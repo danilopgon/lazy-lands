@@ -1,0 +1,130 @@
+# Quality Strategy
+
+## Goal
+
+The Lazy Lands MVP should be reliable enough to demo and defend as a real application.
+
+The goal is not artificial coverage.
+
+The goal is to protect the critical path:
+
+Login → Create campaign → Register session → Accept memory → Generate next session.
+
+## Quality principles
+
+- Test critical flows first.
+- Validate all AI outputs before showing or persisting them.
+- Keep CI as a minimum quality gate.
+- Protect private user data with RLS.
+- Avoid logging sensitive campaign content.
+- Prefer clear fallback behavior over silent failure.
+
+## MVP quality gate
+
+The project should pass:
+
+- Frontend lint.
+- Frontend typecheck.
+- Frontend build.
+- Backend Ruff.
+- Backend pytest for critical logic.
+- Pydantic validation tests.
+- Manual or automated RLS checks.
+- Smoke test for the demo path.
+
+## Frontend testing
+
+Recommended tools:
+
+- Vitest.
+- React Testing Library.
+- Playwright for smoke tests.
+
+Critical frontend tests:
+
+- Registration/login form validation.
+- Protected route redirect.
+- New campaign text validation.
+- Campaign extraction loading/error states.
+- Register session form validation.
+- Memory suggestions accept/reject/edit interactions.
+- Generated session render.
+- Copy generated session action.
+
+## Backend testing
+
+Recommended tools:
+
+- pytest.
+- Ruff.
+- mypy if it does not block delivery.
+
+Critical backend tests:
+
+- Auth dependency rejects missing token.
+- Auth dependency rejects invalid token.
+- Prompt builders include required context.
+- Pydantic schemas accept valid AI outputs.
+- Pydantic schemas reject invalid AI outputs.
+- JSON guard handles Markdown-wrapped JSON.
+- Generate session use case rejects invalid LLM output.
+- Repository/use case ownership checks.
+
+## AI testing
+
+Minimum tests:
+
+- `ExtractCampaignOutput` valid/invalid.
+- `MemorySuggestionsOutput` valid/invalid.
+- `GeneratedSessionOutput` valid/invalid.
+- Prompt snapshot tests for major prompts.
+- FakeLlmProvider for use case tests.
+
+## RLS checks
+
+Must verify:
+
+- Users cannot read campaigns from other users.
+- Users cannot read child data from campaigns they do not own.
+- Users cannot create sessions under campaigns they do not own.
+- Users cannot accept memory facts under campaigns they do not own.
+
+## Observability
+
+Should include:
+
+- `request_id` for backend requests.
+- Structured logs for AI operations.
+- Trace metadata for generation.
+- Error logs for invalid LLM outputs.
+
+Optional:
+
+- Sentry frontend.
+- Sentry backend.
+- Release tags.
+- Sanitized breadcrumbs.
+
+## Definition of Done
+
+A feature is done for the TFM MVP when:
+
+- It works locally.
+- It works in deployment.
+- It has loading/error/success states when applicable.
+- It validates user input.
+- It validates AI output with Pydantic when applicable.
+- It respects user ownership.
+- It belongs to the demo path or supports an official deliverable.
+- It is documented or traceable in README/docs.
+
+## What not to overdo
+
+Do not block MVP delivery on:
+
+- Full E2E coverage.
+- High coverage numbers.
+- Advanced tracing.
+- Complete Sentry setup.
+- PDF perfection.
+- Complex visual polish.

@@ -1,0 +1,16 @@
+node_modules
+.next
+dist
+__pycache__
+*.py
+pnpm-lock.yaml
+.turbo
+coverage
+
+# Pre-existing reference files - not managed by Prettier
+handoff/
+docs/
+.atl/
+openspec/
+PRODUCT.md
+DESIGN.md

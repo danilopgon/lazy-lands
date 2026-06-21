@@ -1,0 +1,73 @@
+schema: spec-driven
+initialized: 2026-06-21
+artifact_store: hybrid
+project: lazy-lands
+
+context: |
+  Product: Campaign Companion for Dungeon Masters (Lazy Lands).
+  Monorepo: pnpm workspaces + turbo, Node.js LTS, Python 3.12.
+  Frontend (apps/web): Next.js App Router + TypeScript + TailwindCSS + shadcn/ui.
+  Backend (services/api): FastAPI + Pydantic + Clean/Hexagonal Architecture.
+  Auth/data: Supabase (local CLI) — email auth, PostgreSQL, RLS.
+  AI: fake LLM provider scaffold in Block 0 (no real LLM calls in early blocks).
+  Stage: pre-build — docs and visual prototypes exist; no application code yet.
+
+testing:
+  strict_tdd: true
+  detected: 2026-06-21
+  frontend:
+    unit:
+      available: true
+      command: "pnpm --filter web test"
+      framework: Vitest + React Testing Library
+    e2e:
+      available: true
+      command: "pnpm --filter web test:e2e"
+      framework: Playwright
+    lint: "pnpm lint"
+    typecheck: "pnpm typecheck"
+  backend:
+    unit:
+      available: true
+      command: "pytest"
+      cwd: "services/api"
+      framework: pytest + pytest-asyncio
+    lint: "ruff check"
+    format_check: "ruff format --check"
+    typecheck: "mypy"
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Reference the relevant docs/ file for the domain
+    - State which critical-path step (Login → Campaign → Session → Memory → Generate) is affected
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Include Pydantic schema changes when the backend is affected
+    - Reference PRODUCT.md P1/P2/P3 principles when AI surfaces are involved
+  design:
+    - Include sequence diagrams for AI flows
+    - Document architecture decisions with rationale
+    - Note Clean Architecture layer boundaries (api → application → domain → infrastructure)
+  tasks:
+    - Group by phase (frontend / backend / infra / shared)
+    - Use hierarchical numbering
+    - Keep tasks completable in one session
+    - Include test tasks alongside implementation tasks (strict TDD)
+  apply:
+    - Follow existing code patterns
+    tdd: true
+    test_command_frontend: "pnpm --filter web test"
+    test_command_e2e: "pnpm --filter web test:e2e"
+    test_command_backend: "pytest"
+  verify:
+    test_command_frontend: "pnpm --filter web test"
+    test_command_e2e: "pnpm --filter web test:e2e"
+    test_command_backend: "pytest"
+    lint_frontend: "pnpm lint && pnpm typecheck"
+    lint_backend: "ruff check && ruff format --check && mypy"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
+    - Preserve provenance (origin field) on all AI-touchable entities
