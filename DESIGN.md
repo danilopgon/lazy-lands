@@ -5,7 +5,9 @@
 > the warmth and legibility of a printed chronicle, on the structural bones of a woodcut print.
 >
 > Reference implementation: `handoff/Lazy Lands Prototype.html` (+ `app/chronicle.css`, the
-> single stylesheet that encodes everything below).
+> single stylesheet that encodes the full prototype system). Production implementation target:
+> `apps/web`, a Next.js App Router frontend that ports this system through TailwindCSS,
+> CSS custom properties and shadcn/ui primitives.
 
 ---
 
@@ -225,6 +227,17 @@ Imagery, where needed (none required for MVP), should be striped placeholder blo
 ## 10. Next.js + Tailwind implementation guide
 
 `handoff/` is temporary prototype reference material. `DESIGN.md` is the durable source for production implementation. Do not copy prototype HTML, inline styles, or Babel-in-browser code into the Next.js app; rebuild with React components, TailwindCSS, and shadcn/ui primitives.
+
+### Current `apps/web` status
+
+The production frontend currently implements the Block 0 slice of Print Chronicle:
+
+- `apps/web/app/globals.css` defines the light Print Chronicle tokens and maps the core Tailwind aliases.
+- `apps/web/app/layout.tsx` loads Instrument Sans, Source Serif 4 and JetBrains Mono with `next/font/google`, and sets `<html lang="en" data-theme="light" data-motion="full">`.
+- `apps/web/components/ui/button.tsx`, `card.tsx`, `input.tsx`, `textarea.tsx` and `label.tsx` restyle shadcn-compatible primitives with radius 0, hard borders, rust focus, and ink-shadow affordances.
+- `apps/web/components/landing-page.tsx` is the current representative surface: a product landing entry point, not a detached marketing microsite.
+
+The dark theme, full motion gates, Scribe notice/loading/stamp patterns, entity ledgers and generated-session views remain design requirements from the prototype until they are rebuilt in production. Do not delete them from this document just because the Block 0 app has not reached them yet.
 
 ### Tailwind `@theme` mapping
 

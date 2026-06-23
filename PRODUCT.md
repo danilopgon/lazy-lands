@@ -7,6 +7,16 @@
 
 ---
 
+## Register
+
+product
+
+Lazy Lands is primarily a task-focused application surface. The landing page belongs to the
+product flow as the entry point, but future design work should default to the product register:
+clarity, trust, reviewability, and DM control matter more than campaign-style marketing flourish.
+
+---
+
 ## 1. What it is, in one line
 
 > _Your campaign, without the amnesia._ Persistent, **reviewable** memory for your NPCs,
@@ -136,3 +146,15 @@ Full structured data: `handoff/app/data.js` in the prototype bundle.
 ## 9. Demo / build intent
 
 This package is a **visual + behavioral base for development**, realistic enough to validate the MVP flow and hand to engineering. The prototype’s React-in-browser setup is a fidelity reference, **not** the production stack — rebuild against your real framework using `DESIGN.md` tokens. UI copy is in **English**; the system is bilingual-friendly but ship copy in English unless decided otherwise.
+
+---
+
+## 10. Current frontend implementation status
+
+`apps/web` is the production Next.js target. It currently implements the Block 0 scaffold:
+
+- `/` renders the product landing page using the Print Chronicle palette, fonts, hard borders and ink shadows.
+- `/login`, `/register` and `/dashboard` are stable placeholder routes, not finished product flows.
+- Authentication, protected campaign data, campaign creation, memory review and session generation are still governed by the MVP screen inventory above and the SDD docs under `docs/`.
+
+Do not treat placeholders as product behavior. They exist to keep navigation and smoke tests stable while the real flows are implemented.
