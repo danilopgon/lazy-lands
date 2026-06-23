@@ -36,7 +36,7 @@ Verification result is **PASS**.
 | `pnpm typecheck` | PASS | Turbo ran web `tsc --noEmit`; 1/1 task successful. |
 | `python -m uv run pytest` | PASS | 3 backend tests passed in 0.42s; 1 StarletteDeprecationWarning from FastAPI TestClient. |
 | `python -m uv run ruff check app/ tests/` | PASS | All checks passed. |
-| `python -m uv run mypy app/` | PASS | Success: no issues found in 25 source files. |
+| `python -m uv run mypy app/` | PASS | Mypy found zero issues in 25 source files. |
 | `pnpm format:check` | PASS | Prettier reports all matched files use Prettier style. |
 | `docker compose --env-file .env.example config` | PASS | Compose config rendered successfully in prior bounded verification. |
 | `docker compose up --build -d` | PASS | Built `lazy-lands-api:latest` and `lazy-lands-web:latest`; started `lazy-lands-api-1` and `lazy-lands-web-1`. |
