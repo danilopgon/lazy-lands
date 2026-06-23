@@ -54,7 +54,7 @@ Full flow: [PRODUCT.md](./PRODUCT.md) section 4.
 | AI          | LLM Provider abstraction (OpenRouter in prod, fake in dev) |
 | Testing     | Vitest + React Testing Library, Playwright, pytest         |
 | Quality     | ESLint, Prettier, Ruff, mypy, Husky, lint-staged           |
-| Deployment  | Vercel (frontend), Coolify/Hetzner (backend)               |
+| Deployment  | Vercel (frontend), Railway (backend)                       |
 
 ---
 
@@ -306,7 +306,7 @@ Pre-commit hooks (Husky + lint-staged) run Prettier on staged files automaticall
 
 Deployment URL: _Pending_
 
-### Backend -- Coolify / Hetzner
+### Backend -- Railway
 
 1. Build with services/api/Dockerfile.
 2. Set backend env vars (APP_ENV=production, Supabase keys, LLM keys).
