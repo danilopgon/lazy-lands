@@ -22,6 +22,7 @@ Read the documents depending on the task you are working on.
 | Supabase, Auth, ownership and RLS | `07-data-security-and-rls.md` |
 | Testing, CI and quality gates | `08-quality-strategy.md` |
 | Final Master Project delivery | `09-tfm-delivery.md` |
+| Implementation roadmap and block status | `10-roadmap.md` |
 
 ## Recommended reading order for new agents
 
