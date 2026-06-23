@@ -398,43 +398,43 @@ const ANTIPATTERNS = [
     skillSection: 'Motion',
     skillGuideline: 'image scale or rotate on hover',
   },
-];
+]
 
 const RULE_ENGINE_SUPPORT = {
   regex: new Set(['source', 'page-analyzer']),
   'static-html': new Set(['element', 'page']),
   browser: new Set(['element', 'page', 'layout']),
   visual: new Set(['visual-contrast']),
-};
+}
 
 function getAntipattern(id) {
-  return ANTIPATTERNS.find(rule => rule.id === id);
+  return ANTIPATTERNS.find((rule) => rule.id === id)
 }
 
 function getRulesForCategory(category) {
-  return ANTIPATTERNS.filter(rule => rule.category === category);
+  return ANTIPATTERNS.filter((rule) => rule.category === category)
 }
 
 function getRuleEngineSupport(engine) {
-  return RULE_ENGINE_SUPPORT[engine] || new Set();
+  return RULE_ENGINE_SUPPORT[engine] || new Set()
 }
 
 // Set of provider tags that gate rules off by default (e.g. 'gpt', 'gemini').
 const GATED_PROVIDERS = new Set(
-  ANTIPATTERNS.map(rule => rule.gated).filter(Boolean),
-);
+  ANTIPATTERNS.map((rule) => rule.gated).filter(Boolean)
+)
 
 // Drop findings for rules gated behind a provider tag unless that provider
 // was explicitly enabled (CLI --gpt / --gemini). Non-gated findings always
 // pass through. `findings` carry the rule id on `.antipattern`.
 function filterByProviders(findings, providers = []) {
-  const enabled = new Set(providers || []);
-  if (!GATED_PROVIDERS.size) return findings;
-  return findings.filter(f => {
-    const rule = getAntipattern(f.antipattern);
-    if (!rule || !rule.gated) return true;
-    return enabled.has(rule.gated);
-  });
+  const enabled = new Set(providers || [])
+  if (!GATED_PROVIDERS.size) return findings
+  return findings.filter((f) => {
+    const rule = getAntipattern(f.antipattern)
+    if (!rule || !rule.gated) return true
+    return enabled.has(rule.gated)
+  })
 }
 
 export {
@@ -445,4 +445,4 @@ export {
   getRulesForCategory,
   getRuleEngineSupport,
   filterByProviders,
-};
+}

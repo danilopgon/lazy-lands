@@ -91,7 +91,6 @@ Reserve directional slides for hierarchical navigation (list → detail) and ord
 
 ```jsx
 import { ViewTransition } from 'react'
-
 ;<ViewTransition>
   <Component />
 </ViewTransition>

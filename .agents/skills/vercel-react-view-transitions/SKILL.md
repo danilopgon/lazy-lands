@@ -60,7 +60,6 @@ When adding view transitions to an existing app, **follow `references/implementa
 
 ```jsx
 import { ViewTransition } from 'react'
-
 ;<ViewTransition>
   <Component />
 </ViewTransition>
