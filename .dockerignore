@@ -1,0 +1,16 @@
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+coverage
+.turbo
+.playwright
+playwright-report
+test-results
+.env
+.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

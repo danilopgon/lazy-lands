@@ -219,3 +219,90 @@ Imagery, where needed (none required for MVP), should be striped placeholder blo
 - The prototype is React 18 + Babel-in-browser purely for fast iteration. **Do not ship that setup** — it’s a fidelity reference, not a starting codebase. Rebuild components in your real stack against these tokens.
 - Theme/motion/texture are attribute/variable driven → trivial to wire to a settings store or `prefers-color-scheme`.
 - The wordmark is type-set, not a logo file: `Lazy ` (ink) + `Lands` (rust), Source Serif 4 600. A standalone identity asset exists at `handoff/Lazy Lands — LinkedIn Card.png`.
+
+---
+
+## 10. Next.js + Tailwind implementation guide
+
+`handoff/` is temporary prototype reference material. `DESIGN.md` is the durable source for production implementation. Do not copy prototype HTML, inline styles, or Babel-in-browser code into the Next.js app; rebuild with React components, TailwindCSS, and shadcn/ui primitives.
+
+### Tailwind `@theme` mapping
+
+Map the CSS custom properties from §3 into Tailwind theme aliases rather than replacing the token names:
+
+```css
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-muted: var(--mute);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-dotted: var(--dotted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-wash: var(--accent-wash);
+  --color-good: var(--good);
+  --color-good-wash: var(--good-wash);
+  --color-warn: var(--warn);
+  --color-warn-wash: var(--warn-wash);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
+  --color-shadow: var(--shadow);
+  --font-sans: var(--font-instrument-sans);
+  --font-serif: var(--font-source-serif);
+  --font-mono: var(--font-jetbrains-mono);
+}
+```
+
+Keep the raw CSS variables on `:root` and `html[data-theme="dark"]` so theme switching remains attribute-driven.
+
+### Font loading
+
+Use `next/font/google` in `app/layout.tsx` for all three required families:
+
+- `Instrument Sans` → `--font-instrument-sans` for UI/body.
+- `Source Serif 4` → `--font-source-serif` for headings, reading, and Scribe prose.
+- `JetBrains Mono` → `--font-jetbrains-mono` for labels, metadata, badges, counters, and system voice.
+
+Production pages should set `<html lang="en" data-theme="light" data-motion="full">` initially. Future settings may toggle `data-theme`, `data-motion`, and `--tex-opacity`.
+
+### shadcn/ui overrides
+
+Use shadcn/ui as behavior/accessibility primitives, then restyle them to match Print Chronicle:
+
+- **Button:** radius `0`, `2px` border by default, `3px 3px 0 var(--shadow)` hard shadow, rust `accent` variant, and press physics that translate into the shadow on hover/active.
+- **Input/Textarea:** radius `0`, hard border, paper background, rust focus ring/offset shadow, mono labels, serif textarea prose.
+- **Card:** `2px` border, `6px 6px 0 var(--shadow)`, paper surface; use accent shadow only for Scribe/AI proposal surfaces.
+- **Label:** JetBrains Mono, uppercase, letter-spaced, muted ink.
+
+Do not assert Tailwind class names in tests. Test user-visible behavior and accessible names; use visual checks for style regressions.
+
+### Layout conventions
+
+- Page containers: `1140px` max for full pages, `900px` for focused mid pages, `720px` for narrow forms.
+- Desktop gutter: `40px`; mobile gutter: `18px`–`24px`.
+- Use one main breakpoint at `900px` for editorial two-column collapse.
+- Prefer hard rules and bordered ledgers over floating cards. Visual hierarchy should feel printed, not glassy.
+
+### Interaction and motion
+
+Motion follows the `data-motion` contract from §2:
+
+- `full`: entrance choreography plus action feedback.
+- `subtle`: remove decorative entrance choreography; keep communicative press/stamp/strike feedback.
+- `off`: remove animations and transitions.
+
+Always respect `prefers-reduced-motion: reduce`. Entrance animation is decorative; action feedback is communicative and may remain only when user motion preferences allow it.
+
+### Accessibility notes
+
+- Color is meaning, not the only signal. Pair semantic colors with text labels or icons/glyphs.
+- Maintain the contrast guarantees in §3 when introducing new combinations.
+- Keep keyboard focus visible with rust focus rings and sufficient offset.
+- The Scribe persona must never imply automatic canon changes; AI output uses proposal language and keeps review/edit/dismiss affordances until the DM confirms it.

@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: fake-key
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.x
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+      - name: Playwright smoke
+        continue-on-error: true
+        run: pnpm --filter web test:e2e
+
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: test
+      SUPABASE_URL: http://localhost:54321
+      SUPABASE_ANON_KEY: fake-key
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install uv
+        run: pip install uv
+      - name: Install dependencies
+        working-directory: services/api
+        run: uv sync
+      - name: Ruff check
+        working-directory: services/api
+        run: uv run ruff check app/ tests/
+      - name: Ruff format check
+        working-directory: services/api
+        run: uv run ruff format --check app/ tests/
+      - name: Mypy
+        working-directory: services/api
+        run: uv run mypy app/ --ignore-missing-imports
+      - name: Tests
+        working-directory: services/api
+        run: uv run pytest

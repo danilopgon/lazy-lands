@@ -1,0 +1,31 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '3000:3000'
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: services/api
+    ports:
+      - '8000:8000'
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: development
+      API_CORS_ORIGINS: '["http://localhost:3000"]'
+      SUPABASE_URL: http://localhost:54321
+      SUPABASE_ANON_KEY: fake-key
+      LLM_PROVIDER: fake
+
+# Supabase: run separately with `pnpm supabase start` after Docker Desktop is running.

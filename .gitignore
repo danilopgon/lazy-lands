@@ -9,6 +9,7 @@ out
 # Build outputs
 dist
 build
+*.tsbuildinfo
 
 # Environment files
 .env
@@ -32,6 +33,9 @@ venv
 coverage
 .playwright
 playwright-report
+test-results
+.pytest_cache
+.ruff_cache
 
 # Turbo
 .turbo
