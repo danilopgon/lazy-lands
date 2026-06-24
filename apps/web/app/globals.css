@@ -37,6 +37,8 @@
   --font-sans: var(--font-instrument-sans);
   --font-serif: var(--font-source-serif);
   --font-mono: var(--font-jetbrains-mono);
+  /* LAND-014: single-column at ≤900px — multi-column begins above 900px */
+  --breakpoint-llg: 901px;
 }
 
 * {
@@ -47,6 +49,7 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+  overflow-x: hidden;
 }
 
 body {
@@ -75,6 +78,15 @@ a {
 ::selection {
   background: var(--accent-wash);
   color: var(--accent-deep);
+}
+
+@keyframes ll-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

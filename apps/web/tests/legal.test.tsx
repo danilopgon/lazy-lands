@@ -1,0 +1,111 @@
+import { render, screen } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+
+// TDD RED phase — tests written before implementation.
+// Covers LEGAL-001 (/cookies) and LEGAL-002 (/privacy).
+
+// ─────────────────────────────────────────────────────────────────
+// /cookies page — LEGAL-001
+// ─────────────────────────────────────────────────────────────────
+describe('/cookies page (LEGAL-001)', () => {
+  it('LEGAL-001b: exports metadata with robots noindex', async () => {
+    const { metadata } = await import('@/app/cookies/page')
+    expect((metadata as { robots?: { index?: boolean } }).robots?.index).toBe(
+      false
+    )
+  })
+
+  it('LEGAL-001a: renders <h1>Cookie Policy</h1>', async () => {
+    const { default: CookiesPage } = await import('@/app/cookies/page')
+    render(<CookiesPage />)
+    expect(
+      screen.getByRole('heading', { level: 1, name: /cookie policy/i })
+    ).toBeInTheDocument()
+  })
+
+  it('LEGAL-001c: documents all four storage keys', async () => {
+    const { default: CookiesPage } = await import('@/app/cookies/page')
+    render(<CookiesPage />)
+    expect(screen.getByText(/sb-access-token/i)).toBeInTheDocument()
+    expect(screen.getByText(/sb-refresh-token/i)).toBeInTheDocument()
+    expect(screen.getByText(/ll-cookie-consent/i)).toBeInTheDocument()
+    expect(screen.getByText(/ll-announcement-dismissed/i)).toBeInTheDocument()
+  })
+
+  it('LEGAL-001d: contains back-link to landing (/)', async () => {
+    const { default: CookiesPage } = await import('@/app/cookies/page')
+    render(<CookiesPage />)
+    const backLink = screen.getByRole('link', {
+      name: /back to home|back to landing|← back|return/i,
+    })
+    expect(backLink).toHaveAttribute('href', '/')
+  })
+
+  it('LEGAL-001e: mentions LSSI-CE technical exemption', async () => {
+    const { default: CookiesPage } = await import('@/app/cookies/page')
+    render(<CookiesPage />)
+    const elements = screen.getAllByText(
+      /lssi-ce|art\. 22\.2|technical.{1,30}exemption/i
+    )
+    expect(elements.length).toBeGreaterThan(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────
+// /privacy page — LEGAL-002
+// ─────────────────────────────────────────────────────────────────
+describe('/privacy page (LEGAL-002)', () => {
+  it('LEGAL-002b: exports metadata with robots noindex', async () => {
+    const { metadata } = await import('@/app/privacy/page')
+    expect((metadata as { robots?: { index?: boolean } }).robots?.index).toBe(
+      false
+    )
+  })
+
+  it('LEGAL-002a: renders <h1>Privacy Policy</h1>', async () => {
+    const { default: PrivacyPage } = await import('@/app/privacy/page')
+    render(<PrivacyPage />)
+    expect(
+      screen.getByRole('heading', { level: 1, name: /privacy policy/i })
+    ).toBeInTheDocument()
+  })
+
+  it('LEGAL-002c: includes [Company] placeholder for data controller', async () => {
+    const { default: PrivacyPage } = await import('@/app/privacy/page')
+    render(<PrivacyPage />)
+    expect(screen.getByText(/\[Company\]/)).toBeInTheDocument()
+  })
+
+  it('LEGAL-002d: includes [contact@example.com] placeholder', async () => {
+    const { default: PrivacyPage } = await import('@/app/privacy/page')
+    render(<PrivacyPage />)
+    const elements = screen.getAllByText(/\[contact@example\.com\]/)
+    expect(elements.length).toBeGreaterThan(0)
+  })
+
+  it('LEGAL-002e: mentions GDPR art. 6.1.b legal basis', async () => {
+    const { default: PrivacyPage } = await import('@/app/privacy/page')
+    render(<PrivacyPage />)
+    const elements = screen.getAllByText(/gdpr|art\. 6\.1\.b|6\.1\(b\)/i)
+    expect(elements.length).toBeGreaterThan(0)
+  })
+
+  it('LEGAL-002f: enumerates user rights', async () => {
+    const { default: PrivacyPage } = await import('@/app/privacy/page')
+    render(<PrivacyPage />)
+    // At least access, rectification, erasure must appear
+    const elements = screen.getAllByText(
+      /access|rectif|erasure|portab|objection/i
+    )
+    expect(elements.length).toBeGreaterThan(0)
+  })
+
+  it('LEGAL-002g: contains back-link to landing (/)', async () => {
+    const { default: PrivacyPage } = await import('@/app/privacy/page')
+    render(<PrivacyPage />)
+    const backLink = screen.getByRole('link', {
+      name: /back to home|back to landing|← back|return/i,
+    })
+    expect(backLink).toHaveAttribute('href', '/')
+  })
+})
