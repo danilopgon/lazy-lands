@@ -118,6 +118,32 @@ A feature is done for the TFM MVP when:
 - It belongs to the demo path or supports an official deliverable.
 - It is documented or traceable in README/docs.
 
+## Living quality rules
+
+The linting and guardrail rules in this project are **living** — they evolve as we detect
+conventions and patterns during development and code review.
+
+### How it works
+
+- When a PR review catches a recurring pattern, we encode it as an automated check.
+- The AI assistant can proactively suggest new rules based on observed codebase conventions.
+- Rules live in `scripts/check-guardrails.mjs` and `apps/web/eslint.config.mjs`.
+- The `pnpm lint:guardrails` script runs imperatively in CI, pre-commit, and `pnpm quality`.
+
+### Current guardrails
+
+| Guardrail | What it catches | Location |
+|-----------|----------------|----------|
+| `type` over `interface` | Prevents `interface` in frontend TS/TSX | ESLint rule |
+| CSS planning references | Catches `OpenSpec`, `SDD`, `LAND-` in public CSS | `scripts/check-guardrails.mjs` |
+| Inline landing static data | Catches large arrays/objects in landing `.tsx` | `scripts/check-guardrails.mjs` |
+| Arbitrary z-index | Catches numeric Tailwind z classes in landing/layout/app | `scripts/check-guardrails.mjs` |
+
+### Suggesting new rules
+
+This list grows. If you see a pattern that should be automated, mention it. The AI can
+implement the check, wire it into `lint:guardrails`, and update this table.
+
 ## What not to overdo
 
 Do not block MVP delivery on:

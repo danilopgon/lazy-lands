@@ -9,8 +9,11 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
+    "lint:guardrails": "node scripts/check-guardrails.mjs",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
+    "quality": "pnpm lint && pnpm typecheck && pnpm test && pnpm lint:guardrails",
+    "quality:strict": "pnpm format:check && pnpm quality",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"
@@ -23,8 +26,14 @@
     "turbo": "^2.3.3"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "prettier --write"
+    "apps/web/**/*.{ts,tsx}": [
+      "prettier --write",
+      "node scripts/lint-web.mjs",
+      "pnpm lint:guardrails"
+    ],
+    "apps/web/**/*.css": [
+      "prettier --write",
+      "pnpm lint:guardrails"
     ],
     "*.{md,json,yaml,yml}": [
       "prettier --write"

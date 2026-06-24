@@ -179,6 +179,6 @@ describe('PublicTop mobile menu', () => {
     await user.click(screen.getByRole('button', { name: /open menu/i }))
 
     const menu = screen.getByRole('dialog', { name: /mobile navigation/i })
-    expect(menu).toHaveStyle({ zIndex: '60' })
+    expect(menu).toHaveClass('z-mobile-menu')
   })
 })
