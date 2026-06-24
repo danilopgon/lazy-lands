@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import AnyHttpUrl, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,8 +7,8 @@ class Settings(BaseSettings):
     api_cors_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000"]
     )
-    supabase_url: Optional[AnyHttpUrl] = None
-    supabase_anon_key: Optional[str] = None
+    supabase_url: AnyHttpUrl | None = None
+    supabase_anon_key: str | None = None
     supabase_service_role_key: str = ""
     supabase_jwt_secret: str = ""
     llm_provider: str = "fake"
