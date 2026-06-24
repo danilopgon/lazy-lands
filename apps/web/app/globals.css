@@ -39,7 +39,7 @@
   --font-serif: var(--font-source-serif);
   --font-mono: var(--font-jetbrains-mono);
   --z-cookie-banner: 50;
-  --z-mobile-menu: 60;
+  --z-mobile-menu: 80;
   --z-skip-link: 70;
   /* Single-column at ≤900px — multi-column begins above 900px. */
   --breakpoint-llg: 901px;
