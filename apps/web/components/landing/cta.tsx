@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { ComingSoonButton } from './coming-soon-button'
+import { ViewEnter } from './motion'
 
 export function LandCTA() {
   return (
@@ -57,7 +58,7 @@ export function LandCTA() {
           </svg>
         </div>
 
-        <div className="relative">
+        <ViewEnter>
           <div
             className="mb-3 font-mono text-[10px] uppercase tracking-[0.1em]"
             style={{ color: '#FBF4EC' }}
@@ -99,13 +100,13 @@ export function LandCTA() {
                 boxShadow: '4px 4px 0 rgba(0,0,0,0.3)',
               }}
             >
-              <Link href="/register">Create account →</Link>
+              <Link href="/register">Start your chronicle →</Link>
             </Button>
             <ComingSoonButton variant="secondary">
               Tour a demo campaign
             </ComingSoonButton>
           </div>
-        </div>
+        </ViewEnter>
       </div>
     </section>
   )

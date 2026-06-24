@@ -10,7 +10,7 @@ export function LandHero() {
     <section className="mx-auto w-full max-w-[1180px] px-5 pb-[44px] pt-[52px] llg:px-10">
       <div className="grid grid-cols-1 items-center gap-12 llg:grid-cols-[1.05fr_0.95fr]">
         <div>
-          <div className="flex flex-wrap gap-2">
+          <div className="ll-enter-1 flex flex-wrap gap-2">
             <Badge variant="accent">✦ Open beta</Badge>
             <Badge variant="muted">
               For DMs who actually run long campaigns
@@ -18,7 +18,7 @@ export function LandHero() {
           </div>
 
           <h1
-            className="mt-6 font-serif font-semibold text-[13vw] leading-[0.94] tracking-[-0.035em] text-[var(--ink)] llg:text-[82px]"
+            className="ll-enter-2 mt-6 font-serif font-semibold text-[13vw] leading-[0.94] tracking-[-0.035em] text-[var(--ink)] llg:text-[82px]"
             style={{ textWrap: 'balance' }}
           >
             Your campaign,
@@ -40,7 +40,7 @@ export function LandHero() {
           </h1>
 
           <p
-            className="mt-[26px] mb-[32px] max-w-[500px] text-[var(--ink-2)]"
+            className="ll-enter-3 mt-[26px] mb-[32px] max-w-[500px] text-[var(--ink-2)]"
             style={{
               fontSize: 18.5,
               lineHeight: 1.5,
@@ -52,7 +52,7 @@ export function LandHero() {
             remembers what your players did.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="ll-enter-4 flex flex-wrap items-center gap-3">
             <Button
               asChild
               variant="accent"
@@ -63,9 +63,9 @@ export function LandHero() {
             <ComingSoonButton>✦ See it on a real campaign</ComingSoonButton>
           </div>
 
-          <div className="mt-[30px] flex flex-wrap gap-[22px] font-mono text-[11px] uppercase tracking-[0.04em] text-[var(--mute)]">
+          <div className="ll-enter-5 mt-[30px] flex flex-wrap gap-[22px] font-mono text-[11px] uppercase tracking-[0.04em] text-[var(--mute)]">
             <span>✓ No card</span>
-            <span>✓ The Scribe never decides canon</span>
+            <span>✓ AI-assisted, DM-controlled</span>
             <span>✓ Export anytime</span>
           </div>
         </div>

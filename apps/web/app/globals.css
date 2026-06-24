@@ -23,6 +23,7 @@
   --danger: #8a2515;
   --danger-wash: #f1d8d1;
   --shadow: #1a1c19;
+  --on-ink-muted: rgb(236 228 211 / 72%);
 }
 
 @theme inline {
@@ -87,6 +88,72 @@ a {
   to {
     transform: translateX(-50%);
   }
+}
+
+/* ─── Print Chronicle Motion System ─────────────────────────────── */
+
+@keyframes ll-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ll-rule {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+/* Scroll-reveal base state */
+[data-motion="full"] .ll-rise {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-motion="full"] .ll-rise.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hero stagger — plays on mount via CSS animation */
+[data-motion="full"] .ll-enter-1 {
+  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0ms;
+}
+[data-motion="full"] .ll-enter-2 {
+  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 100ms;
+}
+[data-motion="full"] .ll-enter-3 {
+  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 200ms;
+}
+[data-motion="full"] .ll-enter-4 {
+  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 300ms;
+}
+[data-motion="full"] .ll-enter-5 {
+  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 400ms;
+}
+
+/* Button press physics */
+[data-motion="full"] button:active,
+[data-motion="full"] a:active {
+  transform: translateY(2px);
 }
 
 @media (prefers-reduced-motion: reduce) {

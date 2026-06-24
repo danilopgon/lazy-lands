@@ -19,7 +19,9 @@ export default function Home() {
       {/* Marketing overlays mount here, NOT in layout.tsx,
           so they do not appear on /cookies, /privacy, or app routes. */}
       <AnnouncementBar />
-      <LandingPage />
+      <main id="main-content">
+        <LandingPage />
+      </main>
       <CookieBanner />
     </>
   )
