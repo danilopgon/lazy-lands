@@ -13,9 +13,9 @@
   --line-strong: #1a1c19;
   --dotted: #b7ae98;
   --border: #1a1c19;
-  --accent: #c84b31;
-  --accent-deep: #8b3a26;
-  --accent-wash: #f3d8ce;
+  --accent: #3a7d44;
+  --accent-deep: #2b5e33;
+  --accent-wash: #c2d8c5;
   --good: #3a7d44;
   --good-wash: #dce9da;
   --warn: #b07f12;
@@ -37,6 +37,8 @@
   --font-sans: var(--font-instrument-sans);
   --font-serif: var(--font-source-serif);
   --font-mono: var(--font-jetbrains-mono);
+  /* Single-column at ≤900px — multi-column begins above 900px. */
+  --breakpoint-llg: 901px;
 }
 
 * {
@@ -47,6 +49,7 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+  overflow-x: hidden;
 }
 
 body {
@@ -75,6 +78,15 @@ a {
 ::selection {
   background: var(--accent-wash);
   color: var(--accent-deep);
+}
+
+@keyframes ll-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

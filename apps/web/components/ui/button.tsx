@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-[var(--ink)] text-[var(--bg)]',
-        accent: 'bg-[var(--accent)] text-[#fbf4ec]',
+        accent: 'bg-[var(--accent)] !text-[var(--paper)]',
         secondary: 'bg-[var(--paper)] text-[var(--ink)]',
         ghost:
           'border-[1.5px] bg-transparent text-[var(--ink)] shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-[var(--paper-2)] hover:shadow-none active:translate-x-0 active:translate-y-0',
@@ -28,12 +28,10 @@ const buttonVariants = cva(
   }
 )
 
-export interface ButtonProps
-  extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
-}
+export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ asChild = false, className, size, variant, ...props }, ref) => {
