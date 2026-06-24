@@ -27,8 +27,10 @@ describe('LandingPage', () => {
 
     it('LAND-003c: primary CTA links to /register', () => {
       render(<LandingPage />)
-      const link = screen.getByRole('link', { name: /start your chronicle/i })
-      expect(link).toHaveAttribute('href', '/register')
+      const links = screen.getAllByRole('link', {
+        name: /start your chronicle/i,
+      })
+      expect(links[0]).toHaveAttribute('href', '/register')
     })
 
     it('LAND-003d: secondary CTA has aria-disabled="true"', () => {
@@ -153,9 +155,10 @@ describe('LandingPage', () => {
 
     it('LAND-009c: primary CTA links to /register', () => {
       render(<LandingPage />)
-      expect(
-        screen.getByRole('link', { name: /create account/i })
-      ).toHaveAttribute('href', '/register')
+      const links = screen.getAllByRole('link', {
+        name: /start your chronicle/i,
+      })
+      expect(links.at(-1)).toHaveAttribute('href', '/register')
     })
 
     it('LAND-009d: secondary CTA has aria-disabled="true" and tooltip', () => {
@@ -208,8 +211,10 @@ describe('LandingPage', () => {
 
     it('LAND-002c: "Start" links to /register', () => {
       render(<LandingPage />)
-      // "Start" nav link (not the CTA)
-      const startLinks = screen.getAllByRole('link', { name: /^start$/i })
+      // nav "Start" link has aria-label="Start your chronicle"
+      const startLinks = screen.getAllByRole('link', {
+        name: /start your chronicle/i,
+      })
       expect(
         startLinks.some((l) => l.getAttribute('href') === '/register')
       ).toBe(true)

@@ -1,4 +1,5 @@
 import { pillars } from './data'
+import { ViewEnter } from './motion'
 
 export function LandPillars() {
   return (
@@ -8,7 +9,7 @@ export function LandPillars() {
     >
       {/* Section header */}
       <div className="mb-12 max-w-[720px]">
-        <div className="mb-[14px] font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--accent)]">
+        <div className="mb-[14px] font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--accent-deep)]">
           / what it does
         </div>
         <h2
@@ -46,62 +47,64 @@ export function LandPillars() {
             }}
             className="last:border-b-0 llg:border-b-0"
           >
-            {/* Icon — 50×50 bordered box */}
-            <div
-              style={{
-                width: 50,
-                height: 50,
-                border: '2px solid var(--border)',
-                background: 'var(--paper)',
-                display: 'grid',
-                placeItems: 'center',
-                marginBottom: 20,
-                fontSize: 22,
-                color: 'var(--accent)',
-                boxShadow: '3px 3px 0 var(--shadow)',
-              }}
-            >
-              {p.glyph}
-            </div>
+            <ViewEnter delay={i * 150}>
+              {/* Icon — 50×50 bordered box */}
+              <div
+                style={{
+                  width: 50,
+                  height: 50,
+                  border: '2px solid var(--border)',
+                  background: 'var(--paper)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  marginBottom: 20,
+                  fontSize: 22,
+                  color: 'var(--accent)',
+                  boxShadow: '3px 3px 0 var(--shadow)',
+                }}
+              >
+                {p.glyph}
+              </div>
 
-            <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--accent)]">
-              {p.eyebrow}
-            </div>
-            <h3
-              className="font-serif text-[var(--ink)]"
-              style={{
-                fontSize: 27,
-                margin: '0 0 12px',
-                lineHeight: 1.0,
-                letterSpacing: '-0.01em',
-              }}
-            >
-              {p.title}
-            </h3>
-            <p
-              className="text-[var(--ink-2)]"
-              style={{ fontSize: 14.5, marginBottom: 18, lineHeight: 1.5 }}
-            >
-              {p.body}
-            </p>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {p.bullets.map((b) => (
-                <li
-                  key={b}
-                  className="font-mono text-[var(--ink-2)]"
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    fontSize: 11.5,
-                    marginBottom: 7,
-                    lineHeight: 1.4,
-                  }}
-                >
-                  <span style={{ color: 'var(--accent)' }}>→</span>
-                  {b}
-                </li>
-              ))}
-            </ul>
+              <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--accent-deep)]">
+                {p.eyebrow}
+              </div>
+              <h3
+                className="font-serif text-[var(--ink)]"
+                style={{
+                  fontSize: 27,
+                  margin: '0 0 12px',
+                  lineHeight: 1.0,
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                {p.title}
+              </h3>
+              <p
+                className="text-[var(--ink-2)]"
+                style={{ fontSize: 14.5, marginBottom: 18, lineHeight: 1.5 }}
+              >
+                {p.body}
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {p.bullets.map((b) => (
+                  <li
+                    key={b}
+                    className="font-mono text-[var(--ink-2)]"
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      fontSize: 11.5,
+                      marginBottom: 7,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    <span style={{ color: 'var(--accent)' }}>→</span>
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            </ViewEnter>
           </div>
         ))}
       </div>

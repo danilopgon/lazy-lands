@@ -1,11 +1,12 @@
 import { Spec, BriefingMock } from './briefing-mock'
+import { ViewEnter } from './motion'
 
 export function LandBriefing() {
   return (
     <section className="mx-auto w-full max-w-[1180px] px-5 py-[72px] llg:px-10">
       <div className="grid grid-cols-1 items-center gap-[56px] llg:grid-cols-2">
         {/* Left: copy + stats */}
-        <div>
+        <ViewEnter>
           <div className="mb-[14px] font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--accent)]">
             / the output
           </div>
@@ -40,7 +41,7 @@ export function LandBriefing() {
             <Spec k="Canon" v="decided by you, not the Scribe" />
             <Spec k="Editable" v="it's a draft, not truth" />
           </div>
-        </div>
+        </ViewEnter>
 
         {/* Right: BriefingMock */}
         <BriefingMock />

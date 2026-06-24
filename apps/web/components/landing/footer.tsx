@@ -9,9 +9,9 @@ export function LandFooter() {
       <div className="mx-auto flex max-w-[1180px] flex-col gap-4 llg:flex-row llg:items-center llg:justify-between">
         <div className="flex items-center gap-4">
           <span className="font-serif text-[18px] font-semibold">
-            Lazy <span style={{ color: 'var(--accent)' }}>Lands</span>
+            Lazy <span style={{ color: 'var(--accent-deep)' }}>Lands</span>
           </span>
-          <span className="font-mono text-[10.5px] text-[var(--mute)]">
+          <span className="font-mono text-[10.5px] text-[var(--ink-2)]">
             © 2026 · made by a DM tired of forgetting
           </span>
         </div>

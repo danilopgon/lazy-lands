@@ -18,7 +18,7 @@ function NpcRow({ name, role, accent = false }: NpcRowProps) {
 
 export function Spec({ k, v }: SpecProps) {
   return (
-    <div style={{ borderLeft: '3px solid var(--accent)', paddingLeft: 14 }}>
+    <div style={{ borderTop: '2px solid var(--border)', paddingTop: 12 }}>
       <div className="font-serif text-[23px] font-semibold">{k}</div>
       <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--mute)]">
         {v}

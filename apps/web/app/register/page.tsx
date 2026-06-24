@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function RegisterPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
+    <main id="main-content" className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
       <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
         Start
       </p>

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16 font-serif">
+    <main id="main-content" className="mx-auto max-w-2xl px-6 py-16 font-serif">
       <Link
         href="/"
         className="font-mono text-xs uppercase tracking-widest text-[var(--ink-2)] hover:text-[var(--accent)]"

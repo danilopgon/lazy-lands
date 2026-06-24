@@ -35,6 +35,16 @@ export default function RootLayout({
       <body
         className={`${instrumentSans.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}
       >
+        {/* Without JS, IntersectionObserver never fires and .ll-rise stays opacity:0 */}
+        <noscript>
+          <style>{`.ll-rise { opacity: 1 !important; transform: none !important; }`}</style>
+        </noscript>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-[var(--accent)] focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:uppercase focus:tracking-widest focus:text-white"
+        >
+          Skip to content
+        </a>
         {children}
       </body>
     </html>

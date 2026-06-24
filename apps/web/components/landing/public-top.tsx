@@ -39,13 +39,17 @@ export function PublicTop() {
               <Link href="/login">Sign in</Link>
             </Button>
             <Button asChild variant="accent" size="sm">
-              <Link href="/register">Start</Link>
+              <Link href="/register">
+                Start<span className="sr-only"> your chronicle</span>
+              </Link>
             </Button>
           </div>
 
           {/* Mobile: CTA + hamburger */}
           <Button asChild variant="accent" size="sm" className="llg:hidden">
-            <Link href="/register">Start</Link>
+            <Link href="/register">
+              Start<span className="sr-only"> your chronicle</span>
+            </Link>
           </Button>
 
           <button
