@@ -19,7 +19,7 @@ ESLint rule `react-hooks/set-state-in-effect` flags calling `setState` synchrono
 
 Tailwind's `md:` prefix fires at 768px; LAND-014 requires single-column at ≤900px. Fixed by:
 1. Adding `--breakpoint-llg: 901px` to `@theme inline` block in `apps/web/app/globals.css`
-2. Swapping all layout-defining `md:` → `llg:` in `apps/web/components/landing-page.tsx`:
+2. Swapping all layout-defining `md:` → `llg:` in `apps/web/components/landing/landing-page.tsx`:
    - `LandHero`: grid-cols, items-center, py-24
    - `HeroCollage`: hidden/block toggle
    - Nav desktop links: hidden/flex toggle
@@ -29,6 +29,16 @@ Tailwind's `md:` prefix fires at 768px; LAND-014 requires single-column at ≤90
    - `LandFooter`: flex-row, items-center, justify-between
 3. Typographic `md:text-*` on headings left as-is (font size, not layout).
 Gates after fix: 64/64 unit tests pass, tsc --noEmit zero errors, ESLint clean, Prettier clean.
+
+## Review feedback follow-up
+
+Implemented PR #1 review fixes after the initial apply pass:
+
+- Cookie policy now documents the actual default `@supabase/ssr` project-scoped auth storage key pattern (`sb-<project-ref>-auth-token`) instead of unconfigured split `sb-access-token` / `sb-refresh-token` keys.
+- Mobile menu overlay now renders as an accessible dialog with `z-index: 60`, above the CookieBanner `z-50` layer.
+- Landing code follows the agreed frontend organization convention: layout overlays under `components/layout`, landing composition under `components/landing`, feature data under `components/landing/data`, and feature-local type aliases under `components/landing/types`.
+- `HeroCollage` is split out of `hero.tsx`; static marquee, pillar, and node graph data moved to feature-local data files.
+- `DESIGN.md` and `docs/04-architecture.md` document the theme breakpoint and frontend organization/type/data conventions.
 
 ## TDD Cycle Evidence
 
@@ -56,6 +66,7 @@ Gates after fix: 64/64 unit tests pass, tsc --noEmit zero errors, ESLint clean, 
 | 5.2 `pnpm typecheck` | — | ✓ zero errors | — | tsc --noEmit clean |
 | 5.3 `pnpm lint + format:check` | ✓ lint failed (setState in effect) | ✓ clean after startTransition fix | — | ESLint + Prettier both clean |
 | LAND-014 fix | — | ✓ 64/64 still pass | — | `llg:` breakpoint at 901px, no test regression |
+| PR #1 review fixes | ✓ cookie policy and mobile stacking tests failed | ✓ 66/66 pass | ✓ actual Supabase key and overlay stacking covered | ✓ file organization refactor preserved landing behavior |
 
 ## Completed Tasks (19/22)
 
@@ -93,10 +104,10 @@ Gates after fix: 64/64 unit tests pass, tsc --noEmit zero errors, ESLint clean, 
 |------|--------|------|
 | `apps/web/vitest.config.ts` | Modified | Widened include glob to .{ts,tsx} |
 | `apps/web/lib/consent.ts` | Created | localStorage helper with SSR guard |
-| `apps/web/components/coming-soon-button.tsx` | Created | aria-disabled CTA with CSS tooltip |
-| `apps/web/components/cookie-banner.tsx` | Created | Cookie consent banner (client, fixed) |
-| `apps/web/components/announcement-bar.tsx` | Created | Announcement bar (client, flow) |
-| `apps/web/components/landing-page.tsx` | Modified | Full rebuild — 9 sections RSC; llg: breakpoint for LAND-014 |
+| `apps/web/components/landing/coming-soon-button.tsx` | Created | aria-disabled CTA with CSS tooltip |
+| `apps/web/components/layout/cookie-banner.tsx` | Created | Cookie consent banner (client, fixed) |
+| `apps/web/components/layout/announcement-bar.tsx` | Created | Announcement bar (client, flow) |
+| `apps/web/components/landing/landing-page.tsx` | Modified | Full rebuild — 9 sections RSC; llg: breakpoint for LAND-014 |
 | `apps/web/app/page.tsx` | Modified | Added metadata + overlay mounts |
 | `apps/web/app/cookies/page.tsx` | Created | /cookies legal page RSC |
 | `apps/web/app/privacy/page.tsx` | Created | /privacy legal page RSC |

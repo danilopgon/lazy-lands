@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
-import { ComingSoonButton } from '@/components/coming-soon-button'
+import { ComingSoonButton } from './coming-soon-button'
 
 export function LandCTA() {
   return (

@@ -33,7 +33,8 @@ beforeEach(() => {
 // ─────────────────────────────────────────────────────────────────
 describe('ComingSoonButton', () => {
   it('LAND-003d: has aria-disabled="true" (NOT native disabled)', async () => {
-    const { ComingSoonButton } = await import('@/components/coming-soon-button')
+    const { ComingSoonButton } =
+      await import('@/components/landing/coming-soon-button')
     render(<ComingSoonButton>See it on a real campaign</ComingSoonButton>)
     const btn = screen.getByRole('button', {
       name: /see it on a real campaign/i,
@@ -44,7 +45,8 @@ describe('ComingSoonButton', () => {
   })
 
   it('LAND-013b: has tabIndex=0 so it is keyboard reachable', async () => {
-    const { ComingSoonButton } = await import('@/components/coming-soon-button')
+    const { ComingSoonButton } =
+      await import('@/components/landing/coming-soon-button')
     render(<ComingSoonButton>See it on a real campaign</ComingSoonButton>)
     const btn = screen.getByRole('button', {
       name: /see it on a real campaign/i,
@@ -53,7 +55,8 @@ describe('ComingSoonButton', () => {
   })
 
   it('LAND-003e: renders tooltip with text "Coming soon"', async () => {
-    const { ComingSoonButton } = await import('@/components/coming-soon-button')
+    const { ComingSoonButton } =
+      await import('@/components/landing/coming-soon-button')
     render(<ComingSoonButton>See it on a real campaign</ComingSoonButton>)
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(
       'Coming soon'
@@ -61,7 +64,8 @@ describe('ComingSoonButton', () => {
   })
 
   it('prevents navigation on click (aria-disabled behavior)', async () => {
-    const { ComingSoonButton } = await import('@/components/coming-soon-button')
+    const { ComingSoonButton } =
+      await import('@/components/landing/coming-soon-button')
     const user = userEvent.setup()
     render(<ComingSoonButton>See it on a real campaign</ComingSoonButton>)
     const btn = screen.getByRole('button', {
@@ -77,7 +81,7 @@ describe('ComingSoonButton', () => {
 // ─────────────────────────────────────────────────────────────────
 describe('CookieBanner', () => {
   it('LAND-011a: renders when ll-cookie-consent is absent', async () => {
-    const { CookieBanner } = await import('@/components/cookie-banner')
+    const { CookieBanner } = await import('@/components/layout/cookie-banner')
     render(<CookieBanner />)
     // useEffect runs after mount — banner appears after effect
     expect(
@@ -87,7 +91,7 @@ describe('CookieBanner', () => {
 
   it('LAND-011b: does NOT render when ll-cookie-consent is set', async () => {
     localStorageMock.setItem('ll-cookie-consent', 'acknowledged')
-    const { CookieBanner } = await import('@/components/cookie-banner')
+    const { CookieBanner } = await import('@/components/layout/cookie-banner')
     render(<CookieBanner />)
     // Give useEffect time to run
     await new Promise((r) => setTimeout(r, 20))
@@ -97,7 +101,7 @@ describe('CookieBanner', () => {
   })
 
   it('LAND-011c: "Got it" writes "acknowledged" to ll-cookie-consent and hides banner', async () => {
-    const { CookieBanner } = await import('@/components/cookie-banner')
+    const { CookieBanner } = await import('@/components/layout/cookie-banner')
     const user = userEvent.setup()
     render(<CookieBanner />)
     await screen.findByRole('region', { name: /cookie notice/i })
@@ -109,7 +113,7 @@ describe('CookieBanner', () => {
   })
 
   it('LAND-011d: has role="region" and aria-label="Cookie notice"', async () => {
-    const { CookieBanner } = await import('@/components/cookie-banner')
+    const { CookieBanner } = await import('@/components/layout/cookie-banner')
     render(<CookieBanner />)
     const region = await screen.findByRole('region', { name: /cookie notice/i })
     expect(region).toHaveAttribute('aria-label', 'Cookie notice')
@@ -121,7 +125,8 @@ describe('CookieBanner', () => {
 // ─────────────────────────────────────────────────────────────────
 describe('AnnouncementBar', () => {
   it('LAND-001a: renders when ll-announcement-dismissed is absent', async () => {
-    const { AnnouncementBar } = await import('@/components/announcement-bar')
+    const { AnnouncementBar } =
+      await import('@/components/layout/announcement-bar')
     render(<AnnouncementBar />)
     expect(
       await screen.findByText(/under active development/i)
@@ -130,7 +135,8 @@ describe('AnnouncementBar', () => {
 
   it('LAND-001b: does NOT render when ll-announcement-dismissed is set', async () => {
     localStorageMock.setItem('ll-announcement-dismissed', 'dismissed')
-    const { AnnouncementBar } = await import('@/components/announcement-bar')
+    const { AnnouncementBar } =
+      await import('@/components/layout/announcement-bar')
     render(<AnnouncementBar />)
     await new Promise((r) => setTimeout(r, 20))
     expect(
@@ -139,7 +145,8 @@ describe('AnnouncementBar', () => {
   })
 
   it('LAND-001c: dismiss (×) sets localStorage key and removes bar', async () => {
-    const { AnnouncementBar } = await import('@/components/announcement-bar')
+    const { AnnouncementBar } =
+      await import('@/components/layout/announcement-bar')
     const user = userEvent.setup()
     render(<AnnouncementBar />)
     await screen.findByText(/under active development/i)
@@ -151,10 +158,27 @@ describe('AnnouncementBar', () => {
   })
 
   it('LAND-001d: contains a link to /register', async () => {
-    const { AnnouncementBar } = await import('@/components/announcement-bar')
+    const { AnnouncementBar } =
+      await import('@/components/layout/announcement-bar')
     render(<AnnouncementBar />)
     await screen.findByText(/under active development/i)
     const link = screen.getByRole('link', { name: /sign up/i })
     expect(link).toHaveAttribute('href', '/register')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────
+// PublicTop mobile menu
+// ─────────────────────────────────────────────────────────────────
+describe('PublicTop mobile menu', () => {
+  it('renders the mobile menu above the cookie banner stacking layer', async () => {
+    const { PublicTop } = await import('@/components/landing/public-top')
+    const user = userEvent.setup()
+    render(<PublicTop />)
+
+    await user.click(screen.getByRole('button', { name: /open menu/i }))
+
+    const menu = screen.getByRole('dialog', { name: /mobile navigation/i })
+    expect(menu).toHaveStyle({ zIndex: '60' })
   })
 })

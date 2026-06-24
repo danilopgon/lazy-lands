@@ -1,10 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 
-interface NpcRowProps {
-  name: string
-  role: string
-  accent?: boolean
-}
+import type { NpcRowProps, SpecProps } from './types'
 
 function NpcRow({ name, role, accent = false }: NpcRowProps) {
   return (
@@ -18,11 +14,6 @@ function NpcRow({ name, role, accent = false }: NpcRowProps) {
       </Badge>
     </div>
   )
-}
-
-export interface SpecProps {
-  k: string
-  v: string
 }
 
 export function Spec({ k, v }: SpecProps) {

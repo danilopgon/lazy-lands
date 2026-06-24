@@ -19,7 +19,7 @@ Five rules that define the look. When in doubt, return here.
 2. **Hard ink shadows, not soft blur.** Elevation is a solid offset block (`box-shadow: 6px 6px 0 var(--shadow)`), never a gaussian blur. It reads like ink pressed onto paper.
 3. **Mono is the voice of the system.** `JetBrains Mono`, uppercase, letter-spaced, is used for _everything the machine says_: nav, metadata, labels, statuses, AI/edit provenance, breadcrumbs. Human-authored prose is serif or sans, never mono.
 4. **Serif for reading, sans for operating.** `Source Serif 4` for anything you _read_ (titles, world state, session drafts, memories). `Instrument Sans` for UI chrome (buttons, body, form values).
-5. **One accent. Color = meaning.** Rust (`--accent`) is the only brand color. Green/amber/red are _semantic only_ (status), never decoration. Everything else is ink on warm paper.
+5. **One accent. Color = meaning.** Emerald (`--accent`) is the only brand color. Green/amber/red status tokens are _semantic only_, never decoration. Everything else is ink on warm paper.
 
 Texture: a faint two-layer dot grid is baked into the `body` background; an optional noise/vignette overlay layers on top. Paper, not screen.
 
@@ -66,9 +66,9 @@ All colors are CSS custom properties on `:root`, overridden under `html[data-the
 | `--line-strong`              | `#1A1C19`             | The structural “ink rule” (3px borders) |
 | `--dotted`                   | `#B7AE98`             | Dotted row separators, input borders    |
 | `--border`                   | `#1A1C19`             | Hard card border                        |
-| `--accent`                   | `#C84B31`             | **Rust** — the only brand color         |
-| `--accent-deep`              | `#8B3A26`             | Accent text on light, link color        |
-| `--accent-wash`              | `#F3D8CE`             | Accent pill fill                        |
+| `--accent`                   | `#3A7D44`             | **Emerald** — the only brand color      |
+| `--accent-deep`              | `#2B5E33`             | Accent text on light, link color        |
+| `--accent-wash`              | `#C2D8C5`             | Accent pill fill / soft tint            |
 | `--good` / `--good-wash`     | `#3A7D44` / `#DCE9DA` | Status: active / accepted / success     |
 | `--warn` / `--warn-wash`     | `#B07F12` / `#F0E4C4` | Status: paused / needs attention        |
 | `--danger` / `--danger-wash` | `#8A2515` / `#F1D8D1` | Status: dormant / destructive / error   |
@@ -117,12 +117,12 @@ Three families, loaded from Google Fonts. **Load all three or the system breaks*
 | ----------------------------------------- | ------ | -------------- | -------------------------------------------------------- |
 | Page title `.ll-h1`                       | Serif  | 38px / 600     | `letter-spacing: -0.022em`, line-height 1.04             |
 | Hero headline                             | Serif  | 56px / 600     | `letter-spacing: -0.028em`, `text-wrap: balance`         |
-| Section head `.ll-secthead h3`            | Serif  | 19px / 600     | Preceded by a 9px rust square, **or** a mono `/01` index |
+| Section head `.ll-secthead h3`            | Serif  | 19px / 600     | Preceded by a 9px emerald square, **or** a mono `/01` index |
 | Stat value `.ll-stat .v`                  | Serif  | 30px / 600     |                                                          |
 | Body                                      | Sans   | 14.5px / 1.5   |                                                          |
 | Long-form (`.ll-textarea`, draft `.body`) | Serif  | 15px / 1.6     | Reading comfort                                          |
 | Labels / nav / pills                      | Mono   | 9.5–11px / 600 | uppercase, `letter-spacing: 0.07–0.12em`                 |
-| Eyebrow `.ll-kicker`                      | Mono   | 10.5px / 600   | uppercase, rust                                          |
+| Eyebrow `.ll-kicker`                      | Mono   | 10.5px / 600   | uppercase, emerald                                      |
 
 **Section numbering.** Sequential pages use a mono index instead of the square bullet:
 `<div class="ll-secthead numbered"><span class="ll-sectnum">/01</span><h3>…</h3></div>`.
@@ -147,8 +147,8 @@ All prefixed `.ll-`. Full CSS in `app/chronicle.css`. Highlights:
 Hard-bordered, press _into_ their own shadow on click (the letterpress gesture).
 
 - `.primary` — solid ink fill (the main action)
-- `.accent` — solid rust (Scribe / generate / forward actions)
-- `.danger` — rust-red outline, danger-wash on hover
+- `.accent` — solid emerald (Scribe / generate / forward actions)
+- `.danger` — danger-red outline, danger-wash on hover
 - `.quiet` — no shadow, hairline border (tertiary)
 - `.small` — compact
 - Press physics: `:hover` nudges `translate(1.5px,1.5px)` and shrinks shadow; `:active` fully seats it. Disabled when busy.
@@ -163,7 +163,7 @@ Hard-bordered, press _into_ their own shadow on click (the letterpress gesture).
 
 - `.ll-dotrow` — dashed-separated row (title + meta + right-aligned mono date).
 - `.ll-entity` — NPC/faction/arc record (serif name + description + key/value facts).
-- `.ll-side` (+ `.ok/.warn/.crit/.rust`) — left status bar (6px) on a card; encodes arc/faction state by color.
+- `.ll-side` (+ `.ok/.warn/.crit/.accent`) — left status bar (6px) on a card; encodes arc/faction state by color.
 
 ### Labels & provenance
 
@@ -175,12 +175,12 @@ Hard-bordered, press _into_ their own shadow on click (the letterpress gesture).
 ### Forms
 
 - `.ll-field` / `.ll-label` (mono, uppercase) / `.ll-input` / `.ll-textarea` (serif, for prose) / `.ll-select`.
-- Focus = rust border + 3px rust offset shadow. Invalid = danger border + danger shadow + `.ll-error-text` (mono).
+- Focus = emerald border + 3px emerald offset shadow. Invalid = danger border + danger shadow + `.ll-error-text` (mono).
 
 ### Feedback surfaces
 
-- `.ll-notice` — **the Scribe’s inverted bulletin.** Ink-filled block with rust shadow; this is how the system “speaks”. `.error` variant recolors to danger.
-- `.ll-empty` — centered empty state with rust ornament (`❧` / `✦`).
+- `.ll-notice` — **the Scribe’s inverted bulletin.** Ink-filled block with emerald shadow; this is how the system “speaks”. `.error` variant recolors to danger.
+- `.ll-empty` — centered empty state with emerald ornament (`❧` / `✦`).
 - `.ll-loading` — the Scribe _writes_: an animated quill (`.ll-quill`) + mono caption with ellipsis.
 - `.ll-modal` / `.ll-toast` — hard-bordered, shadow-offset; toast “presses” in.
 - `.ll-pdf` — export preview; intentionally stays light paper in **both** themes (it’s a printed page).
@@ -200,7 +200,7 @@ All gated by `data-motion` (§2). Keyframes live at the bottom of `chronicle.css
 | **Accept a memory**  | `.ll-stamp`                     | A green “★ Accepted” stamp drops in rotated, with an irregular noise-mask edge (letterpress) |
 | **Dismiss a memory** | `.ll-strike` + `.ll-discarding` | Red strike-through draws across, then the card slides off-page and collapses                 |
 | Loading              | `.ll-quill`                     | Quill nib scribbles                                                                          |
-| Typewriter           | `.ll-caret`                     | Blinking rust caret for streamed/typed text                                                  |
+| Typewriter           | `.ll-caret`                     | Blinking emerald caret for streamed/typed text                                               |
 
 Principle: **entrance animation is decorative (drop it freely); action feedback is communicative (keep it unless motion is fully off).** That split is exactly what `data-motion="subtle"` encodes.
 
@@ -208,7 +208,7 @@ Principle: **entrance animation is decorative (drop it freely); action feedback 
 
 ## 8. Iconography & ornament
 
-No icon library. The system uses a small set of **typographic glyphs** as ornaments, in rust:
+No icon library. The system uses a small set of **typographic glyphs** as ornaments, in emerald:
 `❧` (Scribe / fleuron), `✦`/`✒` (memory / the Scribe writing), `★` (the accepted stamp), `◆ ◈ ⬡ ↝ ≡` (nav marks), `/01` (section index). Keep it to this vocabulary; don’t introduce a drawn icon set without revisiting the DNA. Avoid emoji.
 
 Imagery, where needed (none required for MVP), should be striped placeholder blocks with a mono caption, never AI-drawn SVG.
@@ -220,7 +220,7 @@ Imagery, where needed (none required for MVP), should be striped placeholder blo
 - `app/chronicle.css` is **framework-agnostic** — it’s plain CSS custom properties + classes. Port the tokens to Tailwind `@theme` / CSS modules / styled-components as you like, but keep the token names and the five DNA rules.
 - The prototype is React 18 + Babel-in-browser purely for fast iteration. **Do not ship that setup** — it’s a fidelity reference, not a starting codebase. Rebuild components in your real stack against these tokens.
 - Theme/motion/texture are attribute/variable driven → trivial to wire to a settings store or `prefers-color-scheme`.
-- The wordmark is type-set, not a logo file: `Lazy ` (ink) + `Lands` (rust), Source Serif 4 600. A standalone identity asset exists at `handoff/Lazy Lands — LinkedIn Card.png`.
+- The wordmark is type-set, not a logo file: `Lazy ` (ink) + `Lands` (emerald), Source Serif 4 600. A standalone identity asset exists at `handoff/Lazy Lands — LinkedIn Card.png`.
 
 ---
 
@@ -234,8 +234,9 @@ The production frontend currently implements the Block 0 slice of Print Chronicl
 
 - `apps/web/app/globals.css` defines the light Print Chronicle tokens and maps the core Tailwind aliases.
 - `apps/web/app/layout.tsx` loads Instrument Sans, Source Serif 4 and JetBrains Mono with `next/font/google`, and sets `<html lang="en" data-theme="light" data-motion="full">`.
-- `apps/web/components/ui/button.tsx`, `card.tsx`, `input.tsx`, `textarea.tsx` and `label.tsx` restyle shadcn-compatible primitives with radius 0, hard borders, rust focus, and ink-shadow affordances.
-- `apps/web/components/landing-page.tsx` is the current representative surface: a product landing entry point, not a detached marketing microsite.
+- `apps/web/components/ui/button.tsx`, `card.tsx`, `input.tsx`, `textarea.tsx` and `label.tsx` restyle shadcn-compatible primitives with radius 0, hard borders, emerald focus, and ink-shadow affordances.
+- `apps/web/components/landing/landing-page.tsx` is the current representative surface: a product landing entry point, not a detached marketing microsite.
+- `apps/web/app/globals.css` also defines the custom `llg` breakpoint (`901px`) so landing/editorial layouts switch to multi-column only above the `900px` collapse point.
 
 The dark theme, full motion gates, Scribe notice/loading/stamp patterns, entity ledgers and generated-session views remain design requirements from the prototype until they are rebuilt in production. Do not delete them from this document just because the Block 0 app has not reached them yet.
 
@@ -270,10 +271,12 @@ Map the CSS custom properties from §3 into Tailwind theme aliases rather than r
   --font-sans: var(--font-instrument-sans);
   --font-serif: var(--font-source-serif);
   --font-mono: var(--font-jetbrains-mono);
+  --breakpoint-llg: 901px;
 }
 ```
 
 Keep the raw CSS variables on `:root` and `html[data-theme="dark"]` so theme switching remains attribute-driven.
+Use `llg:` for landing/editorial layout changes that must collapse at `900px`; the default Tailwind `md:` breakpoint is too early for this design system rule.
 
 ### Font loading
 
@@ -289,8 +292,8 @@ Production pages should set `<html lang="en" data-theme="light" data-motion="ful
 
 Use shadcn/ui as behavior/accessibility primitives, then restyle them to match Print Chronicle:
 
-- **Button:** radius `0`, `2px` border by default, `3px 3px 0 var(--shadow)` hard shadow, rust `accent` variant, and press physics that translate into the shadow on hover/active.
-- **Input/Textarea:** radius `0`, hard border, paper background, rust focus ring/offset shadow, mono labels, serif textarea prose.
+- **Button:** radius `0`, `2px` border by default, `3px 3px 0 var(--shadow)` hard shadow, emerald `accent` variant, and press physics that translate into the shadow on hover/active.
+- **Input/Textarea:** radius `0`, hard border, paper background, emerald focus ring/offset shadow, mono labels, serif textarea prose.
 - **Card:** `2px` border, `6px 6px 0 var(--shadow)`, paper surface; use accent shadow only for Scribe/AI proposal surfaces.
 - **Label:** JetBrains Mono, uppercase, letter-spaced, muted ink.
 
@@ -317,5 +320,5 @@ Always respect `prefers-reduced-motion: reduce`. Entrance animation is decorativ
 
 - Color is meaning, not the only signal. Pair semantic colors with text labels or icons/glyphs.
 - Maintain the contrast guarantees in §3 when introducing new combinations.
-- Keep keyboard focus visible with rust focus rings and sufficient offset.
+- Keep keyboard focus visible with emerald focus rings and sufficient offset.
 - The Scribe persona must never imply automatic canon changes; AI output uses proposal language and keeps review/edit/dismiss affordances until the DM confirms it.

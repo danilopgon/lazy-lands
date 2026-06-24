@@ -167,6 +167,22 @@ The frontend is responsible for:
 - Copy/export interactions.
 - Loading, error and success states.
 
+## Frontend component organization
+
+Use layer-specific folders so ownership is obvious during review:
+
+| Folder | Owns | Examples |
+|---|---|---|
+| `components/ui/` | Reusable primitives and shadcn-compatible building blocks. | `button.tsx`, `card.tsx`, `badge.tsx` |
+| `components/layout/` | Transversal app/public shell pieces that are not UI primitives and are not feature-specific. | `cookie-banner.tsx`, `announcement-bar.tsx` |
+| `components/landing/` | Landing-page composition and landing-specific sections/components. | `landing-page.tsx`, `hero.tsx`, `hero-collage.tsx` |
+| `components/landing/data/` | Static landing feature data, exported through the feature data barrel. | `marquee.ts`, `pillars.ts`, `node-graph.ts` |
+| `components/landing/types/` | Feature-local TypeScript object shapes, exported through the feature types barrel. | `briefing.ts`, `node-graph.ts` |
+
+Frontend TypeScript object shapes should use `type` aliases rather than `interface` in this codebase. Feature-local types live under that feature's `types/` folder; static feature data lives under that feature's `data/` folder. Components with visual or domain identity should be split into their own component file instead of being nested inside another component.
+
+Theme tokens in `apps/web/app/globals.css` must stay reflected in `DESIGN.md`, which is the durable source of truth for Print Chronicle tokens and breakpoints.
+
 ## Backend responsibility
 
 The backend is responsible for:

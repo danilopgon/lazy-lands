@@ -4,16 +4,16 @@
 
 - Lazy Lands is a Campaign Companion for Dungeon Masters. The core positioning is continuity: generic AI can generate isolated one-shots, but Lazy Lands remembers accepted campaign context and keeps the DM in control.
 - Product constraints from `PRODUCT.md` and `docs/`: AI output is always a proposal, the DM decides canon, memory is explicit/reviewable, private DM notes never feed the Scribe or exports, and RAG/embeddings/billing/collaboration remain out of MVP scope.
-- The durable design source of truth is `DESIGN.md`: Print Chronicle visual language, radius 0, hard ink shadows, rust as the only brand accent, Source Serif 4/Instrument Sans/JetBrains Mono, visible focus, mobile collapse around 900px, and reduced-motion support.
+- The durable design source of truth is `DESIGN.md`: Print Chronicle visual language, radius 0, hard ink shadows, emerald as the only brand accent, Source Serif 4/Instrument Sans/JetBrains Mono, visible focus, mobile collapse around 900px, and reduced-motion support.
 - Handoff source of truth for the landing page is `handoff/app/views-landing.jsx` plus `handoff/app/views-public.jsx` for the public top navigation. It defines a strong landing narrative: public nav, hero, relationship graph collage, marquee, differentiation/pillars, briefing preview, how-it-works, philosophy quote, final CTA, and footer. It is reference-only; production must rebuild in Next.js/Tailwind/shadcn rather than copy prototype HTML/CSS.
-- Production frontend exists in `apps/web` despite older OpenSpec config saying pre-build/no app code. Current `/` renders `apps/web/components/landing-page.tsx`, a Block 0 scaffold landing page with header links to `/login` and `/register`, basic hero, and product-principles card. `/login` and `/register` are stable placeholders, not real auth flows.
+- Production frontend exists in `apps/web` despite older OpenSpec config saying pre-build/no app code. Current `/` renders `apps/web/components/landing/landing-page.tsx`, a production landing page with header links to `/login` and `/register`, editorial sections, and product-principles content. `/login` and `/register` are stable placeholders, not real auth flows.
 - Supabase auth helpers already exist (`apps/web/lib/supabase/client.ts`, `server.ts`, `middleware.ts`) and middleware refreshes auth cookies when public Supabase env vars are present. No production registration form behavior exists yet; CTA routing can safely target `/register` as a placeholder route.
 - Privacy/cookies requirements are not documented as full legal pages. Existing docs only cover private campaign data, private notes, RLS ownership, and Supabase auth cookies. The Block 3 checklist introduces Privacy/Cookies as a new public-surface requirement that needs explicit scope in proposal/spec.
 - Current tests assert old landing copy: “Remember what happened. Prepare what comes next.” and link names “Login” / “Register”. They will need TDD updates before implementation.
 
 ### Affected Areas
 
-- `apps/web/components/landing-page.tsx` — main implementation surface for the landing content, nav, CTA, privacy/cookies footer, and responsive layout.
+- `apps/web/components/landing/landing-page.tsx` — main implementation surface for the landing content, nav, CTA, privacy/cookies footer, and responsive layout.
 - `apps/web/app/page.tsx` — entry route remains thin, likely unchanged unless metadata/structure moves.
 - `apps/web/app/layout.tsx` — page metadata may need a sharper landing title/description; font/theme setup already matches `DESIGN.md`.
 - `apps/web/app/globals.css` — may need additional Print Chronicle utility tokens/patterns for responsive sections, legal footer, skip/focus treatment, or motion gates.

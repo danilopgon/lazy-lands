@@ -23,13 +23,19 @@ describe('/cookies page (LEGAL-001)', () => {
     ).toBeInTheDocument()
   })
 
-  it('LEGAL-001c: documents all four storage keys', async () => {
+  it('LEGAL-001c: documents the actual Supabase auth storage key pattern and local keys', async () => {
     const { default: CookiesPage } = await import('@/app/cookies/page')
     render(<CookiesPage />)
-    expect(screen.getByText(/sb-access-token/i)).toBeInTheDocument()
-    expect(screen.getByText(/sb-refresh-token/i)).toBeInTheDocument()
+    expect(screen.getByText(/sb-<project-ref>-auth-token/i)).toBeInTheDocument()
     expect(screen.getByText(/ll-cookie-consent/i)).toBeInTheDocument()
     expect(screen.getByText(/ll-announcement-dismissed/i)).toBeInTheDocument()
+  })
+
+  it('does not document legacy split Supabase token keys that this app does not configure', async () => {
+    const { default: CookiesPage } = await import('@/app/cookies/page')
+    render(<CookiesPage />)
+    expect(screen.queryByText(/sb-access-token/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/sb-refresh-token/i)).not.toBeInTheDocument()
   })
 
   it('LEGAL-001d: contains back-link to landing (/)', async () => {

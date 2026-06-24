@@ -5,19 +5,10 @@ import Link from 'next/link'
 
 import { getConsent, setConsent } from '@/lib/consent'
 
-/**
- * Cookie consent banner.
- * - SSR-safe: initial state is hidden (useState(false)); useEffect reads localStorage.
- * - Fixed bottom positioning to prevent CLS.
- * - role="region" aria-label="Cookie notice" for accessibility.
- */
 export function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    // Only read localStorage on the client (never during SSR).
-    // startTransition defers the state update to avoid the
-    // "setState synchronously within an effect" lint rule.
     startTransition(() => {
       if (getConsent() === null) {
         setVisible(true)

@@ -2,18 +2,8 @@
 
 import { useId } from 'react'
 
-interface ComingSoonButtonProps {
-  children: React.ReactNode
-  variant?: 'accent' | 'secondary' | 'ink'
-}
+import type { ComingSoonButtonProps } from './types'
 
-/**
- * A disabled CTA that shows a "Coming soon" tooltip on hover/focus.
- * Uses aria-disabled="true" + tabIndex={0} instead of the native `disabled`
- * attribute because the existing Button has `disabled:pointer-events-none`
- * which would kill hover events and make the tooltip invisible.
- * No @radix-ui/react-tooltip dependency — CSS-only via Tailwind group utilities.
- */
 export function ComingSoonButton({
   children,
   variant = 'secondary',
@@ -21,7 +11,7 @@ export function ComingSoonButton({
   const id = useId()
 
   const variantClasses = {
-    accent: 'bg-[var(--accent)] text-[#fbf4ec] border-[var(--border)]',
+    accent: 'border-[var(--border)] bg-[var(--accent)] !text-[var(--paper)]',
     secondary: 'bg-[var(--paper)] text-[var(--ink)] border-[var(--border)]',
     ink: 'bg-[var(--ink)] text-[var(--bg)] border-[var(--border)]',
   }

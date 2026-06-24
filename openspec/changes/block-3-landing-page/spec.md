@@ -250,13 +250,13 @@ Define the observable behavior of the `/cookies` and `/privacy` pages and the `c
 
 #### LEGAL-001: /cookies page
 
-The `/cookies` route MUST render an `<h1>` with "Cookie Policy". The page MUST export metadata with `title` "Cookies — Lazy Lands" and `robots: { index: false, follow: false }`. It MUST document all storage keys in use: `sb-access-token`, `sb-refresh-token`, `ll-cookie-consent`, and `ll-announcement-dismissed`. It MUST contain a link back to the landing page. It MUST contain a mention of LSSI-CE technical exemption (art. 22.2 or equivalent).
+The `/cookies` route MUST render an `<h1>` with "Cookie Policy". The page MUST export metadata with `title` "Cookies — Lazy Lands" and `robots: { index: false, follow: false }`. It MUST document the actual storage keys in use: the default project-scoped Supabase auth key pattern `sb-<project-ref>-auth-token`, `ll-cookie-consent`, and `ll-announcement-dismissed`. It MUST NOT document split `sb-access-token` / `sb-refresh-token` keys unless the app explicitly configures Supabase to use them. It MUST contain a link back to the landing page. It MUST contain a mention of LSSI-CE technical exemption (art. 22.2 or equivalent).
 
 | Test ID | Pass/Fail condition |
 |---------|---------------------|
 | LEGAL-001a | H1 "Cookie Policy" is present |
 | LEGAL-001b | Page is `noindex` |
-| LEGAL-001c | All four storage keys are documented |
+| LEGAL-001c | The actual Supabase auth key pattern and local storage keys are documented |
 | LEGAL-001d | Back-link to landing is present |
 | LEGAL-001e | LSSI-CE technical exemption is mentioned |
 

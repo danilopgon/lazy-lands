@@ -32,14 +32,14 @@ DMs who run long campaigns lose narrative context between sessions and arrive at
 
 ## Approach
 
-Focused frontend-only production refresh. Port the prototype's editorial sections to real React components against the Print Chronicle tokens in `DESIGN.md` (radius-0, hard ink shadows, rust accent, three font families). No prototype HTML/CSS copied. CookieBanner is `position: fixed` (SSR-safe, no layout shift) reading localStorage on mount. Legal pages are static server components with `noindex` metadata. Strict TDD: each surface gets failing tests before implementation.
+Focused frontend-only production refresh. Port the prototype's editorial sections to real React components against the Print Chronicle tokens in `DESIGN.md` (radius-0, hard ink shadows, emerald accent, three font families). No prototype HTML/CSS copied. CookieBanner is `position: fixed` (SSR-safe, no layout shift) reading localStorage on mount. Legal pages are static server components with `noindex` metadata. Strict TDD: each surface gets failing tests before implementation.
 
 ## Affected Areas
 
 | Area | Impact | Description |
 |------|--------|-------------|
-| `apps/web/components/landing-page.tsx` | Modified | Full rebuild, 10 sections |
-| `apps/web/components/cookie-banner.tsx` | New | Informational banner |
+| `apps/web/components/landing/landing-page.tsx` | Modified | Full rebuild, landing composition |
+| `apps/web/components/layout/cookie-banner.tsx` | New | Informational banner |
 | `apps/web/lib/consent.ts` | New | localStorage consent helper |
 | `apps/web/app/cookies/page.tsx` | New | Cookie policy (noindex) |
 | `apps/web/app/privacy/page.tsx` | New | Privacy policy (noindex) |
@@ -59,7 +59,7 @@ Focused frontend-only production refresh. Port the prototype's editorial section
 - [ ] Single-column layout at ≤900px; hero collage collapses and never hides core copy.
 - [ ] Marquee animation pauses/removes under `prefers-reduced-motion: reduce`.
 - [ ] `/cookies` and `/privacy` carry `noindex` metadata.
-- [ ] WCAG 2.2 AA: visible rust focus rings, color paired with text, accessible names on nav/CTAs.
+- [ ] WCAG 2.2 AA: visible emerald focus rings, color paired with text, accessible names on nav/CTAs.
 
 ## Non-Functional Requirements
 

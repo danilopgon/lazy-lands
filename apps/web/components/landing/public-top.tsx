@@ -4,12 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
-
-const navLinks = [
-  { href: '#product', label: 'Product' },
-  { href: '#how', label: 'How it works' },
-  { href: '#pricing', label: 'Pricing' },
-]
+import { navLinks } from './data'
 
 export function PublicTop() {
   const [open, setOpen] = useState(false)
@@ -75,7 +70,13 @@ export function PublicTop() {
 
       {/* Mobile overlay */}
       {open && (
-        <div className="llg:hidden fixed inset-0 z-50 flex flex-col bg-[var(--paper)]">
+        <div
+          role="dialog"
+          aria-label="Mobile navigation"
+          aria-modal="true"
+          className="llg:hidden fixed inset-0 flex flex-col bg-[var(--paper)]"
+          style={{ zIndex: 60 }}
+        >
           <div className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4">
             <Link
               href="/"

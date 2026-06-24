@@ -31,7 +31,9 @@ export default function CookiesPage() {
         <p>
           Lazy Lands uses only technically necessary cookies and local storage
           keys. We do not use advertising cookies, tracking pixels, or
-          third-party analytics scripts.
+          third-party analytics scripts. Supabase authentication uses its
+          default project-scoped storage key because this app does not configure
+          a custom Supabase auth storage name.
         </p>
 
         <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
@@ -52,21 +54,18 @@ export default function CookiesPage() {
         <div className="space-y-4 border-l-2 border-[var(--line)] pl-4">
           <div>
             <p className="font-mono text-sm font-semibold text-[var(--ink)]">
-              sb-access-token
+              sb-&lt;project-ref&gt;-auth-token
             </p>
             <p className="mt-1 text-sm">
-              Supabase authentication access token. Required for authenticated
-              API requests. Session duration only; cleared on logout.
-            </p>
-          </div>
-
-          <div>
-            <p className="font-mono text-sm font-semibold text-[var(--ink)]">
-              sb-refresh-token
-            </p>
-            <p className="mt-1 text-sm">
-              Supabase authentication refresh token. Used to renew the access
-              token without requiring re-login. Persistent; cleared on logout.
+              Supabase authentication session storage used by the default{' '}
+              <code className="font-mono text-xs">@supabase/ssr</code> clients
+              in this app. The project reference comes from the configured
+              Supabase URL, for example{' '}
+              <code className="font-mono text-xs">
+                sb-abcdefghijklmnopqrst-auth-token
+              </code>
+              . It contains the Supabase session payload required for login
+              continuity and authenticated requests; it is cleared on logout.
             </p>
           </div>
 

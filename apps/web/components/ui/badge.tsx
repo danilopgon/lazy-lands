@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+type BadgeProps = React.HTMLAttributes<HTMLSpanElement> & {
   variant?: 'accent' | 'muted'
 }
 

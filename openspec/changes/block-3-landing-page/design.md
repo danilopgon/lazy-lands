@@ -9,14 +9,16 @@ Frontend-only refresh. Rebuild the prototype's editorial sections as real React 
 ## Architecture Decisions
 
 ### #1 Component tree & file structure
-**Choice**: Sections co-located as named exports inside `components/landing-page.tsx` (RSC). Client pieces extracted to their own files. SVG/mock subcomponents (`HeroCollage`, `NodeGraph`, `BriefingMock`, `NpcRow`, `Spec`) co-located in `landing-page.tsx` (RSC, not reused elsewhere).
+**Choice**: Landing composition lives under `components/landing/landing-page.tsx` (RSC). Landing-specific sections/components stay under `components/landing/`; transversal shell pieces live under `components/layout/`; static landing data lives under `components/landing/data/`; feature-local object shapes use `type` aliases under `components/landing/types/`.
 
 | File | Action | Boundary |
 |------|--------|----------|
-| `components/landing-page.tsx` | Modify (rebuild) | RSC — all 9 sections + collage/mock subcomponents |
-| `components/announcement-bar.tsx` | New | client |
-| `components/cookie-banner.tsx` | New | client |
-| `components/coming-soon-button.tsx` | New | client — reusable disabled CTA (used in Hero + final CTA) |
+| `components/landing/landing-page.tsx` | Modify (rebuild) | RSC — landing composition |
+| `components/layout/announcement-bar.tsx` | New | client |
+| `components/layout/cookie-banner.tsx` | New | client |
+| `components/landing/coming-soon-button.tsx` | New | client — landing disabled CTA (used in Hero + final CTA) |
+| `components/landing/data/` | New | feature-local static landing data |
+| `components/landing/types/` | New | feature-local type aliases |
 | `lib/consent.ts` | New | shared localStorage helper |
 | `app/cookies/page.tsx` | New | RSC + `metadata` |
 | `app/privacy/page.tsx` | New | RSC + `metadata` |
@@ -26,7 +28,7 @@ Frontend-only refresh. Rebuild the prototype's editorial sections as real React 
 | `tests/cookie-banner.test.tsx` | New | localStorage + render |
 | `tests/e2e/smoke.spec.ts` | Modify | new copy |
 
-**Rationale**: One reusable `ComingSoonButton` keeps the a11y pattern in one place (it appears twice). Overlays mount in `page.tsx` not root `layout.tsx`, so `/cookies` and `/privacy` (and future app routes) do not inherit the marketing banner.
+**Rationale**: One landing-local `ComingSoonButton` keeps the a11y pattern in one place (it appears twice) without over-generalizing it into a primitive. Overlays mount in `page.tsx` not root `layout.tsx`, so `/cookies` and `/privacy` (and future app routes) do not inherit the marketing banner.
 
 ### #2 consent.ts
 **Choice**: Single file, both concerns, no custom event (no reactive subscribers — each overlay hides itself). `typeof window === 'undefined'` guard returns the SSR-safe default.

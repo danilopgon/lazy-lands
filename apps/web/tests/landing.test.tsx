@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 
-import { LandingPage } from '@/components/landing-page'
+import { LandingPage } from '@/components/landing/landing-page'
 
 // TDD RED phase (task 3.1) — rewritten with new copy before implementation.
 // Old assertions (Lazy Lands h1, "Remember what happened") removed.

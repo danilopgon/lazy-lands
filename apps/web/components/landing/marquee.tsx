@@ -1,14 +1,7 @@
-const items = [
-  'Persistent campaign memory',
-  'NPCs · Factions · Open arcs',
-  'Session briefings with full context',
-  'The Scribe proposes, you decide',
-  'Export to PDF',
-  'No lock-in',
-]
+import { marqueeItems } from './data'
 
 export function LandMarquee() {
-  const all = [...items, ...items]
+  const all = [...marqueeItems, ...marqueeItems]
   return (
     <div className="overflow-hidden border-y-2 border-[var(--border)] bg-[var(--ink)] py-[13px]">
       <div
