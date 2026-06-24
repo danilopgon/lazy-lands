@@ -12,7 +12,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen">
       <PublicTop />
-      <main>
+      <main id="main-content">
         <LandHero />
         <LandMarquee />
         <LandPillars />

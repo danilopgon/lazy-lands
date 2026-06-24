@@ -7,7 +7,13 @@ p2_count: 2
 p3_count: 2
 timestamp: 2026-06-24T16-05-33Z
 slug: apps-web-components-landing-landing-page-tsx
+status: pre-fix-snapshot
+fixed_in: feat/impeccable-critique-landing
 ---
+
+> **Historical snapshot** — captured before the fix pass.
+> All P1/P2/P3 findings below were resolved in `feat/impeccable-critique-landing`.
+> Do not treat this as current-state guidance.
 
 ### Design Health Score
 

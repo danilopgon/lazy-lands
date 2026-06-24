@@ -103,17 +103,6 @@ a {
   }
 }
 
-@keyframes ll-rule {
-  from {
-    transform: scaleX(0);
-    transform-origin: left;
-  }
-  to {
-    transform: scaleX(1);
-    transform-origin: left;
-  }
-}
-
 /* Scroll-reveal base state */
 [data-motion="full"] .ll-rise {
   opacity: 0;

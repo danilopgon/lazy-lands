@@ -10,6 +10,7 @@ export function LandMarquee() {
   return (
     <div
       className="overflow-hidden border-y-2 border-[var(--border)] bg-[var(--ink)] py-[13px]"
+      tabIndex={0}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
