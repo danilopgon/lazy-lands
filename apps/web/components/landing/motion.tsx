@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react'
 
-interface ViewEnterProps {
+type ViewEnterProps = {
   children: ReactNode
   className?: string
   delay?: number

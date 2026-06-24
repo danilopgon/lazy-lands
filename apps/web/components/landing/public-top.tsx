@@ -78,8 +78,7 @@ export function PublicTop() {
           role="dialog"
           aria-label="Mobile navigation"
           aria-modal="true"
-          className="llg:hidden fixed inset-0 flex flex-col bg-[var(--paper)]"
-          style={{ zIndex: 60 }}
+          className="llg:hidden fixed inset-0 z-mobile-menu flex flex-col bg-[var(--paper)]"
         >
           <div className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4">
             <Link

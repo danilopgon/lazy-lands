@@ -5,6 +5,11 @@ const eslintConfig = [
   ...nextVitals,
   ...nextTypeScript,
   {
+    rules: {
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+    },
+  },
+  {
     ignores: [
       '.next/**',
       'out/**',

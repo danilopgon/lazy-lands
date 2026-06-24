@@ -28,7 +28,7 @@ export function CookieBanner() {
       role="region"
       aria-label="Cookie notice"
       className={[
-        'fixed bottom-0 left-0 right-0 z-50',
+        'fixed bottom-0 left-0 right-0 z-cookie-banner',
         'border-t-2 border-[var(--border)]',
         'bg-[var(--paper)] px-6 py-4',
         'shadow-[0_-4px_0_var(--shadow)]',
