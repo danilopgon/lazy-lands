@@ -38,11 +38,21 @@
   --font-sans: var(--font-instrument-sans);
   --font-serif: var(--font-source-serif);
   --font-mono: var(--font-jetbrains-mono);
-  --z-cookie-banner: 50;
-  --z-mobile-menu: 60;
-  --z-skip-link: 70;
   /* Single-column at ≤900px — multi-column begins above 900px. */
   --breakpoint-llg: 901px;
+}
+
+/* ─── Z-index scale ──────────────────────────────────────────────
+   Tailwind v4 has no z-index theme namespace, so a `--z-*` theme var
+   generates no utility. Named layers must be real custom utilities. */
+@utility z-cookie-banner {
+  z-index: 50;
+}
+@utility z-mobile-menu {
+  z-index: 60;
+}
+@utility z-skip-link {
+  z-index: 70;
 }
 
 * {
