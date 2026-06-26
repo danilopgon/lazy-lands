@@ -40,6 +40,9 @@ test-results
 # Turbo
 .turbo
 
+# SDD tooling (skill registry + cache, local/personal)
+.atl
+
 # OS
 .DS_Store
 Thumbs.db
