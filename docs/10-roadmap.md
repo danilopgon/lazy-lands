@@ -14,7 +14,7 @@ Out of scope for the TFM: `WorldFact`, `Relationship`, `MemorySuggestions`, RAG,
 |---|---|---|
 | 0 | Infra and repo | done |
 | 1 | Design prototype | done |
-| 3 | Landing page | in progress |
+| 3 | Landing page | done |
 | 4 | Auth | pending |
 | 5 | Campaign creation and AI onboarding | pending |
 | 6 | Campaign view | pending |
@@ -69,16 +69,16 @@ Quality criteria met:
 
 ## Block 3 — Landing page
 
-Status: **in progress**
+Status: **done**
 
 - [x] Hero: main headline and subtitle with the value proposition.
 - [x] Minimal navigation: logo, login button, register button.
 - [x] Primary CTA: "Start free" button pointing to registration.
-- [ ] "How it works" section — 3 to 4 visual steps of the flow.
-- [ ] Differentiator section — why this is not another one-shot generator.
-- [ ] Minimal footer.
-- [ ] Privacy and cookies.
-- [ ] Basic responsive review (mobile-first).
+- [x] "How it works" section — 3 to 4 visual steps of the flow.
+- [x] Differentiator section — why this is not another one-shot generator.
+- [x] Minimal footer.
+- [x] Privacy and cookies.
+- [x] Basic responsive review (mobile-first).
 
 ---
 
