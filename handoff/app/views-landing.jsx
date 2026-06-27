@@ -50,16 +50,16 @@ function LandHero() {
           </h1>
           <p style={{ fontSize: 18.5, lineHeight: 1.5, color: "var(--ink-2)", maxWidth: 500, marginTop: 26, marginBottom: 32, fontFamily: '"Source Serif 4", serif' }}>
             The companion that remembers every NPC, every faction and every consequence,
-            so you prep the next session in minutes, and the world remembers what your players did.
+            so your next session starts from accepted memory, and the world remembers what your players did.
           </p>
           <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
             <button className="ll-btn accent" style={{ fontSize: 14.5, padding: "11px 22px" }} onClick={() => go("/register")}>Start your chronicle →</button>
             <button className="ll-btn" style={{ fontSize: 14.5, padding: "11px 22px" }} onClick={() => go("/campaigns/phandalin")}>✦ See it on a real campaign</button>
           </div>
           <div className="mono" style={{ display: "flex", gap: 22, marginTop: 30, fontSize: 11, letterSpacing: "0.04em", color: "var(--mute)", flexWrap: "wrap" }}>
-            <span>✓ No card</span>
-            <span>✓ The Scribe never decides canon</span>
-            <span>✓ Export anytime</span>
+            <span>Open beta</span>
+            <span>The Scribe never decides canon</span>
+            <span>Free while in early access</span>
           </div>
         </div>
         <HeroCollage />
@@ -152,7 +152,7 @@ function NodeGraph() {
 
 /* ── Marquee ── */
 function LandMarquee() {
-  const items = ["Persistent campaign memory", "NPCs · Factions · Open arcs", "Session briefings with full context", "The Scribe proposes, you decide", "Export to PDF", "No lock-in"];
+  const items = ["Session VII accepted: Halia favors two party members", "Open arc: anti-dragon plans need a stable core", "Faction posture changed: Black Bear Guild is watching", "Scribe proposal waiting for DM review", "Private notes stay out of exports", "Next briefing uses accepted memories only"];
   return (
     <div style={{ borderTop: "2px solid var(--border)", borderBottom: "2px solid var(--border)", background: "var(--ink)", color: "var(--bg)", overflow: "hidden", padding: "13px 0" }}>
       <div style={{ display: "flex", gap: 36, whiteSpace: "nowrap", animation: "ll-marquee 38s linear infinite", fontFamily: '"Source Serif 4", serif', fontSize: 26, willChange: "transform" }}>
@@ -216,10 +216,10 @@ function LandBriefing() {
             Not a data dump. An ordered draft you can read five minutes before the session. Always a <em>draft</em>: you edit it, you decide what happens.
           </p>
           <div className="llx-specs" style={{ marginTop: 26, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <Spec k="3 min" v="average prep time" />
-            <Spec k="7 sessions" v="of context, never forgotten" />
-            <Spec k="canon" v="decided by you, not the Scribe" />
-            <Spec k="editable" v="it's a draft, not truth" />
+            <Spec k="Accepted" v="memories feed the briefing" />
+            <Spec k="Dismissed" v="suggestions stay out" />
+            <Spec k="Private" v="notes never export" />
+            <Spec k="Editable" v="draft first, canon later" />
           </div>
         </div>
         <BriefingMock />
@@ -327,7 +327,7 @@ function LandPhilosophy() {
 /* ── Final CTA ── */
 function LandCTA() {
   return (
-    <section id="pricing" style={{ maxWidth: 1180, margin: "0 auto", padding: "20px 40px 92px" }}>
+    <section id="early-access" style={{ maxWidth: 1180, margin: "0 auto", padding: "20px 40px 92px" }}>
       <div className="llx-cta" style={{ border: "2px solid var(--border)", background: "var(--accent)", color: "#FBF4EC", padding: "60px 48px", boxShadow: "10px 10px 0 var(--shadow)", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -40, right: -40, opacity: 0.14 }}>
           <svg width="300" height="300" viewBox="0 0 100 100">
@@ -341,7 +341,7 @@ function LandCTA() {
           <div className="ll-kicker" style={{ color: "#FBF4EC", marginBottom: 12 }}>/ start now</div>
           <h2 className="serif" style={{ fontSize: 72, margin: 0, lineHeight: 0.95, letterSpacing: "-0.03em", maxWidth: 820 }}>Start your first chronicle.</h2>
           <p style={{ fontSize: 18, marginTop: 18, maxWidth: 600, lineHeight: 1.5, fontFamily: '"Source Serif 4", serif' }}>
-            Free while in early access. Bring one campaign or five. No card, no session limit, no excuses.
+            Free while in early access. Start with one campaign and keep every accepted memory reviewable from the first session.
           </p>
           <div style={{ marginTop: 30, display: "flex", gap: 12, flexWrap: "wrap" }}>
             <button className="ll-btn" style={{ background: "var(--ink)", color: "#FBF4EC", borderColor: "var(--ink)", fontSize: 14.5, padding: "11px 22px", boxShadow: "4px 4px 0 rgba(0,0,0,0.3)" }} onClick={() => go("/register")}>Create account →</button>
@@ -364,7 +364,7 @@ function LandFooter() {
         <div className="mono" style={{ display: "flex", gap: 18, fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--ink-2)" }}>
           <a href="#product" style={{ textDecoration: "none" }}>Product</a>
           <a href="#how" style={{ textDecoration: "none" }}>How it works</a>
-          <a href="#pricing" style={{ textDecoration: "none" }}>Pricing</a>
+          <a href="#early-access" style={{ textDecoration: "none" }}>Early access</a>
         </div>
       </div>
     </footer>

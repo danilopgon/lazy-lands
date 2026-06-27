@@ -3,13 +3,10 @@ import { ViewEnter } from './motion'
 
 export function LandBriefing() {
   return (
-    <section className="mx-auto w-full max-w-[1180px] px-5 py-[72px] llg:px-10">
+    <section className="mx-auto w-full max-w-[1180px] px-5 pb-[88px] pt-[56px] llg:px-10">
       <div className="grid grid-cols-1 items-center gap-[56px] llg:grid-cols-2">
-        {/* Left: copy + stats */}
-        <ViewEnter>
-          <div className="mb-[14px] font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--accent)]">
-            / the output
-          </div>
+        {/* Copy: first on mobile, second on desktop */}
+        <ViewEnter className="llg:order-2">
           <h2
             className="font-serif text-[var(--ink)]"
             style={{
@@ -36,15 +33,17 @@ export function LandBriefing() {
           </p>
 
           <div className="mt-[26px] grid grid-cols-2 gap-4">
-            <Spec k="3 min" v="average prep time" />
-            <Spec k="7 sessions" v="of context, never forgotten" />
-            <Spec k="Canon" v="decided by you, not the Scribe" />
-            <Spec k="Editable" v="it's a draft, not truth" />
+            <Spec k="Accepted" v="memories feed the briefing" />
+            <Spec k="Dismissed" v="suggestions stay out" />
+            <Spec k="Private" v="notes never export" />
+            <Spec k="Editable" v="draft first, canon later" />
           </div>
         </ViewEnter>
 
-        {/* Right: BriefingMock */}
-        <BriefingMock />
+        {/* Mock card: second on mobile, first on desktop */}
+        <div className="llg:order-1">
+          <BriefingMock />
+        </div>
       </div>
     </section>
   )

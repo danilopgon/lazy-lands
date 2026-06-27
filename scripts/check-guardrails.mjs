@@ -68,11 +68,11 @@ async function checkCssPlanningReferences() {
 
     for (const pattern of forbidden) {
       for (const match of content.matchAll(new RegExp(pattern, 'gi'))) {
-      violations.push({
-        file,
-        line: lineNumber(content, match.index),
-        message: `Remove internal planning reference: ${match[0]}`,
-      })
+        violations.push({
+          file,
+          line: lineNumber(content, match.index),
+          message: `Remove internal planning reference: ${match[0]}`,
+        })
       }
     }
   }

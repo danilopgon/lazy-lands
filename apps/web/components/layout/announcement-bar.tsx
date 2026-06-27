@@ -3,6 +3,7 @@
 import { startTransition, useEffect, useState } from 'react'
 import Link from 'next/link'
 
+import { Button } from '@/components/ui/button'
 import {
   getAnnouncementDismissed,
   setAnnouncementDismissed,
@@ -40,13 +41,15 @@ export function AnnouncementBar() {
           </Link>{' '}
           and you&apos;ll be the first to know.
         </p>
-        <button
+        <Button
           onClick={handleDismiss}
           aria-label="Dismiss announcement"
-          className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center font-sans text-lg text-[var(--bg)] transition-colors duration-100 hover:text-[var(--accent-wash)]"
+          variant="ghost"
+          size="sm"
+          className="h-10 w-10 flex-shrink-0 border-[var(--bg)] text-[var(--bg)] hover:bg-transparent hover:text-[var(--accent-wash)]"
         >
           ×
-        </button>
+        </Button>
       </div>
     </div>
   )

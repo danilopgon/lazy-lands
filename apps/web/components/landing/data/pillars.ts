@@ -1,4 +1,4 @@
-import type { Pillar } from '../types'
+import type { ContinuityStat, MemoryLoopItem, Pillar } from '../types'
 
 export const pillars: Pillar[] = [
   {
@@ -37,4 +37,28 @@ export const pillars: Pillar[] = [
     ],
     accent: false,
   },
+]
+
+export const memoryLoop: MemoryLoopItem[] = [
+  {
+    label: 'Log',
+    title: 'Session VII: the warehouse fire',
+    body: 'The DM records what happened at the table, including consequences and private notes.',
+  },
+  {
+    label: 'Review',
+    title: 'The Scribe proposes memories',
+    body: 'Each suggestion explains why it matters and keeps Accept, Edit and Dismiss visible.',
+  },
+  {
+    label: 'Prepare',
+    title: 'Only accepted memory returns',
+    body: 'The next briefing uses confirmed context, not dismissed suggestions or private notes.',
+  },
+]
+
+export const continuityStats: ContinuityStat[] = [
+  { value: '5', label: 'NPCs in play' },
+  { value: '4', label: 'Faction threads' },
+  { value: '3', label: 'Open arcs' },
 ]

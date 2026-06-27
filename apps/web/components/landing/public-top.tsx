@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,63 @@ import { navLinks } from './data'
 
 export function PublicTop() {
   const [open, setOpen] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    const previous =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+    const menuButton = menuButtonRef.current
+
+    closeButtonRef.current?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        return
+      }
+
+      if (event.key !== 'Tab') {
+        return
+      }
+
+      const focusable = overlayRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+
+      if (!focusable?.length) {
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      }
+
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      if (previous && document.contains(previous)) {
+        previous.focus()
+      } else {
+        menuButton?.focus()
+      }
+    }
+  }, [open])
 
   return (
     <>
@@ -53,6 +110,7 @@ export function PublicTop() {
           </Button>
 
           <button
+            ref={menuButtonRef}
             type="button"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
@@ -75,6 +133,7 @@ export function PublicTop() {
       {/* Mobile overlay */}
       {open && (
         <div
+          ref={overlayRef}
           role="dialog"
           aria-label="Mobile navigation"
           aria-modal="true"
@@ -89,6 +148,7 @@ export function PublicTop() {
               Lazy <span className="text-[var(--accent)]">Lands</span>
             </Link>
             <button
+              ref={closeButtonRef}
               type="button"
               aria-label="Close menu"
               onClick={() => setOpen(false)}

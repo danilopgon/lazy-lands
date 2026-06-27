@@ -19,11 +19,13 @@ export function ViewEnter({
     const el = ref.current
     if (!el) return
 
+    let timeout: ReturnType<typeof setTimeout> | undefined
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           if (delay) {
-            setTimeout(() => el.classList.add('in-view'), delay)
+            timeout = setTimeout(() => el.classList.add('in-view'), delay)
           } else {
             el.classList.add('in-view')
           }
@@ -34,7 +36,10 @@ export function ViewEnter({
     )
 
     observer.observe(el)
-    return () => observer.disconnect()
+    return () => {
+      if (timeout) clearTimeout(timeout)
+      observer.disconnect()
+    }
   }, [delay])
 
   return (

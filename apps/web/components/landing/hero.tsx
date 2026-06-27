@@ -48,8 +48,8 @@ export function LandHero() {
             }}
           >
             The companion that remembers every NPC, every faction and every
-            consequence, so you prep the next session in minutes, and the world
-            remembers what your players did.
+            consequence, so your next session starts from accepted memory, and
+            the world remembers what your players did.
           </p>
 
           <div className="ll-enter-4 flex flex-wrap items-center gap-3">
@@ -64,9 +64,9 @@ export function LandHero() {
           </div>
 
           <div className="ll-enter-5 mt-[30px] flex flex-wrap gap-[22px] font-mono text-[11px] uppercase tracking-[0.04em] text-[var(--mute)]">
-            <span>✓ No card</span>
-            <span>✓ AI-assisted, DM-controlled</span>
-            <span>✓ Export anytime</span>
+            <span>Open beta</span>
+            <span>The Scribe proposes, you decide</span>
+            <span>Free while in early access</span>
           </div>
         </div>
 

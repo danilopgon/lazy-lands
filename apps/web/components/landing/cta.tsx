@@ -7,64 +7,35 @@ import { ViewEnter } from './motion'
 export function LandCTA() {
   return (
     <section
-      id="pricing"
+      id="early-access"
       className="mx-auto w-full max-w-[1180px] px-5 pb-[92px] pt-[20px] llg:px-10"
     >
       <div
         className="relative overflow-hidden border-2 border-[var(--border)]"
         style={{
           background: 'var(--accent)',
-          color: '#FBF4EC',
+          color: 'var(--bg-contrast)',
           padding: '60px 48px',
           boxShadow: '10px 10px 0 var(--shadow)',
         }}
       >
-        {/* Decorative concentric circles */}
         <div
           aria-hidden="true"
-          className="absolute"
-          style={{ top: -40, right: -40, opacity: 0.14 }}
+          className="absolute hidden border-2 border-[var(--bg-contrast)] p-4 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--bg-contrast)] opacity-20 llg:block"
+          style={{ top: 28, right: 28, width: 220, transform: 'rotate(2deg)' }}
         >
-          <svg width="300" height="300" viewBox="0 0 100 100">
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="none"
-              stroke="#FBF4EC"
-              strokeWidth="1"
-            />
-            <circle
-              cx="50"
-              cy="50"
-              r="28"
-              fill="none"
-              stroke="#FBF4EC"
-              strokeWidth="1"
-            />
-            <circle
-              cx="50"
-              cy="50"
-              r="16"
-              fill="none"
-              stroke="#FBF4EC"
-              strokeWidth="1"
-            />
-            <path
-              d="M50 6 L50 94 M6 50 L94 50 M20 20 L80 80 M20 80 L80 20"
-              stroke="#FBF4EC"
-              strokeWidth="0.5"
-            />
-          </svg>
+          <div className="border-b border-[var(--bg-contrast)] pb-2">
+            Chronicle entry
+          </div>
+          <div className="mt-3 font-serif text-2xl normal-case tracking-normal">
+            Open beta
+          </div>
+          <div className="mt-3 border-t border-dashed border-[var(--bg-contrast)] pt-2">
+            DM review required
+          </div>
         </div>
 
         <ViewEnter>
-          <div
-            className="mb-3 font-mono text-[10px] uppercase tracking-[0.1em]"
-            style={{ color: '#FBF4EC' }}
-          >
-            / start now
-          </div>
           <h2
             className="font-serif text-[13vw] llg:text-[72px]"
             style={{
@@ -85,19 +56,18 @@ export function LandCTA() {
               fontFamily: '"Source Serif 4", serif',
             }}
           >
-            Free while in early access. Bring one campaign or five. No card, no
-            session limit, no excuses.
+            Free while in early access. Start with one campaign and keep every
+            accepted memory reviewable from the first session.
           </p>
           <div className="mt-[30px] flex flex-wrap gap-3">
             <Button
               asChild
+              variant="ink"
               style={{
-                background: 'var(--ink)',
-                color: '#FBF4EC',
-                borderColor: 'var(--ink)',
                 fontSize: 14.5,
                 padding: '11px 22px',
-                boxShadow: '4px 4px 0 rgba(0,0,0,0.3)',
+                boxShadow: '4px 4px 0 var(--bg-contrast)',
+                borderColor: 'var(--bg-contrast)',
               }}
             >
               <Link href="/register">Start your chronicle →</Link>

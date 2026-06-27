@@ -23,6 +23,9 @@
   --danger: #8a2515;
   --danger-wash: #f1d8d1;
   --shadow: #1a1c19;
+  --paper-rgb: 248 243 235;
+  --ink-rgb: 26 28 25;
+  --bg-contrast: #fbf4ec;
   --on-ink-muted: rgb(236 228 211 / 72%);
 }
 
@@ -31,10 +34,25 @@
   --color-foreground: var(--ink);
   --color-paper: var(--paper);
   --color-paper-2: var(--paper-2);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-muted: var(--mute);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-dotted: var(--dotted);
   --color-accent: var(--accent);
   --color-accent-deep: var(--accent-deep);
   --color-accent-wash: var(--accent-wash);
+  --color-good: var(--good);
+  --color-good-wash: var(--good-wash);
+  --color-warn: var(--warn);
+  --color-warn-wash: var(--warn-wash);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
   --color-border: var(--border);
+  --color-shadow: var(--shadow);
+  --color-bg-contrast: var(--bg-contrast);
   --font-sans: var(--font-instrument-sans);
   --font-serif: var(--font-source-serif);
   --font-mono: var(--font-jetbrains-mono);
@@ -103,6 +121,47 @@ a {
   }
 }
 
+@keyframes ll-quill-write {
+  0%,
+  100% {
+    transform: rotate(-5deg) translate(0, 0);
+  }
+  25% {
+    transform: rotate(3deg) translate(3px, -3px);
+  }
+  50% {
+    transform: rotate(-2deg) translate(7px, 1px);
+  }
+  75% {
+    transform: rotate(4deg) translate(3px, -1px);
+  }
+}
+
+@keyframes ll-dots {
+  0% {
+    content: '';
+  }
+  25% {
+    content: '.';
+  }
+  50% {
+    content: '..';
+  }
+  75% {
+    content: '...';
+  }
+}
+
+.ll-quill {
+  transform-origin: 60% 80%;
+  animation: ll-quill-write 850ms ease-in-out infinite;
+}
+
+.ll-ellip::after {
+  content: '';
+  animation: ll-dots 1.4s steps(4) infinite;
+}
+
 /* ─── Print Chronicle Motion System ─────────────────────────────── */
 
 @keyframes ll-rise {
@@ -128,6 +187,30 @@ a {
 [data-motion='full'] .ll-rise.in-view {
   opacity: 1;
   transform: translateY(0);
+}
+
+[data-motion='subtle'] .ll-rise,
+[data-motion='off'] .ll-rise,
+[data-motion='subtle'] .ll-enter-1,
+[data-motion='subtle'] .ll-enter-2,
+[data-motion='subtle'] .ll-enter-3,
+[data-motion='subtle'] .ll-enter-4,
+[data-motion='subtle'] .ll-enter-5,
+[data-motion='off'] .ll-enter-1,
+[data-motion='off'] .ll-enter-2,
+[data-motion='off'] .ll-enter-3,
+[data-motion='off'] .ll-enter-4,
+[data-motion='off'] .ll-enter-5 {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+[data-motion='off'] *,
+[data-motion='off'] *::before,
+[data-motion='off'] *::after {
+  animation: none !important;
+  transition-duration: 0.01ms !important;
 }
 
 /* Hero stagger — plays on mount via CSS animation */
@@ -166,5 +249,15 @@ a {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .ll-rise,
+  .ll-enter-1,
+  .ll-enter-2,
+  .ll-enter-3,
+  .ll-enter-4,
+  .ll-enter-5 {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

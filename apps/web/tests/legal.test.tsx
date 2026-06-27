@@ -76,17 +76,25 @@ describe('/privacy page (LEGAL-002)', () => {
     ).toBeInTheDocument()
   })
 
-  it('LEGAL-002c: includes [Company] placeholder for data controller', async () => {
+  it('LEGAL-002c: uses pending legal-safe controller copy', async () => {
     const { default: PrivacyPage } = await import('@/app/privacy/page')
     render(<PrivacyPage />)
-    expect(screen.getByText(/\[Company\]/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/legal data controller is pending final legal review/i)
+    ).toBeInTheDocument()
   })
 
-  it('LEGAL-002d: includes [contact@example.com] placeholder', async () => {
+  it('LEGAL-002d: does not invent a legal contact channel', async () => {
     const { default: PrivacyPage } = await import('@/app/privacy/page')
     render(<PrivacyPage />)
-    const elements = screen.getAllByText(/\[contact@example\.com\]/)
-    expect(elements.length).toBeGreaterThan(0)
+    expect(
+      screen.queryByText(/\[contact@example\.com\]/)
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        /formal rights-request contact channel is pending legal review/i
+      )
+    ).toBeInTheDocument()
   })
 
   it('LEGAL-002e: mentions GDPR art. 6.1.b legal basis', async () => {

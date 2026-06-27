@@ -33,13 +33,10 @@ export default function PrivacyPage() {
             Data Controller
           </h2>
           <p className="mt-2">
-            The data controller responsible for your personal data is{' '}
-            <strong className="text-[var(--ink)]">[Company]</strong>. You may
-            contact us at:{' '}
-            <strong className="font-mono text-sm text-[var(--ink)]">
-              [contact@example.com]
-            </strong>
-            .
+            The legal data controller is pending final legal review. Until a
+            formal entity and contact channel are published, this page is a
+            non-indexed implementation placeholder and should not be treated as
+            final legal notice.
           </p>
         </div>
 
@@ -108,11 +105,8 @@ export default function PrivacyPage() {
             </li>
           </ul>
           <p className="mt-3">
-            To exercise any of these rights, contact{' '}
-            <strong className="font-mono text-sm text-[var(--ink)]">
-              [contact@example.com]
-            </strong>
-            .
+            The formal rights-request contact channel is pending legal review
+            and will be published before public launch.
           </p>
         </div>
 

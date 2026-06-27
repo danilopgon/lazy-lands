@@ -27,8 +27,8 @@ export function LandFooter() {
           <Link href="#how" className="hover:text-[var(--ink)]">
             How it works
           </Link>
-          <Link href="#pricing" className="hover:text-[var(--ink)]">
-            Pricing
+          <Link href="#early-access" className="hover:text-[var(--ink)]">
+            Early access
           </Link>
           <Link href="/privacy" className="hover:text-[var(--ink)]">
             Privacy
