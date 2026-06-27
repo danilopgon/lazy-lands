@@ -62,13 +62,8 @@ export function LandCTA() {
           <div className="mt-[30px] flex flex-wrap gap-3">
             <Button
               asChild
-              variant="ink"
-              style={{
-                fontSize: 14.5,
-                padding: '11px 22px',
-                boxShadow: '4px 4px 0 var(--bg-contrast)',
-                borderColor: 'var(--bg-contrast)',
-              }}
+              variant="ink-inverted"
+              style={{ fontSize: 14.5, padding: '11px 22px' }}
             >
               <Link href="/register">Start your chronicle →</Link>
             </Button>
