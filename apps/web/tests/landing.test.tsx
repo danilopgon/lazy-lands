@@ -109,10 +109,11 @@ describe('LandingPage', () => {
 
     it('LAND-006b: all four spec stat labels are present', () => {
       render(<LandingPage />)
-      expect(screen.getAllByText(/Accepted/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByText(/Dismissed/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByText(/Private/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByText(/Editable/i).length).toBeGreaterThan(0)
+      // Use getAllByText since "accepted" also appears in a badge; verify at least one stat label exists
+      expect(screen.getAllByText(/^Accepted$/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/^Dismissed$/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/^Private$/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/^Editable$/i).length).toBeGreaterThan(0)
     })
   })
 

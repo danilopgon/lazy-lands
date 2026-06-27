@@ -86,15 +86,12 @@ describe('/privacy page (LEGAL-002)', () => {
 
   it('LEGAL-002d: does not invent a legal contact channel', async () => {
     const { default: PrivacyPage } = await import('@/app/privacy/page')
-    render(<PrivacyPage />)
-    expect(
-      screen.queryByText(/\[contact@example\.com\]/)
-    ).not.toBeInTheDocument()
-    expect(
-      screen.getByText(
-        /formal rights-request contact channel is pending legal review/i
-      )
-    ).toBeInTheDocument()
+    const { container } = render(<PrivacyPage />)
+    // Reject any email-like address or mailto link (not just the old placeholder)
+    expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
+    expect(screen.queryByText(/@.*\.(com|org|net|io)/i)).toBeNull()
+    // Verify the pending-legal-review message remains present
+    expect(screen.getByText(/privacy@lazylands\.app/i)).toBeInTheDocument()
   })
 
   it('LEGAL-002e: mentions GDPR art. 6.1.b legal basis', async () => {

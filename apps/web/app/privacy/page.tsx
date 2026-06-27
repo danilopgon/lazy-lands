@@ -105,8 +105,12 @@ export default function PrivacyPage() {
             </li>
           </ul>
           <p className="mt-3">
-            The formal rights-request contact channel is pending legal review
-            and will be published before public launch.
+            To exercise any of these rights before our formal contact channel is
+            published, reach out via{' '}
+            <strong className="font-mono text-sm text-[var(--ink)]">
+              privacy@lazylands.app
+            </strong>{' '}
+            (temporary inbox, monitored during early access).
           </p>
         </div>
 

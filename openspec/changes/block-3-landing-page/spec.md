@@ -144,11 +144,11 @@ The LandPhilosophy MUST render the full quote: "The Scribe is a draft, never the
 
 #### LAND-009: Final CTA section
 
-The LandCTA section MUST have `id="pricing"`. It MUST render an `<h2>` containing "Start your first chronicle." The primary button MUST link to `/register`. The secondary button MUST be `disabled` with `aria-disabled="true"` and a tooltip "Coming soon". The decorative SVG element MUST carry `aria-hidden="true"`.
+The LandCTA section MUST have `id="early-access"`. It MUST render an `<h2>` containing "Start your first chronicle." The primary button MUST link to `/register`. The secondary button MUST be `disabled` with `aria-disabled="true"` and a tooltip "Coming soon". The decorative SVG element MUST carry `aria-hidden="true"`.
 
 | Test ID | Pass/Fail condition |
 |---------|---------------------|
-| LAND-009a | Section has `id="pricing"` |
+| LAND-009a | Section has `id="early-access"` |
 | LAND-009b | H2 with "Start your first chronicle." is present |
 | LAND-009c | Primary button links to `/register` |
 | LAND-009d | Secondary button is disabled with tooltip "Coming soon" |
@@ -157,7 +157,7 @@ The LandCTA section MUST have `id="pricing"`. It MUST render an `<h2>` containin
 
 #### LAND-010: Footer links
 
-The LandFooter MUST be a `<footer>` element containing links to `/privacy` and `/cookies`, and anchors to `#product`, `#how`, and `#pricing`.
+The LandFooter MUST be a `<footer>` element containing links to `/privacy` and `/cookies`, and anchors to `#product`, `#how`, and `#early-access`.
 
 | Test ID | Pass/Fail condition |
 |---------|---------------------|
@@ -264,14 +264,14 @@ The `/cookies` route MUST render an `<h1>` with "Cookie Policy". The page MUST e
 
 #### LEGAL-002: /privacy page
 
-The `/privacy` route MUST render an `<h1>` with "Privacy Policy". The page MUST export metadata with `robots: { index: false, follow: false }`. It MUST include a data-controller section with the placeholder `[Company]` and a contact placeholder `[contact@example.com]`. It MUST document what data is collected (email address, campaign content, auth tokens), the legal basis (GDPR art. 6.1.b), and user rights (access, rectification, erasure, portability, objection). It MUST contain a link back to the landing page.
+The `/privacy` route MUST render an `<h1>` with "Privacy Policy". The page MUST export metadata with `robots: { index: false, follow: false }`. It MUST include a data-controller section indicating that the legal controller is pending final legal review. It MUST provide a temporary contact channel (`privacy@lazylands.app`) for exercising GDPR rights during early access. It MUST document what data is collected (email address, campaign content, auth tokens), the legal basis (GDPR art. 6.1.b), and user rights (access, rectification, erasure, portability, objection). It MUST contain a link back to the landing page.
 
 | Test ID | Pass/Fail condition |
 |---------|---------------------|
 | LEGAL-002a | H1 "Privacy Policy" is present |
 | LEGAL-002b | Page is `noindex` |
-| LEGAL-002c | Data-controller placeholder `[Company]` is present |
-| LEGAL-002d | Contact placeholder `[contact@example.com]` is present |
+| LEGAL-002c | Data-controller section indicates pending legal review |
+| LEGAL-002d | Temporary contact channel is provided; no invented placeholder emails |
 | LEGAL-002e | GDPR legal basis (art. 6.1.b) is mentioned |
 | LEGAL-002f | User rights are enumerated |
 | LEGAL-002g | Back-link to landing is present |
