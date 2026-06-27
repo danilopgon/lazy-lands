@@ -55,19 +55,23 @@ describe('LandingPage', () => {
       render(<LandingPage />)
       // Items are duplicated for seamless loop, so use getAllByText
       expect(
-        screen.getAllByText(/persistent campaign memory/i).length
+        screen.getAllByText(/session vii accepted/i).length
       ).toBeGreaterThan(0)
       expect(
-        screen.getAllByText(/npcs · factions · open arcs/i).length
+        screen.getAllByText(/open arc: anti-dragon plans/i).length
       ).toBeGreaterThan(0)
       expect(
-        screen.getAllByText(/session briefings with full context/i).length
+        screen.getAllByText(/faction posture changed/i).length
       ).toBeGreaterThan(0)
       expect(
-        screen.getAllByText(/the scribe proposes, you decide/i).length
+        screen.getAllByText(/scribe proposal waiting/i).length
       ).toBeGreaterThan(0)
-      expect(screen.getAllByText(/export to pdf/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByText(/no lock-in/i).length).toBeGreaterThan(0)
+      expect(
+        screen.getAllByText(/private notes stay out/i).length
+      ).toBeGreaterThan(0)
+      expect(
+        screen.getAllByText(/accepted memories only/i).length
+      ).toBeGreaterThan(0)
     })
   })
 
@@ -78,11 +82,17 @@ describe('LandingPage', () => {
       expect(document.getElementById('product')).toBeInTheDocument()
     })
 
-    it('LAND-005b/c/d: renders all three pillar eyebrows', () => {
+    it('LAND-005b/c/d: renders the memory loop states', () => {
       render(<LandingPage />)
-      expect(screen.getByText(/01 · remember/i)).toBeInTheDocument()
-      expect(screen.getByText(/02 · prepare/i)).toBeInTheDocument()
-      expect(screen.getByText(/03 · continuity/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/session vii: the warehouse fire/i)
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(/the scribe proposes memories/i)
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(/only accepted memory returns/i)
+      ).toBeInTheDocument()
     })
   })
 
@@ -99,11 +109,11 @@ describe('LandingPage', () => {
 
     it('LAND-006b: all four spec stat labels are present', () => {
       render(<LandingPage />)
-      expect(screen.getByText(/3 min/i)).toBeInTheDocument()
-      expect(screen.getByText(/7 sessions/i)).toBeInTheDocument()
-      // "Canon" appears multiple times (stat + body copy); check the stat value specifically
-      expect(screen.getAllByText(/Canon/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByText(/Editable/i).length).toBeGreaterThan(0)
+      // Use getAllByText since "accepted" also appears in a badge; verify at least one stat label exists
+      expect(screen.getAllByText(/^Accepted$/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/^Dismissed$/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/^Private$/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/^Editable$/i).length).toBeGreaterThan(0)
     })
   })
 
@@ -141,9 +151,9 @@ describe('LandingPage', () => {
 
   // ─── LAND-009: CTA section ────────────────────────────────────
   describe('Final CTA section (LAND-009)', () => {
-    it('LAND-009a: section has id="pricing"', () => {
+    it('LAND-009a: section has id="early-access"', () => {
       render(<LandingPage />)
-      expect(document.getElementById('pricing')).toBeInTheDocument()
+      expect(document.getElementById('early-access')).toBeInTheDocument()
     })
 
     it('LAND-009b: H2 "Start your first chronicle." is present', () => {

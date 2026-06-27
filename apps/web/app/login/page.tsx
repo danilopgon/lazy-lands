@@ -1,24 +1,34 @@
 import Link from 'next/link'
 
+import { Button } from '@/components/ui/button'
+import { Notice } from '@/components/ui/notice'
+import { SectionHeader } from '@/components/ui/section-header'
+
 export default function LoginPage() {
   return (
-    <main id="main-content" className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
-      <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
-        Access
-      </p>
-      <h1 className="mt-3 font-serif text-5xl font-semibold tracking-[-0.03em]">
-        Login
-      </h1>
-      <p className="mt-4 max-w-xl text-[var(--ink-2)]">
-        Authentication arrives in the next implementation block. This
-        placeholder keeps the entry route smoke-testable.
-      </p>
-      <Link
-        className="mt-8 font-mono text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent-deep)]"
-        href="/"
-      >
-        Back to landing
-      </Link>
+    <main
+      id="main-content"
+      className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
+    >
+      <SectionHeader
+        titleAs="h1"
+        marker="/01"
+        title="Return to the chronicle"
+        description="Authentication is intentionally minimal in this scaffold. The finished login flow will protect private campaign data before any campaign routes expose content."
+      />
+      <Notice className="mt-8">
+        The Scribe is waiting behind the gate. Supabase auth integration lands
+        in the authentication implementation block; this route stays stable for
+        navigation and smoke tests.
+      </Notice>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Button asChild variant="secondary">
+          <Link href="/">Back to landing</Link>
+        </Button>
+        <Button asChild>
+          <Link href="/register">Create account</Link>
+        </Button>
+      </div>
     </main>
   )
 }

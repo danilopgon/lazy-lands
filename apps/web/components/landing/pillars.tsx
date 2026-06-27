@@ -1,112 +1,82 @@
-import { pillars } from './data'
+import { OriginBadge } from '@/components/ui/origin-badge'
+import { SectionHeader } from '@/components/ui/section-header'
+import { StatLedger } from '@/components/ui/stat-ledger'
+
+import { continuityStats, memoryLoop } from './data'
 import { ViewEnter } from './motion'
 
 export function LandPillars() {
   return (
     <section
       id="product"
-      className="mx-auto w-full max-w-[1180px] px-5 pb-[40px] pt-[92px] llg:px-10"
+      className="mx-auto w-full max-w-[1180px] px-5 pb-[48px] pt-[88px] llg:px-10"
     >
-      {/* Section header */}
-      <div className="mb-12 max-w-[720px]">
-        <div className="mb-[14px] font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--accent-deep)]">
-          / what it does
-        </div>
-        <h2
-          className="font-serif text-[var(--ink)]"
-          style={{
-            fontSize: 52,
-            margin: 0,
-            lineHeight: 1.0,
-            letterSpacing: '-0.025em',
-          }}
-        >
-          Not a one-shot generator.
-          <br />
-          <em style={{ color: 'var(--mute)' }}>It&apos;s memory.</em>
-        </h2>
+      <div className="mb-10 max-w-[700px]">
+        <SectionHeader
+          kicker="What it does"
+          title="Not a one-shot generator. It is memory."
+          description="Lazy Lands turns session logs into reviewable campaign continuity: what changed, who reacted, and what the Scribe may use next."
+        />
       </div>
 
-      {/* Pillars grid — single outer border */}
-      <div
-        className="grid grid-cols-1 llg:grid-cols-3"
-        style={{
-          border: '2px solid var(--border)',
-          background: 'var(--border)',
-          boxShadow: '8px 8px 0 var(--shadow)',
-        }}
-      >
-        {pillars.map((p, i) => (
-          <div
-            key={p.eyebrow}
-            style={{
-              background: p.accent ? 'var(--accent-wash)' : 'var(--paper)',
-              padding: '34px 28px',
-              borderRight: i < 2 ? '2px solid var(--border)' : 'none',
-              borderBottom: '2px solid var(--border)',
-            }}
-            className="last:border-b-0 llg:border-b-0"
-          >
-            <ViewEnter delay={i * 150}>
-              {/* Icon — 50×50 bordered box */}
-              <div
-                style={{
-                  width: 50,
-                  height: 50,
-                  border: '2px solid var(--border)',
-                  background: 'var(--paper)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  marginBottom: 20,
-                  fontSize: 22,
-                  color: 'var(--accent)',
-                  boxShadow: '3px 3px 0 var(--shadow)',
-                }}
+      <div className="grid grid-cols-1 gap-8 llg:grid-cols-[1.2fr_0.8fr]">
+        <ViewEnter>
+          <div className="border-y-[3px] border-[var(--line-strong)] bg-[color-mix(in_srgb,var(--paper)_72%,transparent)]">
+            {memoryLoop.map((item, index) => (
+              <article
+                key={item.label}
+                className="grid grid-cols-[110px_1fr] items-start gap-6 border-b border-[var(--line)] px-4 py-6 last:border-b-0 llg:grid-cols-[126px_1fr] llg:px-5"
               >
-                {p.glyph}
-              </div>
-
-              <div className="mb-[9px] font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--accent-deep)]">
-                {p.eyebrow}
-              </div>
-              <h3
-                className="font-serif text-[var(--ink)]"
-                style={{
-                  fontSize: 27,
-                  margin: '0 0 12px',
-                  lineHeight: 1.0,
-                  letterSpacing: '-0.01em',
-                }}
-              >
-                {p.title}
-              </h3>
-              <p
-                className="text-[var(--ink-2)]"
-                style={{ fontSize: 14.5, marginBottom: 18, lineHeight: 1.5 }}
-              >
-                {p.body}
-              </p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {p.bullets.map((b) => (
-                  <li
-                    key={b}
-                    className="font-mono text-[var(--ink-2)]"
-                    style={{
-                      display: 'flex',
-                      gap: 8,
-                      fontSize: 11.5,
-                      marginBottom: 7,
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    <span style={{ color: 'var(--accent)' }}>→</span>
-                    {b}
-                  </li>
-                ))}
-              </ul>
-            </ViewEnter>
+                <div className="pt-[3px]">
+                  <div className="mb-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--accent-deep)]">
+                    0{index + 1}
+                  </div>
+                  <div className="font-mono text-[18px] font-semibold uppercase leading-none tracking-[0.02em] text-[var(--ink)]">
+                    {item.label}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-serif text-[24px] font-semibold leading-tight tracking-[-0.015em] text-[var(--ink)]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 max-w-[58ch] text-sm leading-relaxed text-[var(--ink-2)]">
+                    {item.body}
+                  </p>
+                </div>
+              </article>
+            ))}
           </div>
-        ))}
+        </ViewEnter>
+
+        <ViewEnter delay={120}>
+          <div className="space-y-5">
+            <StatLedger items={continuityStats} />
+            <div className="border-2 border-[var(--accent)] bg-[var(--accent-wash)] p-5">
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="font-serif text-2xl font-semibold text-[var(--ink)]">
+                  Memory in play
+                </h3>
+                <OriginBadge origin="scribe" />
+              </div>
+              <p className="mt-3 font-serif text-[15px] leading-relaxed text-[var(--ink)]">
+                Two party members earned Halia&apos;s favor; two damaged it. The
+                next briefing must account for the split trust at the
+                Miner&apos;s Exchange.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--accent-deep)]">
+                <span className="border border-[var(--accent)] bg-[var(--paper)] px-2 py-1">
+                  accepted
+                </span>
+                <span className="border border-[var(--accent)] bg-[var(--paper)] px-2 py-1">
+                  Halia Thornton
+                </span>
+                <span className="border border-[var(--accent)] bg-[var(--paper)] px-2 py-1">
+                  Session VII
+                </span>
+              </div>
+            </div>
+          </div>
+        </ViewEnter>
       </div>
     </section>
   )

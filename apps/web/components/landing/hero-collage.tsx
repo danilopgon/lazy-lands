@@ -45,7 +45,7 @@ export function HeroCollage() {
           top: 16,
           width: 162,
           background: 'var(--accent)',
-          color: '#FBF4EC',
+          color: 'var(--bg-contrast)',
           transform: 'rotate(-4deg)',
         }}
       >

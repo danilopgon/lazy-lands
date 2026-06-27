@@ -9,8 +9,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-[var(--ink)] text-[var(--bg)]',
-        accent: 'bg-[var(--accent)] !text-[var(--paper)]',
+        default: 'bg-[var(--accent)] text-[var(--bg-contrast)]',
+        accent: 'bg-[var(--accent)] text-[var(--bg-contrast)]',
+        ink: 'bg-[var(--ink)] text-[var(--bg-contrast)]',
+        'ink-inverted':
+          'bg-[var(--ink)] text-[var(--bg-contrast)] border-[var(--bg-contrast)] shadow-[3px_3px_0_var(--bg-contrast)] hover:shadow-[1.5px_1.5px_0_var(--bg-contrast)]',
         secondary: 'bg-[var(--paper)] text-[var(--ink)]',
         ghost:
           'border-[1.5px] bg-transparent text-[var(--ink)] shadow-none hover:translate-x-0 hover:translate-y-0 hover:bg-[var(--paper-2)] hover:shadow-none active:translate-x-0 active:translate-y-0',
@@ -27,6 +30,10 @@ const buttonVariants = cva(
     },
   }
 )
+
+// Variant semantics: default/accent = product progression, ink = CTA on light
+// surfaces, ink-inverted = CTA on dark/accent surfaces (owns border + shadow
+// so hover state is correct), secondary/ghost = low-emphasis actions.
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof buttonVariants> & {

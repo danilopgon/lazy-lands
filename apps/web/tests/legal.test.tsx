@@ -76,17 +76,22 @@ describe('/privacy page (LEGAL-002)', () => {
     ).toBeInTheDocument()
   })
 
-  it('LEGAL-002c: includes [Company] placeholder for data controller', async () => {
+  it('LEGAL-002c: uses pending legal-safe controller copy', async () => {
     const { default: PrivacyPage } = await import('@/app/privacy/page')
     render(<PrivacyPage />)
-    expect(screen.getByText(/\[Company\]/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/legal data controller is pending final legal review/i)
+    ).toBeInTheDocument()
   })
 
-  it('LEGAL-002d: includes [contact@example.com] placeholder', async () => {
+  it('LEGAL-002d: does not invent a legal contact channel', async () => {
     const { default: PrivacyPage } = await import('@/app/privacy/page')
-    render(<PrivacyPage />)
-    const elements = screen.getAllByText(/\[contact@example\.com\]/)
-    expect(elements.length).toBeGreaterThan(0)
+    const { container } = render(<PrivacyPage />)
+    // Reject any email-like address or mailto link (not just the old placeholder)
+    expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
+    expect(screen.queryByText(/@.*\.(com|org|net|io)/i)).toBeNull()
+    // Verify the pending-legal-review message remains present
+    expect(screen.getByText(/privacy@lazylands\.app/i)).toBeInTheDocument()
   })
 
   it('LEGAL-002e: mentions GDPR art. 6.1.b legal basis', async () => {

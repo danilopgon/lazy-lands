@@ -31,14 +31,13 @@ The system is driven by attributes on `<html>`. No JS framework required — jus
 
 | Attribute       | Values                            | Effect                                                                                                                        |
 | --------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `data-theme`    | `light` (default), `dark`         | Swaps the whole token palette. Dark is a true “printing negative”: light ink on charcoal.                                     |
+| `data-theme`    | `light` (default)                 | MVP ships light-only. Dark theme remains a post-MVP consideration, not a current production requirement.                       |
 | `data-motion`   | `full` (default), `subtle`, `off` | `subtle` drops entrance choreography but keeps action feedback (stamp/strike/press). `off` kills all animation + transitions. |
 | `--tex-opacity` | `0`–`1` (default `0.5`)           | Inline style on `<html>`; controls paper-texture intensity.                                                                   |
 
 `prefers-reduced-motion: reduce` is always respected regardless of `data-motion`.
 
 ```js
-document.documentElement.setAttribute('data-theme', 'dark')
 document.documentElement.setAttribute('data-motion', 'subtle')
 document.documentElement.style.setProperty('--tex-opacity', '0.35')
 ```
@@ -47,7 +46,7 @@ document.documentElement.style.setProperty('--tex-opacity', '0.35')
 
 ## 3. Color tokens
 
-All colors are CSS custom properties on `:root`, overridden under `html[data-theme="dark"]`.
+All MVP colors are CSS custom properties on `:root`.
 **Never hard-code hex in components** — always reference the token.
 
 ### Light (default)
@@ -74,23 +73,9 @@ All colors are CSS custom properties on `:root`, overridden under `html[data-the
 | `--danger` / `--danger-wash` | `#8A2515` / `#F1D8D1` | Status: dormant / destructive / error   |
 | `--shadow`                   | `#1A1C19`             | Hard ink shadow                         |
 
-### Dark (`data-theme="dark"`)
+### Post-MVP dark theme note
 
-Key overrides — ink and paper invert, accent brightens, shadow goes pure black:
-
-| Token                            | Hex                               |
-| -------------------------------- | --------------------------------- |
-| `--bg`                           | `#16140F`                         |
-| `--paper`                        | `#211E17`                         |
-| `--paper-2`                      | `#2A261C`                         |
-| `--ink`                          | `#ECE4D3`                         |
-| `--border` / `--line-strong`     | `#ECE4D3`                         |
-| `--accent`                       | `#E0664A`                         |
-| `--accent-deep`                  | `#EE8868`                         |
-| `--good` / `--warn` / `--danger` | `#6BBE6F` / `#D6A93A` / `#E06A52` |
-| `--shadow`                       | `#000000`                         |
-
-> Contrast note: the inverted Scribe bulletin (`.ll-notice`) flips to _light paper on dark_ in light mode and _dark on light_ in dark mode — it is always the photographic negative of the page. Verified legible in both.
+Dark theme is intentionally out of the current MVP. If it returns later, it should keep emerald as the brand accent and preserve the Print Chronicle contrast model; do not reactivate the prototype's historical rust accent as part of that work.
 
 ---
 
@@ -219,7 +204,7 @@ Imagery, where needed (none required for MVP), should be striped placeholder blo
 
 - `app/chronicle.css` is **framework-agnostic** — it’s plain CSS custom properties + classes. Port the tokens to Tailwind `@theme` / CSS modules / styled-components as you like, but keep the token names and the five DNA rules.
 - The prototype is React 18 + Babel-in-browser purely for fast iteration. **Do not ship that setup** — it’s a fidelity reference, not a starting codebase. Rebuild components in your real stack against these tokens.
-- Theme/motion/texture are attribute/variable driven → trivial to wire to a settings store or `prefers-color-scheme`.
+- Motion/texture are attribute/variable driven. Theme settings are post-MVP and should not be scaffolded in Block 0.
 - The wordmark is type-set, not a logo file: `Lazy ` (ink) + `Lands` (emerald), Source Serif 4 600. A standalone identity asset exists at `handoff/Lazy Lands — LinkedIn Card.png`.
 
 ---
@@ -238,7 +223,7 @@ The production frontend currently implements the Block 0 slice of Print Chronicl
 - `apps/web/components/landing/landing-page.tsx` is the current representative surface: a product landing entry point, not a detached marketing microsite.
 - `apps/web/app/globals.css` also defines the custom `llg` breakpoint (`901px`) so landing/editorial layouts switch to multi-column only above the `900px` collapse point.
 
-The dark theme, full motion gates, Scribe notice/loading/stamp patterns, entity ledgers and generated-session views remain design requirements from the prototype until they are rebuilt in production. Do not delete them from this document just because the Block 0 app has not reached them yet.
+Full motion gates, Scribe notice/loading/stamp patterns, entity ledgers and generated-session views remain design requirements from the prototype until they are rebuilt in production. Dark theme is not an MVP requirement.
 
 ### Tailwind `@theme` mapping
 
@@ -275,7 +260,7 @@ Map the CSS custom properties from §3 into Tailwind theme aliases rather than r
 }
 ```
 
-Keep the raw CSS variables on `:root` and `html[data-theme="dark"]` so theme switching remains attribute-driven.
+Keep the raw CSS variables on `:root`; do not add dark theme overrides until a post-MVP theme task exists.
 Use `llg:` for landing/editorial layout changes that must collapse at `900px`; the default Tailwind `md:` breakpoint is too early for this design system rule.
 
 ### Font loading
@@ -286,7 +271,7 @@ Use `next/font/google` in `app/layout.tsx` for all three required families:
 - `Source Serif 4` → `--font-source-serif` for headings, reading, and Scribe prose.
 - `JetBrains Mono` → `--font-jetbrains-mono` for labels, metadata, badges, counters, and system voice.
 
-Production pages should set `<html lang="en" data-theme="light" data-motion="full">` initially. Future settings may toggle `data-theme`, `data-motion`, and `--tex-opacity`.
+Production pages should set `<html lang="en" data-theme="light" data-motion="full">` initially. Future settings may toggle `data-motion` and `--tex-opacity`; `data-theme` remains fixed to `light` for the MVP.
 
 ### shadcn/ui overrides
 
@@ -322,3 +307,39 @@ Always respect `prefers-reduced-motion: reduce`. Entrance animation is decorativ
 - Maintain the contrast guarantees in §3 when introducing new combinations.
 - Keep keyboard focus visible with emerald focus rings and sufficient offset.
 - The Scribe persona must never imply automatic canon changes; AI output uses proposal language and keeps review/edit/dismiss affordances until the DM confirms it.
+
+---
+
+## 11. Landing page layout deviations from handoff
+
+The handoff (`handoff/`) is a starting reference, not a final spec. The following deviations were introduced in `chore/design-cleanup` to address generic AI-default layout patterns while staying within the Print Chronicle system.
+
+### 11.1 Pillars section — step indicator redesign
+
+**Handoff intent:** Three memory-loop items, each with a `grid-cols-[72px_1fr]` two-column layout: narrow left column (11px mono number + 8px emerald square + 10px mono label), wide right column (26px serif heading + body).
+
+**Problem:** The 8px square was disconnected decoration with no semantic purpose. The 11px number and 10px label were functionally invisible next to the 26px heading — the hierarchy read as "decoration, then content" rather than "step marker, then content." Three identical dashed-separator rows produced the canonical AI-numbered-list look.
+
+**Change:** The orphaned square is removed. The step label (`LOG`, `REVIEW`, `PREPARE`) is promoted to 18px uppercase mono — the dominant visual anchor in the left column. The step number (`01`, `02`, `03`) becomes a 9.5px annotation above it. Left column width increased from 72px to 110px to give the label room. Separators changed from `border-dashed border-[var(--dotted)]` to `border-[var(--line)]` (solid, lighter) — more editorial, less data-table.
+
+**Justification:** `JetBrains Mono` uppercase is defined as the system voice for labels and metadata. Making the workflow label the primary element is consistent with DNA rule 3. The change does not introduce new tokens or deviate from the color palette.
+
+### 11.2 How It Works section — column dividers instead of boxed cards
+
+**Handoff intent:** Three steps on a dark ink background, each wrapped in `border-2 border-[var(--bg)] p-5` — producing three distinct bordered boxes.
+
+**Problem:** Three equal bordered cards is one of the most recognisable AI-default layout patterns. It conflicts with the Print Chronicle principle of using hard rules and bordered ledgers over floating cards.
+
+**Change:** Individual card borders removed. Steps are now ledger columns, separated only by `border-l-2 border-[var(--bg)]` vertical rules between them. Horizontal rules handle the mobile (single-column) separation. Content within each column is unchanged: the 84px serif emerald numbers, heading, body, and "Product state" inset box remain.
+
+**Justification:** The ledger column format is directly described in DESIGN.md §6 (`.ll-statbar` / `.ll-cols` with a vertical ink rule). The change makes the How It Works section feel like a printed table rather than a card deck.
+
+### 11.3 Briefing section — column order swapped on desktop
+
+**Handoff intent:** Two-column layout — left: copy + spec stats, right: BriefingMock card.
+
+**Problem:** Both Pillars (text-list left / visual right) and Briefing (copy left / card right) used the same two-column arrangement. Three consecutive sections sharing a "left-text / right-visual" layout family created a monotonous scrolling rhythm.
+
+**Change:** On desktop (`llg:`), the BriefingMock card moves to the left column and the copy moves to the right (`order-1` / `order-2`). Mobile DOM order is unchanged (copy first, then card) to maintain the correct reading sequence.
+
+**Justification:** Alternating visual position (card on right in Pillars, card on left in Briefing) creates a compositional ZIG that breaks the identical rhythm without touching content or tokens.

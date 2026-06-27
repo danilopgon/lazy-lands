@@ -10,12 +10,6 @@ export function LandHowItWorks() {
     >
       <div className="mx-auto w-full max-w-[1180px] px-5 llg:px-10">
         <ViewEnter>
-          <div
-            className="mb-[14px] font-mono text-[10px] uppercase tracking-[0.1em]"
-            style={{ color: 'var(--bg)' }}
-          >
-            / how it works
-          </div>
           <h2
             className="font-serif"
             style={{
@@ -29,9 +23,17 @@ export function LandHowItWorks() {
             Three steps. Not one more.
           </h2>
 
-          <div className="mt-[56px] grid grid-cols-1 gap-8 llg:grid-cols-3 llg:gap-8">
-            {howItWorksSteps.map((s) => (
-              <div key={s.n}>
+          <div className="mt-[56px] grid grid-cols-1 llg:grid-cols-3">
+            {howItWorksSteps.map((s, i) => (
+              <div
+                key={s.n}
+                className={[
+                  i === 0 ? 'llg:pr-8' : i === 2 ? 'llg:pl-8' : 'llg:px-8',
+                  i > 0
+                    ? 'mt-10 border-t-2 border-[var(--bg)] pt-10 llg:mt-0 llg:border-t-0 llg:border-l-2 llg:pt-0 flex flex-col h-full gap-4'
+                    : 'flex flex-col h-full gap-4',
+                ].join(' ')}
+              >
                 <div className="mb-4 flex items-baseline gap-[14px]">
                   <div
                     className="font-serif"
@@ -75,6 +77,14 @@ export function LandHowItWorks() {
                 >
                   {s.body}
                 </p>
+                <div className="mt-auto bg-[var(--bg)] p-3 text-[var(--ink)]">
+                  <div className="font-mono text-[9.5px] uppercase tracking-[0.08em] text-[var(--mute)] ">
+                    Product state
+                  </div>
+                  <div className="mt-2 font-serif text-[15px] leading-snug">
+                    {s.state}
+                  </div>
+                </div>
               </div>
             ))}
           </div>

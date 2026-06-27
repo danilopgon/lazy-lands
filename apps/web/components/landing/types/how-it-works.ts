@@ -3,4 +3,5 @@ export type HowItWorksStep = {
   title: string
   body: string
   glyph: string
+  state: string
 }

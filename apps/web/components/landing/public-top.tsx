@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,71 @@ import { navLinks } from './data'
 
 export function PublicTop() {
   const [open, setOpen] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const shouldRestoreFocusRef = useRef(true)
+
+  function closeMenu({ restoreFocus = true }: { restoreFocus?: boolean } = {}) {
+    shouldRestoreFocusRef.current = restoreFocus
+    setOpen(false)
+  }
+
+  useEffect(() => {
+    if (!open) return
+
+    const previous =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+    const menuButton = menuButtonRef.current
+
+    closeButtonRef.current?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        closeMenu()
+        return
+      }
+
+      if (event.key !== 'Tab') {
+        return
+      }
+
+      const focusable = overlayRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+
+      if (!focusable?.length) {
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      }
+
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      if (shouldRestoreFocusRef.current) {
+        if (previous && document.contains(previous)) {
+          previous.focus()
+        } else {
+          menuButton?.focus()
+        }
+      }
+    }
+  }, [open])
 
   return (
     <>
@@ -53,6 +118,7 @@ export function PublicTop() {
           </Button>
 
           <button
+            ref={menuButtonRef}
             type="button"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
@@ -75,6 +141,7 @@ export function PublicTop() {
       {/* Mobile overlay */}
       {open && (
         <div
+          ref={overlayRef}
           role="dialog"
           aria-label="Mobile navigation"
           aria-modal="true"
@@ -84,14 +151,15 @@ export function PublicTop() {
             <Link
               href="/"
               className="font-serif text-xl font-semibold text-[var(--ink)]"
-              onClick={() => setOpen(false)}
+              onClick={() => closeMenu({ restoreFocus: false })}
             >
               Lazy <span className="text-[var(--accent)]">Lands</span>
             </Link>
             <button
+              ref={closeButtonRef}
               type="button"
               aria-label="Close menu"
-              onClick={() => setOpen(false)}
+              onClick={() => closeMenu()}
               className="flex h-10 w-10 items-center justify-center border-2 border-[var(--border)] shadow-[2px_2px_0_var(--shadow)]"
             >
               <span className="font-mono text-lg leading-none">✕</span>
@@ -103,7 +171,7 @@ export function PublicTop() {
               <Link
                 key={l.href}
                 href={l.href}
-                onClick={() => setOpen(false)}
+                onClick={() => closeMenu({ restoreFocus: false })}
                 className="border-b border-[var(--dotted)] py-4 font-serif text-2xl text-[var(--ink)] hover:text-[var(--accent)]"
               >
                 {l.label}
@@ -112,12 +180,18 @@ export function PublicTop() {
 
             <div className="mt-8 flex flex-col gap-3">
               <Button asChild variant="ghost">
-                <Link href="/login" onClick={() => setOpen(false)}>
+                <Link
+                  href="/login"
+                  onClick={() => closeMenu({ restoreFocus: false })}
+                >
                   Sign in
                 </Link>
               </Button>
               <Button asChild variant="accent">
-                <Link href="/register" onClick={() => setOpen(false)}>
+                <Link
+                  href="/register"
+                  onClick={() => closeMenu({ restoreFocus: false })}
+                >
                   Start your chronicle →
                 </Link>
               </Button>

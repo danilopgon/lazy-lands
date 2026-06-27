@@ -3,6 +3,7 @@
 import { startTransition, useEffect, useState } from 'react'
 import Link from 'next/link'
 
+import { Button } from '@/components/ui/button'
 import { getConsent, setConsent } from '@/lib/consent'
 
 export function CookieBanner() {
@@ -42,21 +43,9 @@ export function CookieBanner() {
             Learn more
           </Link>
         </p>
-        <button
-          onClick={handleAccept}
-          className={[
-            'inline-flex items-center justify-center whitespace-nowrap',
-            'border-2 border-[var(--border)] font-sans text-sm font-semibold',
-            'bg-[var(--ink)] text-[var(--bg)]',
-            'shadow-[3px_3px_0_var(--shadow)]',
-            'h-9 px-4',
-            'hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]',
-            'active:translate-x-[3px] active:translate-y-[3px] active:shadow-none',
-            'transition-[transform,box-shadow] duration-100',
-          ].join(' ')}
-        >
+        <Button onClick={handleAccept} size="sm">
           Got it
-        </button>
+        </Button>
       </div>
     </div>
   )
