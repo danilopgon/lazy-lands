@@ -4,9 +4,14 @@ Each block unlocks the next. Do not start a block until the previous one is work
 
 ## Scope cut
 
-Only `Arc` is added as a new persistent entity in the MVP.
+New persistent entities added in the MVP: `Arc`, `MemoryFact`.
 
-Out of scope for the TFM: `WorldFact`, `Relationship`, `MemorySuggestions`, RAG, embeddings, and vector databases.
+`MemorySuggestion` is part of the MVP as the narrative memory layer validated by the DM.
+It is a transient API response (not a database table) — suggestions are proposed by the AI
+after a session and the DM decides which become active `MemoryFact` records.
+
+Out of scope for the TFM: `WorldFact`, `Relationship`, RAG, embeddings, vector databases,
+complex relationship graphs, visual timeline, and advanced memory compiler.
 
 ## Block overview
 
@@ -138,9 +143,11 @@ Status: **pending**
 
 ---
 
-## Block 7 — Sessions: post-session registration
+## Block 7 — Sessions: post-session registration and memory review
 
 Status: **pending**
+
+### Session registration
 
 - [ ] New session screen linked to a campaign.
 - [ ] Field: free-text summary of what happened.
@@ -148,6 +155,26 @@ Status: **pending**
 - [ ] Save session to Supabase with a sequential number.
 - [ ] RLS active on the `sessions` table.
 - [ ] Session history per campaign (chronological list).
+
+### Rolling summary (triggered after session save)
+
+- [ ] FastAPI endpoint `POST /campaigns/{id}/summarize` — updates `accumulated_summary` using
+  the previous summary + new session. Called automatically after session registration.
+
+### Memory suggestions (MVP — part of the core DM flow)
+
+- [ ] FastAPI endpoint `POST /sessions/{id}/suggest-memories` — calls the LLM, validates
+  output against `MemorySuggestionsOutput`, returns 0–5 `MemorySuggestion` objects.
+  Suggestions are **not persisted** at this point; they are a transient API response.
+- [ ] Frontend renders the suggestion list after the session is saved.
+- [ ] Each suggestion shows: content, type, importance and reason.
+- [ ] DM can **accept** a suggestion → `POST /campaigns/{id}/memory-facts` creates a
+  `MemoryFact` with `status=active`. Only the accepted (and optionally edited) content is
+  stored — never the raw suggestion automatically.
+- [ ] DM can **reject** a suggestion → no request is sent; the suggestion is discarded.
+- [ ] DM can **edit** a suggestion before accepting → the edited content is sent to
+  `POST /campaigns/{id}/memory-facts`; the original suggestion is not stored.
+- [ ] RLS active on the `memory_facts` table.
 
 ---
 
@@ -157,13 +184,14 @@ Status: **pending**
 
 ### Generation
 
-- [ ] FastAPI endpoint `POST /campaigns/{id}/summarize` — updates `accumulated_summary`.
 - [ ] FastAPI endpoint `POST /sessions/generate` — receives `campaign_id`.
-- [ ] `GenerateNextSessionUseCase` builds the compressed context: `AccumulatedSummary` + last full session + NPCs + factions + open arcs (~2,000 tokens maximum).
+- [ ] `GenerateNextSessionUseCase` builds compressed context: `accumulated_summary` + last full
+  session + NPCs + factions + open arcs + **active `MemoryFacts`** (~2,000 tokens maximum).
+  Unaccepted suggestions are excluded from context.
 - [ ] LLM call with the contextualised generation prompt.
 - [ ] The LLM returns structured JSON validated against `GeneratedSessionOutput`.
 - [ ] Save `trace_json` with provider, prompt version, context summary and any errors.
-- [ ] Render of the structured output.
+- [ ] Render of the structured output, with visible continuity links to accepted memories.
 
 ### Editing
 
@@ -189,12 +217,28 @@ Status: **pending**
 
 Status: **pending**
 
+### AI and prompt tests
+
 - [ ] Unit tests for prompt builders.
 - [ ] Unit tests for Pydantic schemas.
 - [ ] Tests for `GenerateNextSessionUseCase` with `FakeLlmProvider`.
-- [ ] Repository tests against local Supabase or mocks.
-- [ ] Auth dependency tests with valid and invalid JWTs.
 - [ ] LLM JSON validation: valid case, invalid case and fallback.
 - [ ] Snapshot tests for main prompts.
-- [ ] Minimal RLS tests in Supabase (`campaigns`, `npcs`, `factions`, `sessions`).
+
+### Memory layer tests (required — ADR-08)
+
+- [ ] A `MemorySuggestion` is not auto-saved as a `MemoryFact` — the suggestion endpoint
+  returns suggestions without writing to `memory_facts`.
+- [ ] Accept suggestion → `POST /campaigns/{id}/memory-facts` creates an active `MemoryFact`.
+- [ ] Reject suggestion → no `MemoryFact` is created (no request is sent).
+- [ ] Edit suggestion before accept → the edited content is saved as the `MemoryFact`,
+  not the original AI suggestion.
+- [ ] Generation context includes active `MemoryFacts` and excludes unaccepted suggestions.
+
+### Infrastructure tests
+
+- [ ] Repository tests against local Supabase or mocks.
+- [ ] Auth dependency tests with valid and invalid JWTs.
+- [ ] Minimal RLS tests in Supabase (`campaigns`, `npcs`, `factions`, `sessions`,
+  `memory_facts`).
 - [ ] Basic PDF export test.
