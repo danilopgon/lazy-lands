@@ -1,0 +1,10 @@
+{
+  "name": "supabase",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "latest"
+  }
+}
