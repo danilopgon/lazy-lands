@@ -1,6 +1,0 @@
--- Seed data for local Supabase development.
---
--- This file intentionally contains no campaign rows. `supabase db reset` runs
--- seed.sql before the deterministic local auth user exists; campaigns.user_id
--- now has an FK to auth.users(id), so campaign/session seed rows are inserted
--- by `supabase/scripts/seed-auth.ts` after creating or detecting that user.
