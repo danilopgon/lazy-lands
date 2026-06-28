@@ -86,6 +86,10 @@ Status: **done**
 
 Status: **pending**
 
+Dev environment setup (first block where frontend calls FastAPI):
+
+- [ ] Add `package.json` to `services/api` with a `dev` script (`uv run uvicorn app.main:app --reload --port 8000`) so `pnpm dev` launches both Next.js and FastAPI in parallel via Turborepo.
+
 Supabase setup (moved here from Block 0 — first needed in this block):
 
 - [ ] Create Supabase project with email auth enabled.
