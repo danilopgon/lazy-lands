@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ComingSoonButton } from './coming-soon-button'
-import { HeroGraphScene } from './hero-graph-scene'
+import { HeroGraphSlot } from './hero-graph-slot'
 
 export function LandHero() {
   return (
@@ -75,11 +75,9 @@ export function LandHero() {
         </div>
 
         {/* ── Graph — a square plate sized by its own column, so it sits right
-            beside the copy on a shared grid. Square box keeps nodes circular
-            at every width. ── */}
-        <div className="hidden aspect-square w-full self-center llg:block">
-          <HeroGraphScene />
-        </div>
+            beside the copy on a shared grid. Desktop-only and lazy-loaded so
+            mobile never ships the animation code (see HeroGraphSlot). ── */}
+        <HeroGraphSlot />
       </div>
     </section>
   )
