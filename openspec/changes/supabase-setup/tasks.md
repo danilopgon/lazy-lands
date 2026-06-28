@@ -48,17 +48,17 @@ Chain strategy: size-exception
 
 ## Phase 3 — Seed
 
-- [ ] **T-07** Write `supabase/seed.sql` [IMPL] | `supabase/seed.sql` | INSERT 1 campaign (`id=10000000-0000-0000-0000-000000000001`, `user_id=00000000-0000-0000-0000-000000000001`, `title='Dev Campaign'`) and 2 sessions (`id=20000000-0000-0000-0000-000000000001`, `20000000-0000-0000-0000-000000000002`, `session_number=1,2`); all UUIDs as literal string constants | Verify: `pnpm supabase:reset` completes without errors; rows visible as postgres role | Spec: FR-4.1, NFR-1, AC-13 | **sequential** after T-06
+- [x] **T-07** Write `supabase/seed.sql` [IMPL] | `supabase/seed.sql` | INSERT 1 campaign (`id=10000000-0000-0000-0000-000000000001`, `user_id=00000000-0000-0000-0000-000000000001`, `title='Dev Campaign'`) and 2 sessions (`id=20000000-0000-0000-0000-000000000001`, `20000000-0000-0000-0000-000000000002`, `session_number=1,2`); all UUIDs as literal string constants | Verify: `pnpm supabase:reset` completes without errors; rows visible as postgres role | Spec: FR-4.1, NFR-1, AC-13 | **sequential** after T-06
 
-- [ ] **T-08** Write `supabase/scripts/seed-auth.ts` [IMPL] | `supabase/scripts/seed-auth.ts` | Export `seedAuthUser(options, deps)` with injectable `createClientFn` + `log`; **idempotency guard**: call `supabase.auth.admin.getUserById(FIXED_UUID)` first — if user exists log skip and return; `--dry-run`: log intended params, no API call, exit 0; normal path: `createUser({ id: '00000000-0000-0000-0000-000000000001', email, password, email_confirm: true })`; exit 1 on missing `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` without `--dry-run`; guard `main()` against import side effects | Verify: `pnpm supabase:seed-auth --dry-run` logs intent + exits 0; `pnpm test` (supabase workspace) → all 5 cases pass | Spec: FR-4.2, NFR-3, AC-15–AC-16 | **parallel** with T-07
+- [x] **T-08** Write `supabase/scripts/seed-auth.ts` [IMPL] | `supabase/scripts/seed-auth.ts` | Export `seedAuthUser(options, deps)` with injectable `createClientFn` + `log`; **idempotency guard**: call `supabase.auth.admin.getUserById(FIXED_UUID)` first — if user exists log skip and return; `--dry-run`: log intended params, no API call, exit 0; normal path: `createUser({ id: '00000000-0000-0000-0000-000000000001', email, password, email_confirm: true })`; exit 1 on missing `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` without `--dry-run`; guard `main()` against import side effects | Verify: `pnpm supabase:seed-auth --dry-run` logs intent + exits 0; `pnpm test` (supabase workspace) → all 5 cases pass | Spec: FR-4.2, NFR-3, AC-15–AC-16 | **parallel** with T-07
 
 ---
 
 ## Phase 4 — Tooling and docs
 
-- [ ] **T-09** Add `tsx` to root devDependencies [IMPL] | Root `package.json` | `pnpm add -D tsx` from repo root; commit updated lockfile | Verify: `tsx --version` | Spec: FR-5.2, AC-18 | **parallel** with T-07/T-08
+- [x] **T-09** Add `tsx` to root devDependencies [IMPL] | Root `package.json` | `pnpm add -D tsx` from repo root; commit updated lockfile | Verify: `tsx --version` | Spec: FR-5.2, AC-18 | **parallel** with T-07/T-08
 
-- [ ] **T-10** Add `supabase:reset` and `supabase:seed-auth` scripts to root `package.json` [IMPL] | Root `package.json` | Add `"supabase:reset": "supabase db reset"` and `"supabase:seed-auth": "tsx supabase/scripts/seed-auth.ts"` | Verify: `pnpm supabase:seed-auth --dry-run` resolves | Spec: FR-5.1, AC-17 | **sequential** after T-09
+- [x] **T-10** Add `supabase:reset` and `supabase:seed-auth` scripts to root `package.json` [IMPL] | Root `package.json` | Add `"supabase:reset": "supabase db reset"` and `"supabase:seed-auth": "tsx supabase/scripts/seed-auth.ts"` | Verify: `pnpm supabase:seed-auth --dry-run` resolves | Spec: FR-5.1, AC-17 | **sequential** after T-09
 
 - [ ] **T-11** Write `supabase/CLOUD.md` [DOCS] | `supabase/CLOUD.md` | Sections: Docker Desktop prereq; `supabase link --project-ref <ref>` (one-time); initial `supabase db push`; incremental push workflow (only `db push` mutates hosted — never hand-edit); rollback path (drop policies → drop tables CASCADE → drop types → `db push` — safe, no real data); cloud auth user creation note | Spec: FR-5.3, AC-19 | **parallel** with T-08–T-10
 

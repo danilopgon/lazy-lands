@@ -88,7 +88,7 @@ def test_user_a_reads_own_campaign(db_conn) -> None:
         cur.execute("select id from campaigns")
         rows = cur.fetchall()
     assert len(rows) == 1
-    assert rows[0][0] == SEEDED_CAMPAIGN
+    assert str(rows[0][0]) == SEEDED_CAMPAIGN
 
 
 # --- FR-2.2 / Scenario 2: Non-owner silently filtered -----------------------

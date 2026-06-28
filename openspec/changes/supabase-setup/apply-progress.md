@@ -224,17 +224,74 @@ correct groundwork (24 policies + GRANTs), but the seed rows are absent.
   was re-checked to be pristine (0 tables). Zero pollution, zero net change
   to the foreign project.
 
+---
+
+## Batch 3 — Recovery: Seed + auth script + root tooling — DONE
+
+Recovery continuation after a prior `sdd-apply` returned an empty result with
+partial uncommitted changes. Implemented only the assigned recovery scope:
+T-07 through T-10. T-11, T-12, and T-13 remain untouched for the next batch.
+
+### Work-unit commits (Batch 3)
+
+| Commit | Work unit | Files |
+|---|---|---|
+| (this batch) | Seed + auth script + tooling recovery | `supabase/seed.sql`, `supabase/scripts/seed-auth.ts`, `package.json`, `pnpm-lock.yaml`, `supabase/package.json`, `services/api/tests/test_rls.py`, `openspec/changes/supabase-setup/tasks.md`, `openspec/changes/supabase-setup/apply-progress.md` |
+
+### TDD Cycle Evidence — Batch 3 (T-07 through T-10)
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| T-07 Write `supabase/seed.sql` | `services/api/tests/test_rls.py` (6 assertions, written in Phase 1) | Integration (local Supabase Postgres on :54322) | ✅ `pnpm supabase:reset` applied migration + seed; schema tests remain GREEN | ✅ Phase 1 RLS tests were RED until seed rows existed | ✅ `uv run pytest tests/test_schema.py tests/test_rls.py -v` → **39 passed** after seed | ✅ Owner/non-owner campaign reads + owner/non-owner session reads + non-owner insert + anon permission-denied | ➖ SQL seed is minimal and literal by design |
+| T-08 Write `supabase/scripts/seed-auth.ts` | `supabase/scripts/seed-auth.test.ts` | Unit (Vitest + mocked Admin client; no live stack) | ✅ Pre-impl `pnpm --filter supabase test` failed at `Cannot find module './seed-auth'` | ✅ Existing RED test imported missing production module | ✅ `pnpm --filter supabase test` → **5 passed** | ✅ 5 cases: dry-run, missing URL, missing service key, normal create, idempotent skip | ✅ Extracted constants, `parseArgs`, credential validation, direct-execution guard |
+| T-09 Add `tsx` root devDependency | Root `package.json` + `pnpm-lock.yaml` | Config / CLI tooling | ✅ Prior partial change inspected before use | ✅ Root `supabase:seed-auth` could not run without `tsx` | ✅ `pnpm exec tsx --version` → `tsx v4.22.4` | ➖ Triangulation skipped: structural dependency addition | ➖ Existing partial lockfile/package changes retained after verification |
+| T-10 Add root Supabase scripts | Root `package.json` | Config / CLI tooling | ✅ Root scripts absent before edit | ✅ `pnpm supabase:seed-auth --dry-run` unavailable before script existed | ✅ `pnpm supabase:reset` completed; `pnpm supabase:seed-auth --dry-run` exited 0 and logged intent | ✅ Reset script + seed-auth dry-run exercise both new root commands | ➖ Prettier confirmed package.json unchanged after formatting |
+
+### Test summary (Batch 3)
+
+- **Total tests written this batch**: 0 new tests (Strict TDD — Phase 1 wrote
+  the RED tests; this recovery batch makes T-07/T-08/T-10 GREEN).
+- **Backend schema + RLS**: `39 passed in 0.28s` after `pnpm supabase:reset`.
+- **Seed-auth unit tests**: `5 passed` via `pnpm --filter supabase test`.
+- **Dry-run CLI**: `pnpm supabase:seed-auth --dry-run` exited 0 and logged the
+  pinned UUID + `email_confirm=true`; no real Admin API call was made.
+- **tsx tooling**: `pnpm exec tsx --version` → `tsx v4.22.4`.
+- **Lint/format touched test**: `uv run ruff check tests/test_rls.py` → all
+  checks passed.
+
+## Deviations from design (Batch 3)
+
+- `supabase/seed.sql` uses the exact T-07 task title `Dev Campaign` and only
+  required fields (`id`, `user_id`, `title`, `session_number`) rather than the
+  richer illustrative seed content in `design.md`. This matches the assigned
+  task and FR-4.1 minimal seed requirement.
+- `services/api/tests/test_rls.py` was minimally corrected to compare
+  `str(rows[0][0])` to the expected seeded campaign UUID. Psycopg returns
+  PostgreSQL `uuid` columns as Python `UUID` objects, while the test constant is
+  a string. This preserves the behavioral assertion and removes a false
+  negative without weakening coverage.
+
+## Issues found (Batch 3)
+
+- The previous port-54322 blocker is no longer present in this environment:
+  Docker now shows the local containers labeled `com.supabase.cli.project=lazy-lands`,
+  and `pnpm supabase:reset` completed safely against the lazy-lands stack.
+- The failed prior agent's partial changes were valid and retained: root `tsx`
+  devDependency + lockfile entries, and `@supabase/supabase-js` in
+  `supabase/package.json` + lockfile. This batch finished and verified them
+  instead of re-adding or reverting them.
+- A first formatting attempt included `supabase/seed.sql`; Prettier has no SQL
+  parser in this project and reported "No parser could be inferred". The SQL
+  file was left as manually formatted SQL; Prettier was rerun only on supported
+  JSON/TypeScript files.
+
 ## Remaining tasks
 
-- [ ] **T-07** Write `supabase/seed.sql` (Phase 3)
-- [ ] **T-08** Write `supabase/scripts/seed-auth.ts` (Phase 3 — make Vitest GREEN)
-- [ ] **T-09** Add `tsx` to root devDependencies (Phase 4)
-- [ ] **T-10** Add `supabase:reset` + `supabase:seed-auth` scripts to root `package.json` (Phase 4)
 - [ ] **T-11** Write `supabase/CLOUD.md` (Phase 4)
 - [ ] **T-12** Fix `AGENTS.md`: "Next.js 15" → "Next.js 16" (Phase 4)
-- [ ] **T-13** Run full local acceptance gate (Phase 5 — VERIFY) — **requires :54322 freed first**
+- [ ] **T-13** Run full local acceptance gate (Phase 5 — VERIFY)
 
-## Verification commands run this batch
+## Verification commands run (cumulative)
 
 | Command | Result |
 |---|---|
@@ -245,9 +302,17 @@ correct groundwork (24 policies + GRANTs), but the seed rows are absent.
 | `uv run ruff check .` (services/api) | `All checks passed!` (no Python changed) |
 | `drop database lazy_lands_verify` + temp file cleanup | Scratch DB dropped; holy-seitan `public` schema re-verified empty (0 tables); zero net pollution |
 | `pnpm supabase:reset` / `pnpm supabase start` (lazy-lands live stack) | **NOT RUN** — would conflict on :54322 (foreign `holy-seitan` stack) / risk wiping the foreign project. Requires user to free :54322 before the full live acceptance gate (T-13). |
+| `pnpm --filter supabase test` (pre-impl Batch 3) | RED confirmed: failed at `Cannot find module './seed-auth'` before `seed-auth.ts` existed |
+| `pnpm supabase:reset` (Batch 3) | ✅ Reset local lazy-lands DB, applied `20260628101707_initial_schema.sql`, seeded `supabase/seed.sql`, restarted containers |
+| `uv run pytest tests/test_schema.py tests/test_rls.py -v` (services/api, Batch 3) | ✅ **39 passed in 0.28s** |
+| `pnpm exec tsx --version` (Batch 3) | ✅ `tsx v4.22.4`, `node v24.16.0` |
+| `pnpm --filter supabase test` (Batch 3) | ✅ **5 passed** (`supabase/scripts/seed-auth.test.ts`) |
+| `pnpm supabase:seed-auth --dry-run` (Batch 3) | ✅ Exited 0; logged pinned UUID + `email_confirm=true`; no Admin API call |
+| `pnpm exec prettier --write package.json supabase/package.json supabase/scripts/seed-auth.ts` | ✅ Supported files formatted/unchanged |
+| `uv run ruff format tests/test_rls.py && uv run ruff check tests/test_rls.py` | ✅ Reformatted touched Python test; all checks passed |
 
 ## Status
 
-6/13 tasks complete. Ready for next batch (Phase 3 — T-07 seed.sql + T-08
-seed-auth.ts). ⚠️ Prerequisite for full live (T-13) verification: free port
-54322 (stop the foreign `holy-seitan` Supabase stack).
+10/13 tasks complete. Ready for next apply batch (T-11/T-12 docs/tooling
+follow-up, then T-13 acceptance gate). The local lazy-lands Supabase stack is
+currently available on :54322 and Batch 3 verification passed against it.
