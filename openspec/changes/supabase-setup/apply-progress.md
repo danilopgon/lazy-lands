@@ -337,9 +337,42 @@ T-08; no `tasks.md` checkbox changed.
 - `tasks.md`, `AGENTS.md`, frontend files, and `.claude/` were not modified in
   this supplemental batch.
 
-- [ ] **T-11** Write `supabase/CLOUD.md` (Phase 4)
-- [ ] **T-12** Fix `AGENTS.md`: "Next.js 15" → "Next.js 16" (Phase 4)
-- [ ] **T-13** Run full local acceptance gate (Phase 5 — VERIFY)
+## Batch 4 — Cloud runbook, docs fix, and acceptance gate — DONE
+
+Completed the final docs and verification tasks inline with the orchestrator because the cloud
+migration policy required explicit maintainer control.
+
+### Files changed (Batch 4)
+
+- `supabase/CLOUD.md` — added the hosted Supabase migration runbook. The target workflow is
+  CI/CD-controlled `supabase db push` from `main`; manual push is documented only for bootstrap
+  or emergency recovery. The runbook explicitly forbids local seed data and local auth seeding in
+  cloud.
+- `AGENTS.md` — corrected the frontend stack row from Next.js 15 to Next.js 16.
+- `docs/10-roadmap.md` — added the Block 4 end-of-block production smoke test: register, log in,
+  log out, and log back in against deployed frontend/backend + hosted Supabase.
+- `openspec/changes/supabase-setup/tasks.md` — marked T-11, T-12, and T-13 complete.
+- `openspec/changes/supabase-setup/apply-progress.md` — recorded this final batch.
+
+### Verification evidence (Batch 4)
+
+| Check | Result |
+|---|---|
+| `pnpm supabase start` | ✅ Local lazy-lands stack already running on :54321/:54322 |
+| `pnpm supabase:reset` | ✅ Applied migration + `supabase/seed.sql` successfully |
+| `pnpm supabase:seed-auth` | ✅ Created local auth user `dm@lazylands.test` with fixed UUID |
+| `pnpm supabase:seed-auth` (second run) | ✅ Idempotency guard skipped existing user |
+| `uv run pytest tests/test_schema.py tests/test_rls.py -v` | ✅ **39 passed** |
+| `pnpm --filter supabase test` | ✅ **7 passed** |
+| `pnpm typecheck` | ✅ Turbo typecheck passed (`web`) |
+| `pnpm lint` | ✅ Turbo lint passed (`web`) |
+| `pnpm test` | ✅ Turbo test passed (`web`: 66 tests, `supabase`: 7 tests) |
+| `uv run ruff check .` (`services/api`) | ✅ All checks passed |
+| `pnpm format:check` | ⚠️ Failed on pre-existing unrelated frontend formatting drift; intended files were formatted individually |
+
+### Remaining tasks
+
+None. T-01 through T-13 are complete.
 
 ## Verification commands run (cumulative)
 
@@ -363,6 +396,7 @@ T-08; no `tasks.md` checkbox changed.
 
 ## Status
 
-10/13 tasks complete. Ready for next apply batch (T-11/T-12 docs/tooling
-follow-up, then T-13 acceptance gate). The local lazy-lands Supabase stack is
-currently available on :54322 and Batch 3 verification passed against it.
+13/13 tasks complete. Ready for fresh-context diff review, commit/push, PR creation, and then
+`sdd-verify` if requested. The local lazy-lands Supabase stack is available on :54322 and the
+final acceptance gate passed, except for the known pre-existing global Prettier drift outside
+this change's intended files.

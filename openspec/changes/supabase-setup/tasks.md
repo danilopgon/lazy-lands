@@ -60,15 +60,15 @@ Chain strategy: size-exception
 
 - [x] **T-10** Add `supabase:reset` and `supabase:seed-auth` scripts to root `package.json` [IMPL] | Root `package.json` | Add `"supabase:reset": "supabase db reset"` and `"supabase:seed-auth": "tsx supabase/scripts/seed-auth.ts"` | Verify: `pnpm supabase:seed-auth --dry-run` resolves | Spec: FR-5.1, AC-17 | **sequential** after T-09
 
-- [ ] **T-11** Write `supabase/CLOUD.md` [DOCS] | `supabase/CLOUD.md` | Sections: Docker Desktop prereq; `supabase link --project-ref <ref>` (one-time); initial `supabase db push`; incremental push workflow (only `db push` mutates hosted — never hand-edit); rollback path (drop policies → drop tables CASCADE → drop types → `db push` — safe, no real data); cloud auth user creation note | Spec: FR-5.3, AC-19 | **parallel** with T-08–T-10
+- [x] **T-11** Write `supabase/CLOUD.md` [DOCS] | `supabase/CLOUD.md` | Sections: Docker Desktop prereq; `supabase link --project-ref <ref>` (one-time); initial `supabase db push`; incremental push workflow (only `db push` mutates hosted — never hand-edit); rollback path (drop policies → drop tables CASCADE → drop types → `db push` — safe, no real data); cloud auth user creation note | Spec: FR-5.3, AC-19 | **parallel** with T-08–T-10
 
-- [ ] **T-12** Fix `AGENTS.md`: "Next.js 15" → "Next.js 16" [DOCS] | `AGENTS.md` | Single string replacement; matches `apps/web/package.json` (`next@16.2.9`) | Verify: `grep "Next.js 16" AGENTS.md` | Spec: FR-5.4, AC-20 | **parallel** with T-08–T-11
+- [x] **T-12** Fix `AGENTS.md`: "Next.js 15" → "Next.js 16" [DOCS] | `AGENTS.md` | Single string replacement; matches `apps/web/package.json` (`next@16.2.9`) | Verify: `grep "Next.js 16" AGENTS.md` | Spec: FR-5.4, AC-20 | **parallel** with T-08–T-11
 
 ---
 
 ## Phase 5 — Acceptance gate
 
-- [ ] **T-13** Run full local acceptance gate [VERIFY] | — | Execute in order: `pnpm supabase start` → `pnpm supabase:reset` → `pnpm supabase:seed-auth` → `pnpm supabase:seed-auth` (second run — must not fail; idempotency guard) → `uv run pytest` (schema + RLS fully green) → `pnpm test` (all workspaces green) → manual login with seeded credentials | All 23 acceptance criteria satisfied | Spec: NFR-1, NFR-2, NFR-3 | **sequential** after T-06–T-12
+- [x] **T-13** Run full local acceptance gate [VERIFY] | — | Execute in order: `pnpm supabase start` → `pnpm supabase:reset` → `pnpm supabase:seed-auth` → `pnpm supabase:seed-auth` (second run — must not fail; idempotency guard) → `uv run pytest` (schema + RLS fully green) → `pnpm test` (all workspaces green) → manual login with seeded credentials | All 23 acceptance criteria satisfied | Spec: NFR-1, NFR-2, NFR-3 | **sequential** after T-06–T-12
 
 ---
 

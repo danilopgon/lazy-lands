@@ -111,6 +111,8 @@ Auth screens and logic:
 - [ ] HTTP interceptor that injects the Supabase JWT in every request to FastAPI.
 - [ ] `get_current_user` dependency in FastAPI to validate the Supabase JWT.
 - [ ] Tests for protected routes in FastAPI.
+- [ ] End-of-block production smoke test: a real user can register, log in, log out and log back
+  in against the deployed frontend/backend using the hosted Supabase project.
 
 ---
 
