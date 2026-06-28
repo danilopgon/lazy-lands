@@ -106,6 +106,40 @@ describe('seed-auth', () => {
     )
   })
 
+  it('rejects remote Supabase URLs before creating a client', async () => {
+    const createUser = vi.fn()
+    const getUserById = vi.fn()
+    const createClientFn = makeCreateClientFn({ createUser, getUserById })
+
+    await expect(
+      seedAuthUser({ dryRun: false }, {
+        url: 'https://example.supabase.co',
+        serviceRoleKey: 'service-role-key',
+        createClientFn,
+        log: () => {},
+      } satisfies SeedAuthDeps)
+    ).rejects.toThrow(/local Supabase URL/)
+
+    expect(createClientFn).not.toHaveBeenCalled()
+    expect(getUserById).not.toHaveBeenCalled()
+    expect(createUser).not.toHaveBeenCalled()
+  })
+
+  it('rejects invalid Supabase URLs clearly before creating a client', async () => {
+    const createClientFn = makeCreateClientFn({})
+
+    await expect(
+      seedAuthUser({ dryRun: false }, {
+        url: 'not a valid url',
+        serviceRoleKey: 'service-role-key',
+        createClientFn,
+        log: () => {},
+      } satisfies SeedAuthDeps)
+    ).rejects.toThrow(/valid URL/)
+
+    expect(createClientFn).not.toHaveBeenCalled()
+  })
+
   // (e) Idempotency guard: getUserById returns an existing user → createUser
   // is NOT called and a skip message is logged.
   it('(e) skips createUser and logs a skip when the user already exists', async () => {

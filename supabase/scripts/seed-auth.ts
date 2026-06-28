@@ -66,6 +66,27 @@ function validateCredentials(
   }
 }
 
+function assertLocalSupabaseUrl(url: string): void {
+  let parsed: URL
+
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new Error('seed-auth: SUPABASE_URL must be a valid URL')
+  }
+
+  const hostname = parsed.hostname.toLowerCase()
+  const localHostnames = new Set(['localhost', '127.0.0.1', '::1', '[::1]'])
+
+  if (!localHostnames.has(hostname)) {
+    throw new Error(
+      'seed-auth: SUPABASE_URL must be a local Supabase URL ' +
+        '(localhost, 127.0.0.1, or ::1) when --dry-run is not used; ' +
+        `refusing remote host ${parsed.hostname}`
+    )
+  }
+}
+
 function createSeedUserParams() {
   return {
     id: FIXED_UUID,
@@ -101,6 +122,7 @@ export async function seedAuthUser(
   }
 
   validateCredentials(deps)
+  assertLocalSupabaseUrl(deps.url)
 
   const client = (deps.createClientFn ?? createClient)(
     deps.url,

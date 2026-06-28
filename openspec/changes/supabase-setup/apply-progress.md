@@ -287,6 +287,56 @@ T-07 through T-10. T-11, T-12, and T-13 remain untouched for the next batch.
 
 ## Remaining tasks
 
+---
+
+## Supplemental hardening — local-only guard for dev auth seed — DONE
+
+Added a local-only safety guard to `supabase/scripts/seed-auth.ts` so the
+hardcoded local development credentials cannot be used against a hosted or
+remote Supabase URL. This is supplemental security hardening for completed
+T-08; no `tasks.md` checkbox changed.
+
+### TDD Cycle Evidence — Supplemental hardening
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| Local-only seed-auth URL guard | `supabase/scripts/seed-auth.test.ts` | Unit (Vitest + injected client factory; no live stack) | ✅ Baseline `pnpm --filter supabase test` → **5 passed** before edits | ✅ Added remote-URL + invalid-URL tests first; RED confirmed: **2 failed, 5 passed** before implementation | ✅ `pnpm --filter supabase test` → **7 passed** after guard implementation | ✅ Existing localhost normal-path test proves local URLs still proceed; new remote URL test proves client creation is blocked; invalid URL test proves clear parse failure | ✅ Extracted URL validation into `assertLocalSupabaseUrl`; Prettier applied; tests rerun GREEN |
+
+### Test summary (Supplemental hardening)
+
+- **Total tests written this batch**: 2 unit tests.
+- **Seed-auth unit tests**: `7 passed` via `pnpm --filter supabase test`.
+- **Dry-run CLI**: `pnpm supabase:seed-auth --dry-run` exited 0 and logged the
+  pinned UUID + `email_confirm=true`; dry-run remains credential-free and makes
+  no Supabase client.
+
+### Guard behavior
+
+- `--dry-run` returns before credential or URL validation, so it remains safe in
+  any environment and never creates a Supabase client.
+- Non-dry-run still fails clearly when `SUPABASE_URL` or
+  `SUPABASE_SERVICE_ROLE_KEY` is missing.
+- Non-dry-run parses `SUPABASE_URL` with `new URL(...)`; invalid URLs fail with
+  `seed-auth: SUPABASE_URL must be a valid URL` before client creation.
+- Non-dry-run only accepts hostnames `localhost`, `127.0.0.1`, `::1`, or
+  `[::1]`; remote hosts such as `example.supabase.co` fail with a local-only
+  error before `createClientFn`, `getUserById`, or `createUser` can run.
+
+### Files changed (Supplemental hardening)
+
+- `supabase/scripts/seed-auth.ts` — added robust URL parsing and local-host
+  enforcement after credential validation and before client creation.
+- `supabase/scripts/seed-auth.test.ts` — added remote-url rejection and invalid
+  URL tests; existing localhost normal-path test remains the allowed-path proof.
+- `openspec/changes/supabase-setup/apply-progress.md` — recorded this
+  supplemental hardening note.
+
+### Out-of-scope confirmation
+
+- `supabase/CLOUD.md` was not read for editing, created, or modified.
+- `tasks.md`, `AGENTS.md`, frontend files, and `.claude/` were not modified in
+  this supplemental batch.
+
 - [ ] **T-11** Write `supabase/CLOUD.md` (Phase 4)
 - [ ] **T-12** Fix `AGENTS.md`: "Next.js 15" → "Next.js 16" (Phase 4)
 - [ ] **T-13** Run full local acceptance gate (Phase 5 — VERIFY)
