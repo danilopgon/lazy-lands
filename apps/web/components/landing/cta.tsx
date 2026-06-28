@@ -8,7 +8,7 @@ export function LandCTA() {
   return (
     <section
       id="early-access"
-      className="mx-auto w-full max-w-[1180px] px-5 pb-[92px] pt-[20px] llg:px-10"
+      className="mx-auto w-full max-w-[1420px] px-5 pb-[92px] pt-[20px] llg:px-10"
     >
       <div
         className="relative overflow-hidden border-2 border-[var(--border)]"

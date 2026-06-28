@@ -9,7 +9,7 @@ export function LandPillars() {
   return (
     <section
       id="product"
-      className="mx-auto w-full max-w-[1180px] px-5 pb-[48px] pt-[88px] llg:px-10"
+      className="mx-auto w-full max-w-[1420px] px-5 pb-[48px] pt-[88px] llg:px-10"
     >
       <div className="mb-10 max-w-[700px]">
         <SectionHeader

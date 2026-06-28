@@ -215,26 +215,28 @@ body {
   transition-duration: 0.01ms !important;
 }
 
-/* Hero stagger — plays on mount via CSS animation */
+/* Hero stagger — plays on mount via CSS animation.
+   Delays are pushed so the copy "arrives" while the graph scene
+   (Motion, on-load) is mid-assembly: world first, then words. */
 [data-motion='full'] .ll-enter-1 {
-  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 0ms;
-}
-[data-motion='full'] .ll-enter-2 {
-  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 100ms;
-}
-[data-motion='full'] .ll-enter-3 {
-  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 200ms;
-}
-[data-motion='full'] .ll-enter-4 {
   animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
   animation-delay: 300ms;
 }
+[data-motion='full'] .ll-enter-2 {
+  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 420ms;
+}
+[data-motion='full'] .ll-enter-3 {
+  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 540ms;
+}
+[data-motion='full'] .ll-enter-4 {
+  animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 640ms;
+}
 [data-motion='full'] .ll-enter-5 {
   animation: ll-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 400ms;
+  animation-delay: 740ms;
 }
 
 /* Button press physics */
