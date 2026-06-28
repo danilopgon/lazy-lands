@@ -17,10 +17,19 @@ export function LandMarquee() {
       onBlur={() => setPaused(false)}
     >
       <div
-        className="[animation-duration:18s] llg:[animation-duration:38s]"
+        className="[animation-duration:30s] llg:[animation-duration:46s]"
         style={{
+          // The track must shrink-wrap to its content: a block-level flex box
+          // defaults to the parent's width (the viewport), so translateX(-50%)
+          // would be half the viewport — not half the content — and the loop
+          // resets after ~2 messages. `max-content` makes -50% equal one set.
+          width: 'max-content',
+          // No flex `gap` here: a flex gap is also inserted at the seam between
+          // the two copies, so translateX(-50%) lands half a gap short of one
+          // full set and the loop visibly jumps back each cycle. Instead each
+          // item carries its own trailing gap (marginRight), so -50% equals
+          // exactly one set and the loop is seamless.
           display: 'flex',
-          gap: 36,
           whiteSpace: 'nowrap',
           animationName: 'll-marquee',
           animationTimingFunction: 'linear',
@@ -38,6 +47,7 @@ export function LandMarquee() {
               display: 'flex',
               alignItems: 'center',
               gap: 36,
+              marginRight: 36,
               color: 'var(--bg)',
             }}
           >
