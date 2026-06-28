@@ -1,2 +1,0 @@
--- Seed data for local Supabase development. Populated in Block 1.
--- TODO: add auth.users seed

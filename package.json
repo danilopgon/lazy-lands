@@ -12,6 +12,8 @@
     "lint:guardrails": "node scripts/check-guardrails.mjs",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
+    "supabase:reset": "supabase db reset",
+    "supabase:seed-auth": "tsx supabase/scripts/seed-auth.ts",
     "quality": "pnpm lint && pnpm typecheck && pnpm test && pnpm lint:guardrails",
     "quality:strict": "pnpm format:check && pnpm quality",
     "format": "prettier --write .",
@@ -23,6 +25,7 @@
     "lint-staged": "^15.2.10",
     "prettier": "^3.4.2",
     "supabase": "^2.107.0",
+    "tsx": "^4.22.4",
     "turbo": "^2.3.3"
   },
   "lint-staged": {

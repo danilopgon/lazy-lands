@@ -22,7 +22,7 @@ output is an editable proposal; the DM always has the last word.
 
 | Layer       | Technology                                                         |
 | ----------- | ------------------------------------------------------------------ |
-| Frontend    | Next.js 15 (App Router), React, TypeScript, TailwindCSS, shadcn/ui |
+| Frontend    | Next.js 16 (App Router), React, TypeScript, TailwindCSS, shadcn/ui |
 | Backend     | FastAPI, Python 3.12, Pydantic, uv                                 |
 | Database    | Supabase (PostgreSQL + Auth + RLS)                                 |
 | AI          | LLM Provider abstraction (OpenRouter in production, fake in dev)   |

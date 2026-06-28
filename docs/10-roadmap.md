@@ -86,6 +86,10 @@ Status: **done**
 
 Status: **pending**
 
+Dev environment setup (first block where frontend calls FastAPI):
+
+- [ ] Add `package.json` to `services/api` with a `dev` script (`uv run uvicorn app.main:app --reload --port 8000`) so `pnpm dev` launches both Next.js and FastAPI in parallel via Turborepo.
+
 Supabase setup (moved here from Block 0 — first needed in this block):
 
 - [ ] Create Supabase project with email auth enabled.
@@ -107,6 +111,8 @@ Auth screens and logic:
 - [ ] HTTP interceptor that injects the Supabase JWT in every request to FastAPI.
 - [ ] `get_current_user` dependency in FastAPI to validate the Supabase JWT.
 - [ ] Tests for protected routes in FastAPI.
+- [ ] End-of-block production smoke test: a real user can register, log in, log out and log back
+  in against the deployed frontend/backend using the hosted Supabase project.
 
 ---
 
