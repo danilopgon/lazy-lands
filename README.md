@@ -60,8 +60,9 @@ Full flow: [PRODUCT.md](./PRODUCT.md) section 4.
 
 ## Architecture Overview
 
-Backend follows Clean Architecture: thin routers -> application use cases -> domain ports ->
-infrastructure adapters.
+Backend follows a Modular Monolith with nested Clean/Hexagonal layers per module (see ADR-05). Each feature module will encapsulate its own `domain/`, `application/`, `infrastructure/`, routes, schemas, and prompts. Transversal concerns will live in a `shared/` kernel.
+
+**Note:** The backend structure is currently being migrated from layer-first to feature-first organization. See `docs/04-architecture.md` for the target architecture.
 
 Full architecture reference: [docs/04-architecture.md](./docs/04-architecture.md).
 
@@ -80,7 +81,7 @@ lazy-lands/
 |   |-- app/main.py
 |   |-- app/core/           # Config, security, logging, errors
 |   |-- app/api/            # Routers and dependencies
-|   |-- app/application/    # Use cases
+|   |-- app/application/    # Use cases (subdivided by feature: campaigns/, sessions/, memory/, generation/)
 |   |-- app/domain/         # Models and ports
 |   |-- app/infrastructure/ # Supabase client, LLM adapters
 |   |-- app/prompts/        # Jinja prompt templates
