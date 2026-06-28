@@ -15,6 +15,7 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 - **Frontend middleware**: Create `apps/web/middleware.ts` — session refresh via `updateSession()`, route protection matcher for `/dashboard` and future protected routes.
 - **HTTP client**: Create `apps/web/lib/api.ts` — fetch wrapper injecting JWT from Supabase browser client into `Authorization: Bearer` header.
 - **Tests**: Protected route tests in FastAPI (valid/invalid/missing JWT). Form validation tests. Middleware unit tests.
+- **Production smoke test**: End-of-block verification against deployed environment (Vercel frontend + Railway backend + hosted Supabase). Real user flow: register → login → logout → login again. Validates JWT validation works with hosted Supabase JWT secret, CORS is configured correctly, and redirects work in production.
 
 ### Out of Scope
 
@@ -61,6 +62,15 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 8. Create `apps/web/lib/api.ts` — authenticated fetch wrapper.
 9. Add protected route test in FastAPI: test valid JWT, expired JWT, missing header.
 
+### Phase 3: Production smoke test
+
+1. Deploy backend to Railway with production env vars (hosted Supabase URL, keys, JWT secret).
+2. Deploy frontend to Vercel with production env vars (hosted Supabase URL, anon key, backend API URL).
+3. Run smoke test manually: register a new user, login, verify redirect to `/dashboard`, logout, login again.
+4. Verify JWT validation works against hosted Supabase JWT secret (not just local).
+5. Verify CORS allows Vercel origin in production backend.
+6. Document any issues found and fix before closing Block 4.
+
 ## Affected Areas
 
 | Area | Impact | Description |
@@ -77,6 +87,7 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 | `apps/web/app/login/page.tsx` | Modified | Placeholder → real form |
 | `apps/web/app/register/page.tsx` | Modified | Placeholder → real form |
 | `apps/web/lib/api.ts` | New | Authenticated HTTP client |
+| Production deployment | Verified | Smoke test against Vercel + Railway + hosted Supabase |
 
 ## Risks
 
@@ -86,6 +97,7 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 | PyJWT HS256 secret mismatch with Supabase | Low | Local secret from `supabase status`. `config.toml` defines JWT algorithm. Verify with a real token in integration test. |
 | Middleware matcher too broad/narrow | Low | Start with explicit `/dashboard` path. Expand as blocks add protected routes. |
 | Mixed structural + feature changes hard to review | Medium | Two clear phases: migration first (mechanical, tests pass), then auth (new functionality). Separate commits. |
+| Production smoke test fails | Low | Hosted Supabase JWT secret differs from local. CORS origins not configured for Vercel domain. Mitigation: test locally first with `APP_ENV=production` to catch config issues early. |
 
 ## Rollback Plan
 
@@ -109,3 +121,4 @@ Git revert. The migration is a single branch. If Phase 1 (migration) has issues,
 - [ ] `ruff check` and `ruff format --check` pass on backend.
 - [ ] `pnpm lint` and `pnpm typecheck` pass on frontend.
 - [ ] Old directories (`core/`, `api/`, `application/`, `domain/`, `infrastructure/`, `prompts/`) no longer exist.
+- [ ] **Production smoke test**: A real user can register, login, logout, and login again against the deployed frontend (Vercel) + backend (Railway) using the hosted Supabase project.
