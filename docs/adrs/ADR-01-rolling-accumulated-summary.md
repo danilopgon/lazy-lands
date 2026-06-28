@@ -28,17 +28,27 @@ summaries and consequences can easily exceed 8,000–12,000 tokens. This causes 
 
 Rolling accumulated summary for the MVP.
 
-A field `accumulated_summary` is added to `Campaign`. It is regenerated automatically when a
-session is saved via `POST /campaigns/{id}/summarize`. The LLM takes the previous summary plus
-the new session and produces an updated summary of approximately 300–400 tokens.
+A field `accumulated_summary` is added to `Campaign`. It is regenerated as part of
+`POST /campaigns/{campaign_id}/sessions` (the session save endpoint). The LLM takes the
+previous accumulated summary plus the new session N and produces an updated summary of
+approximately 300–400 tokens. After this step `summarized_up_to_session = N`.
 
-The generation prompt receives:
+The generation prompt for session N+1 receives:
 
-- `accumulated_summary` — full campaign history up to session N-1, compressed
-- Last full session — maximum fidelity for the most recent events
+- `accumulated_summary` — all campaign history up to and including session N, compressed
+  (~300–400 tokens, bounded regardless of session count)
 - NPCs, factions and open arcs — current world state
+- Active `MemoryFacts` — DM-approved narrative anchors
 
 Total context stays below ~2,000 tokens regardless of the number of sessions.
+
+**Note on the "last full session verbatim" pattern:** providing session N both inside the
+compressed summary and again verbatim would double-count it and inflate the context. Because
+the summary is regenerated immediately after each session save (including the new session), the
+generation context does not need a separate verbatim copy of the last session. If higher
+fidelity for the most recent session is needed post-MVP, the summary step can be made lazy
+(lag by one session), providing session N verbatim and only summarizing sessions 1..N-1.
+That is a future trade-off, not the MVP design.
 
 ## Consequences
 

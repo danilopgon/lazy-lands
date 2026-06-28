@@ -43,17 +43,18 @@ no-op that returns 204.
 ### Flow
 
 ```
-Session saved
+POST /campaigns/{campaign_id}/sessions
+     │  1. Persists session with sequential number
+     │  2. SummarizeCampaignUseCase → updates accumulated_summary (includes session N)
+     │  3. SuggestMemoriesUseCase → returns 0–5 MemorySuggestion objects (NOT persisted)
      ↓
-POST /campaigns/{id}/summarize  (updates accumulated_summary)
-     ↓
-POST /sessions/{id}/suggest-memories  (returns MemorySuggestion list — NOT persisted)
+Response: { session_id, session_number, memory_suggestions: [...] }
      ↓
 DM reviews suggestions in UI
      ↓
-Accept → POST /campaigns/{id}/memory-facts  (creates MemoryFact with status=active)
+Accept → POST /campaigns/{campaign_id}/memory-facts  (creates MemoryFact status=active)
 Reject → no request sent (suggestion is discarded)
-Edit + Accept → POST /campaigns/{id}/memory-facts with edited content
+Edit + Accept → POST /campaigns/{campaign_id}/memory-facts with edited content
 ```
 
 ### Generation uses only active MemoryFacts

@@ -152,28 +152,25 @@ Status: **pending**
 - [ ] New session screen linked to a campaign.
 - [ ] Field: free-text summary of what happened.
 - [ ] Field: consequences and world state changes.
-- [ ] Save session to Supabase with a sequential number.
+- [ ] FastAPI endpoint `POST /campaigns/{campaign_id}/sessions` — single endpoint that:
+  1. Persists the session with a sequential number.
+  2. Calls `SummarizeCampaignUseCase` to update `accumulated_summary` (previous summary + new session → compressed summary now including session N). Sets `summarized_up_to_session = N`.
+  3. Calls `SuggestMemoriesUseCase` to generate 0–5 `MemorySuggestion` objects validated with Pydantic.
+  4. Returns `session_id`, `session_number` and `memory_suggestions` in the response.
+  Suggestions are returned as part of the response — they are **not persisted** until the DM accepts.
 - [ ] RLS active on the `sessions` table.
 - [ ] Session history per campaign (chronological list).
 
-### Rolling summary (triggered after session save)
-
-- [ ] FastAPI endpoint `POST /campaigns/{id}/summarize` — updates `accumulated_summary` using
-  the previous summary + new session. Called automatically after session registration.
-
 ### Memory suggestions (MVP — part of the core DM flow)
 
-- [ ] FastAPI endpoint `POST /sessions/{id}/suggest-memories` — calls the LLM, validates
-  output against `MemorySuggestionsOutput`, returns 0–5 `MemorySuggestion` objects.
-  Suggestions are **not persisted** at this point; they are a transient API response.
-- [ ] Frontend renders the suggestion list after the session is saved.
+- [ ] Frontend renders the `memory_suggestions` list returned by the session save endpoint.
 - [ ] Each suggestion shows: content, type, importance and reason.
-- [ ] DM can **accept** a suggestion → `POST /campaigns/{id}/memory-facts` creates a
+- [ ] DM can **accept** a suggestion → `POST /campaigns/{campaign_id}/memory-facts` creates a
   `MemoryFact` with `status=active`. Only the accepted (and optionally edited) content is
   stored — never the raw suggestion automatically.
 - [ ] DM can **reject** a suggestion → no request is sent; the suggestion is discarded.
 - [ ] DM can **edit** a suggestion before accepting → the edited content is sent to
-  `POST /campaigns/{id}/memory-facts`; the original suggestion is not stored.
+  `POST /campaigns/{campaign_id}/memory-facts`; the original suggestion is not stored.
 - [ ] RLS active on the `memory_facts` table.
 
 ---
@@ -185,9 +182,11 @@ Status: **pending**
 ### Generation
 
 - [ ] FastAPI endpoint `POST /sessions/generate` — receives `campaign_id`.
-- [ ] `GenerateNextSessionUseCase` builds compressed context: `accumulated_summary` + last full
-  session + NPCs + factions + open arcs + **active `MemoryFacts`** (~2,000 tokens maximum).
-  Unaccepted suggestions are excluded from context.
+- [ ] `GenerateNextSessionUseCase` builds compressed context: `accumulated_summary` (covers all
+  sessions up to and including the last played one) + NPCs + factions + open arcs +
+  **active `MemoryFacts`** (~2,000 tokens maximum). Unaccepted suggestions are excluded
+  from context. The last session is already part of the summary — it is not provided
+  separately to avoid double-counting.
 - [ ] LLM call with the contextualised generation prompt.
 - [ ] The LLM returns structured JSON validated against `GeneratedSessionOutput`.
 - [ ] Save `trace_json` with provider, prompt version, context summary and any errors.
