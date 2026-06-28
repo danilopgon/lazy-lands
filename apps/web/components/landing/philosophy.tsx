@@ -2,7 +2,7 @@ import { ViewEnter } from './motion'
 
 export function LandPhilosophy() {
   return (
-    <section className="mx-auto w-full max-w-[1000px] px-5 py-[56px] llg:px-10">
+    <section className="mx-auto w-full max-w-[1420px] px-5 py-[56px] llg:px-10">
       <div className="mb-[40px] h-[1px] bg-[var(--border)]" />
       <ViewEnter>
         <div

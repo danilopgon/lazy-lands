@@ -3,13 +3,17 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ComingSoonButton } from './coming-soon-button'
-import { HeroCollage } from './hero-collage'
+import { HeroGraphScene } from './hero-graph-scene'
 
 export function LandHero() {
   return (
-    <section className="mx-auto w-full max-w-[1180px] px-5 pb-[44px] pt-[52px] llg:px-10">
-      <div className="grid grid-cols-1 items-center gap-12 llg:grid-cols-[1.05fr_0.95fr]">
-        <div>
+    <section className="relative flex w-full flex-col justify-center overflow-hidden py-12 llg:min-h-[calc(100dvh-150px)]">
+      {/* One contained band: copy and graph share a single tight gutter and the
+          same vertical centre, so they read as one composition — not two
+          elements stranded in opposite corners. */}
+      <div className="mx-auto grid w-full max-w-[1420px] grid-cols-1 items-center gap-y-12 px-6 llg:grid-cols-2 llg:gap-x-12 llg:px-10">
+        {/* ── Copy ── */}
+        <div className="llg:max-w-[560px]">
           <div className="ll-enter-1 flex flex-wrap gap-2">
             <Badge variant="accent">✦ Open beta</Badge>
             <Badge variant="muted">
@@ -40,7 +44,7 @@ export function LandHero() {
           </h1>
 
           <p
-            className="ll-enter-3 mt-[26px] mb-[32px] max-w-[500px] text-[var(--ink-2)]"
+            className="ll-enter-3 mb-[32px] mt-[26px] max-w-[500px] text-[var(--ink-2)]"
             style={{
               fontSize: 18.5,
               lineHeight: 1.5,
@@ -70,7 +74,12 @@ export function LandHero() {
           </div>
         </div>
 
-        <HeroCollage />
+        {/* ── Graph — a square plate sized by its own column, so it sits right
+            beside the copy on a shared grid. Square box keeps nodes circular
+            at every width. ── */}
+        <div className="hidden aspect-square w-full self-center llg:block">
+          <HeroGraphScene />
+        </div>
       </div>
     </section>
   )

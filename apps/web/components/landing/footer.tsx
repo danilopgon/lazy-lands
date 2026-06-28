@@ -6,7 +6,7 @@ export function LandFooter() {
       className="border-t-2 border-[var(--border)] px-5 py-[30px] llg:px-10"
       style={{ background: 'var(--paper-2)' }}
     >
-      <div className="mx-auto flex max-w-[1180px] flex-col gap-4 llg:flex-row llg:items-center llg:justify-between">
+      <div className="mx-auto flex max-w-[1420px] flex-col gap-4 llg:flex-row llg:items-center llg:justify-between">
         <div className="flex items-center gap-4">
           <span className="font-serif text-[18px] font-semibold">
             Lazy <span style={{ color: 'var(--accent-deep)' }}>Lands</span>

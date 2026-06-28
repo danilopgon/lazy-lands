@@ -8,7 +8,7 @@ export function LandHowItWorks() {
       className="border-y-2 border-[var(--border)] py-[88px]"
       style={{ background: 'var(--ink)', color: 'var(--bg)' }}
     >
-      <div className="mx-auto w-full max-w-[1180px] px-5 llg:px-10">
+      <div className="mx-auto w-full max-w-[1420px] px-5 llg:px-10">
         <ViewEnter>
           <h2
             className="font-serif"

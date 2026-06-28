@@ -3,7 +3,7 @@ import { ViewEnter } from './motion'
 
 export function LandBriefing() {
   return (
-    <section className="mx-auto w-full max-w-[1180px] px-5 pb-[88px] pt-[56px] llg:px-10">
+    <section className="mx-auto w-full max-w-[1420px] px-5 pb-[88px] pt-[56px] llg:px-10">
       <div className="grid grid-cols-1 items-center gap-[56px] llg:grid-cols-2">
         {/* Copy: first on mobile, second on desktop */}
         <ViewEnter className="llg:order-2">
