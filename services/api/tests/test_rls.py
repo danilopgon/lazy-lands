@@ -1,0 +1,150 @@
+"""RLS behavior tests for the initial supabase-setup migration.
+
+Strict-TDD Phase 1 (RED): written BEFORE the migration + seed exist. Tests MUST
+fail (or skip when the local stack is down) until Phase 2 applies the migration
+and Phase 3 seeds the demo campaign.
+
+These encode the security invariants from docs/07-data-security-and-rls.md and
+FR-2/FR-3 of the spec — the security tests that make the 24 policies
+behavioral, not textual.
+
+Approach: connect as the postgres superuser, then inside each test open a
+transaction that switches to the ``authenticated`` (or ``anon``) role with a
+simulated JWT sub claim. ``force_rollback=True`` guarantees no test mutates the
+seed data. The superuser bypasses RLS, so we MUST ``SET LOCAL ROLE`` to make
+RLS actually apply.
+"""
+
+from __future__ import annotations
+
+import contextlib
+from collections.abc import Iterator
+
+import psycopg
+import pytest
+from psycopg import Cursor
+
+# Local Supabase DB DSN (postgres superuser; matches config.toml [db] port).
+LOCAL_DB_DSN = "postgresql://postgres:postgres@localhost:54322/postgres"
+
+# Seeded owner of the demo campaign — matches seed.sql + seed-auth.ts FIXED_UUID.
+USER_A = "00000000-0000-0000-0000-000000000001"
+# A second authenticated user that owns no data.
+USER_B = "00000000-0000-0000-0000-000000000002"
+# The seeded campaign (owned by USER_A) — matches seed.sql.
+SEEDED_CAMPAIGN = "10000000-0000-0000-0000-000000000001"
+
+
+@pytest.fixture(scope="module")
+def db_conn():
+    """Connect to the local Supabase Postgres; skip the module if it is down."""
+    try:
+        conn = psycopg.connect(LOCAL_DB_DSN, connect_timeout=2)
+    except psycopg.OperationalError:
+        pytest.skip("Local Supabase stack not running on :54322")
+    yield conn
+    conn.close()
+
+
+# Roles exercised by these tests. Whitelisted because ``SET LOCAL ROLE`` takes
+# a bare identifier, not a bind parameter — the role value is interpolated into
+# the SQL string, so it must be one of these internal constants (never user
+# input).
+_ALLOWED_ROLES = {"authenticated", "anon"}
+
+
+@contextlib.contextmanager
+def as_user(conn: psycopg.Connection, role: str, sub: str | None) -> Iterator[Cursor]:
+    """Run a block as ``role`` with a simulated JWT ``sub`` claim, then roll back.
+
+    - ``role`` is ``"authenticated"`` or ``"anon"`` (whitelisted, never user
+      input — ``SET LOCAL ROLE`` cannot accept a bind parameter).
+    - ``sub`` is the UUID placed in ``request.jwt.claims ->> 'sub'`` so
+      ``auth.uid()`` resolves to it. Pass ``None`` for unauthenticated (anon).
+    - ``SET LOCAL`` keeps role/claim changes scoped to the transaction.
+    - ``force_rollback=True`` guarantees no persistent mutations across tests.
+    """
+    if role not in _ALLOWED_ROLES:
+        raise ValueError(f"unsupported role {role!r}; expected one of {_ALLOWED_ROLES}")
+    with conn.transaction(force_rollback=True):
+        with conn.cursor() as cur:
+            # role is validated against a fixed internal whitelist, so it is
+            # safe to interpolate into the SET LOCAL ROLE identifier slot.
+            cur.execute(f"set local role {role}")
+            if sub is not None:
+                claims = f'{{"sub":"{sub}"}}'
+                cur.execute(
+                    "select set_config('request.jwt.claims', %s, true)", (claims,)
+                )
+            yield cur
+
+
+# --- FR-2.2 / Scenario 1: Owner reads own campaign ---------------------------
+
+
+def test_user_a_reads_own_campaign(db_conn) -> None:
+    """User A SELECTs campaigns and gets exactly the 1 owned campaign row."""
+    with as_user(db_conn, "authenticated", USER_A) as cur:
+        cur.execute("select id from campaigns")
+        rows = cur.fetchall()
+    assert len(rows) == 1
+    assert rows[0][0] == SEEDED_CAMPAIGN
+
+
+# --- FR-2.2 / Scenario 2: Non-owner silently filtered -----------------------
+
+
+def test_user_b_reads_zero_campaigns(db_conn) -> None:
+    """User B SELECTs campaigns and gets 0 rows (RLS filters silently)."""
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        cur.execute("select id from campaigns")
+        rows = cur.fetchall()
+    assert rows == []
+
+
+# --- FR-2.2 / Scenario 3: Non-owner INSERT rejected -------------------------
+
+
+def test_user_b_cannot_insert_session_into_user_a_campaign(db_conn) -> None:
+    """User B INSERTing a session into A's campaign is rejected by RLS.
+
+    An INSERT failing the ``WITH CHECK`` predicate raises
+    ``InsufficientPrivilege`` (psycopg maps the ``new row violates row-level
+    security policy`` error here).
+    """
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            cur.execute(
+                "insert into sessions (campaign_id, session_number) values (%s, 99)",
+                (SEEDED_CAMPAIGN,),
+            )
+
+
+# --- FR-3.3 / Scenario: anon gets permission denied, NOT an empty set --------
+
+
+def test_anon_cannot_select_campaigns(db_conn) -> None:
+    """The `anon` role has NO table GRANT, so SELECT raises permission denied
+    (InsufficientPrivilege), NOT an empty result set."""
+    with as_user(db_conn, "anon", None) as cur:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            cur.execute("select id from campaigns")
+
+
+# --- Child-entity ownership checks ------------------------------------------
+
+
+def test_user_a_reads_two_seeded_sessions(db_conn) -> None:
+    """User A SELECTs sessions and sees exactly the 2 seeded sessions."""
+    with as_user(db_conn, "authenticated", USER_A) as cur:
+        cur.execute("select id from sessions order by session_number")
+        rows = cur.fetchall()
+    assert len(rows) == 2
+
+
+def test_user_b_reads_zero_sessions(db_conn) -> None:
+    """User B SELECTs sessions and gets 0 rows (parent campaign not owned)."""
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        cur.execute("select id from sessions")
+        rows = cur.fetchall()
+    assert rows == []
