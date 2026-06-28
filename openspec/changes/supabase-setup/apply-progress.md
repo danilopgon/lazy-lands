@@ -400,3 +400,43 @@ None. T-01 through T-13 are complete.
 `sdd-verify` if requested. The local lazy-lands Supabase stack is available on :54322 and the
 final acceptance gate passed, except for the known pre-existing global Prettier drift outside
 this change's intended files.
+
+---
+
+## PR #9 review follow-up — spec and schema-test consistency — DONE
+
+Follow-up fixed partially-applied CodeRabbit/Codex comments without changing the completed task
+checkboxes:
+
+- `openspec/changes/supabase-setup/spec.md` no longer repeats stale pre-review decisions. It now
+  points legacy readers at the canonical nested spec and summarizes the accepted model:
+  `campaigns.user_id -> auth.users(id)`, `seed.sql` has no campaign/session rows, `seed-auth.ts`
+  owns deterministic local campaign/session inserts, and `memory_facts` uses the composite
+  campaign-scoped session FK.
+- `services/api/tests/test_schema.py` now creates a rollback-scoped `auth.users` row before the
+  cross-campaign memory-fact FK test inserts campaigns, preserving the real `campaigns.user_id`
+  FK while still proving a memory fact cannot reference another campaign's session.
+- `supabase/CLOUD.md` now describes the local deterministic seed workflow accurately and keeps the
+  cloud policy migration-only: no local seed data and no `pnpm supabase:seed-auth` for hosted
+  projects.
+
+### TDD Cycle Evidence — PR #9 review follow-up
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| Schema test auth FK setup gap | `services/api/tests/test_schema.py` | Integration (local Supabase Postgres on :54322) | ✅ `uv run pytest tests/test_schema.py tests/test_rls.py -v` → 40 passed after reset + seed-auth | ✅ Existing review test exposed the missing `auth.users` setup once `campaigns.user_id` became a real FK | ✅ `test_memory_fact_cannot_reference_session_from_another_campaign` passes with a real rollback-scoped auth owner row | ✅ Test still uses two campaigns and a session from only campaign B, then attempts a memory fact in campaign A; the FK violation must come from the composite FK, not missing owner setup | ✅ Added only rollback-scoped owner setup; assertion remains unchanged |
+| Stale root spec and cloud wording | OpenSpec/docs consistency | Documentation | N/A | ✅ Review comments identified stale contradictory wording | ✅ Root spec contains no stale no-FK/seed.sql campaign-row claims; `supabase/CLOUD.md` describes reset + seed-auth local data flow | ➖ Triangulation skipped: documentation consistency fix | ✅ Root spec reduced to canonical pointer plus current accepted model to avoid future duplicate drift |
+
+### Verification evidence — PR #9 review follow-up
+
+| Command | Result |
+|---|---|
+| `pnpm supabase:reset` | ✅ Reset local DB, applied migration, and ran empty/no-campaign `supabase/seed.sql` successfully |
+| `pnpm supabase:seed-auth --dry-run` | ✅ Exited 0; logged intended fixed UUID and did not print or require secrets |
+| `pnpm supabase:seed-auth` twice with process env from `pnpm supabase status -o env` plus `SUPABASE_SEED_PASSWORD` | ✅ First run created the fixed local auth user and seed rows; second run skipped existing user/campaign/sessions idempotently |
+| `uv run pytest tests/test_schema.py tests/test_rls.py -v` (`services/api`) | ✅ 40 passed |
+| `pnpm --filter supabase test` | ✅ 10 passed |
+| `uv run ruff check .` (`services/api`) | ✅ All checks passed |
+| `pnpm typecheck` | ✅ Turbo typecheck passed (`web`) |
+| `pnpm lint` | ✅ Turbo lint passed (`web`) |
+| `pnpm test` | ✅ Turbo test passed (`web`: 66 tests, `supabase`: 10 tests) |

@@ -1,10 +1,14 @@
 import { pathToFileURL } from 'node:url'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 import { createClient } from '@supabase/supabase-js'
 
 export const FIXED_UUID = '00000000-0000-0000-0000-000000000001'
 export const SEED_EMAIL = 'dm@lazylands.test'
-export const SEED_PASSWORD = 'lazy-lands-dev-password'
+export const SEED_CAMPAIGN_ID = '10000000-0000-0000-0000-000000000001'
+export const SEED_SESSION_ONE_ID = '20000000-0000-0000-0000-000000000001'
+export const SEED_SESSION_TWO_ID = '20000000-0000-0000-0000-000000000002'
 
 export interface SeedAuthOptions {
   dryRun: boolean
@@ -24,11 +28,28 @@ type AdminClient = {
       }) => Promise<{ error?: { message?: string } | null }>
     }
   }
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (
+        column: string,
+        value: string
+      ) => {
+        maybeSingle: () => Promise<{
+          data?: unknown | null
+          error?: { message?: string } | null
+        }>
+      }
+    }
+    insert: (
+      values: unknown
+    ) => Promise<{ error?: { message?: string } | null }>
+  }
 }
 
 export interface SeedAuthDeps {
   url: string | undefined
   serviceRoleKey: string | undefined
+  seedPassword?: string | undefined
   createClientFn?: typeof createClient
   log?: (message: string) => void
 }
@@ -52,6 +73,7 @@ function validateCredentials(
 ): asserts deps is SeedAuthDeps & {
   url: string
   serviceRoleKey: string
+  seedPassword: string
 } {
   if (!deps.url) {
     throw new Error(
@@ -62,6 +84,12 @@ function validateCredentials(
   if (!deps.serviceRoleKey) {
     throw new Error(
       'seed-auth: SUPABASE_SERVICE_ROLE_KEY must be set unless --dry-run is used'
+    )
+  }
+
+  if (!deps.seedPassword) {
+    throw new Error(
+      'seed-auth: SUPABASE_SEED_PASSWORD must be set unless --dry-run is used'
     )
   }
 }
@@ -87,12 +115,63 @@ function assertLocalSupabaseUrl(url: string): void {
   }
 }
 
-function createSeedUserParams() {
+function createSeedUserParams(seedPassword: string) {
   return {
     id: FIXED_UUID,
     email: SEED_EMAIL,
-    password: SEED_PASSWORD,
+    password: seedPassword,
     email_confirm: true,
+  }
+}
+
+function parseDotenvLine(line: string): [string, string] | null {
+  const trimmed = line.trim()
+
+  if (!trimmed || trimmed.startsWith('#')) {
+    return null
+  }
+
+  const withoutExport = trimmed.startsWith('export ')
+    ? trimmed.slice('export '.length).trim()
+    : trimmed
+  const separator = withoutExport.indexOf('=')
+
+  if (separator <= 0) {
+    return null
+  }
+
+  const key = withoutExport.slice(0, separator).trim()
+  let value = withoutExport.slice(separator + 1).trim()
+
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1)
+  }
+
+  return [key, value]
+}
+
+export function loadRootEnv(rootDir = process.cwd()): void {
+  const envPath = resolve(rootDir, '.env')
+
+  if (!existsSync(envPath)) {
+    return
+  }
+
+  for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+    const parsed = parseDotenvLine(line)
+
+    if (!parsed) {
+      continue
+    }
+
+    const [key, value] = parsed
+
+    if (process.env[key] === undefined) {
+      process.env[key] = value
+    }
   }
 }
 
@@ -112,17 +191,23 @@ export async function seedAuthUser(
   deps: SeedAuthDeps
 ): Promise<void> {
   const log = deps.log ?? console.log
-  const params = createSeedUserParams()
 
   if (options.dryRun) {
     log(
-      `[dry-run] would create auth user id=${params.id} email=${params.email} email_confirm=true`
+      `[dry-run] would create auth user id=${FIXED_UUID} email=${SEED_EMAIL} email_confirm=true`
+    )
+    log(
+      '[dry-run] SUPABASE_SEED_PASSWORD is required for non-dry-run execution but is not printed'
+    )
+    log(
+      `[dry-run] would seed campaign id=${SEED_CAMPAIGN_ID} and 2 sessions after the auth user exists`
     )
     return
   }
 
   validateCredentials(deps)
   assertLocalSupabaseUrl(deps.url)
+  const params = createSeedUserParams(deps.seedPassword)
 
   const client = (deps.createClientFn ?? createClient)(
     deps.url,
@@ -136,6 +221,7 @@ export async function seedAuthUser(
 
   if (existing.data?.user) {
     log(`seed-auth: user ${FIXED_UUID} already exists; skipping createUser`)
+    await seedCampaignData(client, log)
     return
   }
 
@@ -158,12 +244,93 @@ export async function seedAuthUser(
   }
 
   log(`seed-auth: created auth user ${SEED_EMAIL} (${FIXED_UUID})`)
+  await seedCampaignData(client, log)
+}
+
+async function ensureRow(
+  client: AdminClient,
+  table: string,
+  id: string,
+  values: unknown,
+  log: (message: string) => void
+): Promise<void> {
+  const existing = await client
+    .from(table)
+    .select('id')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (existing.error) {
+    throw new Error(
+      `seed-auth: ${table} lookup failed: ${
+        existing.error.message ?? String(existing.error)
+      }`
+    )
+  }
+
+  if (existing.data) {
+    log(`seed-auth: ${table} ${id} already exists; skipping insert`)
+    return
+  }
+
+  const inserted = await client.from(table).insert(values)
+
+  if (inserted.error) {
+    throw new Error(
+      `seed-auth: ${table} insert failed: ${
+        inserted.error.message ?? String(inserted.error)
+      }`
+    )
+  }
+}
+
+async function seedCampaignData(
+  client: AdminClient,
+  log: (message: string) => void
+): Promise<void> {
+  await ensureRow(
+    client,
+    'campaigns',
+    SEED_CAMPAIGN_ID,
+    {
+      id: SEED_CAMPAIGN_ID,
+      user_id: FIXED_UUID,
+      title: 'Dev Campaign',
+    },
+    log
+  )
+
+  await ensureRow(
+    client,
+    'sessions',
+    SEED_SESSION_ONE_ID,
+    {
+      id: SEED_SESSION_ONE_ID,
+      campaign_id: SEED_CAMPAIGN_ID,
+      session_number: 1,
+    },
+    log
+  )
+
+  await ensureRow(
+    client,
+    'sessions',
+    SEED_SESSION_TWO_ID,
+    {
+      id: SEED_SESSION_TWO_ID,
+      campaign_id: SEED_CAMPAIGN_ID,
+      session_number: 2,
+    },
+    log
+  )
 }
 
 async function main(): Promise<void> {
+  loadRootEnv()
   await seedAuthUser(parseArgs(process.argv.slice(2)), {
     url: process.env.SUPABASE_URL,
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    seedPassword: process.env.SUPABASE_SEED_PASSWORD,
   })
 }
 

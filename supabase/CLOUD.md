@@ -103,8 +103,11 @@ Record the reason in the PR, issue, or release notes.
 
 ## Seed policy
 
-`supabase/seed.sql` is for local development only. It creates deterministic data for tests and
-developer onboarding.
+The local deterministic data workflow is local-only. `supabase db reset` runs
+`supabase/seed.sql`, which intentionally contains no campaign/session rows because the fixed local
+auth user does not exist yet. After reset, `pnpm supabase:seed-auth` creates or detects that auth
+user and then inserts the deterministic local campaign and sessions for tests and developer
+onboarding.
 
 Do not apply local seed data to the hosted project:
 
@@ -117,13 +120,14 @@ The default cloud workflow must apply migrations only.
 
 ## Auth user policy
 
-`pnpm supabase:seed-auth` is local-only. The script contains fixed development credentials and
-has a technical guard that rejects non-local `SUPABASE_URL` values.
+`pnpm supabase:seed-auth` is local-only. The script requires
+`SUPABASE_SEED_PASSWORD` from the environment and has a technical guard that rejects non-local
+`SUPABASE_URL` values.
 
 For hosted projects:
 
 - Do not run `pnpm supabase:seed-auth`.
-- Do not create users with the local development password.
+- Do not create users with any local development seed password.
 - Create any required demo user through the Supabase dashboard or a future cloud-specific
   provisioning script that uses a real, rotated password.
 - Store cloud secrets only in the deployment platform's secret manager, never in Git.

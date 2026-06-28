@@ -11,12 +11,12 @@
 --       campaigns -> direct ownership: user_id = auth.uid()
 --       child tables -> EXISTS sub-select against the parent campaign
 --   - GRANTs: schema USAGE to anon/authenticated/service_role; table DML to
---     authenticated; ALL to service_role; NO table grants to anon
+--     authenticated; least-privilege local seed access to service_role; NO table
+--     grants to anon
 --
--- Design decision D1 (load-bearing): campaigns.user_id has NO foreign key to
--- auth.users. seed.sql runs BEFORE seed-auth.ts creates the auth user, so an
--- FK would break `supabase db reset`. Ownership is enforced by RLS, not by a
--- referential constraint.
+-- campaigns.user_id references auth.users(id). Local deterministic campaign
+-- seed data is inserted by seed-auth.ts AFTER the auth user exists, not by
+-- seed.sql during `supabase db reset`.
 --
 -- Postgres 17 provides gen_random_uuid() in core — no pgcrypto extension.
 
@@ -34,10 +34,10 @@ create type memory_status  as enum ('active', 'archived');
 -- 2. Tables (parent-first)
 -- =============================================================================
 
--- campaigns (parent; no FK to auth.users — see design D1)
+-- campaigns (parent; owner must exist in auth.users before campaign insert)
 create table campaigns (
   id                        uuid primary key default gen_random_uuid(),
-  user_id                   uuid not null,
+  user_id                   uuid not null references auth.users (id) on delete cascade,
   title                     text not null,
   description               text,
   world_state               text,
@@ -59,6 +59,8 @@ create table sessions (
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
 );
+
+alter table sessions add constraint sessions_campaign_id_id_key unique (campaign_id, id);
 
 -- npcs (child of campaigns)
 create table npcs (
@@ -102,7 +104,7 @@ create table arcs (
 create table memory_facts (
   id                 uuid primary key default gen_random_uuid(),
   campaign_id        uuid not null references campaigns (id) on delete cascade,
-  source_session_id  uuid references sessions (id) on delete cascade,
+  source_session_id  uuid,
   content            text not null,
   type               text,
   importance          importance,
@@ -110,6 +112,12 @@ create table memory_facts (
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
 );
+
+alter table memory_facts
+  add constraint memory_facts_campaign_source_session_fk
+  foreign key (campaign_id, source_session_id)
+  references sessions (campaign_id, id)
+  on delete cascade;
 
 -- =============================================================================
 -- 3. Enable Row Level Security on all 6 tables
@@ -377,7 +385,9 @@ create policy memory_facts_delete on memory_facts
 --   anon         -> NO table privileges (campaign data is never public). An
 --                   unauthenticated request gets InsufficientPrivilege, NOT
 --                   an empty result set — this is what test_rls.py verifies.
---   service_role  -> full access; bypasses RLS (trusted server-side only).
+--   service_role  -> SELECT/INSERT only on campaigns/sessions for the local-only
+--                   deterministic seed script. Runtime campaign data access must
+--                   use authenticated user context plus RLS/ownership checks.
 --
 -- No sequence GRANTs needed — all PKs are UUIDs (gen_random_uuid()).
 
@@ -386,8 +396,10 @@ grant usage on schema public to anon, authenticated, service_role;
 -- Authenticated users operate on all tables; RLS scopes them to their own rows.
 grant select, insert, update, delete on all tables in schema public to authenticated;
 
--- service_role is used by trusted backend code; it also bypasses RLS.
-grant all on all tables in schema public to service_role;
+-- service_role is used only by the local seed-auth script to insert deterministic
+-- campaign/session rows AFTER the fixed local auth user exists. Do not use this
+-- grant pattern as backend runtime authorization for campaign data.
+grant select, insert on campaigns, sessions to service_role;
 
 -- NOTE: anon is intentionally granted NO table privileges. No campaign data is
 -- public.

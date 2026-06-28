@@ -16,6 +16,10 @@ Ownership is enforced through:
 
 - `user_id` on `campaigns`.
 - Campaign-scoped child entities.
+- A database FK from `campaigns.user_id` to `auth.users(id)`.
+- A composite FK from `memory_facts(campaign_id, source_session_id)` to
+  `sessions(campaign_id, id)`, preventing a memory fact from linking to a
+  session in another campaign.
 - Supabase Row Level Security.
 - Backend ownership checks before operations.
 
@@ -96,7 +100,8 @@ Suggested fields:
 
 - `id uuid primary key`
 - `campaign_id uuid references campaigns(id)`
-- `source_session_id uuid references sessions(id)`
+- `source_session_id uuid` nullable, constrained with `campaign_id` to reference
+  a session in the same campaign
 - `content text not null`
 - `type text`
 - `importance text`

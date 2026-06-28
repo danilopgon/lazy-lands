@@ -358,7 +358,6 @@ import { createClient } from "@supabase/supabase-js";
 
 const FIXED_UUID = "00000000-0000-0000-0000-000000000001";
 const SEED_EMAIL = "dm@lazylands.test";
-const SEED_PASSWORD = "lazy-lands-dev-password"; // local-dev only; never used in cloud
 
 interface SeedAuthOptions {
   dryRun: boolean;
@@ -374,6 +373,7 @@ export async function seedAuthUser(
   deps: {
     url: string | undefined;
     serviceRoleKey: string | undefined;
+    seedPassword: string | undefined;
     createClientFn?: typeof createClient;
     log?: (msg: string) => void;
   },
@@ -387,10 +387,10 @@ export async function seedAuthUser(
     return;
   }
 
-  // Real run requires service-role credentials — fail loudly if missing.
-  if (!deps.url || !deps.serviceRoleKey) {
+  // Real run requires local service-role credentials and an explicit seed password — fail loudly if missing.
+  if (!deps.url || !deps.serviceRoleKey || !deps.seedPassword) {
     throw new Error(
-      "seed-auth: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must both be set",
+      "seed-auth: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_SEED_PASSWORD must be set",
     );
   }
 
@@ -402,7 +402,7 @@ export async function seedAuthUser(
   const { error } = await supabase.auth.admin.createUser({
     id: FIXED_UUID,
     email: SEED_EMAIL,
-    password: SEED_PASSWORD,
+    password: deps.seedPassword,
     email_confirm: true,
   });
 

@@ -114,16 +114,28 @@ EXPECTED_ENUM_COLUMNS: dict[tuple[str, str], str] = {
     ("memory_facts", "status"): "memory_status",
 }
 
-# ALL expected FK constraints with ON DELETE CASCADE.
-# (child_table, child_column) -> (parent_table, parent_column)
-EXPECTED_CASCADE_FKS: dict[tuple[str, str], tuple[str, str]] = {
-    ("sessions", "campaign_id"): ("campaigns", "id"),
-    ("npcs", "campaign_id"): ("campaigns", "id"),
-    ("factions", "campaign_id"): ("campaigns", "id"),
-    ("arcs", "campaign_id"): ("campaigns", "id"),
-    ("memory_facts", "campaign_id"): ("campaigns", "id"),
-    ("memory_facts", "source_session_id"): ("sessions", "id"),
+# ALL expected single-column FK constraints with ON DELETE CASCADE.
+# (child_table, child_column) -> (parent_schema, parent_table, parent_column)
+EXPECTED_CASCADE_FKS: dict[tuple[str, str], tuple[str, str, str]] = {
+    ("campaigns", "user_id"): ("auth", "users", "id"),
+    ("sessions", "campaign_id"): ("public", "campaigns", "id"),
+    ("npcs", "campaign_id"): ("public", "campaigns", "id"),
+    ("factions", "campaign_id"): ("public", "campaigns", "id"),
+    ("arcs", "campaign_id"): ("public", "campaigns", "id"),
+    ("memory_facts", "campaign_id"): ("public", "campaigns", "id"),
 }
+
+# Composite tenant-scoped FK for memory_facts.source_session_id.
+EXPECTED_COMPOSITE_CASCADE_FKS: dict[
+    tuple[str, tuple[str, ...]], tuple[str, tuple[str, ...]]
+] = {
+    ("memory_facts", ("campaign_id", "source_session_id")): (
+        "sessions",
+        ("campaign_id", "id"),
+    ),
+}
+
+TEST_AUTH_USER_ID = "00000000-0000-0000-0000-00000000f001"
 
 
 @pytest.fixture(scope="module")
@@ -251,14 +263,14 @@ def test_timestamps_not_null_default_now(db_conn, table_name: str) -> None:
 
 
 def test_cascade_foreign_keys_exist(db_conn) -> None:
-    """All child ``campaign_id`` FKs + ``memory_facts.source_session_id`` FK
-    MUST exist with ON DELETE CASCADE."""
+    """All single-column ownership FKs MUST exist with ON DELETE CASCADE."""
     with db_conn.cursor() as cur:
         cur.execute(
             """
             select
                 cl.relname            as child_table,
                 att.attname           as child_column,
+                ref_ns.nspname        as parent_schema,
                 ref.relname           as parent_table,
                 ref_att.attname       as parent_column,
                 con.confdeltype
@@ -273,11 +285,13 @@ def test_cascade_foreign_keys_exist(db_conn) -> None:
                                     and ref_att.attnum = con.confkey[1]
             where con.contype = 'f'
               and cl_ns.nspname = 'public'
+              and array_length(con.conkey, 1) = 1
             """
         )
-        fks = {(r[0], r[1]): (r[2], r[3], r[4]) for r in cur.fetchall()}
+        fks = {(r[0], r[1]): (r[2], r[3], r[4], r[5]) for r in cur.fetchall()}
 
     for (child_tbl, child_col), (
+        parent_schema,
         parent_tbl,
         parent_col,
     ) in EXPECTED_CASCADE_FKS.items():
@@ -285,11 +299,15 @@ def test_cascade_foreign_keys_exist(db_conn) -> None:
         assert key in fks, (
             f"missing FK on {child_tbl}.{child_col} -> {parent_tbl}.{parent_col}"
         )
-        actual_parent, actual_parent_col, del_type = fks[key]
-        assert (actual_parent, actual_parent_col) == (parent_tbl, parent_col), (
+        actual_parent_schema, actual_parent, actual_parent_col, del_type = fks[key]
+        assert (actual_parent_schema, actual_parent, actual_parent_col) == (
+            parent_schema,
+            parent_tbl,
+            parent_col,
+        ), (
             f"{child_tbl}.{child_col} references "
-            f"{actual_parent}.{actual_parent_col}, expected "
-            f"{parent_tbl}.{parent_col}"
+            f"{actual_parent_schema}.{actual_parent}.{actual_parent_col}, expected "
+            f"{parent_schema}.{parent_tbl}.{parent_col}"
         )
         # confdeltype 'c' == ON DELETE CASCADE.
         assert del_type == "c", (
@@ -298,41 +316,111 @@ def test_cascade_foreign_keys_exist(db_conn) -> None:
         )
 
 
-def test_no_fk_from_campaigns_user_id_to_auth_users(db_conn) -> None:
-    """``campaigns.user_id`` MUST NOT carry an FK to ``auth.users``.
-
-    Rationale (design D1): ``seed.sql`` runs before ``seed-auth.ts`` creates
-    the auth user; an FK would break ``db reset``. Ownership is enforced by
-    RLS, not by a referential constraint.
-
-    The campaigns-table precondition turns this from a vacuous pass (no FKs
-    because no tables) into a meaningful RED until the migration exists.
-    """
+def test_memory_facts_source_session_fk_is_campaign_scoped(db_conn) -> None:
+    """``source_session_id`` MUST reference a session within the same campaign."""
     with db_conn.cursor() as cur:
         cur.execute(
-            "select 1 from information_schema.tables "
-            "where table_schema = 'public' and table_name = 'campaigns'"
-        )
-        assert cur.fetchone() is not None, (
-            "campaigns table must exist for the no-FK assertion to be meaningful"
-        )
-        cur.execute(
             """
-            select count(*)
+            select
+                child.relname as child_table,
+                array_agg(child_att.attname order by ordinality) as child_columns,
+                parent.relname as parent_table,
+                array_agg(parent_att.attname order by ordinality) as parent_columns,
+                con.confdeltype
             from pg_constraint con
-            join pg_class cl        on con.conrelid    = cl.oid
-            join pg_namespace cl_ns on cl.relnamespace  = cl_ns.oid
-            join pg_class ref       on con.confrelid    = ref.oid
-            join pg_namespace ref_ns on ref.relnamespace = ref_ns.oid
+            join pg_class child on child.oid = con.conrelid
+            join pg_namespace child_ns on child_ns.oid = child.relnamespace
+            join pg_class parent on parent.oid = con.confrelid
+            cross join unnest(con.conkey, con.confkey) with ordinality
+                as keys(child_attnum, parent_attnum, ordinality)
+            join pg_attribute child_att on child_att.attrelid = child.oid
+                and child_att.attnum = keys.child_attnum
+            join pg_attribute parent_att on parent_att.attrelid = parent.oid
+                and parent_att.attnum = keys.parent_attnum
             where con.contype = 'f'
-              and cl_ns.nspname = 'public'
-              and cl.relname   = 'campaigns'
-              and ref_ns.nspname = 'auth'
-              and ref.relname   = 'users'
+              and child_ns.nspname = 'public'
+              and child.relname = 'memory_facts'
+              and parent.relname = 'sessions'
+            group by child.relname, parent.relname, con.confdeltype
             """
         )
-        count = cur.fetchone()[0]
-    assert count == 0, f"campaigns.user_id unexpectedly has {count} FK to auth.users"
+        fks = {
+            (row[0], tuple(row[1])): (row[2], tuple(row[3]), row[4])
+            for row in cur.fetchall()
+        }
+
+    for (child_tbl, child_cols), (
+        parent_tbl,
+        parent_cols,
+    ) in EXPECTED_COMPOSITE_CASCADE_FKS.items():
+        key = (child_tbl, child_cols)
+        assert key in fks, (
+            f"missing composite FK on {child_tbl}.{child_cols} -> "
+            f"{parent_tbl}.{parent_cols}"
+        )
+        actual_parent, actual_parent_cols, del_type = fks[key]
+        assert (actual_parent, actual_parent_cols) == (parent_tbl, parent_cols)
+        assert del_type == "c"
+
+
+def test_memory_fact_cannot_reference_session_from_another_campaign(db_conn) -> None:
+    """Tenant boundary is enforced by the composite source-session FK."""
+    campaign_a = "10000000-0000-0000-0000-00000000aaa1"
+    campaign_b = "10000000-0000-0000-0000-00000000bbb1"
+    session_b = "20000000-0000-0000-0000-00000000bbb1"
+
+    with db_conn.transaction(force_rollback=True):
+        with db_conn.cursor() as cur:
+            cur.execute(
+                """
+                insert into auth.users (
+                    id,
+                    aud,
+                    role,
+                    email,
+                    encrypted_password,
+                    email_confirmed_at,
+                    raw_app_meta_data,
+                    raw_user_meta_data,
+                    created_at,
+                    updated_at
+                )
+                values (
+                    %s,
+                    'authenticated',
+                    'authenticated',
+                    'schema-fk-test@lazylands.test',
+                    '',
+                    now(),
+                    '{"provider":"email","providers":["email"]}'::jsonb,
+                    '{}'::jsonb,
+                    now(),
+                    now()
+                )
+                on conflict (id) do nothing
+                """,
+                (TEST_AUTH_USER_ID,),
+            )
+            cur.execute(
+                "insert into campaigns (id, user_id, title) values (%s, %s, %s)",
+                (campaign_a, TEST_AUTH_USER_ID, "Campaign A"),
+            )
+            cur.execute(
+                "insert into campaigns (id, user_id, title) values (%s, %s, %s)",
+                (campaign_b, TEST_AUTH_USER_ID, "Campaign B"),
+            )
+            cur.execute(
+                "insert into sessions (id, campaign_id, session_number) "
+                "values (%s, %s, 1)",
+                (session_b, campaign_b),
+            )
+
+            with pytest.raises(psycopg.errors.ForeignKeyViolation):
+                cur.execute(
+                    "insert into memory_facts "
+                    "(campaign_id, source_session_id, content) values (%s, %s, %s)",
+                    (campaign_a, session_b, "Cross-campaign fact"),
+                )
 
 
 @pytest.mark.parametrize("table_name", sorted(EXPECTED_TABLES))

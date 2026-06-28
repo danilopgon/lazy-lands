@@ -43,17 +43,16 @@ children) → `ENABLE ROW LEVEL SECURITY` → policies → GRANTs.
 
 | Table | `campaign_id` FK | Additional FKs |
 |---|---|---|
-| `campaigns` | — (root entity) | `user_id uuid NOT NULL` — NO FK to `auth.users` (see note below) |
-| `sessions` | `NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE` | — |
+| `campaigns` | — (root entity) | `user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE` |
+| `sessions` | `NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE`; `UNIQUE (campaign_id, id)` | — |
 | `npcs` | `NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE` | — |
 | `factions` | `NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE` | — |
 | `arcs` | `NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE` | — |
-| `memory_facts` | `NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE` | `source_session_id uuid REFERENCES sessions(id) ON DELETE CASCADE` (nullable) |
+| `memory_facts` | `NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE` | `source_session_id uuid` nullable with composite FK `(campaign_id, source_session_id) REFERENCES sessions(campaign_id, id) ON DELETE CASCADE` |
 
-> **No FK from `campaigns.user_id` to `auth.users`**: the seed workflow inserts `seed.sql` rows
-> (including `campaigns`) during `db reset` — before `seed-auth.ts` creates the auth user.
-> A referential constraint would make the campaign INSERT fail. Ownership is enforced by RLS, not
-> by an FK constraint.
+> **Auth FK and seed order**: `campaigns.user_id` MUST reference `auth.users(id)`. Therefore
+> `seed.sql` carries no campaign rows; `seed-auth.ts` creates or detects the fixed local auth user
+> first, then inserts deterministic campaign/session rows with a local-only service role client.
 
 **FR-1.3 — Column completeness.** Every table MUST contain exactly the columns defined in
 `docs/07-data-security-and-rls.md`, with the following universal rules:
@@ -134,7 +133,7 @@ exists (
 | Role | Table privileges |
 |---|---|
 | `authenticated` | `SELECT, INSERT, UPDATE, DELETE` on all 6 tables (RLS scopes to owned rows) |
-| `service_role` | `ALL` on all 6 tables (bypasses RLS) |
+| `service_role` | `SELECT, INSERT` on `campaigns` and `sessions` only for the local-only deterministic seed flow |
 | `anon` | No table privileges |
 
 **FR-3.3** The `anon` role MUST receive no table-level grants. Unauthenticated access to any
@@ -150,10 +149,9 @@ table MUST return `permission denied`, not an empty result set.
 
 ### FR-4: Minimal seed
 
-**FR-4.1 — `supabase/seed.sql`.** MUST insert exactly 1 campaign and 2 sessions owned by the
-fixed UUID `00000000-0000-0000-0000-000000000001`. This file is executed by `supabase db reset`
-as the `postgres` superuser (bypasses RLS). It MUST reference the fixed UUID as a literal
-constant for traceability.
+**FR-4.1 — `supabase/seed.sql`.** MUST contain no campaign/session rows. This file is executed by
+`supabase db reset` before the fixed auth user exists, so deterministic campaign/session seed rows
+belong in `seed-auth.ts` after auth user creation/detection.
 
 **FR-4.2 — `supabase/scripts/seed-auth.ts`.** MUST:
 - Call `supabase.auth.admin.createUser` via the Admin API.
@@ -164,7 +162,10 @@ constant for traceability.
 - Accept `--dry-run` flag: log the intended `createUser` call parameters, make no API call,
   exit 0.
 - Fail with non-zero exit code and a clear error message when `SUPABASE_URL` or
-  `SUPABASE_SERVICE_ROLE_KEY` are absent and `--dry-run` is not active.
+  `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SEED_PASSWORD` are absent and `--dry-run` is not active.
+- Load the root `.env` before reading environment variables when executed as the CLI script.
+- Insert exactly 1 deterministic campaign and 2 deterministic sessions after the fixed auth user
+  exists; the operation MUST be idempotent.
 - Guard `main()` so importing the module in tests has no side effects.
 
 #### Scenario: Seed completes on a reset stack
@@ -230,7 +231,8 @@ pnpm supabase:seed-auth  # auth user creation
 
 After these three commands the local database MUST contain:
 - All 6 tables with the correct schema.
-- 1 campaign and 2 sessions owned by UUID `00000000-0000-0000-0000-000000000001`.
+- 1 campaign and 2 sessions owned by UUID `00000000-0000-0000-0000-000000000001` after
+  `pnpm supabase:seed-auth`.
 - 1 authenticatable auth user with id `00000000-0000-0000-0000-000000000001`.
 
 ### NFR-2: Schema parity (local ↔ cloud)
@@ -260,15 +262,15 @@ mocked Admin client.
    `memory_status` (`active`, `archived`). (FR-1.1)
 3. All 6 tables exist with every column from `docs/07-data-security-and-rls.md`. (FR-1.2, FR-1.3)
 4. `id` defaults to `gen_random_uuid()`; `created_at` and `updated_at` default to `now()` and are NOT NULL on all 6 tables. (FR-1.3)
-5. `campaigns.user_id` is `NOT NULL` with no FK constraint to `auth.users`. (FR-1.2)
-6. FK constraints with `ON DELETE CASCADE` exist: all 5 child tables → `campaigns(id)`; `memory_facts.source_session_id` → `sessions(id)`. (FR-1.2)
+5. `campaigns.user_id` is `NOT NULL` with an FK constraint to `auth.users(id) ON DELETE CASCADE`. (FR-1.2)
+6. FK constraints with `ON DELETE CASCADE` exist: all 5 child tables → `campaigns(id)`; `memory_facts(campaign_id, source_session_id)` → `sessions(campaign_id, id)`. (FR-1.2)
 7. `campaign_id` on all child tables is NOT NULL. (FR-1.2)
 8. RLS is enabled on all 6 tables (`pg_class.relrowsecurity = true`). (FR-2.1)
 9. Exactly 24 RLS policies exist across all 6 tables. (FR-2.2)
 10. `authenticated` role has `SELECT, INSERT, UPDATE, DELETE` on all 6 tables. (FR-3.2)
 11. `anon` role has no table-level grants; querying any table as `anon` returns `permission denied`, not an empty result. (FR-3.2, FR-3.3)
-12. `service_role` has `ALL` privileges on all 6 tables. (FR-3.2)
-13. `supabase/seed.sql` inserts 1 campaign and 2 sessions owned by UUID `00000000-0000-0000-0000-000000000001` after `pnpm supabase:reset`. (FR-4.1)
+12. `service_role` has only the local seed privileges needed on `campaigns` and `sessions`. (FR-3.2)
+13. `supabase/seed.sql` contains no campaign/session rows; `pnpm supabase:seed-auth` inserts 1 campaign and 2 sessions owned by UUID `00000000-0000-0000-0000-000000000001`. (FR-4.1)
 14. `pnpm supabase:reset` completes without errors on a clean local stack. (NFR-1)
 15. `pnpm supabase:seed-auth` creates the auth user with pinned UUID; the user can authenticate with the configured credentials. (FR-4.2)
 16. `pnpm supabase:seed-auth --dry-run` logs the intended `createUser` call and exits 0 without calling the Admin API. (FR-4.2)
@@ -291,7 +293,7 @@ mocked Admin client.
 - TypeScript env declaration file (`env.d.ts`) — Block 4 at latest.
 - Rich demo seed (full NPC roster, multiple campaigns, factions, arcs, memory facts) — later block.
 - CI integration for the Supabase local stack — later block.
-- New environment variables — `.env.example` already declares all Supabase vars needed by this change.
+- New cloud deployment workflow — CI/CD migration deployment is deferred to the login/signup block.
 - `updated_at` trigger — application layer sets the value on mutation.
 
 ---
@@ -311,8 +313,8 @@ Tests MUST assert:
 - Each table has the expected columns with the correct data types per `docs/07`.
 - All 5 enum types exist in `pg_type` with the exact member values in `pg_enum`.
 - FK constraints exist on all child `campaign_id` columns with `ON DELETE CASCADE` behavior.
-- `memory_facts.source_session_id` FK to `sessions(id)` exists with `ON DELETE CASCADE`.
-- `campaigns.user_id` has NO FK constraint to `auth.users`.
+- `memory_facts(campaign_id, source_session_id)` FK to `sessions(campaign_id, id)` exists with `ON DELETE CASCADE` and rejects cross-campaign references.
+- `campaigns.user_id` has an FK constraint to `auth.users(id)` with `ON DELETE CASCADE`.
 - `pg_class.relrowsecurity = true` for all 6 tables.
 - Exactly 24 rows in `pg_policies` across the 6 tables (4 per table).
 
@@ -350,6 +352,7 @@ Tests MUST cover:
   `00000000-0000-0000-0000-000000000001` and `email_confirm: true`) are logged to the injected logger.
 - Missing `SUPABASE_URL`: function rejects/throws with a descriptive error; process would exit 1.
 - Missing `SUPABASE_SERVICE_ROLE_KEY`: function rejects/throws with a descriptive error; process would exit 1.
+- Missing `SUPABASE_SEED_PASSWORD`: function rejects/throws with a descriptive error; process would exit 1.
 - Normal path: `createUser` is called exactly once with `{ id: FIXED_UUID, email, password, email_confirm: true }`.
 
 ---
