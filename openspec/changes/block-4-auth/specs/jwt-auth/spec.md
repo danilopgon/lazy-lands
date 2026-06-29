@@ -289,6 +289,7 @@ async def protected_route(user_id: str = Depends(get_current_user)) -> dict:
 | JA-T-09 | Token with `aud: "anon"` | 401 |
 | JA-T-10 | Token with wrong issuer | 401 |
 | JA-T-11 | JWKS client raises `PyJWKClientError` (simulating unreachable JWKS or unknown kid after re-fetch) | 401 |
+| JA-T-12 | Token header declares an algorithm other than ES256 | 401 |
 
 All 401 responses MUST include `WWW-Authenticate: Bearer` in the response headers.
 Test MUST assert this header is present on every 401 response.
@@ -330,7 +331,7 @@ FastAPI dependency-injected singleton is required to preserve the key cache.
 2. `get_current_user` in `shared/security.py` uses `PyJWKClient` with `algorithms=["ES256"]`,
    `audience="authenticated"`, and `issuer` derived from `settings.supabase_url`. (JA-002)
 3. `get_current_user` returns the `sub` claim as a `str` on valid tokens. (JA-002.4)
-4. All 11 test cases in the test matrix pass. (Test requirements)
+4. All 12 test cases in the test matrix pass. (Test requirements)
 5. All 401 responses include `WWW-Authenticate: Bearer`. (JA-002.5)
 6. `GET /health` returns 200 without an `Authorization` header. (JA-003)
 7. `shared/database.py` is importable and provides a Supabase client factory. (JA-004)

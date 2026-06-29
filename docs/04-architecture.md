@@ -91,68 +91,70 @@ Infrastructure implements external dependencies such as Supabase, LLM providers 
 Each feature module contains nested layer directories:
 
 ```text
-campaigns/
-  domain/
-    models.py
-    ports.py
-  application/
-    extract_campaign.py
-    create_campaign.py
-    get_campaign.py
-  infrastructure/
-    repository.py
-  routes.py
-  schemas.py
-  prompts/
-    extract_campaign_v1.jinja
+app/
+  modules/
+    campaigns/
+      domain/
+        models.py
+        ports.py
+      application/
+        extract_campaign.py
+        create_campaign.py
+        get_campaign.py
+      infrastructure/
+        repository.py
+      routes.py
+      schemas.py
+      prompts/
+        extract_campaign_v1.jinja
 
-sessions/
-  domain/
-    models.py
-    ports.py
-  application/
-    register_session.py
-  infrastructure/
-    repository.py
-  routes.py
-  schemas.py
+    sessions/
+      domain/
+        models.py
+        ports.py
+      application/
+        register_session.py
+      infrastructure/
+        repository.py
+      routes.py
+      schemas.py
 
-memory/
-  domain/
-    models.py
-    ports.py
-  application/
-    accept_memory.py
-  infrastructure/
-    repository.py
-  routes.py
-  schemas.py
-  prompts/
-    suggest_memory_facts_v1.jinja
+    memory/
+      domain/
+        models.py
+        ports.py
+      application/
+        accept_memory.py
+      infrastructure/
+        repository.py
+      routes.py
+      schemas.py
+      prompts/
+        suggest_memory_facts_v1.jinja
 
-generation/
-  domain/
-    models.py
-  application/
-    generate_session.py
-  routes.py
-  schemas.py
-  prompts/
-    generate_session_v1.jinja
+    generation/
+      domain/
+        models.py
+      application/
+        generate_session.py
+      routes.py
+      schemas.py
+      prompts/
+        generate_session_v1.jinja
 
-shared/
-  config.py
-  security.py
-  logging.py
-  errors.py
-  database.py
-  llm/
-    port.py
-    fake.py
-    openrouter.py
+    health/
+      routes.py
 
-health/
-  routes.py
+  shared/
+    config.py
+    security.py
+    logging.py
+    errors.py
+    database.py
+    llm/
+      port.py
+      fake.py
+      openrouter.py
 ```
 
 Module rules:
@@ -178,11 +180,12 @@ services/
     app/
       main.py
       shared/
-      campaigns/
-      sessions/
-      memory/
-      generation/
-      health/
+      modules/
+        campaigns/
+        sessions/
+        memory/
+        generation/
+        health/
       tests/
 
 docs/

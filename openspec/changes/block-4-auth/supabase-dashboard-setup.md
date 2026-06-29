@@ -42,18 +42,25 @@ These MUST match or local tokens will fail validation and tests will produce fal
 
 ### Steps
 
-1. Generate a signing key file using the Supabase CLI (command verified against the official
+1. Confirm `signing_keys_path` is set in `supabase/config.toml`:
+
+   ```toml
+   signing_keys_path = "./signing_keys.json"
+   ```
+
+2. Generate a signing key file using the Supabase CLI (command verified against the official
    Supabase CLI docs via Context7 on 2026-06-29):
 
    ```bash
    supabase gen signing-key --algorithm ES256
    ```
 
-   > `ES256` is the default and recommended algorithm (`RS256` is also supported). Pass
-   > `--append` to add a key to an existing keys file instead of overwriting. The generated
-   > file is then referenced via `signing_keys_path` in `config.toml`.
+   > `ES256` is the default and recommended algorithm (`RS256` is also supported). The CLI
+   > writes the file configured by `signing_keys_path` in `supabase/config.toml`; do not
+   > redirect stdout. Pass `--append` to add a key to an existing keys file instead of
+   > overwriting.
 
-2. The generated file is a JSON object containing a `keys` array of JWK objects. Example shape
+3. The generated file is a JSON object containing a `keys` array of JWK objects. Example shape
    (values are illustrative — use the actual generated file):
 
    ```json
@@ -73,16 +80,8 @@ These MUST match or local tokens will fail validation and tests will produce fal
    }
    ```
 
-3. Save the file to a path that is **NOT inside the git repository**, or add the path to
-   `.gitignore`. **Never commit the signing keys file.**
+4. Keep the configured file out of source control. **Never commit the signing keys file.**
    Recommended path: `supabase/signing_keys.json` with `supabase/signing_keys.json` in `.gitignore`.
-
-4. Uncomment and set `signing_keys_path` in `supabase/config.toml`:
-
-   ```toml
-   # line ~168-169 — currently commented out
-   signing_keys_path = "./signing_keys.json"
-   ```
 
 5. Restart the local Supabase stack: `supabase stop && supabase start`.
 

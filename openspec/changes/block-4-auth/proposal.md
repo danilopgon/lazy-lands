@@ -72,7 +72,7 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 9. Create `apps/web/app/forgot-password/page.tsx` — email form, calls `resetPasswordForEmail` with `redirectTo=/auth/reset`, shows confirmation message.
 10. Create `apps/web/app/auth/reset/page.tsx` — reads `token_hash`+`type=recovery`, calls `verifyOtp`, shows new password form, calls `updateUser`.
 11. Create `apps/web/lib/api.ts` — authenticated fetch wrapper.
-12. Add protected route tests in FastAPI: valid ES256 JWT, expired JWT, wrong aud, wrong issuer, missing header (11 test cases total).
+12. Add protected route tests in FastAPI: valid ES256 JWT, expired JWT, wrong aud, wrong issuer, wrong algorithm, missing header (12 test cases total).
 13. Configure local Supabase `signing_keys_path` for ES256 parity with hosted.
 
 ### Phase 3: Production smoke test

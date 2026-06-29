@@ -40,7 +40,7 @@ After success, use a hard navigation so the SSR middleware sees the freshly-writ
 
 | Concern | Decision |
 |---------|----------|
-| ES256 keys reproducible | Documented cross-platform `package.json` script (no bash-only `.sh`) running from `services/api` as `supabase gen signing-key --algorithm ES256 > ../../supabase/signing_keys.json`; file in `.gitignore`; `signing_keys_path` uncommented in committed `config.toml`. Devs run script before `supabase start`. CI needs no keys — tests mock PyJWKClient. |
+| ES256 keys reproducible | Documented cross-platform `package.json` script (no bash-only `.sh`) running from `services/api` as `supabase gen signing-key --algorithm ES256`; the Supabase CLI writes the configured `signing_keys_path`; file in `.gitignore`; `signing_keys_path` uncommented in committed `config.toml`. Devs run script before `supabase start`. CI needs no keys — tests mock PyJWKClient. |
 | Middleware testability | Extract pure `decideAuth(user, pathname) → "redirect" \| "passthrough"` (Vitest, plain inputs). `middleware()` is thin glue (`updateSession` → `getUser` → `NextResponse`); SM-T-01..07 call it directly with mocked SSR client. Real Edge behavior covered by Playwright — no `@edge-runtime/vm`. |
 
 ## Data Flow
@@ -81,7 +81,7 @@ export function decideAuth(user: User | null, pathname: string): 'redirect' | 'p
 
 | Layer | What | Approach |
 |-------|------|----------|
-| Unit (pytest) | JA-T-01..11 | In-memory EC P-256 keypair; mock `jwks_client`; no network |
+| Unit (pytest) | JA-T-01..12 | In-memory EC P-256 keypair; mock `jwks_client`; no network |
 | Unit (Vitest/RTL) | AU-T-01..24, SM-T-01..07 | Mock Supabase calls; `decideAuth` pure tests |
 | E2E (Playwright) | Edge middleware glue | Real `/dashboard` redirect |
 | Manual smoke | Block-4 gate | Deployed Vercel + Railway + hosted Supabase |
@@ -93,4 +93,4 @@ config change: `supabase_jwt_secret` removed from `Settings` (JA-005) and Railwa
 
 ## Open Questions
 
-- None blocking. Confirm `PyJWKClient` `cache_keys`/`lifespan` kwargs against installed PyJWT at apply.
+- Non-blocking. Confirm `PyJWKClient` `cache_keys`/`lifespan` kwargs against installed PyJWT at apply.

@@ -1,7 +1,7 @@
 import pytest
 
-from app.shared.llm.port import LlmProvider
 from app.shared.llm.fake import FakeLlmProvider
+from app.shared.llm.port import LlmProvider
 
 
 @pytest.mark.asyncio

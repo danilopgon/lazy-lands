@@ -19,7 +19,7 @@ Two main commit boundaries: (1) structural migration, (2) real auth.
 - [x] T-09 · Add signing-key generation script to `services/api/package.json`
 - [x] T-10 · Verify Phase 1 green
 - [ ] T-11 · Add `pyjwt[crypto]` to `pyproject.toml`
-- [ ] T-12 · Write failing JWT auth tests (JA-T-01..11) [TDD — failing]
+- [ ] T-12 · Write failing JWT auth tests (JA-T-01..12) [TDD — failing]
 - [ ] T-13 · Write failing import/factory test for `shared/database.py` [TDD — failing]
 - [ ] T-14 · Implement `get_current_user` in `shared/security.py`
 - [ ] T-15 · Remove `supabase_jwt_secret` from `Settings`
@@ -235,15 +235,16 @@ Windows PowerShell and macOS/Linux):
 {
   "scripts": {
     "dev": "uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
-    "setup:keys": "supabase gen signing-key --algorithm ES256 > ../../supabase/signing_keys.json"
+    "setup:keys": "supabase gen signing-key --algorithm ES256"
   }
 }
 ```
 
 Add `supabase/signing_keys.json` to `.gitignore`.
-Uncomment `signing_keys_path` in `supabase/config.toml` and set its value to the generated
-file path (line ~168 in the file). Developers run `pnpm --filter api setup:keys` before
-`supabase start`. CI tests mock `PyJWKClient` — no real keys required in CI.
+Set `signing_keys_path` in `supabase/config.toml` to the generated file path (line ~168 in
+the file). The Supabase CLI writes the configured keys file; do not redirect stdout.
+Developers run `pnpm --filter api setup:keys` before `supabase start`. CI tests mock
+`PyJWKClient` — no real keys required in CI.
 
 **Spec**: JA-006.
 
@@ -285,7 +286,7 @@ The `[crypto]` extra pulls in `cryptography`, which is required for ES256 suppor
 
 ---
 
-### T-12 · Write failing JWT auth tests (JA-T-01..11) [TDD — failing]
+### T-12 · Write failing JWT auth tests (JA-T-01..12) [TDD — failing]
 
 **Seq**: after T-11.
 
@@ -324,6 +325,7 @@ fail because `get_current_user` is still a stub.
 | JA-T-09 | Token with `aud: "anon"` | 401 |
 | JA-T-10 | Token with wrong issuer | 401 |
 | JA-T-11 | `mock_jwks_client.get_signing_key_from_jwt` raises `PyJWKClientError` | 401 |
+| JA-T-12 | Token header declares an algorithm other than ES256 | 401 |
 
 Every 401 response assertion MUST also check for the `WWW-Authenticate: Bearer` header.
 
@@ -355,7 +357,7 @@ These tests fail because `shared/database.py` does not exist yet.
 
 ### T-14 · Implement `get_current_user` in `shared/security.py`
 
-**Seq**: after T-12 (failing tests exist). Makes JA-T-01..11 GREEN.
+**Seq**: after T-12 (failing tests exist). Makes JA-T-01..12 GREEN.
 
 Replace the stub in `services/api/app/shared/security.py` with the real ES256/JWKS
 implementation:
@@ -432,7 +434,7 @@ bypasses RLS; feature modules must not use it for user-data reads).
 **Seq**: after T-14, T-15, T-16.
 
 Confirm:
-- `uv run pytest` exits 0: all 11 JA-T tests pass + all existing tests still pass.
+- `uv run pytest` exits 0: all 12 JA-T tests pass + all existing tests still pass.
 - `uv run ruff check app/` reports zero violations.
 
 **[COMMIT 2 — backend jwt-auth: one commit, adds real ES256/JWKS validation]**
@@ -835,8 +837,8 @@ Create `apps/web/app/auth/reset/page.tsx` as a `"use client"` component:
 
 | Check | Command | Required result |
 |-------|---------|-----------------|
-| Backend unit tests | `uv run pytest` from `services/api/` | Exit 0 — includes JA-T-01..11 + existing |
-| Frontend unit tests | `pnpm test` | All 42 tests pass (11 JA + 24 AU + 7 SM) |
+| Backend unit tests | `uv run pytest` from `services/api/` | Exit 0 — includes JA-T-01..12 + existing |
+| Frontend unit tests | `pnpm test` | All 43 tests pass (12 JA + 24 AU + 7 SM) |
 | Frontend typecheck | `pnpm typecheck` | Zero errors |
 | Frontend lint | `pnpm lint` | Zero errors |
 | Backend lint | `uv run ruff check app/` from `services/api/` | Zero violations |
@@ -852,7 +854,7 @@ This task gates the PR train — do not declare Block 4 complete until it is gre
 | Test task | Test IDs | Implementation task |
 |-----------|----------|---------------------|
 | T-01 (update imports) | — | T-02..T-07 (migration) |
-| T-12 | JA-T-01..11 | T-14 (`get_current_user`) |
+| T-12 | JA-T-01..12 | T-14 (`get_current_user`) |
 | T-13 | database factory | T-16 (`database.py`) |
 | T-18 | SM-T-01..07 | T-19 (`decideAuth`) |
 | T-20 | E2E middleware | T-21 (`middleware.ts`) |
