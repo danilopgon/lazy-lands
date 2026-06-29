@@ -74,9 +74,13 @@ LLM Provider
 
 ## Backend architecture style
 
-The backend follows a modular Clean Architecture / Hexagonal Architecture approach.
+The backend follows a **Modular Monolith with nested Clean/Hexagonal layers per module** (see ADR-05).
 
-FastAPI routers are thin. They receive HTTP requests and delegate to application use cases.
+Each feature module (`campaigns`, `sessions`, `memory`, `generation`) encapsulates its own `domain/`, `application/`, `infrastructure/`, `routes.py`, `schemas.py`, and `prompts/`. This combines feature-based cohesion with layered discipline.
+
+Transversal concerns (config, security, Supabase client, LLM provider port + adapters) live in a `shared/` kernel imported by all modules.
+
+FastAPI routers within each module are thin. They receive HTTP requests and delegate to application use cases within the same module.
 
 Use cases orchestrate domain logic and infrastructure ports.
 
@@ -84,36 +88,81 @@ Infrastructure implements external dependencies such as Supabase, LLM providers 
 
 ## Backend layers
 
+Each feature module contains nested layer directories:
+
 ```text
-api/
-  routers/
-  dependencies/
+app/
+  modules/
+    campaigns/
+      domain/
+        models.py
+        ports.py
+      application/
+        extract_campaign.py
+        create_campaign.py
+        get_campaign.py
+      infrastructure/
+        repository.py
+      routes.py
+      schemas.py
+      prompts/
+        extract_campaign_v1.jinja
 
-application/
-  campaigns/
-  sessions/
-  memory/
-  exports/
+    sessions/
+      domain/
+        models.py
+        ports.py
+      application/
+        register_session.py
+      infrastructure/
+        repository.py
+      routes.py
+      schemas.py
 
-domain/
-  models/
-  ports/
+    memory/
+      domain/
+        models.py
+        ports.py
+      application/
+        accept_memory.py
+      infrastructure/
+        repository.py
+      routes.py
+      schemas.py
+      prompts/
+        suggest_memory_facts_v1.jinja
 
-infrastructure/
-  supabase/
-  llm/
-  pdf/
+    generation/
+      domain/
+        models.py
+      application/
+        generate_session.py
+      routes.py
+      schemas.py
+      prompts/
+        generate_session_v1.jinja
 
-prompts/
-  templates/
-  render.py
+    health/
+      routes.py
 
-core/
-  config.py
-  security.py
-  logging.py
-  errors.py
+  shared/
+    config.py
+    security.py
+    logging.py
+    errors.py
+    database.py
+    llm/
+      port.py
+      fake.py
+      openrouter.py
 ```
+
+Module rules:
+
+1. A module does NOT import `application/` or `infrastructure/` from another module.
+2. Shared entities live in the module that owns them (e.g. `Campaign` in `campaigns/domain/`).
+3. Genuinely transversal concerns live in `shared/`.
+4. Trivial features don't need the full structure (e.g. `health/` is just `routes.py`).
 
 ## Suggested repository structure
 
@@ -130,12 +179,13 @@ services/
   api/
     app/
       main.py
-      core/
-      domain/
-      application/
-      infrastructure/
-      api/
-      prompts/
+      shared/
+      modules/
+        campaigns/
+        sessions/
+        memory/
+        generation/
+        health/
       tests/
 
 docs/

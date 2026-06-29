@@ -91,6 +91,10 @@ Status: **done**
 
 Status: **pending**
 
+Architecture refinement (before first endpoints):
+
+- [x] Review backend architecture: confirm modular monolith with nested layer structure per module (ADR-05 refined). Update `docs/04-architecture.md` and ADR-05 with the concrete folder structure and module rules.
+
 Dev environment setup (first block where frontend calls FastAPI):
 
 - [ ] Add `package.json` to `services/api` with a `dev` script (`uv run uvicorn app.main:app --reload --port 8000`) so `pnpm dev` launches both Next.js and FastAPI in parallel via Turborepo.

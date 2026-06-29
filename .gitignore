@@ -50,6 +50,7 @@ Thumbs.db
 # Supabase
 supabase/.branches
 supabase/.temp
+supabase/signing_keys.json
 
 # Logs
 *.log

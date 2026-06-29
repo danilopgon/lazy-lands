@@ -1,0 +1,7 @@
+{
+  "name": "api",
+  "scripts": {
+    "dev": "uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "setup:keys": "supabase gen signing-key --algorithm ES256"
+  }
+}
