@@ -1,5 +1,14 @@
 # Proposal: Block 4 — Auth + Backend Structure Migration
 
+> **Scope amended 2026-06-29** — Two corrections applied after verification against a
+> real hosted Supabase access token for project `vprryqqoforhdtbejqab`:
+> 1. **Auth model**: Hosted Supabase uses **ES256 (asymmetric ECC P-256) + JWKS**, not
+>    HS256 + shared secret. Backend validates JWTs via `PyJWKClient` against the JWKS
+>    endpoint; no JWT secret is shipped to the API service.
+> 2. **Email confirmation in scope**: Email confirmation is **enabled** on the hosted
+>    project (diverges from local `config.toml` which has it disabled). Password recovery
+>    comes with it as a security baseline. See updated In Scope and Capabilities below.
+
 ## Intent
 
 Implement end-to-end authentication (Supabase JWT validation, login/register UI, route protection) and migrate the backend from layer-first to modular monolith (ADR-05). Auth is the first block where frontend calls FastAPI, requiring real JWT enforcement and a dev environment that launches both services via `pnpm dev`.
@@ -10,8 +19,8 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 
 - **Backend structure migration**: Move `core/` → `shared/`, `infrastructure/llm/` → `shared/llm/`, `domain/ports/llm.py` → `shared/llm/`, `api/routes/health.py` → `health/routes.py`. Create empty feature module shells (`campaigns/`, `sessions/`, `memory/`, `generation/`) with `domain/`, `application/`, `infrastructure/` subdirs. Remove old directories. Update all imports.
 - **Dev environment**: Add `services/api/package.json` with `dev` script (`uv run uvicorn`). `pnpm dev` launches Next.js + FastAPI via Turborepo.
-- **Backend JWT validation**: Replace `get_current_user` stub with real PyJWT HS256 validation against `SUPABASE_JWT_SECRET`. Add `shared/database.py` Supabase client factory. Add `pyjwt[crypto]` dependency.
-- **Frontend auth UI**: Replace login/register placeholders with real forms (react-hook-form + zod). Supabase email auth via `@supabase/supabase-js`.
+- **Backend JWT validation**: Replace `get_current_user` stub with real PyJWT **ES256/JWKS** validation via `PyJWKClient` against `{SUPABASE_URL}/auth/v1/.well-known/jwks.json`. No JWT secret shipped to the API — `supabase_jwt_secret` removed from `Settings`. Add `shared/database.py` Supabase client factory. Add `pyjwt[crypto]` dependency.
+- **Frontend auth UI**: Replace login/register placeholders with real forms (react-hook-form + zod). Supabase email auth via `@supabase/supabase-js`. Registration shows "check your email" state (no immediate session). New pages: `/auth/confirm` (email confirmation callback), `/forgot-password`, `/auth/reset` (password reset callback).
 - **Frontend middleware**: Create `apps/web/middleware.ts` — session refresh via `updateSession()`, route protection matcher for `/dashboard` and future protected routes.
 - **HTTP client**: Create `apps/web/lib/api.ts` — fetch wrapper injecting JWT from Supabase browser client into `Authorization: Bearer` header.
 - **Tests**: Protected route tests in FastAPI (valid/invalid/missing JWT). Form validation tests. Middleware unit tests.
@@ -23,14 +32,14 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 - Supabase schema changes — migration already exists from `supabase-setup` block.
 - Real LLM calls — fake provider stays.
 - RAG, embeddings, billing, multi-user collaboration — post-MVP.
-- Email confirmation flow — disabled in local `config.toml`.
+- ~~Email confirmation flow — disabled in local `config.toml`.~~ **MOVED IN-SCOPE** (see amendment note above). Email confirmation is enabled on hosted Supabase.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `jwt-auth`: Backend JWT validation via PyJWT, `get_current_user` dependency, protected route enforcement with 401 responses.
-- `auth-ui`: Login and registration forms with client-side validation (zod), Supabase email auth, error handling, redirects.
+- `jwt-auth`: Backend JWT validation via PyJWT `PyJWKClient` (ES256/JWKS), `get_current_user` dependency, protected route enforcement with 401 responses. No shared secret.
+- `auth-ui`: Login form, registration form (now with "check email" state), email confirmation callback (`/auth/confirm`), forgot-password page, password reset callback (`/auth/reset`). Client-side validation via zod + react-hook-form.
 - `session-management`: Next.js middleware for Supabase session refresh (cookie handling) and route protection (redirect unauthenticated users to `/login`).
 
 ### Modified Capabilities
@@ -53,21 +62,25 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 ### Phase 2: Auth implementation
 
 1. Add `pyjwt[crypto]` to `pyproject.toml`.
-2. Implement JWT validation in `shared/security.py` — decode HS256 with `supabase_jwt_secret`, extract `sub` as user ID.
+2. Implement JWT validation in `shared/security.py` — ES256/JWKS via `PyJWKClient`, extract `sub` as user ID. Remove `supabase_jwt_secret` from `Settings`.
 3. Create `shared/database.py` — Supabase client factory using `supabase_service_role_key`.
 4. Create `services/api/package.json` with `dev` script.
 5. Create `apps/web/middleware.ts` — import `updateSession`, matcher for protected routes.
 6. Replace `apps/web/app/login/page.tsx` — form with email/password, `supabase.auth.signInWithPassword`, redirect to `/dashboard` on success.
-7. Replace `apps/web/app/register/page.tsx` — form with email/password, `supabase.auth.signUp`, redirect after registration.
-8. Create `apps/web/lib/api.ts` — authenticated fetch wrapper.
-9. Add protected route test in FastAPI: test valid JWT, expired JWT, missing header.
+7. Replace `apps/web/app/register/page.tsx` — form with email/password, `supabase.auth.signUp` with `emailRedirectTo=/auth/confirm`, show "check email" message (no immediate session).
+8. Create `apps/web/app/auth/confirm/page.tsx` — reads `token_hash`+`type` from URL, calls `verifyOtp`, redirects to `/dashboard` on success.
+9. Create `apps/web/app/forgot-password/page.tsx` — email form, calls `resetPasswordForEmail` with `redirectTo=/auth/reset`, shows confirmation message.
+10. Create `apps/web/app/auth/reset/page.tsx` — reads `token_hash`+`type=recovery`, calls `verifyOtp`, shows new password form, calls `updateUser`.
+11. Create `apps/web/lib/api.ts` — authenticated fetch wrapper.
+12. Add protected route tests in FastAPI: valid ES256 JWT, expired JWT, wrong aud, wrong issuer, missing header (11 test cases total).
+13. Configure local Supabase `signing_keys_path` for ES256 parity with hosted.
 
 ### Phase 3: Production smoke test
 
-1. Deploy backend to Railway with production env vars (hosted Supabase URL, keys, JWT secret).
-2. Deploy frontend to Vercel with production env vars (hosted Supabase URL, anon key, backend API URL).
-3. Run smoke test manually: register a new user, login, verify redirect to `/dashboard`, logout, login again.
-4. Verify JWT validation works against hosted Supabase JWT secret (not just local).
+1. Deploy backend to Railway with production env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `API_CORS_ORIGINS=<vercel-domain>`. **No `SUPABASE_JWT_SECRET` needed** — JWT validation uses JWKS derived from `SUPABASE_URL`.
+2. Deploy frontend to Vercel with production env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_API_URL=<railway-url>`, `NEXT_PUBLIC_APP_URL=<vercel-domain>`.
+3. Configure Supabase dashboard: Auth → URL configuration must include `/auth/confirm` and `/auth/reset` redirect URLs for the Vercel domain.
+4. Run smoke test manually: register → confirm email → login → verify `/dashboard` → logout → login again → password recovery flow.
 5. Verify CORS allows Vercel origin in production backend.
 6. Document any issues found and fix before closing Block 4.
 
@@ -94,7 +107,8 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
 | Import breakage during migration | Medium | Run `pytest` + `ruff` after each move. Migration is mechanical — grep confirms all `app.core.*` references updated. |
-| PyJWT HS256 secret mismatch with Supabase | Low | Local secret from `supabase status`. `config.toml` defines JWT algorithm. Verify with a real token in integration test. |
+| JWKS endpoint unreachable during local dev | Low | Derive JWKS URL from `SUPABASE_URL`. Local Supabase exposes JWKS at `http://127.0.0.1:54321/auth/v1/.well-known/jwks.json` when running. Tests mock `PyJWKClient` — no network required. |
+| Local Supabase ES256 signing key setup | Medium | `signing_keys_path` must be configured before local tokens can be validated by the backend. Verify exact CLI command from current Supabase docs before setup. |
 | Middleware matcher too broad/narrow | Low | Start with explicit `/dashboard` path. Expand as blocks add protected routes. |
 | Mixed structural + feature changes hard to review | Medium | Two clear phases: migration first (mechanical, tests pass), then auth (new functionality). Separate commits. |
 | Production smoke test fails | Low | Hosted Supabase JWT secret differs from local. CORS origins not configured for Vercel domain. Mitigation: test locally first with `APP_ENV=production` to catch config issues early. |
@@ -116,7 +130,10 @@ Git revert. The migration is a single branch. If Phase 1 (migration) has issues,
 - [ ] New test: protected endpoint returns 401 without JWT, 401 with invalid JWT, 200 with valid JWT.
 - [ ] `pnpm dev` starts both Next.js (`:3000`) and FastAPI (`:8000`).
 - [ ] Login form submits, receives Supabase session, redirects to `/dashboard`.
-- [ ] Register form creates account via Supabase, redirects after signup.
+- [ ] Register form creates account via Supabase, shows "check email" message (no immediate redirect to `/dashboard`).
+- [ ] Email confirmation link opens `/auth/confirm`, calls `verifyOtp`, redirects to `/dashboard` on success.
+- [ ] Forgot-password page calls `resetPasswordForEmail` with correct `redirectTo`.
+- [ ] Password reset callback page calls `verifyOtp` then `updateUser` on new password submission.
 - [ ] Unauthenticated visit to `/dashboard` redirects to `/login`.
 - [ ] `ruff check` and `ruff format --check` pass on backend.
 - [ ] `pnpm lint` and `pnpm typecheck` pass on frontend.
