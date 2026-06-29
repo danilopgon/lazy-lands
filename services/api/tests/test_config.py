@@ -1,4 +1,4 @@
-from app.core.config import Settings
+from app.shared.config import Settings
 
 
 def test_settings_load_required_environment(monkeypatch) -> None:

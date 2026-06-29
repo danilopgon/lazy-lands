@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health
-from app.core.config import settings
-from app.core.errors import AppError, http_error_handler
+from app.health import routes as health
+from app.shared.config import settings
+from app.shared.errors import AppError, http_error_handler
 
 app = FastAPI(title="lazy-lands-api")
 
