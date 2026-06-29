@@ -55,10 +55,10 @@ After success, use a hard navigation so the SSR middleware sees the freshly-writ
 | File | Action | Description |
 |------|--------|-------------|
 | `services/api/app/shared/{config,security,errors,logging,dependencies}.py`, `shared/database.py`, `shared/llm/{port,fake}.py` | Create | Kernel (moved from `core/`,`api/`,`domain/`,`infrastructure/`) + new `database.py` factory |
-| `services/api/app/health/routes.py` | Create | Moved from `api/routes/health.py` |
-| `services/api/app/{campaigns,sessions,memory,generation}/` | Create | Empty shells (domain/application/infrastructure) |
+| `services/api/app/modules/health/routes.py` | Create | Moved from `api/routes/health.py`, then grouped under `modules/` |
+| `services/api/app/modules/{campaigns,sessions,memory,generation}/` | Create | Empty shells (domain/application/infrastructure), grouped under `modules/` |
 | `services/api/app/{core,api,application,domain,infrastructure,prompts}/` | Delete | Old layer-first layout |
-| `services/api/app/main.py` | Modify | Imports → `app.shared.*` / `app.health.*` |
+| `services/api/app/main.py` | Modify | Imports → `app.shared.*` / `app.modules.health.*` |
 | `services/api/{pyproject.toml,package.json}` | Modify/Create | `pyjwt[crypto]`; Turborepo `dev` script |
 | `apps/web/middleware.ts` + pure `decideAuth` module | Create | Session refresh + `/dashboard*` guard |
 | `apps/web/app/{login,register}/page.tsx` | Modify | Real forms (react-hook-form + zod) |

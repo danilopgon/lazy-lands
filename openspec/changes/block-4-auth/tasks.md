@@ -30,7 +30,7 @@ pages do not import each other.
 > One commit. No business logic changes. Tests updated first, migration makes them green.
 > Satisfies: RB-001, RB-002, RB-003, RB-004, RB-005, RB-006, NFR-RB-1, NFR-RB-2.
 
-### T-01 · Update existing test import paths [TDD — make tests fail first]
+### [x] T-01 · Update existing test import paths [TDD — make tests fail first]
 
 **Seq**: first task in Phase 1.
 
@@ -56,7 +56,7 @@ Files to update: `tests/test_config.py`, `tests/test_fake_llm.py`, `tests/test_h
 
 ---
 
-### T-02 · Create `app/shared/` kernel (config, security stub, errors, logging, dependencies)
+### [x] T-02 · Create `app/shared/` kernel (config, security stub, errors, logging, dependencies)
 
 **Seq**: after T-01. **Parallel with T-03, T-04**.
 
@@ -75,7 +75,7 @@ Create `services/api/app/shared/` with:
 
 ---
 
-### T-03 · Create `app/shared/llm/` subpackage
+### [x] T-03 · Create `app/shared/llm/` subpackage
 
 **Seq**: after T-01. **Parallel with T-02, T-04**.
 
@@ -91,7 +91,7 @@ Create `services/api/app/shared/llm/` with:
 
 ---
 
-### T-04 · Create `app/health/` module
+### [x] T-04 · Create `app/health/` module
 
 **Seq**: after T-01. **Parallel with T-02, T-03**.
 
@@ -108,7 +108,7 @@ Create `services/api/app/health/` with:
 
 ---
 
-### T-05 · Create empty feature module shells
+### [x] T-05 · Create empty feature module shells
 
 **Seq**: after T-01. **Parallel with T-02, T-03, T-04**.
 
@@ -128,7 +128,7 @@ No router from these modules is registered in `main.py` in this phase.
 
 ---
 
-### T-06 · Update `main.py` imports
+### [x] T-06 · Update `main.py` imports
 
 **Seq**: after T-02, T-03, T-04.
 
@@ -140,7 +140,7 @@ old paths must remain.
 
 ---
 
-### T-07 · Delete old directories
+### [x] T-07 · Delete old directories
 
 **Seq**: after T-06.
 
@@ -158,7 +158,7 @@ each feature shell created in T-05.
 
 ---
 
-### T-08 · Add `services/api/package.json` with dev script
+### [x] T-08 · Add `services/api/package.json` with dev script
 
 **Seq**: after T-01 (independent of T-02..T-07, can be done in parallel).
 
@@ -180,7 +180,7 @@ When `pnpm dev` is executed from the monorepo root, Turborepo must start both Ne
 
 ---
 
-### T-09 · Add signing-key generation script to `services/api/package.json`
+### [x] T-09 · Add signing-key generation script to `services/api/package.json`
 
 **Seq**: after T-08.
 
@@ -205,7 +205,7 @@ file path (line ~168 in the file). Developers run `pnpm --filter api setup:keys`
 
 ---
 
-### T-10 · Verify Phase 1 green
+### [x] T-10 · Verify Phase 1 green
 
 **Seq**: after T-06, T-07 (all migration tasks complete).
 

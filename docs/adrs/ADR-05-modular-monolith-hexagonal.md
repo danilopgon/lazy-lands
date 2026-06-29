@@ -3,7 +3,8 @@
 **Status:** Accepted  
 **Date:** 2026  
 **Area:** Backend / Architecture
-**Refined:** 2026-06-28 — Nested layer structure within modules
+**Refined:** 2026-06-28 — Nested layer structure within modules  
+**Refined:** 2026-06-29 — Feature modules grouped under `app/modules/` to separate domain modules from the shared kernel
 
 ## Context and problem
 
@@ -29,7 +30,8 @@ This means:
 
 - **Single FastAPI process** — no operational overhead of microservices for a solo developer.
 - **Modules with explicit boundaries** by functional domain: `campaigns`, `sessions`,
-  `memory`, `generation`, `exports`. No module calls directly into the internals of another.
+  `memory`, `generation`, `exports`, all grouped under `app/modules/`. No module calls
+  directly into the internals of another.
 - **Nested layer structure within each module** — each feature module contains its own
   `domain/`, `application/`, `infrastructure/`, `routes.py`, `schemas.py`, and `prompts/`
   subdirectories. This combines the cohesion of feature-based organization with the discipline
@@ -45,71 +47,72 @@ This means:
 ```text
 app/
   shared/                    # Transversal: config, security, errors, Supabase client, LLM port+adapters
-  campaigns/
-    domain/
-      models.py              # Campaign, NPC, Faction, Arc
-      ports.py               # CampaignRepository Protocol
-    application/
-      extract_campaign.py
-      create_campaign.py
-      get_campaign.py
-    infrastructure/
-      repository.py          # SupabaseCampaignRepository
-    routes.py
-    schemas.py
-    prompts/
-      extract_campaign_v1.jinja
-  sessions/
-    domain/
-      models.py
-      ports.py
-    application/
-      register_session.py
-    infrastructure/
-      repository.py
-    routes.py
-    schemas.py
-  memory/
-    domain/
-      models.py
-      ports.py
-    application/
-      accept_memory.py
-    infrastructure/
-      repository.py
-    routes.py
-    schemas.py
-    prompts/
-      suggest_memory_facts_v1.jinja
-  generation/
-    domain/
-      models.py
-    application/
-      generate_session.py
-    routes.py
-    schemas.py
-    prompts/
-      generate_session_v1.jinja
-  health/
-    routes.py
+  modules/                   # All domain feature modules (separate from the shared kernel)
+    campaigns/
+      domain/
+        models.py              # Campaign, NPC, Faction, Arc
+        ports.py               # CampaignRepository Protocol
+      application/
+        extract_campaign.py
+        create_campaign.py
+        get_campaign.py
+      infrastructure/
+        repository.py          # SupabaseCampaignRepository
+      routes.py
+      schemas.py
+      prompts/
+        extract_campaign_v1.jinja
+    sessions/
+      domain/
+        models.py
+        ports.py
+      application/
+        register_session.py
+      infrastructure/
+        repository.py
+      routes.py
+      schemas.py
+    memory/
+      domain/
+        models.py
+        ports.py
+      application/
+        accept_memory.py
+      infrastructure/
+        repository.py
+      routes.py
+      schemas.py
+      prompts/
+        suggest_memory_facts_v1.jinja
+    generation/
+      domain/
+        models.py
+      application/
+        generate_session.py
+      routes.py
+      schemas.py
+      prompts/
+        generate_session_v1.jinja
+    health/
+      routes.py
 ```
 
 ### Module structure rules
 
 1. **A module does NOT import `application/` or `infrastructure/` from another module.** If
-   campaigns needs something from sessions, it does so via a port in `campaigns/domain/ports.py`
-   or via the shared kernel.
+   campaigns needs something from sessions, it does so via a port in
+   `modules/campaigns/domain/ports.py` or via the shared kernel.
 
 2. **Shared entities live in the module that "owns" them.** `Campaign` lives in
-   `campaigns/domain/models.py`. Sessions, memory, and generation import Campaign from there.
-   This is acceptable in a monolith — not microservices.
+   `modules/campaigns/domain/models.py`. Sessions, memory, and generation import Campaign
+   from there. This is acceptable in a monolith — not microservices.
 
 3. **Genuinely transversal concerns live in `shared/`.** Config, security, Supabase client,
    LLM port + adapters, errors, logging. If something is used by 2+ modules and none "owns" it,
    it goes to shared.
 
-4. **Trivial features don't need the full structure.** `health/` is just `routes.py`. Don't
-   create empty `domain/` and `application/` just to comply.
+4. **Trivial features don't need the full structure.** `modules/health/` is just `routes.py`.
+   Don't create empty `domain/` and `application/` just to comply.
 
 ## Evolution roadmap
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.health import routes as health
+from app.modules.health import routes as health
 from app.shared.config import settings
 from app.shared.errors import AppError, http_error_handler
 
