@@ -40,7 +40,7 @@ After success, use a hard navigation so the SSR middleware sees the freshly-writ
 
 | Concern | Decision |
 |---------|----------|
-| ES256 keys reproducible | Documented cross-platform `package.json` script (no bash-only `.sh`) running `supabase gen signing-key --algorithm ES256 > supabase/signing_keys.json`; file in `.gitignore`; `signing_keys_path` uncommented in committed `config.toml`. Devs run script before `supabase start`. CI needs no keys — tests mock PyJWKClient. |
+| ES256 keys reproducible | Documented cross-platform `package.json` script (no bash-only `.sh`) running from `services/api` as `supabase gen signing-key --algorithm ES256 > ../../supabase/signing_keys.json`; file in `.gitignore`; `signing_keys_path` uncommented in committed `config.toml`. Devs run script before `supabase start`. CI needs no keys — tests mock PyJWKClient. |
 | Middleware testability | Extract pure `decideAuth(user, pathname) → "redirect" \| "passthrough"` (Vitest, plain inputs). `middleware()` is thin glue (`updateSession` → `getUser` → `NextResponse`); SM-T-01..07 call it directly with mocked SSR client. Real Edge behavior covered by Playwright — no `@edge-runtime/vm`. |
 
 ## Data Flow
@@ -54,7 +54,7 @@ After success, use a hard navigation so the SSR middleware sees the freshly-writ
 
 | File | Action | Description |
 |------|--------|-------------|
-| `services/api/app/shared/{config,security,errors,logging,dependencies}.py`, `shared/database.py`, `shared/llm/{port,fake}.py` | Create | Kernel (moved from `core/`,`api/`,`domain/`,`infrastructure/`) + new `database.py` factory |
+| `services/api/app/shared/{config,security,errors,logging,dependencies}.py`, `shared/llm/{port,fake}.py` | Create | Phase 1 kernel (moved from `core/`,`api/`,`domain/`,`infrastructure/`); `shared/database.py` is Phase 2A |
 | `services/api/app/modules/health/routes.py` | Create | Moved from `api/routes/health.py`, then grouped under `modules/` |
 | `services/api/app/modules/{campaigns,sessions,memory,generation}/` | Create | Empty shells (domain/application/infrastructure), grouped under `modules/` |
 | `services/api/app/{core,api,application,domain,infrastructure,prompts}/` | Delete | Old layer-first layout |

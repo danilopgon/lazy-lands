@@ -1,9 +1,9 @@
 # ADR-05 — Backend Architecture: Modular Monolith + Hexagonal/Clean
 
-**Status:** Accepted  
-**Date:** 2026  
+**Status:** Accepted
+**Date:** 2026
 **Area:** Backend / Architecture
-**Refined:** 2026-06-28 — Nested layer structure within modules  
+**Refined:** 2026-06-28 — Nested layer structure within modules
 **Refined:** 2026-06-29 — Feature modules grouped under `app/modules/` to separate domain modules from the shared kernel
 
 ## Context and problem

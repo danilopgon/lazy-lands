@@ -17,7 +17,7 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 
 ### In Scope
 
-- **Backend structure migration**: Move `core/` → `shared/`, `infrastructure/llm/` → `shared/llm/`, `domain/ports/llm.py` → `shared/llm/`, `api/routes/health.py` → `health/routes.py`. Create empty feature module shells (`campaigns/`, `sessions/`, `memory/`, `generation/`) with `domain/`, `application/`, `infrastructure/` subdirs. Remove old directories. Update all imports.
+- **Backend structure migration**: Move `core/` → `shared/`, `infrastructure/llm/` → `shared/llm/`, `domain/ports/llm.py` → `shared/llm/`, `api/routes/health.py` → `modules/health/routes.py`. Create empty feature module shells under `modules/` (`campaigns/`, `sessions/`, `memory/`, `generation/`) with `domain/`, `application/`, `infrastructure/` subdirs. Remove old directories. Update all imports.
 - **Dev environment**: Add `services/api/package.json` with `dev` script (`uv run uvicorn`). `pnpm dev` launches Next.js + FastAPI via Turborepo.
 - **Backend JWT validation**: Replace `get_current_user` stub with real PyJWT **ES256/JWKS** validation via `PyJWKClient` against `{SUPABASE_URL}/auth/v1/.well-known/jwks.json`. No JWT secret shipped to the API — `supabase_jwt_secret` removed from `Settings`. Add `shared/database.py` Supabase client factory. Add `pyjwt[crypto]` dependency.
 - **Frontend auth UI**: Replace login/register placeholders with real forms (react-hook-form + zod). Supabase email auth via `@supabase/supabase-js`. Registration shows "check your email" state (no immediate session). New pages: `/auth/confirm` (email confirmation callback), `/forgot-password`, `/auth/reset` (password reset callback).
@@ -50,10 +50,10 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 
 ### Phase 1: Backend structure migration
 
-1. Create `shared/` with `config.py`, `security.py`, `errors.py`, `logging.py` (from `core/`), plus `database.py` (new), `llm/` (from `infrastructure/llm/` + `domain/ports/llm.py`).
-2. Create `health/routes.py` (from `api/routes/health.py`).
-3. Create empty feature shells: `campaigns/`, `sessions/`, `memory/`, `generation/` — each with `__init__.py` and appropriate empty subdirs per ADR-05.
-4. Update `main.py` imports: `app.core.*` → `app.shared.*`, `app.api.routes.health` → `app.health.routes`.
+1. Create `shared/` with `config.py`, `security.py`, `errors.py`, `logging.py`, `dependencies.py` (from `core/` / `api/`), plus `llm/` (from `infrastructure/llm/` + `domain/ports/llm.py`). `shared/database.py` is deferred to Phase 2A.
+2. Create `modules/health/routes.py` (from `api/routes/health.py`).
+3. Create empty feature shells under `modules/`: `campaigns/`, `sessions/`, `memory/`, `generation/` — each with `__init__.py` and appropriate empty subdirs per ADR-05.
+4. Update `main.py` imports: `app.core.*` → `app.shared.*`, `app.api.routes.health` → `app.modules.health.routes`.
 5. Move `api/dependencies.py` re-export → `shared/dependencies.py`.
 6. Update all test imports (`test_config.py`, `test_fake_llm.py`).
 7. Delete old directories: `core/`, `api/`, `application/`, `domain/`, `infrastructure/`, `prompts/`.
@@ -89,8 +89,8 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 | Area | Impact | Description |
 |------|--------|-------------|
 | `services/api/app/shared/` | New | Transversal kernel: config, security, errors, logging, database, llm |
-| `services/api/app/health/` | New | Health routes (moved from `api/routes/`) |
-| `services/api/app/{campaigns,sessions,memory,generation}/` | New | Empty feature module shells per ADR-05 |
+| `services/api/app/modules/health/` | New | Health routes (moved from `api/routes/`) |
+| `services/api/app/modules/{campaigns,sessions,memory,generation}/` | New | Empty feature module shells per ADR-05 |
 | `services/api/app/{core,api,application,domain,infrastructure,prompts}/` | Removed | Old layer-first structure |
 | `services/api/app/main.py` | Modified | Import paths updated |
 | `services/api/pyproject.toml` | Modified | Add `pyjwt[crypto]` |

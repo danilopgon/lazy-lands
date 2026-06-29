@@ -1,8 +1,51 @@
 # Tasks: block-4-auth — Auth + Backend Structure Migration
 
 Ordered, dependency-aware implementation checklist for the **block-4-auth** change.
-All 39 tasks follow Strict TDD: the failing test comes before its implementation.
+All tasks follow Strict TDD: the failing test comes before its implementation.
 Two main commit boundaries: (1) structural migration, (2) real auth.
+
+---
+
+## Implementation Checklist
+
+- [x] T-01 · Update existing test import paths [TDD — make tests fail first]
+- [x] T-02 · Create `app/shared/` kernel (config, security stub, errors, logging, dependencies)
+- [x] T-03 · Create `app/shared/llm/` subpackage
+- [x] T-04 · Create `app/modules/health/` module
+- [x] T-05 · Create empty feature module shells
+- [x] T-06 · Update `main.py` imports
+- [x] T-07 · Delete old directories
+- [x] T-08 · Add `services/api/package.json` with dev script
+- [x] T-09 · Add signing-key generation script to `services/api/package.json`
+- [x] T-10 · Verify Phase 1 green
+- [ ] T-11 · Add `pyjwt[crypto]` to `pyproject.toml`
+- [ ] T-12 · Write failing JWT auth tests (JA-T-01..11) [TDD — failing]
+- [ ] T-13 · Write failing import/factory test for `shared/database.py` [TDD — failing]
+- [ ] T-14 · Implement `get_current_user` in `shared/security.py`
+- [ ] T-15 · Remove `supabase_jwt_secret` from `Settings`
+- [ ] T-16 · Implement `shared/database.py` lazy Supabase client factory
+- [ ] T-17 · Verify Phase 2A backend green
+- [ ] T-18 · Write failing Vitest unit tests for `decideAuth` (SM-T-01..07) [TDD — failing]
+- [ ] T-19 · Create pure `decideAuth` function
+- [ ] T-20 · Write failing Playwright E2E test for middleware glue [TDD — failing]
+- [ ] T-21 · Create `middleware.ts` thin glue
+- [ ] T-22 · Verify Phase 2B middleware green
+- [ ] T-23 · Write failing Vitest tests for HTTP client (AU-T-12..14) [TDD — failing]
+- [ ] T-24 · Create `apps/web/lib/api.ts` fetch wrapper
+- [ ] T-25 · Write failing RTL tests for login form (AU-T-01..07) [TDD — failing]
+- [ ] T-26 · Replace login placeholder with real form
+- [ ] T-27 · Verify Phase 2C-i green
+- [ ] T-28 · Write failing RTL tests for register form (AU-T-08..11) [TDD — failing]
+- [ ] T-29 · Replace register placeholder with real form
+- [ ] T-30 · Write failing RTL tests for `/auth/confirm` page (AU-T-15..17) [TDD — failing]
+- [ ] T-31 · Create `/auth/confirm` page
+- [ ] T-32 · Verify Phase 2C-ii green
+- [ ] T-33 · Write failing RTL tests for `/forgot-password` page (AU-T-18..20) [TDD — failing]
+- [ ] T-34 · Create `/forgot-password` page
+- [ ] T-35 · Write failing RTL tests for `/auth/reset` page (AU-T-21..24) [TDD — failing]
+- [ ] T-36 · Create `/auth/reset` page
+- [ ] T-37 · Verify Phase 2C-iii green
+- [ ] T-38 · Full Suite Gate (all PRs merged)
 
 ---
 
@@ -45,7 +88,7 @@ pytest` MUST fail with `ModuleNotFoundError` (the new paths do not yet exist).
 | `from app.core.logging import ...` | `from app.shared.logging import ...` |
 | `from app.core.security import ...` | `from app.shared.security import ...` |
 | `from app.api.dependencies import ...` | `from app.shared.dependencies import ...` |
-| `from app.api.routes.health import ...` | `from app.health.routes import ...` |
+| `from app.api.routes.health import ...` | `from app.modules.health.routes import ...` |
 | `from app.domain.ports.llm import ...` | `from app.shared.llm.port import ...` |
 | `from app.infrastructure.llm.fake import ...` | `from app.shared.llm.fake import ...` |
 
@@ -91,11 +134,11 @@ Create `services/api/app/shared/llm/` with:
 
 ---
 
-### [x] T-04 · Create `app/health/` module
+### [x] T-04 · Create `app/modules/health/` module
 
 **Seq**: after T-01. **Parallel with T-02, T-03**.
 
-Create `services/api/app/health/` with:
+Create `services/api/app/modules/health/` with:
 
 | File | Source |
 |------|--------|
@@ -116,10 +159,11 @@ Create the following directory tree (no business logic — scaffolding only):
 
 ```
 services/api/app/
-  campaigns/  __init__.py  domain/__init__.py  application/__init__.py  infrastructure/__init__.py
-  sessions/   __init__.py  domain/__init__.py  application/__init__.py  infrastructure/__init__.py
-  memory/     __init__.py  domain/__init__.py  application/__init__.py  infrastructure/__init__.py
-  generation/ __init__.py  domain/__init__.py  application/__init__.py  infrastructure/__init__.py
+  modules/
+    campaigns/  __init__.py  domain/__init__.py  application/__init__.py  infrastructure/__init__.py
+    sessions/   __init__.py  domain/__init__.py  application/__init__.py  infrastructure/__init__.py
+    memory/     __init__.py  domain/__init__.py  application/__init__.py  infrastructure/__init__.py
+    generation/ __init__.py  domain/__init__.py  application/__init__.py  infrastructure/__init__.py
 ```
 
 No router from these modules is registered in `main.py` in this phase.
@@ -133,7 +177,7 @@ No router from these modules is registered in `main.py` in this phase.
 **Seq**: after T-02, T-03, T-04.
 
 Replace all `app.core.*`, `app.api.*`, `app.domain.*`, and `app.infrastructure.*` imports in
-`services/api/app/main.py` with `app.shared.*` / `app.health.*` equivalents. No import from
+`services/api/app/main.py` with `app.shared.*` / `app.modules.health.*` equivalents. No import from
 old paths must remain.
 
 **Spec**: RB-001, RB-002.
@@ -191,7 +235,7 @@ Windows PowerShell and macOS/Linux):
 {
   "scripts": {
     "dev": "uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
-    "setup:keys": "supabase gen signing-key --algorithm ES256 > supabase/signing_keys.json"
+    "setup:keys": "supabase gen signing-key --algorithm ES256 > ../../supabase/signing_keys.json"
   }
 }
 ```

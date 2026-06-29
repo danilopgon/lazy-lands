@@ -17,9 +17,9 @@
 
 Migrate the FastAPI backend from a layer-first directory structure (`core/`, `api/`,
 `application/`, `domain/`, `infrastructure/`, `prompts/`) to a modular monolith
-(`shared/` kernel + `health/` module + empty feature shells). All existing tests and
-lint rules MUST pass after the migration. Turborepo integration is added so `pnpm dev`
-launches both Next.js (`:3000`) and FastAPI (`:8000`).
+(`shared/` kernel + `modules/health` module + empty feature shells under `modules/`).
+All existing tests and lint rules MUST pass after the migration. Turborepo integration
+is added so `pnpm dev` launches both Next.js (`:3000`) and FastAPI (`:8000`).
 
 ---
 
@@ -36,7 +36,6 @@ launches both Next.js (`:3000`) and FastAPI (`:8000`).
 | `security.py` | Moved from `core/security.py` | Stub replaced with real ES256/JWKS JWT (see `jwt-auth` spec) |
 | `errors.py` | Moved from `core/errors.py` | Import paths updated |
 | `logging.py` | Moved from `core/logging.py` | Import paths updated |
-| `database.py` | New | Supabase client factory (see `jwt-auth` spec) |
 | `dependencies.py` | Moved from `api/dependencies.py` | Re-exports `get_current_user` from `shared.security` |
 | `llm/__init__.py` | New | Aggregates LLM port + implementation |
 | `llm/port.py` | Moved from `domain/ports/llm.py` | Same interface |
@@ -53,16 +52,19 @@ launches both Next.js (`:3000`) and FastAPI (`:8000`).
 
 ---
 
-### RB-002: `app/health/` module
+Phase 1 MUST NOT create `services/api/app/shared/database.py`; the Supabase client factory
+is deferred to Phase 2A and owned by the `jwt-auth` spec.
 
-`services/api/app/health/` MUST contain:
+### RB-002: `app/modules/health/` module
+
+`services/api/app/modules/health/` MUST contain:
 
 | File | Source |
 |------|--------|
 | `__init__.py` | New (empty) |
 | `routes.py` | Moved from `api/routes/health.py` |
 
-`main.py` MUST register the health router via `from app.health.routes import router`.
+`main.py` MUST register the health router via `from app.modules.health.routes import router`.
 
 #### Scenario: Health endpoint still responds
 
@@ -74,8 +76,8 @@ launches both Next.js (`:3000`) and FastAPI (`:8000`).
 
 ### RB-003: Empty feature module shells
 
-`services/api/app/` MUST contain exactly these new module directories, each with the
-following subdirectory tree:
+`services/api/app/modules/` MUST contain exactly these new feature module directories,
+each with the following subdirectory tree:
 
 ```
 <module>/
@@ -120,14 +122,14 @@ After the migration all of the following directories MUST NOT exist under
 
 `services/api/tests/` MUST be updated to reflect new import paths. Every test file that
 imports from `app.core.*`, `app.api.*`, `app.domain.*`, or `app.infrastructure.*` MUST be
-updated to import from `app.shared.*` or `app.health.*` as appropriate.
+updated to import from `app.shared.*` or `app.modules.health.*` as appropriate.
 
 `pytest` MUST exit 0 with all tests passing after the migration.
 `ruff check app/` MUST report zero violations after the migration.
 
 #### Scenario: Full test suite green after migration
 
-- GIVEN all old directories are deleted and `shared/` + `health/` are in place
+- GIVEN all old directories are deleted and `shared/` + `modules/health` are in place
 - WHEN `uv run pytest` is executed from `services/api/`
 - THEN all tests pass and the exit code is 0
 
@@ -181,10 +183,10 @@ separate commit.
 
 ## Acceptance criteria
 
-1. `services/api/app/shared/` exists with all 8 modules listed in RB-001. (RB-001)
-2. `services/api/app/health/routes.py` exists and exposes a router. (RB-002)
+1. `services/api/app/shared/` exists with all Phase 1 modules listed in RB-001. (RB-001)
+2. `services/api/app/modules/health/routes.py` exists and exposes a router. (RB-002)
 3. `GET /health` returns HTTP 200 after the migration. (RB-002)
-4. `campaigns/`, `sessions/`, `memory/`, `generation/` exist under `app/` with `domain/`, `application/`, `infrastructure/` subdirectories. (RB-003)
+4. `campaigns/`, `sessions/`, `memory/`, `generation/` exist under `app/modules/` with `domain/`, `application/`, `infrastructure/` subdirectories. (RB-003)
 5. `core/`, `api/`, `application/` (top-level), `domain/` (top-level), `infrastructure/` (top-level), `prompts/` do NOT exist under `services/api/app/`. (RB-004)
 6. `uv run pytest` exits 0 with all tests passing. (RB-005)
 7. `uv run ruff check app/` reports zero violations. (RB-005)
