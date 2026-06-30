@@ -30,11 +30,11 @@ Two main commit boundaries: (1) structural migration, (2) real auth.
 - [x] T-20 · Write failing Playwright E2E test for proxy glue [TDD — failing] → `apps/web/tests/e2e/proxy.spec.ts`
 - [x] T-21 · Modify `apps/web/proxy.ts` (Next.js 16 entry point, was incorrectly spec'd as `middleware.ts`); update `updateSession` to return `{ response, user }`
 - [x] T-22 · Verify Phase 2B middleware green (80 Vitest pass, 2 Playwright E2E pass, 0 typecheck errors, 0 lint errors)
-- [ ] T-23 · Write failing Vitest tests for HTTP client (AU-T-12..14) [TDD — failing]
-- [ ] T-24 · Create `apps/web/lib/api.ts` fetch wrapper
-- [ ] T-25 · Write failing RTL tests for login form (AU-T-01..07) [TDD — failing]
-- [ ] T-26 · Replace login placeholder with real form
-- [ ] T-27 · Verify Phase 2C-i green
+- [x] T-23 · Write failing Vitest tests for HTTP client (AU-T-12..14) [TDD — failing]
+- [x] T-24 · Create `apps/web/lib/api.ts` fetch wrapper + TanStack Query setup (providers.tsx, layout.tsx integration)
+- [x] T-25 · Write failing RTL tests for login form (AU-T-01..07) [TDD — failing]
+- [x] T-26 · Replace login placeholder with real form
+- [x] T-27 · Verify Phase 2C-i green
 - [ ] T-28 · Write failing RTL tests for register form (AU-T-08..11) [TDD — failing]
 - [ ] T-29 · Replace register placeholder with real form
 - [ ] T-30 · Write failing RTL tests for `/auth/confirm` page (AU-T-15..17) [TDD — failing]
@@ -46,6 +46,7 @@ Two main commit boundaries: (1) structural migration, (2) real auth.
 - [ ] T-36 · Create `/auth/reset` page
 - [ ] T-37 · Verify Phase 2C-iii green
 - [ ] T-38 · Full Suite Gate (all PRs merged)
+- [ ] T-39 · Update `supabase-dashboard-setup.md` readiness table
 
 ---
 
@@ -59,7 +60,9 @@ Phase 1 (T-01..T-10) ──must complete first──┐
                                              ├── Phase 2C-ii  Reg+Confirm (T-29..T-33)  ─── PR 5
                                              └── Phase 2C-iii Forgot+Reset (T-34..T-38) ─── PR 6
                                                                    │
-                                       Final gate (T-39) ──────────┘
+                                       Final gate (T-38) ──────────┤
+                                                                   │
+                                       Deployment readiness (T-39) ─┘
 ```
 
 **Phase 2A, 2B, 2C-i, 2C-ii, 2C-iii are all parallelizable** with each other after Phase 1
@@ -591,7 +594,7 @@ Confirmed (2026-06-30 remediation):
 
 **Seq**: first task in Phase 2C-i.
 
-Create `apps/web/lib/__tests__/api.test.ts`. Mock `supabase.auth.getSession`.
+Create `apps/web/tests/api.test.ts`. Mock `supabase.auth.getSession`.
 
 | ID | Scenario |
 |----|----------|
@@ -605,21 +608,46 @@ Tests fail because `lib/api.ts` does not exist.
 
 ---
 
-### T-24 · Create `apps/web/lib/api.ts` fetch wrapper
+### T-24 · Create `apps/web/lib/api.ts` fetch wrapper + TanStack Query setup
 
 **Seq**: after T-23. Makes AU-T-12..14 GREEN.
 
-Export `apiFetch(path, init?)`:
+**Part 1: Internal fetch wrapper**
+
+Export `apiFetch(path, init?)` as an INTERNAL function (not for direct component use):
 - Call `supabase.auth.getSession()`. If session and `access_token` exist, inject
   `Authorization: Bearer <access_token>` header.
 - If `path` starts with `/`, prepend `process.env.NEXT_PUBLIC_API_URL`.
 - Do NOT catch or transform 4xx/5xx — return the raw `Response`.
 
+**Part 2: TanStack Query integration**
+
+1. Install `@tanstack/react-query`: `pnpm add @tanstack/react-query`
+2. Create `apps/web/providers.tsx` with `QueryClientProvider`:
+   ```tsx
+   "use client";
+   import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+   import { useState } from "react";
+
+   export function Providers({ children }: { children: React.ReactNode }) {
+     const [queryClient] = useState(() => new QueryClient());
+     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+   }
+   ```
+3. Wrap `apps/web/app/layout.tsx` with `<Providers>`:
+   ```tsx
+   import { Providers } from "@/providers";
+   // ...
+   <body>
+     <Providers>{children}</Providers>
+   </body>
+   ```
+
 **Important**: `NEXT_PUBLIC_API_URL` (backend base URL) is distinct from
 `NEXT_PUBLIC_APP_URL` (frontend domain, used for email redirect URLs in the register and
 forgot-password pages).
 
-**Spec**: AU-003.1, AU-003.2, AU-003.3.
+**Spec**: AU-003.1, AU-003.2, AU-003.3, AU-003.4.
 
 ---
 
@@ -667,9 +695,10 @@ Replace `apps/web/app/login/page.tsx` with a real `"use client"` form:
 **Seq**: after T-24, T-26.
 
 - `pnpm test` — AU-T-12..14 and AU-T-01..07 pass.
-- `pnpm typecheck` + `pnpm lint` pass on `lib/api.ts` and `app/login/page.tsx`.
+- `pnpm typecheck` + `pnpm lint` pass on `lib/api.ts`, `providers.tsx`, and `app/login/page.tsx`.
+- Verify `QueryClientProvider` is configured in `app/layout.tsx`.
 
-**[COMMIT 4 — auth-ui: HTTP client + login form]**
+**[COMMIT 4 — auth-ui: HTTP client + TanStack Query setup + login form]**
 
 ---
 
@@ -859,6 +888,30 @@ This task gates the PR train — do not declare Block 4 complete until it is gre
 
 ---
 
+## T-39 · Update `supabase-dashboard-setup.md` readiness table
+
+**Seq**: after T-38 (all PRs merged, code complete).
+
+Update the readiness table in `openspec/changes/block-4-auth/supabase-dashboard-setup.md`:
+
+| Trigger | Update readiness row |
+|---------|---------------------|
+| Domain purchased + Cloudflare configured | Row 2 (Redirect URL allow-list) → `true` |
+| Backend deployed to Railway | Row 6 (Railway backend env vars) → `true` |
+| Frontend deployed to Vercel | Row 7 (Vercel frontend env vars) → `true` |
+| Custom SMTP configured | Row 5 (Custom SMTP) → `true` |
+
+When ALL rows read `true`, flip `READY_TO_EXECUTE: true` and notify the user.
+
+**Important**: The domain is the FIRST dependency because:
+1. Domain purchase → DNS propagation time
+2. Cloudflare setup → nameservers, DNS records
+3. Point subdomains: `api.<domain>` → Railway, `app.<domain>` → Vercel
+4. Configure Supabase redirect URLs with the real domain
+5. Configure Railway/Vercel environment variables with the domain
+
+---
+
 ## Summary: Test/Implementation Pairs
 
 | Test task | Test IDs | Implementation task |
@@ -888,6 +941,7 @@ This task gates the PR train — do not declare Block 4 complete until it is gre
 | Phase 2C-ii (T-28..T-32) | Phase 1 committed | 2A, 2B, 2C-i, 2C-iii |
 | Phase 2C-iii (T-33..T-37) | Phase 1 committed | 2A, 2B, 2C-i, 2C-ii |
 | T-38 | All Phase 2 merged | — |
+| T-39 | T-38 + domain purchased | — |
 
 Within Phase 1: T-02, T-03, T-04, T-05, T-08 are parallel with each other (after T-01).
 

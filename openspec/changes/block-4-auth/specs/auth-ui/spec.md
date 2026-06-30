@@ -151,10 +151,14 @@ Same loading state contract as AU-001.3.
 
 ---
 
-### AU-003: HTTP client (`apps/web/lib/api.ts`)
+### AU-003: HTTP client with TanStack Query (`apps/web/lib/api.ts`)
 
-`apps/web/lib/api.ts` MUST be created. It MUST export an async function (named `apiFetch`
-or equivalent) that wraps the native `fetch` API with the following behavior:
+`apps/web/lib/api.ts` MUST be created. It MUST export an internal async function (named `apiFetch`
+or equivalent) that wraps the native `fetch` API with the following behavior. This function is used
+as the `queryFn` for TanStack Query mutations and queries.
+
+**Important**: `apiFetch` is NOT exported publicly. Components use TanStack Query hooks
+(`useMutation`, `useQuery`) instead of calling `apiFetch` directly.
 
 #### AU-003.1: JWT injection
 
@@ -175,16 +179,22 @@ The function MUST prepend `process.env.NEXT_PUBLIC_API_URL` to relative URL path
 The function MUST NOT catch or transform HTTP error responses. 4xx/5xx responses
 MUST be returned to the caller as-is so the caller can inspect the status.
 
+#### AU-003.4: TanStack Query integration
+
+The app MUST use `@tanstack/react-query` for data fetching. The `QueryClientProvider`
+MUST be configured in `apps/web/app/layout.tsx`. Components MUST use `useMutation` and
+`useQuery` hooks instead of calling `apiFetch` directly.
+
 #### Scenario: Request with active session
 
 - GIVEN a Supabase session exists with a valid `access_token`
-- WHEN `apiFetch("/campaigns")` is called
+- WHEN a TanStack Query mutation calls `apiFetch("/campaigns")` internally
 - THEN the outgoing request includes `Authorization: Bearer <access_token>`
 
 #### Scenario: Request without session
 
 - GIVEN no Supabase session exists
-- WHEN `apiFetch("/campaigns")` is called
+- WHEN a TanStack Query mutation calls `apiFetch("/campaigns")` internally
 - THEN the outgoing request does NOT include an `Authorization` header
 
 ---
@@ -437,8 +447,9 @@ email is registered with Supabase (AU-005.2).
 12. `apps/web/app/forgot-password/page.tsx` exists; calls `resetPasswordForEmail` with correct `redirectTo`; shows confirmation message. (AU-005)
 13. `apps/web/app/auth/reset/page.tsx` exists; calls `verifyOtp` with `type: "recovery"` on mount; shows new password form on success. (AU-006)
 14. Reset page: successful password update → `updateUser` called → directed to `/login`. (AU-006.3)
-15. `apps/web/lib/api.ts` exists and exports an async fetch wrapper. (AU-003)
+15. `apps/web/lib/api.ts` exists and contains an internal `apiFetch` function for TanStack Query. (AU-003)
 16. With active session: `Authorization: Bearer <token>` header injected. (AU-003.1)
 17. Without session: no `Authorization` header sent. (AU-003.1)
-18. All 24 Vitest test cases pass. (Test requirements)
-19. `pnpm typecheck` and `pnpm lint` pass on all new/modified files. (NFR-AU-1, NFR-AU-2)
+18. `@tanstack/react-query` is installed and `QueryClientProvider` is configured in `app/layout.tsx`. (AU-003.4)
+19. All 24 Vitest test cases pass. (Test requirements)
+20. `pnpm typecheck` and `pnpm lint` pass on all new/modified files. (NFR-AU-1, NFR-AU-2)

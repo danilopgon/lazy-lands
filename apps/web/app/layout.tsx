@@ -5,6 +5,7 @@ import {
   Source_Serif_4,
 } from 'next/font/google'
 
+import { Providers } from '@/providers'
 import './globals.css'
 
 const instrumentSans = Instrument_Sans({
@@ -52,7 +53,7 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
