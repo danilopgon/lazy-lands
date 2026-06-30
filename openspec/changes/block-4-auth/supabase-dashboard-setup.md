@@ -16,6 +16,7 @@
 
 | # | Item | Scope | Unblocks when… | Ready |
 |---|------|-------|----------------|-------|
+| 0 | Domain + Cloudflare DNS | HOSTED | Domain purchased + DNS configured | `false` |
 | 1 | Local ES256 signing keys | LOCAL | Handled inside `sdd-apply` (jwt-auth slice) | `false` |
 | 2 | Redirect URL allow-list | HOSTED | Frontend deployed → real Vercel domain exists | `false` |
 | 3 | Confirm email enabled | HOSTED | Already verified ON (2026-06-29) | `true` |
@@ -30,6 +31,66 @@ When all rows read `true`, this guide is safe to execute end-to-end.
 
 Each item is tagged with scope: **[LOCAL]** / **[HOSTED]** / **[BOTH]**, and whether it
 must be done before the smoke test passes: **[REQUIRED]** / **[RECOMMENDED]**.
+
+---
+
+## 0. Domain + Cloudflare DNS Setup
+
+**[HOSTED] [REQUIRED — FIRST STEP]**
+
+> **This is the FIRST dependency** because domain purchase and DNS propagation take time.
+> Complete this before other deployment tasks to avoid blocking the smoke test.
+
+### Steps
+
+1. **Purchase a domain** (e.g., `lazylands.app`, `lazylands.io`, or your preferred TLD)
+   - Recommended registrars: Cloudflare Registrar, Namecheap, Google Domains
+   - `.app` domains require HTTPS (enforced by HSTS preload list)
+
+2. **Add domain to Cloudflare** (if not using Cloudflare Registrar)
+   - Create a Cloudflare account if needed
+   - Add your domain and follow the nameserver change instructions
+   - Wait for nameserver propagation (can take up to 24-48 hours)
+
+3. **Configure DNS records in Cloudflare**
+
+   | Type | Name | Content | Proxy status | Notes |
+   |------|------|---------|--------------|-------|
+   | CNAME | `www` | `<your-project>.vercel.app` | DNS only (gray cloud) | Vercel handles SSL |
+   | CNAME | `scribe` | `<your-service>.railway.app` | DNS only (gray cloud) | Railway handles SSL |
+
+   > **Why "DNS only" (gray cloud)?** Vercel and Railway provide their own SSL certificates
+   > and CDN. Enabling Cloudflare's proxy (orange cloud) can cause certificate conflicts.
+   > Use DNS-only unless you specifically need Cloudflare's WAF or caching rules.
+
+4. **Configure custom domain in Vercel**
+   - Go to: Vercel → Your Project → Settings → Domains
+   - Add `<your-domain>` (apex) or `app.<your-domain>` if you prefer a subdomain
+   - Vercel will verify DNS and provision SSL automatically
+
+5. **Configure custom domain in Railway**
+   - Go to: Railway → Your Service → Settings → Domains
+   - Add `scribe.<your-domain>`
+   - Railway will provision SSL automatically
+
+6. **Update environment variables** (see Sections 6 and 7)
+   - `API_CORS_ORIGINS` in Railway must include the frontend origin
+   - `NEXT_PUBLIC_APP_URL` in Vercel must be `https://<your-domain>` (or `https://app.<your-domain>`)
+   - `NEXT_PUBLIC_API_URL` in Vercel must be `https://scribe.<your-domain>`
+
+### Verification
+
+After DNS propagation (usually 5-30 minutes with Cloudflare):
+
+```bash
+# Check frontend
+curl -I https://<your-domain>
+# Expected: HTTP 200, valid SSL certificate
+
+# Check backend
+curl -I https://scribe.<your-domain>/health
+# Expected: HTTP 200, valid SSL certificate
+```
 
 ---
 
@@ -119,10 +180,10 @@ Go to: **Supabase Dashboard → Your Project → Authentication → URL Configur
 Set to your Vercel production domain:
 
 ```
-https://<your-vercel-domain>.vercel.app
+https://<your-domain>
 ```
 
-Replace `<your-vercel-domain>` with your actual Vercel project subdomain or custom domain.
+Replace `<your-domain>` with your actual custom domain (e.g., `lazylands.app`).
 
 #### Redirect URL allow-list
 
@@ -131,13 +192,13 @@ Add ALL of the following entries (one per line):
 ```
 http://localhost:3000/auth/confirm
 http://localhost:3000/auth/reset
-https://<your-vercel-domain>.vercel.app/auth/confirm
-https://<your-vercel-domain>.vercel.app/auth/reset
+https://<your-domain>/auth/confirm
+https://<your-domain>/auth/reset
 ```
 
 - The `localhost` entries allow local development and local smoke testing.
-- The `vercel.app` entries are required for the production smoke test.
-- If you use a custom domain, add entries for that domain too.
+- The custom domain entries are required for the production smoke test.
+- If you also keep the Vercel preview URL, add entries for that domain too.
 
 > **Why `/auth/confirm` and `/auth/reset` specifically?** These are the callback routes
 > defined in the `auth-ui` spec (AU-004, AU-006). They read `token_hash` + `type` from
@@ -259,7 +320,7 @@ Set these environment variables:
 |----------|-------|-------|
 | `SUPABASE_URL` | `https://<your-project-ref>.supabase.co` | Required for JWKS derivation |
 | `SUPABASE_SERVICE_ROLE_KEY` | Your service role key | From Supabase → Settings → API |
-| `API_CORS_ORIGINS` | `https://<your-vercel-domain>.vercel.app` | Must match Vercel domain exactly |
+| `API_CORS_ORIGINS` | `https://<your-domain>` | Must match Vercel domain exactly |
 | `APP_ENV` | `production` | |
 
 **Do NOT set `SUPABASE_JWT_SECRET`** — the backend derives the JWKS URL from `SUPABASE_URL`
@@ -268,7 +329,7 @@ ship. If a `SUPABASE_JWT_SECRET` variable exists from a previous setup, remove i
 
 > The `API_CORS_ORIGINS` variable accepts a comma-separated list if you need multiple
 > origins (e.g., staging + production Vercel deployments):
-> `https://lazy-lands.vercel.app,https://lazy-lands-staging.vercel.app`
+> `https://<your-domain>,https://lazy-lands.vercel.app`
 
 ---
 
@@ -283,9 +344,9 @@ Set these for Production (and optionally Preview):
 | Variable | Value | Notes |
 |----------|-------|-------|
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://<your-project-ref>.supabase.co` | Public — safe to expose |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your anon/public key | From Supabase → Settings → API |
-| `NEXT_PUBLIC_API_URL` | `https://<your-railway-service>.railway.app` | Backend base URL |
-| `NEXT_PUBLIC_APP_URL` | `https://<your-vercel-domain>.vercel.app` | Used to build `emailRedirectTo` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Your publishable/public key | From Supabase → Settings → API |
+| `NEXT_PUBLIC_API_URL` | `https://scribe.<your-domain>` | Backend base URL |
+| `NEXT_PUBLIC_APP_URL` | `https://<your-domain>` | Used to build `emailRedirectTo` |
 
 > `NEXT_PUBLIC_APP_URL` is required for AU-002 (`signUp` with `emailRedirectTo`) and
 > AU-005 (`resetPasswordForEmail` with `redirectTo`). Without it, the confirmation and
@@ -297,6 +358,15 @@ Set these for Production (and optionally Preview):
 
 Work through this before running the Block 4 smoke test:
 
+**Domain + Cloudflare**
+- [ ] Domain purchased
+- [ ] Domain added to Cloudflare (or using Cloudflare Registrar)
+- [ ] DNS records configured: `<domain>` → Vercel, `scribe.<domain>` → Railway
+- [ ] Custom domain configured in Vercel
+- [ ] Custom domain configured in Railway
+- [ ] `curl -I https://<your-domain>` returns HTTP 200
+- [ ] `curl -I https://scribe.<your-domain>/health` returns HTTP 200
+
 **Local setup**
 - [ ] Signing keys file generated and NOT committed to git
 - [ ] `signing_keys_path` set in `supabase/config.toml`
@@ -304,9 +374,9 @@ Work through this before running the Block 4 smoke test:
 - [ ] `curl http://127.0.0.1:54321/auth/v1/.well-known/jwks.json` returns ES256 key
 
 **Hosted Supabase dashboard**
-- [ ] Site URL set to Vercel production domain
-- [ ] `/auth/confirm` redirect URLs added for localhost and Vercel domain
-- [ ] `/auth/reset` redirect URLs added for localhost and Vercel domain
+- [ ] Site URL set to Vercel production domain (`https://<your-domain>`)
+- [ ] `/auth/confirm` redirect URLs added for localhost and custom domain
+- [ ] `/auth/reset` redirect URLs added for localhost and custom domain
 - [ ] Email confirmation is enabled
 - [ ] Confirmation email template uses token_hash redirect to `/auth/confirm`
 - [ ] Password recovery email template uses token_hash redirect to `/auth/reset`
@@ -315,14 +385,14 @@ Work through this before running the Block 4 smoke test:
 **Railway**
 - [ ] `SUPABASE_URL` set
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` set
-- [ ] `API_CORS_ORIGINS` includes Vercel domain
+- [ ] `API_CORS_ORIGINS` includes `https://<your-domain>`
 - [ ] `SUPABASE_JWT_SECRET` removed if previously set
 
 **Vercel**
 - [ ] `NEXT_PUBLIC_SUPABASE_URL` set
-- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` set
-- [ ] `NEXT_PUBLIC_API_URL` set to Railway backend URL
-- [ ] `NEXT_PUBLIC_APP_URL` set to Vercel domain
+- [ ] `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` set
+- [ ] `NEXT_PUBLIC_API_URL` set to `https://scribe.<your-domain>`
+- [ ] `NEXT_PUBLIC_APP_URL` set to `https://<your-domain>`
 
 ---
 
