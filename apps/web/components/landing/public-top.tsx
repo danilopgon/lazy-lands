@@ -6,6 +6,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { navLinks } from './data'
 
+/**
+ * Sticky top navigation — desktop links + accessible mobile hamburger with focus trap.
+ *
+ * @returns {React.ReactElement} The top navigation element with desktop and mobile variants.
+ */
 export function PublicTop() {
   const [open, setOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
@@ -13,6 +18,12 @@ export function PublicTop() {
   const overlayRef = useRef<HTMLDivElement>(null)
   const shouldRestoreFocusRef = useRef(true)
 
+  /**
+   * Close the mobile menu overlay, optionally restoring focus to the trigger.
+   *
+   * @param {object} [root0] - Optional close options.
+   * @param {boolean} [root0.restoreFocus=true] - Whether to restore focus to the menu trigger.
+   */
   function closeMenu({ restoreFocus = true }: { restoreFocus?: boolean } = {}) {
     shouldRestoreFocusRef.current = restoreFocus
     setOpen(false)
@@ -29,6 +40,11 @@ export function PublicTop() {
 
     closeButtonRef.current?.focus()
 
+    /**
+     * Trap Tab/Shift+Tab within the mobile overlay and handle Escape.
+     *
+     * @param {KeyboardEvent} event - The keyboard event from the keydown listener.
+     */
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         closeMenu()

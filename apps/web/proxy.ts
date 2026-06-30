@@ -7,6 +7,12 @@ type HeadersWithSetCookie = Headers & {
   getSetCookie?: () => string[]
 }
 
+/**
+ * Split a combined Set-Cookie header string into individual cookie values.
+ *
+ * @param {string|null} header - The combined Set-Cookie header string, or null.
+ * @returns {string[]} Array of individual cookie values, or empty array if header is null.
+ */
 function splitCombinedSetCookieHeader(header: string | null) {
   if (!header) {
     return []
@@ -15,6 +21,12 @@ function splitCombinedSetCookieHeader(header: string | null) {
   return header.split(/,(?=\s*[^;,\s]+=)/)
 }
 
+/**
+ * Copy Set-Cookie headers from a source response to a target, handling both combined and split formats.
+ *
+ * @param {Headers} source - The source response headers to read Set-Cookie from.
+ * @param {Headers} target - The target headers object to append Set-Cookie values to.
+ */
 function copySetCookieHeaders(source: Headers, target: Headers) {
   const sourceWithSetCookie = source as HeadersWithSetCookie
   const explicitSetCookieHeaders = sourceWithSetCookie.getSetCookie?.() ?? []
@@ -27,6 +39,12 @@ function copySetCookieHeaders(source: Headers, target: Headers) {
   }
 }
 
+/**
+ * Middleware entry — refresh the auth session and redirect unauthenticated users on protected routes.
+ *
+ * @param {NextRequest} request - The incoming Next.js request.
+ * @returns {Promise<NextResponse>} The pass-through response, or a 302 redirect to /login for unauthenticated protected routes.
+ */
 export async function proxy(request: NextRequest) {
   const { response, user } = await updateSession(request)
 

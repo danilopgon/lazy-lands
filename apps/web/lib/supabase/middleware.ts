@@ -2,6 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import type { User } from '@supabase/supabase-js'
 import { type NextRequest, NextResponse } from 'next/server'
 
+/**
+ * Refresh the Supabase auth session via middleware cookies and return the current user.
+ *
+ * @param {NextRequest} request - The incoming Next.js request with cookie state.
+ * @returns {Promise<{response: NextResponse, user: User|null}>} An object containing the response with updated cookies and the authenticated user (or null).
+ */
 export async function updateSession(
   request: NextRequest
 ): Promise<{ response: NextResponse; user: User | null }> {
@@ -10,8 +16,7 @@ export async function updateSession(
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Early-return: no Supabase config — return null user so callers can
-    // safely pass to decideAuth without receiving undefined.
+    // Missing local/CI config should behave as unauthenticated, never undefined.
     return { response, user: null }
   }
 

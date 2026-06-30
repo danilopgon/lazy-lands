@@ -1,3 +1,5 @@
+"""FastAPI application entry point — middleware, error handlers, and router wiring."""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

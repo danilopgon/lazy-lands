@@ -1,5 +1,10 @@
 import Link from 'next/link'
 
+/**
+ * Site footer — brand mark, copyright, and navigation links.
+ *
+ * @returns {React.ReactElement} The footer element.
+ */
 export function LandFooter() {
   return (
     <footer

@@ -1,5 +1,10 @@
 import { ViewEnter } from './motion'
 
+/**
+ * Philosophy section — single pull-quote with attribution line.
+ *
+ * @returns {React.ReactElement} The philosophy landing section element.
+ */
 export function LandPhilosophy() {
   return (
     <section className="mx-auto w-full max-w-[1420px] px-5 py-[56px] llg:px-10">

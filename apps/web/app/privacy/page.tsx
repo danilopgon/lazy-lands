@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * Privacy policy page — non-indexed placeholder until legal review is finalised.
+ *
+ * @returns {React.ReactElement} The privacy policy page element.
+ */
 export default function PrivacyPage() {
   return (
     <main id="main-content" className="mx-auto max-w-2xl px-6 py-16 font-serif">

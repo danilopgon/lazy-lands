@@ -2,9 +2,13 @@ import '@testing-library/jest-dom/vitest'
 
 // IntersectionObserver is not implemented in jsdom.
 // Provide a no-op stub so components that use it (e.g. ViewEnter) render without errors.
+/** jsdom lacks IntersectionObserver — this stub prevents components from throwing during render. */
 class IntersectionObserverStub {
+  /** No-op: jsdom does not implement observation. */
   observe() {}
+  /** No-op: nothing to unobserve in a stub. */
   unobserve() {}
+  /** No-op: no observers to disconnect. */
   disconnect() {}
 }
 

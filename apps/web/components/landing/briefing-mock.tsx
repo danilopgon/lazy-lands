@@ -2,6 +2,15 @@ import { Badge } from '@/components/ui/badge'
 
 import type { NpcRowProps, SpecProps } from './types'
 
+/**
+ * Single NPC row in the briefing mock — name, role, and status badge.
+ *
+ * @param {object} root0 - The NPC row props.
+ * @param {string} root0.name - The NPC display name.
+ * @param {string} root0.role - The NPC role or title.
+ * @param {boolean} [root0.accent=false] - Whether to render with accent styling (active status).
+ * @returns {React.ReactElement} The NPC row element.
+ */
 function NpcRow({ name, role, accent = false }: NpcRowProps) {
   return (
     <div className="flex items-center justify-between border-b border-dashed border-[var(--dotted)] py-[6px] last:border-0">
@@ -16,6 +25,14 @@ function NpcRow({ name, role, accent = false }: NpcRowProps) {
   )
 }
 
+/**
+ * Key-value spec line used in the briefing mock grid.
+ *
+ * @param {object} root0 - The spec props.
+ * @param {string} root0.k - The spec key (label).
+ * @param {string} root0.v - The spec value (description).
+ * @returns {React.ReactElement} The spec line element.
+ */
 export function Spec({ k, v }: SpecProps) {
   return (
     <div style={{ borderTop: '2px solid var(--border)', paddingTop: 12 }}>
@@ -27,6 +44,11 @@ export function Spec({ k, v }: SpecProps) {
   )
 }
 
+/**
+ * Static briefing card mock — rotated paper card with hardcoded session data.
+ *
+ * @returns {React.ReactElement} The briefing mock card element.
+ */
 export function BriefingMock() {
   return (
     <div

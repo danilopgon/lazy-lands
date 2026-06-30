@@ -1,6 +1,11 @@
 import { Spec, BriefingMock } from './briefing-mock'
 import { ViewEnter } from './motion'
 
+/**
+ * Briefing section — side-by-side copy and tilted mock card.
+ *
+ * @returns {React.ReactElement} The briefing landing section element.
+ */
 export function LandBriefing() {
   return (
     <section className="mx-auto w-full max-w-[1420px] px-5 pb-[88px] pt-[56px] llg:px-10">

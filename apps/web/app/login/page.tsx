@@ -4,6 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
 import { SectionHeader } from '@/components/ui/section-header'
 
+/**
+ * Login page — placeholder until Supabase auth is implemented.
+ *
+ * @returns {React.ReactElement} The login page element.
+ */
 export default function LoginPage() {
   return (
     <main

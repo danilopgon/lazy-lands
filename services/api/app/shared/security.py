@@ -1,3 +1,5 @@
+"""Supabase ES256 JWT validation via JWKS singleton — FastAPI auth dependency."""
+
 import json
 from typing import Annotated
 
@@ -6,10 +8,8 @@ from fastapi import Header, HTTPException, status
 
 from app.shared.config import settings
 
-# ---------------------------------------------------------------------------
 # Module-level JWKS singleton (NFR-JA-3 — one client per process, key cache
 # preserved across requests; PyJWKClient() makes no network call at construction).
-# ---------------------------------------------------------------------------
 
 # Fail fast on misconfiguration: without SUPABASE_URL the derived JWKS URI is
 # "None/auth/v1/…", which would silently reject every request with a generic 401
@@ -30,9 +30,12 @@ _WWW_AUTHENTICATE = {"WWW-Authenticate": "Bearer"}
 
 
 def _unauthorized() -> HTTPException:
-    """Build a fresh 401. A new instance per raise avoids mutating a shared
-    exception's ``__cause__`` via ``raise … from exc`` (corrupts error chains
-    in async tracing/logging)."""
+    """Build a fresh 401.
+
+    A new instance per raise avoids mutating a shared exception's
+    ``__cause__`` via ``raise … from exc`` (corrupts error chains in async
+    tracing/logging).
+    """
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -43,8 +46,7 @@ def _unauthorized() -> HTTPException:
 async def get_current_user(
     authorization: Annotated[str | None, Header()] = None,
 ) -> str:
-    """
-    FastAPI dependency — validates a Supabase ES256 JWT.
+    """FastAPI dependency — validates a Supabase ES256 JWT.
 
     Extracts the Bearer token from the Authorization header, resolves the
     signing key via the JWKS endpoint singleton, and decodes with strict
@@ -52,7 +54,6 @@ async def get_current_user(
     WWW-Authenticate: Bearer header.  Returns the ``sub`` claim as a str
     (the Supabase user UUID) for downstream handlers.
     """
-    # --- pre-decode guard ---------------------------------------------------
     if not authorization or not authorization.startswith("Bearer "):
         raise _unauthorized()
 
@@ -60,7 +61,6 @@ async def get_current_user(
     if not token:
         raise _unauthorized()
 
-    # --- JWKS key resolution + JWT decode -----------------------------------
     try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
         payload = jwt.decode(

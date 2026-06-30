@@ -4,6 +4,11 @@ import { Button } from '@/components/ui/button'
 import { ComingSoonButton } from './coming-soon-button'
 import { ViewEnter } from './motion'
 
+/**
+ * Final CTA section — accent block with register link and demo button.
+ *
+ * @returns {React.ReactElement} The CTA landing section element.
+ */
 export function LandCTA() {
   return (
     <section

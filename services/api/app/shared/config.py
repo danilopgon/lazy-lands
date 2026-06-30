@@ -1,8 +1,12 @@
+"""Application settings loaded from environment variables and .env file."""
+
 from pydantic import AnyHttpUrl, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """Pydantic settings model — reads from env vars and optional .env file."""
+
     app_env: str = "development"
     api_cors_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000"]
@@ -17,6 +21,7 @@ class Settings(BaseSettings):
     @field_validator("api_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
+        """Accept a comma-separated string or a list and normalise to list[str]."""
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value

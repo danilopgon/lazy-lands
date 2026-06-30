@@ -8,6 +8,15 @@ type ViewEnterProps = {
   delay?: number
 }
 
+/**
+ * IntersectionObserver-driven reveal wrapper — adds `in-view` class when the element enters the viewport.
+ *
+ * @param {object} root0 - The view enter props.
+ * @param {React.ReactNode} root0.children - The content to reveal on scroll.
+ * @param {string} [root0.className=''] - Optional additional CSS classes.
+ * @param {number} [root0.delay=0] - Optional delay in milliseconds before adding the in-view class.
+ * @returns {React.ReactElement} The reveal wrapper element.
+ */
 export function ViewEnter({
   children,
   className = '',

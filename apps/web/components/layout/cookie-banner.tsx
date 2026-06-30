@@ -6,6 +6,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { getConsent, setConsent } from '@/lib/consent'
 
+/**
+ * Fixed cookie consent banner — shown until the user accepts via localStorage.
+ *
+ * @returns {React.ReactElement|null} The cookie banner element, or null if consent was already given.
+ */
 export function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
@@ -19,6 +24,7 @@ export function CookieBanner() {
 
   if (!visible) return null
 
+  /** Record consent in localStorage and hide the banner. */
   function handleAccept() {
     setConsent()
     setVisible(false)

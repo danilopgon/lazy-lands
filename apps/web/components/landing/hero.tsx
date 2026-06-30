@@ -5,6 +5,11 @@ import { Button } from '@/components/ui/button'
 import { ComingSoonButton } from './coming-soon-button'
 import { HeroGraphSlot } from './hero-graph-slot'
 
+/**
+ * Hero section — headline, sub-copy, CTAs, and the desktop graph slot.
+ *
+ * @returns {React.ReactElement} The hero landing section element.
+ */
 export function LandHero() {
   return (
     <section className="relative flex w-full flex-col justify-center overflow-hidden py-12 llg:min-h-[calc(100dvh-150px)]">

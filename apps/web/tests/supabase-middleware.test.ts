@@ -27,6 +27,12 @@ vi.mock('@supabase/ssr', () => ({
   })),
 }))
 
+/**
+ * Build a NextRequest from a URL string for middleware tests.
+ *
+ * @param {string} url - The URL string to create the request from.
+ * @returns {NextRequest} A NextRequest instance for use in middleware tests.
+ */
 function makeRequest(url: string): NextRequest {
   return new NextRequest(url)
 }

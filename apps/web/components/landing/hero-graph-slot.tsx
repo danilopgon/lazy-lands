@@ -13,6 +13,11 @@ const HeroGraphScene = dynamic(
   { ssr: false }
 )
 
+/**
+ * Desktop-only lazy-loaded wrapper for the animated hero graph scene.
+ *
+ * @returns {React.ReactElement} The hero graph slot element, visible only on desktop breakpoints.
+ */
 export function HeroGraphSlot() {
   const [isDesktop, setIsDesktop] = useState(false)
 

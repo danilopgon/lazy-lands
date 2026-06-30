@@ -4,6 +4,14 @@ import { useId } from 'react'
 
 import type { ComingSoonButtonProps } from './types'
 
+/**
+ * Disabled button with a "Coming soon" tooltip — used for unreleased CTAs.
+ *
+ * @param {object} root0 - The coming soon button props.
+ * @param {React.ReactNode} root0.children - The button label content.
+ * @param {'accent'|'secondary'|'ink'} [root0.variant='secondary'] - The visual variant.
+ * @returns {React.ReactElement} The disabled button element with tooltip.
+ */
 export function ComingSoonButton({
   children,
   variant = 'secondary',

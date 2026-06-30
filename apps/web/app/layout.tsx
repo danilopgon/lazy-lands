@@ -27,6 +27,13 @@ export const metadata: Metadata = {
   description: 'Campaign Companion for Dungeon Masters',
 }
 
+/**
+ * Root layout — font variables, skip-link, noscript fallback for scroll animations.
+ *
+ * @param {object} root0 - The root layout props.
+ * @param {React.ReactNode} root0.children - The page content to render inside the layout.
+ * @returns {React.ReactElement} The root HTML document element.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

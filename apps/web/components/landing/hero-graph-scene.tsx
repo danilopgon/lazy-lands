@@ -6,6 +6,12 @@ import { edges, nodes } from './data'
 import type { EdgeDef, NodeKind } from './types'
 
 // ── Visual mapping (ported from the former static node-graph) ──────────
+/**
+ * Map an edge kind to its CSS custom-property colour.
+ *
+ * @param {EdgeDef['kind']} kind - The edge relationship kind.
+ * @returns {string} The CSS colour variable string for the edge.
+ */
 function edgeColor(kind: EdgeDef['kind']): string {
   if (kind === 'enemy') return 'var(--accent)'
   if (kind === 'tense') return 'var(--warn)'
@@ -13,6 +19,12 @@ function edgeColor(kind: EdgeDef['kind']): string {
   return 'var(--ink)'
 }
 
+/**
+ * Return the SVG dash pattern for frayed edges, or undefined for firm bonds.
+ *
+ * @param {EdgeDef['kind']} kind - The edge relationship kind.
+ * @returns {string|undefined} The SVG stroke-dasharray string, or undefined for solid lines.
+ */
 function edgeDash(kind: EdgeDef['kind']): string | undefined {
   if (kind === 'lost') return '1.2 1'
   if (kind === 'tense') return '0.7 0.7'
@@ -21,10 +33,22 @@ function edgeDash(kind: EdgeDef['kind']): string | undefined {
 
 // Frayed bonds (tense/lost) keep their dash pattern and ghost in via opacity;
 // firm bonds draw themselves with a pathLength stroke reveal.
+/**
+ * Whether an edge is frayed (tense/lost) — determines fade-in vs stroke-reveal.
+ *
+ * @param {EdgeDef['kind']} kind - The edge relationship kind.
+ * @returns {boolean} True if the edge should use opacity fade-in instead of stroke reveal.
+ */
 function isFrayed(kind: EdgeDef['kind']): boolean {
   return kind === 'tense' || kind === 'lost'
 }
 
+/**
+ * Map a node kind to its fill colour.
+ *
+ * @param {NodeKind} kind - The node category kind.
+ * @returns {string} The CSS colour variable string for the node fill.
+ */
 function nodeFill(kind: NodeKind): string {
   if (kind === 'party') return 'var(--accent)'
   if (kind === 'enemy') return 'var(--danger)'
@@ -32,6 +56,12 @@ function nodeFill(kind: NodeKind): string {
   return 'var(--paper)'
 }
 
+/**
+ * Map a node kind to its label text colour.
+ *
+ * @param {NodeKind} kind - The node category kind.
+ * @returns {string} The CSS colour variable string for the node label text.
+ */
 function nodeTextFill(kind: NodeKind): string {
   return kind === 'neutral' ? 'var(--ink)' : 'var(--paper)'
 }
@@ -49,6 +79,11 @@ const ANNOT_DELAY = 1.0
 const CARD_LEFT_DELAY = 0.95
 const CARD_RIGHT_DELAY = 1.1
 
+/**
+ * Animated campaign graph — SVG nodes/edges with parallax cards and scroll transforms.
+ *
+ * @returns {React.ReactElement} The animated hero graph scene element.
+ */
 export function HeroGraphScene() {
   const reduce = useReducedMotion()
   const { scrollY } = useScroll()
@@ -125,7 +160,11 @@ export function HeroGraphScene() {
                 animate={
                   frayed ? { opacity: 1 } : { pathLength: 1, opacity: 1 }
                 }
-                transition={{ delay, duration: frayed ? 0.4 : 0.55, ease: EASE }}
+                transition={{
+                  delay,
+                  duration: frayed ? 0.4 : 0.55,
+                  ease: EASE,
+                }}
               />
             )
           })}

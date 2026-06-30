@@ -23,6 +23,7 @@ Read the documents depending on the task you are working on.
 | Testing, CI and quality gates | `08-quality-strategy.md` |
 | Final Master Project delivery | `09-tfm-delivery.md` |
 | Implementation roadmap and block status | `10-roadmap.md` |
+| Documentation and comment conventions | `conventions/documentation.md` |
 
 ## Recommended reading order for new agents
 
