@@ -12,7 +12,7 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://localhost:3000"]
     )
     supabase_url: AnyHttpUrl | None = None
-    supabase_anon_key: str | None = None
+    supabase_publishable_key: str | None = None
     supabase_service_role_key: str = ""
     llm_provider: str = "fake"
 

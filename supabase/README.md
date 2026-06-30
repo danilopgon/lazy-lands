@@ -24,9 +24,9 @@ Expected environment variable mapping:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=<API URL from supabase status>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key from supabase status>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable key from supabase status>
 SUPABASE_URL=<API URL from supabase status>
-SUPABASE_ANON_KEY=<anon key from supabase status>
+SUPABASE_PUBLISHABLE_KEY=<publishable key from supabase status>
 SUPABASE_SERVICE_ROLE_KEY=<service_role key from supabase status>
 SUPABASE_JWT_SECRET=<JWT secret for local verification>
 ```
