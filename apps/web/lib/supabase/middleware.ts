@@ -1,13 +1,18 @@
 import { createServerClient } from '@supabase/ssr'
+import type { User } from '@supabase/supabase-js'
 import { type NextRequest, NextResponse } from 'next/server'
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(
+  request: NextRequest
+): Promise<{ response: NextResponse; user: User | null }> {
   let response = NextResponse.next({ request })
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return response
+    // Early-return: no Supabase config — return null user so callers can
+    // safely pass to decideAuth without receiving undefined.
+    return { response, user: null }
   }
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -27,7 +32,11 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
-  await supabase.auth.getUser()
+  // Reuse the single getUser() call — its result feeds decideAuth.
+  // Do NOT call getUser() a second time; one round-trip per request.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  return response
+  return { response, user }
 }

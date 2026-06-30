@@ -5,16 +5,24 @@
 **Revised**: 2026-06-29 — Added `/auth/confirm`, `/auth/reset`, `/forgot-password` to
 public allow-list. Updated smoke test to reflect email confirmation flow and ES256/JWKS
 (no JWT secret on Railway). See proposal amendment.
+**Revised**: 2026-06-30 — Corrected file convention for Next.js 16. Next.js 16 renames the
+middleware entry point from `middleware.ts` to `proxy.ts` and the exported function from
+`middleware` to `proxy`. A `middleware.ts` file is never loaded by Next.js 16.
 
 ---
 
 ## Overview
 
-Add a Next.js middleware file at `apps/web/middleware.ts` that refreshes Supabase session
-cookies on every matched request and redirects unauthenticated users away from protected
-routes. The `updateSession()` helper at `apps/web/lib/supabase/middleware.ts` already
-exists from a prior block; this spec wires it into the actual Next.js middleware entry
-point.
+Add the Next.js proxy/middleware file at `apps/web/proxy.ts` (Next.js 16 convention — see
+note above) that refreshes Supabase session cookies on every matched request and redirects
+unauthenticated users away from protected routes. The `updateSession()` helper at
+`apps/web/lib/supabase/middleware.ts` already exists from a prior block; this spec wires
+it into the actual Next.js 16 entry point (`proxy.ts`).
+
+`updateSession` returns `{ response: NextResponse; user: User | null }`. The `user` value
+comes from the single `supabase.auth.getUser()` call already inside `updateSession` —
+no second round-trip is needed. The early-return path (missing env vars) returns
+`{ response, user: null }` so callers never receive `undefined`.
 
 **Partition**: `session-management` owns route guards and session refresh. `auth-ui` owns
 Supabase auth calls and page rendering. The email confirmation and password reset callback
@@ -25,9 +33,10 @@ reached before a session exists.
 
 ## Functional requirements
 
-### SM-001: Middleware file exists
+### SM-001: Proxy file exists (Next.js 16 middleware entry point)
 
-`apps/web/middleware.ts` MUST exist at the Next.js app root (peer of `app/`, not inside it).
+`apps/web/proxy.ts` MUST exist at the Next.js app root (peer of `app/`, not inside it).
+This is the Next.js 16 convention — equivalent to `middleware.ts` in earlier versions.
 
 ---
 
@@ -35,26 +44,27 @@ reached before a session exists.
 
 The middleware MUST call `updateSession(request)` (imported from
 `apps/web/lib/supabase/middleware.ts`) on every request that matches the route matcher.
-`updateSession` handles Supabase cookie refresh and returns a `NextResponse`. The
-middleware MUST return this response (or a redirect derived from it).
+`updateSession` handles Supabase cookie refresh and returns `{ response: NextResponse; user: User | null }`.
+The middleware MUST destructure this result and return `response` (or a redirect derived from it).
 
 Session refresh MUST happen before any ownership check or route guard so that
 `supabase.auth.getUser()` inside the middleware reflects the current token state.
 
 ---
 
-### SM-003: Route matcher — protected routes
+### SM-003: Route matcher — broad matcher required for Supabase SSR
 
-The middleware `config.matcher` MUST match:
+The `proxy.ts` `config.matcher` MUST use the broad Supabase SSR pattern that matches all
+non-asset paths (excluding `_next/static`, `_next/image`, `favicon.ico`, and static file
+extensions). This is intentional: Supabase SSR requires the proxy to run on every page
+request so it can refresh the auth cookie transparently.
 
-| Pattern | Reason |
-|---------|--------|
-| `/dashboard` | Primary authenticated entry point in this block |
-| `/dashboard/:path*` | All sub-paths under `/dashboard` |
+The broad matcher satisfies SM-003 because it includes `/dashboard` and `/dashboard/:path*`.
+Route protection is enforced by `decideAuth`'s `PROTECTED` list — not by narrowing the
+matcher to `/dashboard*`.
 
-The matcher MAY also exclude Next.js internal paths (`_next/static`, `_next/image`,
-`favicon.ico`) for performance. It MUST NOT match static asset paths in a way that
-breaks image or CSS loading.
+The matcher MUST NOT be narrowed to `/dashboard*` only, as that would skip cookie refresh
+on public routes and break the SSR session lifecycle.
 
 ---
 
@@ -111,7 +121,7 @@ refreshed token on the next server-side render.
 
 ### Strict TDD — tests before implementation
 
-Tests MUST be written in a failing state before `middleware.ts` is created.
+Tests MUST be written in a failing state before `proxy.ts` is modified.
 
 ### Auth-decision function — pure unit test pattern
 
@@ -125,7 +135,9 @@ covered by the Playwright E2E smoke test, not by Vitest unit tests.
 
 ### Middleware unit tests (Vitest)
 
-Location: `apps/web/middleware.test.ts` or equivalent.
+Location: `apps/web/tests/decide.test.ts` (pure `decideAuth` tests, SM-T-01..07) and
+`apps/web/tests/proxy.test.tsx` (proxy integration tests with mocked `updateSession`).
+Vitest only runs tests under `apps/web/tests/` — do not place tests at the app root.
 
 The Supabase client and `updateSession` MUST be mocked. `NextRequest` is constructible
 from a URL string without a live Next.js runtime.
@@ -187,21 +199,22 @@ The matcher or explicit path check MUST prevent this for all public routes liste
 
 ### NFR-SM-3: TypeScript
 
-`middleware.ts` MUST pass `pnpm typecheck` without errors.
+`proxy.ts`, `lib/auth/decide.ts`, and `lib/supabase/middleware.ts` MUST pass
+`pnpm typecheck` without errors.
 
 ---
 
 ## Acceptance criteria
 
-1. `apps/web/middleware.ts` exists at the app root. (SM-001)
-2. Middleware calls `updateSession` on every matched request. (SM-002)
-3. Middleware `config.matcher` includes `/dashboard` and `/dashboard/:path*`. (SM-003)
+1. `apps/web/proxy.ts` exists at the app root (Next.js 16 entry point). (SM-001)
+2. Proxy calls `updateSession` on every matched request; `updateSession` returns `{ response, user }`. (SM-002)
+3. Proxy `config.matcher` uses the broad Supabase SSR pattern; `decideAuth` enforces the `/dashboard` guard. (SM-003)
 4. Public routes (`/`, `/login`, `/register`, `/forgot-password`, `/auth/confirm`, `/auth/reset`, `/privacy`, `/cookies`) are not redirected. (SM-004)
-5. Unauthenticated request to `/dashboard` → 302 redirect to `/login`. (SM-005)
+5. Unauthenticated request to `/dashboard` → redirect to `/login` (via `decideAuth`). (SM-005)
 6. Authenticated request to `/dashboard` → proceeds without redirect. (SM-006)
 7. Refreshed session cookies are present on the response when a refresh occurs. (SM-007)
-8. All 7 Vitest test cases pass without a live Supabase instance. (Test requirements)
-9. `pnpm typecheck` passes on `middleware.ts`. (NFR-SM-3)
+8. All 7 Vitest `decideAuth` tests (SM-T-01..07) pass without a live Supabase instance. (Test requirements)
+9. `pnpm typecheck` passes on `proxy.ts`, `lib/auth/decide.ts`, `lib/supabase/middleware.ts`. (NFR-SM-3)
 10. No redirect loop is possible from `/login`, `/auth/confirm`, or `/auth/reset`. (NFR-SM-2)
 
 ---
