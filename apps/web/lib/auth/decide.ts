@@ -10,6 +10,10 @@ const PROTECTED = ['/dashboard']
  *
  * Kept pure (no I/O, no side effects) so it can be unit-tested with Vitest in
  * a jsdom environment without requiring the Edge runtime.
+ *
+ * @param {User|null} user - The authenticated Supabase user, or null if unauthenticated.
+ * @param {string} pathname - The current request pathname.
+ * @returns {'redirect'|'passthrough'} "redirect" if the user should be sent to login, "passthrough" otherwise.
  */
 export function decideAuth(
   user: User | null,

@@ -1,6 +1,11 @@
 import { howItWorksSteps } from './data'
 import { ViewEnter } from './motion'
 
+/**
+ * "Three steps" section — dark background with numbered step cards.
+ *
+ * @returns {React.ReactElement} The how-it-works landing section element.
+ */
 export function LandHowItWorks() {
   return (
     <section

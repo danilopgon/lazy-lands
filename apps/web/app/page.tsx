@@ -13,11 +13,14 @@ export const metadata: Metadata = {
     'and generate session briefings — so the world remembers what your players did.',
 }
 
+/**
+ * Landing page — composes the marketing overlays and the main landing section.
+ *
+ * @returns {React.ReactElement} The home page element with announcement, landing, and cookie banner.
+ */
 export default function Home() {
   return (
     <>
-      {/* Marketing overlays mount here, NOT in layout.tsx,
-          so they do not appear on /cookies, /privacy, or app routes. */}
       <AnnouncementBar />
       <LandingPage />
       <CookieBanner />

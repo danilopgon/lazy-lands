@@ -7,13 +7,23 @@ type NoticeProps = React.HTMLAttributes<HTMLDivElement> & {
   ornament?: React.ReactNode
 }
 
+/**
+ * Callout box — scribe (dark), error (red), or plain variant with optional ornament icon.
+ *
+ * @param {object} root0 - The notice props, extending standard HTML div attributes.
+ * @param {string} [root0.className] - Optional additional CSS classes to merge.
+ * @param {'scribe'|'error'|'plain'} [root0.variant='scribe'] - The visual variant.
+ * @param {React.ReactNode} [root0.ornament] - Optional decorative icon before the content (default: star).
+ * @param {React.ReactNode} root0.children - The notice body content.
+ * @returns {React.ReactElement} The notice callout element.
+ */
 export function Notice({
   className,
   variant = 'scribe',
   ornament = '✦',
   children,
   ...props
-}: NoticeProps) {
+}: NoticeProps): React.ReactElement {
   return (
     <div
       className={cn(

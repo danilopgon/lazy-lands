@@ -4,6 +4,11 @@ import { useState } from 'react'
 
 import { marqueeItems } from './data'
 
+/**
+ * Infinite CSS-animation marquee — pauses on hover/focus for accessibility.
+ *
+ * @returns {React.ReactElement} The marquee landing section element.
+ */
 export function LandMarquee() {
   const [paused, setPaused] = useState(false)
   const all = [...marqueeItems, ...marqueeItems]

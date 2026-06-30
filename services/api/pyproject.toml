@@ -31,7 +31,10 @@ line-length = 88
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E", "F", "I", "UP", "B", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.mypy]
 python_version = "3.12"

@@ -108,6 +108,7 @@ Read based on what you are working on:
 | Supabase, Auth, RLS               | `docs/07-data-security-and-rls.md`       |
 | Testing strategy and CI           | `docs/08-quality-strategy.md`            |
 | TFM delivery requirements         | `docs/09-tfm-delivery.md`                |
+| Documentation and comments        | `docs/conventions/documentation.md`      |
 | UI/UX visual direction            | `DESIGN.md`, then `handoff/`             |
 
 ---
@@ -156,3 +157,11 @@ operation must verify ownership before reading or writing. Never bypass RLS.
 
 Each commit should represent a single deliverable unit of work. Keep PRs focused. Avoid mixing
 unrelated changes. A reviewer should understand the purpose of a commit from its diff alone.
+
+### Prefer self-documenting code over inline comments
+
+Use clear names, small functions, typed boundaries, and focused tests before adding comments.
+Inline comments are acceptable when they explain non-obvious why, tradeoffs, invariants,
+security constraints, external framework behavior, or compatibility requirements. Do not add
+comments that restate the code, duplicate a test name, or narrate routine steps. Remove stale,
+misleading, decorative, or noisy comments when touching nearby code.

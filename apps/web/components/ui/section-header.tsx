@@ -10,6 +10,18 @@ type SectionHeaderProps = React.HTMLAttributes<HTMLDivElement> & {
   titleAs?: 'h1' | 'h2' | 'h3'
 }
 
+/**
+ * Section heading block — optional kicker, marker, configurable heading level, and description.
+ *
+ * @param {object} root0 - The section header props, extending standard HTML div attributes.
+ * @param {string} root0.title - The main heading text.
+ * @param {string} [root0.description] - Optional supporting description text below the heading.
+ * @param {string} [root0.kicker] - Optional small uppercase label above the heading.
+ * @param {React.ReactNode} [root0.marker] - Optional decorative marker element beside the heading.
+ * @param {'h1'|'h2'|'h3'} [root0.titleAs='h2'] - The HTML heading level to render.
+ * @param {string} [root0.className] - Optional additional CSS classes to merge.
+ * @returns {React.ReactElement} The section header element.
+ */
 export function SectionHeader({
   title,
   description,

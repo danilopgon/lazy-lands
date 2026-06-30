@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * Cookie policy page — non-indexed, lists all storage items in use.
+ *
+ * @returns {React.ReactElement} The cookie policy page element.
+ */
 export default function CookiesPage() {
   return (
     <main id="main-content" className="mx-auto max-w-2xl px-6 py-16 font-serif">

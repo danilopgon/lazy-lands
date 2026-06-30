@@ -6,6 +6,15 @@ type LoadingScribeProps = {
   className?: string
 }
 
+/**
+ * Animated loading indicator — quill icon with configurable title and caption.
+ *
+ * @param {object} root0 - The loading scribe props.
+ * @param {string} [root0.title='The Scribe is writing'] - The heading text.
+ * @param {string} [root0.caption='Gathering the campaign thread'] - The caption text below the heading.
+ * @param {string} [root0.className] - Optional additional CSS classes to merge.
+ * @returns {React.ReactElement} The loading indicator element.
+ */
 export function LoadingScribe({
   title = 'The Scribe is writing',
   caption = 'Gathering the campaign thread',

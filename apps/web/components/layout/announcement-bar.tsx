@@ -9,6 +9,11 @@ import {
   setAnnouncementDismissed,
 } from '@/lib/consent'
 
+/**
+ * Dismissible announcement bar — reads dismissed state from localStorage.
+ *
+ * @returns {React.ReactElement|null} The announcement bar element, or null if dismissed.
+ */
 export function AnnouncementBar() {
   const [visible, setVisible] = useState(false)
 
@@ -22,6 +27,7 @@ export function AnnouncementBar() {
 
   if (!visible) return null
 
+  /** Persist dismissal to localStorage and hide the bar. */
   function handleDismiss() {
     setAnnouncementDismissed()
     setVisible(false)

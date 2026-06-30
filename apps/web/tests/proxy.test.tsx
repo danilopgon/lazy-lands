@@ -12,6 +12,12 @@ vi.mock('@/lib/supabase/middleware', () => ({
 // Helper: build a minimal NextRequest-like object from a URL string.
 // proxy.ts uses `new URL(request.url).pathname` and `request.url`, so a plain
 // Request cast satisfies that contract without needing nextUrl.
+/**
+ * Build a minimal NextRequest-compatible object from a URL string for proxy tests.
+ *
+ * @param {string} url - The URL string to create the request from.
+ * @returns {NextRequest} A NextRequest-compatible object for use in proxy tests.
+ */
 function makeRequest(url: string): NextRequest {
   return new Request(url) as unknown as NextRequest
 }

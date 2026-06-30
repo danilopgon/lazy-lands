@@ -9,6 +9,17 @@ type EmptyStateProps = React.HTMLAttributes<HTMLDivElement> & {
   ornament?: React.ReactNode
 }
 
+/**
+ * Centred empty-state panel with ornament, title, description, and optional action slot.
+ *
+ * @param {object} root0 - The empty state props, extending standard HTML div attributes.
+ * @param {string} root0.title - The main heading text.
+ * @param {string} root0.description - The supporting description text.
+ * @param {React.ReactNode} [root0.action] - Optional action element (button or link) rendered below the description.
+ * @param {React.ReactNode} [root0.ornament] - Optional decorative element above the title (default: floral ornament).
+ * @param {string} [root0.className] - Optional additional CSS classes to merge.
+ * @returns {React.ReactElement} The empty state panel element.
+ */
 export function EmptyState({
   title,
   description,

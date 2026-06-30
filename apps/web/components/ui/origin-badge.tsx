@@ -5,6 +5,14 @@ type OriginBadgeProps = {
   className?: string
 }
 
+/**
+ * Tiny label indicating whether content originated from the Scribe or was edited by the user.
+ *
+ * @param {object} root0 - The origin badge props.
+ * @param {'scribe'|'edited'} root0.origin - The content origin.
+ * @param {string} [root0.className] - Optional additional CSS classes to merge.
+ * @returns {React.ReactElement} The origin badge element.
+ */
 export function OriginBadge({ origin, className }: OriginBadgeProps) {
   return (
     <span

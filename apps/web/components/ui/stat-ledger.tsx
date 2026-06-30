@@ -10,6 +10,14 @@ type StatLedgerProps = {
   className?: string
 }
 
+/**
+ * Horizontal stat grid — value/label pairs in a bordered, shadowed ledger layout.
+ *
+ * @param {object} root0 - The stat ledger props.
+ * @param {Array<{value: string, label: string}>} root0.items - Array of stat items with value and label.
+ * @param {string} [root0.className] - Optional additional CSS classes to merge.
+ * @returns {React.ReactElement} The stat ledger element.
+ */
 export function StatLedger({ items, className }: StatLedgerProps) {
   return (
     <dl

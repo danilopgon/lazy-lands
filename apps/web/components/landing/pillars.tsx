@@ -5,6 +5,11 @@ import { StatLedger } from '@/components/ui/stat-ledger'
 import { continuityStats, memoryLoop } from './data'
 import { ViewEnter } from './motion'
 
+/**
+ * Product pillars section — memory loop steps and continuity stats with a "memory in play" callout.
+ *
+ * @returns {React.ReactElement} The pillars landing section element.
+ */
 export function LandPillars() {
   return (
     <section

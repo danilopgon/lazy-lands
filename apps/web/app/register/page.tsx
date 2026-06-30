@@ -4,6 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Notice } from '@/components/ui/notice'
 import { SectionHeader } from '@/components/ui/section-header'
 
+/**
+ * Registration page — placeholder until account creation is implemented.
+ *
+ * @returns {React.ReactElement} The registration page element.
+ */
 export default function RegisterPage() {
   return (
     <main

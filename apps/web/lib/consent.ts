@@ -4,6 +4,8 @@ export const ANNOUNCEMENT_KEY = 'll-announcement-dismissed'
 /**
  * Returns the current cookie consent value, or null if not set.
  * SSR-safe: guards against typeof window === 'undefined'.
+ *
+ * @returns {'acknowledged'|null} The consent value "acknowledged", or null if not yet set or in SSR.
  */
 export function getConsent(): 'acknowledged' | null {
   if (typeof window === 'undefined') return null
@@ -22,6 +24,8 @@ export function setConsent(): void {
 /**
  * Returns true if the announcement bar has been dismissed.
  * SSR-safe: returns false when window is unavailable.
+ *
+ * @returns {boolean} True if the announcement has been dismissed, false otherwise or in SSR.
  */
 export function getAnnouncementDismissed(): boolean {
   if (typeof window === 'undefined') return false

@@ -11,6 +11,11 @@ const emptyStats = [
   { value: '0', label: 'Open arcs' },
 ]
 
+/**
+ * Campaign dashboard — placeholder empty state until auth and data are wired.
+ *
+ * @returns {React.ReactElement} The dashboard page element.
+ */
 export default function DashboardPage() {
   return (
     <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
