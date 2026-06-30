@@ -1,3 +1,4 @@
+import json
 from typing import Annotated
 
 import jwt
@@ -70,8 +71,13 @@ async def get_current_user(
             algorithms=["ES256"],
             audience="authenticated",
             issuer=_issuer,
+            options={"require": ["exp"]},
         )
-    except jwt.PyJWTError as exc:
+    # PyJWKClient.fetch_data() parses the JWKS body with json.load and only wraps
+    # URLError/TimeoutError — a malformed JWKS response raises json.JSONDecodeError
+    # / UnicodeDecodeError, neither of which is a PyJWTError. Catch them too so a
+    # bad upstream response fails closed as 401 instead of leaking a 500.
+    except (jwt.PyJWTError, json.JSONDecodeError, UnicodeDecodeError) as exc:
         raise _unauthorized() from exc
 
     # A token can pass signature/aud/iss/exp validation yet omit ``sub`` —

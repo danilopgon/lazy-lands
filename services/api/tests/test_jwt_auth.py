@@ -303,6 +303,31 @@ def test_ja_t13_missing_sub_claim_returns_401(ec_keypair, mock_jwks_client, clie
 
 
 # ---------------------------------------------------------------------------
+# JA-T-14 — Otherwise-valid token without an `exp` claim → 401 (never expires)
+# ---------------------------------------------------------------------------
+
+
+def test_ja_t14_missing_exp_claim_returns_401(ec_keypair, mock_jwks_client, client):
+    # A signed token without `exp` would otherwise be accepted forever. The
+    # decode requires `exp`, so a token omitting it must be rejected (401).
+    private_key, _ = ec_keypair
+    payload = {
+        "sub": "user-uuid-1234",
+        "aud": "authenticated",
+        "iss": _derived_issuer(),
+        "iat": int(time.time()),
+    }
+    token = jwt.encode(
+        payload, private_key, algorithm="ES256", headers={"kid": "test-kid-1"}
+    )
+
+    response = client.get("/protected", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 401
+    assert response.headers.get("WWW-Authenticate") == "Bearer"
+
+
+# ---------------------------------------------------------------------------
 # T-13 — database factory import tests (shared/database.py does not exist yet)
 # ---------------------------------------------------------------------------
 
@@ -321,7 +346,12 @@ def test_database_factory_does_not_init_at_import():
 
     import app.shared.database  # noqa: PLC0415
 
-    with patch("supabase.create_client") as mock_create:
-        importlib.reload(app.shared.database)
+    try:
+        with patch("supabase.create_client") as mock_create:
+            importlib.reload(app.shared.database)
 
-    mock_create.assert_not_called()
+        mock_create.assert_not_called()
+    finally:
+        # Reloading under the patch rebinds the module's create_client to the
+        # mock; reload once more to restore the real reference for later tests.
+        importlib.reload(app.shared.database)

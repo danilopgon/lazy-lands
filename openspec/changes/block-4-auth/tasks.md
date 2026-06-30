@@ -19,7 +19,7 @@ Two main commit boundaries: (1) structural migration, (2) real auth.
 - [x] T-09 · Add signing-key generation script to `services/api/package.json`
 - [x] T-10 · Verify Phase 1 green
 - [x] T-11 · Add `pyjwt[crypto]` to `pyproject.toml`
-- [x] T-12 · Write failing JWT auth tests (JA-T-01..12) [TDD — failing]
+- [x] T-12 · Write failing JWT auth tests (JA-T-01..14) [TDD — failing]
 - [x] T-13 · Write failing import/factory test for `shared/database.py` [TDD — failing]
 - [x] T-14 · Implement `get_current_user` in `shared/security.py`
 - [x] T-15 · Remove `supabase_jwt_secret` from `Settings`
@@ -286,7 +286,7 @@ The `[crypto]` extra pulls in `cryptography`, which is required for ES256 suppor
 
 ---
 
-### T-12 · Write failing JWT auth tests (JA-T-01..12) [TDD — failing]
+### T-12 · Write failing JWT auth tests (JA-T-01..14) [TDD — failing]
 
 **Seq**: after T-11.
 
