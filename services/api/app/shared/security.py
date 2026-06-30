@@ -15,9 +15,7 @@ from app.shared.config import settings
 # "None/auth/v1/…", which would silently reject every request with a generic 401
 # at runtime instead of surfacing the missing env var. Catch it at startup.
 if settings.supabase_url is None:
-    raise RuntimeError(
-        "SUPABASE_URL is required for JWT validation but is not set."
-    )
+    raise RuntimeError("SUPABASE_URL is required for JWT validation but is not set.")
 
 # Trailing-slash guard: Pydantic v2 normalises AnyHttpUrl with a trailing "/".
 # Without rstrip() the derived issuer becomes "…//auth/v1" and every valid token
@@ -58,7 +56,7 @@ async def get_current_user(
     if not authorization or not authorization.startswith("Bearer "):
         raise _unauthorized()
 
-    token = authorization[len("Bearer "):]
+    token = authorization[len("Bearer ") :]
     if not token:
         raise _unauthorized()
 
