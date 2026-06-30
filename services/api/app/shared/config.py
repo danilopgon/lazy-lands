@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     supabase_url: AnyHttpUrl | None = None
     supabase_anon_key: str | None = None
     supabase_service_role_key: str = ""
-    supabase_jwt_secret: str = ""
     llm_provider: str = "fake"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
