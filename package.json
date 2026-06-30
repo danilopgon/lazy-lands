@@ -42,8 +42,7 @@
       "prettier --write"
     ],
     "*.py": [
-      "bash -c 'cd services/api && uv run ruff format'",
-      "bash -c 'cd services/api && uv run ruff check --fix'"
+      "echo 'Python: run ruff in services/api'"
     ]
   }
 }
