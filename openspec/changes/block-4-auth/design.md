@@ -36,12 +36,18 @@ Both `/auth/confirm` and `/auth/reset` are `"use client"` page components callin
 PKCE-default `?code`). `flowType` need not change — `verifyOtp(token_hash)` is independent of PKCE.
 After success, use a hard navigation so the SSR middleware sees the freshly-written session cookie.
 
-### Decision 3 — Local signing-key setup + middleware test harness
+### Decision 3 — Local signing-key setup + proxy test harness (Next.js 16)
+
+**Note**: Next.js 16 renames the middleware convention from `middleware.ts` (exported `middleware`) to
+`proxy.ts` (exported `proxy`). Creating a `middleware.ts` in Next.js 16 produces dead code — the file
+is never loaded. All references to `middleware.ts` in prior artifact versions should be read as `proxy.ts`.
 
 | Concern | Decision |
 |---------|----------|
 | ES256 keys reproducible | Documented cross-platform `package.json` script (no bash-only `.sh`) running from `services/api` as `supabase gen signing-key --algorithm ES256`; the Supabase CLI writes the configured `signing_keys_path`; file in `.gitignore`; `signing_keys_path` uncommented in committed `config.toml`. Devs run script before `supabase start`. CI needs no keys — tests mock PyJWKClient. |
-| Middleware testability | Extract pure `decideAuth(user, pathname) → "redirect" \| "passthrough"` (Vitest, plain inputs). `middleware()` is thin glue (`updateSession` → `getUser` → `NextResponse`); SM-T-01..07 call it directly with mocked SSR client. Real Edge behavior covered by Playwright — no `@edge-runtime/vm`. |
+| Proxy testability | Extract pure `decideAuth(user, pathname) → "redirect" \| "passthrough"` into `lib/auth/decide.ts` (Vitest pure tests SM-T-01..07). `proxy()` in `proxy.ts` is thin glue: calls `updateSession(request)` which now returns `{ response: NextResponse; user: User \| null }` (reusing the single `getUser()` call already inside `updateSession`; no second round-trip). `proxy()` uses `new URL(request.url).pathname` (works in both Edge runtime and plain-Request unit test mocks). Real Edge behavior covered by Playwright — no `@edge-runtime/vm`. |
+| Broad matcher (intentional) | `proxy.ts` `config.matcher` covers all non-asset paths. This is the Supabase SSR session-refresh requirement — cookies must be refreshed on every page request. Route protection is enforced by `decideAuth`'s `PROTECTED` list, not by narrowing the matcher. |
+| `updateSession` return contract | `updateSession` returns `{ response, user }`. Early-return path (missing env vars) returns `{ response, user: null }` — never `undefined`. This is a breaking change from the prior `return response` shape; callers must destructure. |
 
 ## Data Flow
 
@@ -60,7 +66,9 @@ After success, use a hard navigation so the SSR middleware sees the freshly-writ
 | `services/api/app/{core,api,application,domain,infrastructure,prompts}/` | Delete | Old layer-first layout |
 | `services/api/app/main.py` | Modify | Imports → `app.shared.*` / `app.modules.health.*` |
 | `services/api/{pyproject.toml,package.json}` | Modify/Create | `pyjwt[crypto]`; Turborepo `dev` script |
-| `apps/web/middleware.ts` + pure `decideAuth` module | Create | Session refresh + `/dashboard*` guard |
+| `apps/web/proxy.ts` (Next.js 16 middleware entry point) | Modify | Wire `decideAuth` + `updateSession({ response, user })` into session guard |
+| `apps/web/lib/auth/decide.ts` | Create | Pure `decideAuth(user, pathname)` — no Edge runtime needed |
+| `apps/web/lib/supabase/middleware.ts` | Modify | Return `{ response, user }` instead of bare `response`; reuse existing `getUser()` |
 | `apps/web/app/{login,register}/page.tsx` | Modify | Real forms (react-hook-form + zod) |
 | `apps/web/app/{auth/confirm,auth/reset,forgot-password}/page.tsx` | Create | verifyOtp callbacks + recovery form |
 | `apps/web/lib/api.ts` | Create | fetch wrapper injecting `Bearer` token |

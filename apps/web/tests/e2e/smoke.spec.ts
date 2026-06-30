@@ -14,7 +14,10 @@ test('landing page loads with new copy and correct title', async ({ page }) => {
 
   // LAND-003c: primary CTA visible
   await expect(
-    page.getByRole('link', { name: /start your chronicle/i })
+    page
+      .locator('main')
+      .getByRole('link', { name: /start your chronicle/i })
+      .first()
   ).toBeVisible()
 
   // LAND-010b/c: footer legal links visible

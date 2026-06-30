@@ -1,21 +1,105 @@
-import { describe, expect, it, vi } from 'vitest'
-import { type NextRequest } from 'next/server'
+import type { User } from '@supabase/supabase-js'
+import { type NextRequest, NextResponse } from 'next/server'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// Mock updateSession to return the { response, user } contract
+const mockResponse = new NextResponse(null, { status: 200 })
 
 vi.mock('@/lib/supabase/middleware', () => ({
-  updateSession: vi.fn((request: Request) => ({ handledRequest: request })),
+  updateSession: vi.fn(),
 }))
 
-describe('Next.js proxy session refresh', () => {
-  it('exports proxy and delegates session refresh to updateSession', async () => {
-    const request = new Request(
-      'http://localhost:3000/dashboard'
-    ) as unknown as NextRequest
-    const { proxy } = await import('../proxy')
+// Helper: build a minimal NextRequest-like object from a URL string.
+// proxy.ts uses `new URL(request.url).pathname` and `request.url`, so a plain
+// Request cast satisfies that contract without needing nextUrl.
+function makeRequest(url: string): NextRequest {
+  return new Request(url) as unknown as NextRequest
+}
 
-    await expect(proxy(request)).resolves.toEqual({ handledRequest: request })
+describe('proxy — session-management (Phase 2B)', () => {
+  beforeEach(() => {
+    vi.resetModules()
   })
 
-  it('preserves the existing matcher exclusions', async () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('SM-proxy-01: passes through authenticated user on /dashboard', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const mockUser: User = { id: 'user-123' } as User
+    vi.mocked(updateSession).mockResolvedValue({
+      response: mockResponse,
+      user: mockUser,
+    })
+
+    const { proxy } = await import('../proxy')
+    const request = makeRequest('http://localhost:3000/dashboard')
+    const result = await proxy(request)
+
+    // Authenticated → pass through the session response unchanged
+    expect(result).toBe(mockResponse)
+  })
+
+  it('SM-proxy-02: redirects unauthenticated user from /dashboard to /login', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    vi.mocked(updateSession).mockResolvedValue({
+      response: mockResponse,
+      user: null,
+    })
+
+    const { proxy } = await import('../proxy')
+    const request = makeRequest('http://localhost:3000/dashboard')
+    const result = await proxy(request)
+
+    // Unauthenticated on protected route → 302 redirect to /login, NOT the session response
+    expect(result).not.toBe(mockResponse)
+    expect(result.status).toBe(302)
+    expect(result.headers.get('location')).toContain('/login')
+  })
+
+  it('SM-proxy-03: passes through unauthenticated user on public route /login', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    vi.mocked(updateSession).mockResolvedValue({
+      response: mockResponse,
+      user: null,
+    })
+
+    const { proxy } = await import('../proxy')
+    const request = makeRequest('http://localhost:3000/login')
+    const result = await proxy(request)
+
+    // Public route → always pass through
+    expect(result).toBe(mockResponse)
+  })
+
+  it('SM-proxy-04: preserves refreshed Set-Cookie headers from updateSession', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const refreshedResponse = new NextResponse(null, { status: 200 })
+    refreshedResponse.cookies.set('sb-session', 'refreshed-token', {
+      httpOnly: true,
+      path: '/',
+      sameSite: 'lax',
+    })
+    const mockUser: User = { id: 'user-123' } as User
+    vi.mocked(updateSession).mockResolvedValue({
+      response: refreshedResponse,
+      user: mockUser,
+    })
+
+    const { proxy } = await import('../proxy')
+    const request = makeRequest('http://localhost:3000/dashboard')
+    const result = await proxy(request)
+
+    expect(result).toBe(refreshedResponse)
+    expect(result.headers.getSetCookie()).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('sb-session=refreshed-token'),
+      ])
+    )
+  })
+
+  it('SM-proxy-05: preserves the existing broad matcher (session-refresh for all non-asset paths)', async () => {
     const { config } = await import('../proxy')
 
     expect(config.matcher).toEqual([

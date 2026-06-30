@@ -25,11 +25,11 @@ Two main commit boundaries: (1) structural migration, (2) real auth.
 - [x] T-15 · Remove `supabase_jwt_secret` from `Settings`
 - [x] T-16 · Implement `shared/database.py` lazy Supabase client factory
 - [x] T-17 · Verify Phase 2A backend green
-- [ ] T-18 · Write failing Vitest unit tests for `decideAuth` (SM-T-01..07) [TDD — failing]
-- [ ] T-19 · Create pure `decideAuth` function
-- [ ] T-20 · Write failing Playwright E2E test for middleware glue [TDD — failing]
-- [ ] T-21 · Create `middleware.ts` thin glue
-- [ ] T-22 · Verify Phase 2B middleware green
+- [x] T-18 · Write failing Vitest unit tests for `decideAuth` (SM-T-01..07) [TDD — failing] → `apps/web/tests/decide.test.ts`
+- [x] T-19 · Create pure `decideAuth` function → `apps/web/lib/auth/decide.ts`
+- [x] T-20 · Write failing Playwright E2E test for proxy glue [TDD — failing] → `apps/web/tests/e2e/proxy.spec.ts`
+- [x] T-21 · Modify `apps/web/proxy.ts` (Next.js 16 entry point, was incorrectly spec'd as `middleware.ts`); update `updateSession` to return `{ response, user }`
+- [x] T-22 · Verify Phase 2B middleware green (80 Vitest pass, 2 Playwright E2E pass, 0 typecheck errors, 0 lint errors)
 - [ ] T-23 · Write failing Vitest tests for HTTP client (AU-T-12..14) [TDD — failing]
 - [ ] T-24 · Create `apps/web/lib/api.ts` fetch wrapper
 - [ ] T-25 · Write failing RTL tests for login form (AU-T-01..07) [TDD — failing]
@@ -446,11 +446,12 @@ Confirm:
 > Starts after Phase 1 commits. Parallel with Phase 2A, 2C-i, 2C-ii, 2C-iii.
 > Satisfies: SM-001 through SM-007, NFR-SM-1, NFR-SM-2, NFR-SM-3.
 
-### T-18 · Write failing Vitest unit tests for `decideAuth` (SM-T-01..07) [TDD — failing]
+### [x] T-18 · Write failing Vitest unit tests for `decideAuth` (SM-T-01..07) [TDD — failing]
 
 **Seq**: first task in Phase 2B.
 
-Create `apps/web/middleware.test.ts`. Tests are pure-function Vitest tests of
+Create `apps/web/tests/decide.test.ts` (Vitest only picks up files under `apps/web/tests/`).
+Tests are pure-function Vitest tests of
 `decideAuth(user, pathname)` — no `@edge-runtime/vm` required.
 
 | ID | User | Path | Expected return |
@@ -469,7 +470,7 @@ Tests fail because `lib/auth/decide.ts` does not exist yet.
 
 ---
 
-### T-19 · Create pure `decideAuth` function
+### [x] T-19 · Create pure `decideAuth` function
 
 **Seq**: after T-18 (failing tests exist). Makes SM-T-01..07 GREEN.
 
@@ -499,73 +500,82 @@ of session state (SM-T-03..SM-T-07 all pass through).
 
 ---
 
-### T-20 · Write failing Playwright E2E test for middleware glue [TDD — failing]
+### [x] T-20 · Write failing Playwright E2E test for proxy glue [TDD — failing]
 
-**Seq**: after T-19 (decideAuth exists, middleware.ts does not).
+**Seq**: after T-19 (decideAuth exists, proxy.ts not yet wired with decideAuth).
 
-Create `apps/web/tests/e2e/middleware.spec.ts`:
+Create `apps/web/tests/e2e/proxy.spec.ts` (Playwright testDir is `./tests/e2e`):
 
 ```ts
 import { test, expect } from "@playwright/test";
 
-test("unauthenticated visit to /dashboard redirects to /login", async ({
+test("SM-E2E-01: unauthenticated visit to /dashboard redirects to /login", async ({
   page,
 }) => {
-  await page.goto("/dashboard");
+  await page.context().clearCookies();
+  await page.goto("/dashboard", { waitUntil: "networkidle" });
   await expect(page).toHaveURL(/\/login/);
 });
 ```
 
-Test fails because `middleware.ts` does not yet exist; visiting `/dashboard` renders the
-page directly without any redirect.
+Test fails because `proxy.ts` does not yet call `decideAuth`; unauthenticated `/dashboard`
+renders directly without redirect.
 
 **Spec**: SM-005 (edge glue).
 
 ---
 
-### T-21 · Create `middleware.ts` thin glue
+### [x] T-21 · Modify `proxy.ts` thin glue (Next.js 16 — NOT `middleware.ts`)
 
 **Seq**: after T-20 (failing Playwright test exists). Makes T-20 Playwright test GREEN.
 
-Create `apps/web/middleware.ts` at the Next.js app root (peer of `app/`, not inside it):
+**IMPORTANT**: Next.js 16 uses `proxy.ts` (not `middleware.ts`) as the middleware entry point.
+`apps/web/proxy.ts` already exists — modify it, do NOT create `middleware.ts`.
+
+Also update `apps/web/lib/supabase/middleware.ts` to return `{ response, user }`:
+- Reuse the existing `getUser()` call — do NOT add a second call.
+- Early-return path (missing env vars) MUST return `{ response, user: null }`.
+
+Then wire `decideAuth` into `proxy.ts`:
+- Use `new URL(request.url).pathname` (not `request.nextUrl.pathname`) — works with plain
+  Request mocks in Vitest and in the Edge runtime.
+- Keep the BROAD matcher — do NOT narrow to `/dashboard*`. Protection is enforced by `decideAuth`.
 
 ```ts
-import { NextRequest, NextResponse } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+// apps/web/proxy.ts
+import { type NextRequest, NextResponse } from "next/server";
 import { decideAuth } from "@/lib/auth/decide";
+import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
-  const { response, supabase } = await updateSession(request);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (decideAuth(user, request.nextUrl.pathname) === "redirect") {
+export async function proxy(request: NextRequest) {
+  const { response, user } = await updateSession(request);
+  const pathname = new URL(request.url).pathname;
+  if (decideAuth(user, pathname) === "redirect") {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   return response;
 }
 
 export const config = {
-  matcher: ["/dashboard", "/dashboard/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
 ```
-
-The matcher is scoped to `/dashboard*` only — all other routes are untouched by the
-middleware (SM-004 public routes are never reached by the matcher).
 
 **Spec**: SM-001, SM-002, SM-003, SM-004, SM-005, SM-006, SM-007 / NFR-SM-1, NFR-SM-2.
 
 ---
 
-### T-22 · Verify Phase 2B middleware green
+### [x] T-22 · Verify Phase 2B middleware green
 
 **Seq**: after T-21.
 
-Confirm:
-- `pnpm test` — all 7 SM-T Vitest tests pass.
-- Playwright E2E — `apps/web/tests/e2e/middleware.spec.ts` passes.
-- `pnpm typecheck` passes on `middleware.ts` and `lib/auth/decide.ts`.
+Confirmed (2026-06-30 remediation):
+- `pnpm test` — 80 web tests pass (9 files): 10 `decideAuth` tests, 5 proxy tests, 1 runtime `updateSession` Set-Cookie test, and 64 pre-existing tests.
+- Playwright E2E — `pnpm --filter web test:e2e` passes 2 tests (`smoke.spec.ts` + `proxy.spec.ts`).
+- `pnpm typecheck` — zero errors on `proxy.ts`, `lib/auth/decide.ts`, `lib/supabase/middleware.ts`, and remediation tests.
+- `pnpm lint` — zero errors.
 
 **[COMMIT 3 — middleware: decideAuth pure function + thin Edge glue]**
 
