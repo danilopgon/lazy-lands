@@ -18,13 +18,13 @@ Two main commit boundaries: (1) structural migration, (2) real auth.
 - [x] T-08 · Add `services/api/package.json` with dev script
 - [x] T-09 · Add signing-key generation script to `services/api/package.json`
 - [x] T-10 · Verify Phase 1 green
-- [ ] T-11 · Add `pyjwt[crypto]` to `pyproject.toml`
-- [ ] T-12 · Write failing JWT auth tests (JA-T-01..12) [TDD — failing]
-- [ ] T-13 · Write failing import/factory test for `shared/database.py` [TDD — failing]
-- [ ] T-14 · Implement `get_current_user` in `shared/security.py`
-- [ ] T-15 · Remove `supabase_jwt_secret` from `Settings`
-- [ ] T-16 · Implement `shared/database.py` lazy Supabase client factory
-- [ ] T-17 · Verify Phase 2A backend green
+- [x] T-11 · Add `pyjwt[crypto]` to `pyproject.toml`
+- [x] T-12 · Write failing JWT auth tests (JA-T-01..14) [TDD — failing]
+- [x] T-13 · Write failing import/factory test for `shared/database.py` [TDD — failing]
+- [x] T-14 · Implement `get_current_user` in `shared/security.py`
+- [x] T-15 · Remove `supabase_jwt_secret` from `Settings`
+- [x] T-16 · Implement `shared/database.py` lazy Supabase client factory
+- [x] T-17 · Verify Phase 2A backend green
 - [ ] T-18 · Write failing Vitest unit tests for `decideAuth` (SM-T-01..07) [TDD — failing]
 - [ ] T-19 · Create pure `decideAuth` function
 - [ ] T-20 · Write failing Playwright E2E test for middleware glue [TDD — failing]
@@ -286,7 +286,7 @@ The `[crypto]` extra pulls in `cryptography`, which is required for ES256 suppor
 
 ---
 
-### T-12 · Write failing JWT auth tests (JA-T-01..12) [TDD — failing]
+### T-12 · Write failing JWT auth tests (JA-T-01..14) [TDD — failing]
 
 **Seq**: after T-11.
 
