@@ -40,12 +40,12 @@ Two main commit boundaries: (1) structural migration, (2) real auth.
 - [x] T-30 · Write failing RTL tests for `/auth/confirm` page (AU-T-15..17) [TDD — failing]
 - [x] T-31 · Create `/auth/confirm` page
 - [x] T-32 · Verify Phase 2C-ii green
-- [ ] T-33 · Write failing RTL tests for `/forgot-password` page (AU-T-18..20) [TDD — failing]
-- [ ] T-34 · Create `/forgot-password` page
-- [ ] T-35 · Write failing RTL tests for `/auth/reset` page (AU-T-21..24) [TDD — failing]
-- [ ] T-36 · Create `/auth/reset` page
-- [ ] T-37 · Verify Phase 2C-iii green
-- [ ] T-38 · Full Suite Gate (all PRs merged)
+- [x] T-33 · Write failing RTL tests for `/forgot-password` page (AU-T-18..20) [TDD — failing]
+- [x] T-34 · Create `/forgot-password` page
+- [x] T-35 · Write failing RTL tests for `/auth/reset` page (AU-T-21..24) [TDD — failing]
+- [x] T-36 · Create `/auth/reset` page
+- [x] T-37 · Verify Phase 2C-iii green
+- [x] T-38 · Full Suite Gate (all PRs merged)
 - [ ] T-39 · Update `supabase-dashboard-setup.md` readiness table
 
 ---

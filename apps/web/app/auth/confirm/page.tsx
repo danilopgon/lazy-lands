@@ -6,6 +6,7 @@ import Link from 'next/link'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
 import { createClient } from '@/lib/supabase/client'
+import { AuthCard } from '@/components/auth/auth-card'
 
 const supabase = createClient()
 
@@ -49,29 +50,23 @@ function ConfirmContent() {
 
   if (status === 'loading') {
     return (
-      <main
-        id="main-content"
-        className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-      >
+      <AuthCard>
         <p className="text-base leading-relaxed text-[var(--ink-2)]">
           Verifying your email&hellip;
         </p>
-      </main>
+      </AuthCard>
     )
   }
 
   return (
-    <main
-      id="main-content"
-      className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-    >
-      <p role="alert" className="text-base text-red-600">
+    <AuthCard>
+      <p role="alert" className="text-base text-[var(--danger)]">
         {errorMessage}
       </p>
       <Link href="/register" className="mt-4 underline">
         Register again
       </Link>
-    </main>
+    </AuthCard>
   )
 }
 
@@ -88,14 +83,11 @@ export default function ConfirmPage() {
   return (
     <Suspense
       fallback={
-        <main
-          id="main-content"
-          className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-        >
+        <AuthCard>
           <p className="text-base leading-relaxed text-[var(--ink-2)]">
             Verifying your email&hellip;
           </p>
-        </main>
+        </AuthCard>
       }
     >
       <ConfirmContent />
