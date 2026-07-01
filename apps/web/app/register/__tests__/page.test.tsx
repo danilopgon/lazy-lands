@@ -30,6 +30,13 @@ describe('RegisterPage (AU-002)', () => {
     delete process.env.NEXT_PUBLIC_APP_URL
   })
 
+  it('offers a link to the login page', () => {
+    render(<RegisterPage />)
+
+    const link = screen.getByRole('link', { name: /sign in|log in|login/i })
+    expect(link).toHaveAttribute('href', '/login')
+  })
+
   it('AU-T-08: invalid email format → validation error; no Supabase call', async () => {
     const user = userEvent.setup()
     render(<RegisterPage />)

@@ -28,6 +28,15 @@ describe('LoginPage (AU-001)', () => {
     vi.resetModules()
   })
 
+  it('offers a link to the register page', () => {
+    render(<LoginPage />)
+
+    const link = screen.getByRole('link', {
+      name: /create an account|sign up|register/i,
+    })
+    expect(link).toHaveAttribute('href', '/register')
+  })
+
   it('AU-T-01: empty email → validation error; no Supabase call', async () => {
     const user = userEvent.setup()
     render(<LoginPage />)
