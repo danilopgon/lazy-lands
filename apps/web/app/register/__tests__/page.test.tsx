@@ -49,7 +49,7 @@ describe('RegisterPage (AU-002)', () => {
     render(<RegisterPage />)
 
     await user.type(screen.getByLabelText(/email/i), 'not-an-email')
-    await user.type(screen.getByLabelText(/password/i), 'somepass')
+    await user.type(screen.getByLabelText(/^password$/i), 'somepass')
     await user.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -73,7 +73,7 @@ describe('RegisterPage (AU-002)', () => {
     render(<RegisterPage />)
 
     await user.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.type(screen.getByLabelText(/^password$/i), 'password123')
     await user.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -82,6 +82,28 @@ describe('RegisterPage (AU-002)', () => {
           /password must include uppercase, lowercase, number, and special character/i
         )
       ).toBeInTheDocument()
+    })
+    expect(mockSignUp).not.toHaveBeenCalled()
+  })
+
+  it('requires a confirm password field before signup', () => {
+    render(<RegisterPage />)
+
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
+  })
+
+  it('blocks signup when password confirmation does not match', async () => {
+    const user = userEvent.setup()
+    render(<RegisterPage />)
+
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/^password$/i), 'Password123!')
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password123?')
+    await user.click(screen.getByRole('button', { name: /sign up/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/passwords must match/i)).toBeInTheDocument()
     })
     expect(mockSignUp).not.toHaveBeenCalled()
   })
@@ -95,20 +117,22 @@ describe('RegisterPage (AU-002)', () => {
     render(<RegisterPage />)
 
     await user.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await user.type(screen.getByLabelText(/password/i), 'Password123!')
+    await user.type(screen.getByLabelText(/^password$/i), 'Password123!')
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password123!')
     await user.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
-      expect(mockSignUp).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: 'test@example.com',
-          password: 'Password123!',
-          options: expect.objectContaining({
-            emailRedirectTo: expect.stringContaining('/auth/confirm'),
-          }),
-        })
-      )
+      expect(mockSignUp).toHaveBeenCalled()
     })
+    const signUpPayload = mockSignUp.mock.calls[0][0]
+    expect(signUpPayload).toEqual({
+      email: 'test@example.com',
+      password: 'Password123!',
+      options: {
+        emailRedirectTo: expect.stringContaining('/auth/confirm'),
+      },
+    })
+    expect(signUpPayload).not.toHaveProperty('confirmPassword')
   })
 
   it('AU-T-10: successful signUp → "Check your email" visible; NOT navigated to /dashboard', async () => {
@@ -120,7 +144,8 @@ describe('RegisterPage (AU-002)', () => {
     render(<RegisterPage />)
 
     await user.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await user.type(screen.getByLabelText(/password/i), 'Password123!')
+    await user.type(screen.getByLabelText(/^password$/i), 'Password123!')
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password123!')
     await user.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -142,7 +167,8 @@ describe('RegisterPage (AU-002)', () => {
     render(<RegisterPage />)
 
     await user.type(screen.getByLabelText(/email/i), 'existing@example.com')
-    await user.type(screen.getByLabelText(/password/i), 'Password123!')
+    await user.type(screen.getByLabelText(/^password$/i), 'Password123!')
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password123!')
     await user.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {

@@ -42,20 +42,25 @@ const PASSWORD_REQUIREMENTS = [
   },
 ]
 
-/** Register form schema — email + password validation. */
-const registerSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .refine(
-      (password) =>
-        PASSWORD_REQUIREMENTS.slice(1).every((requirement) =>
-          requirement.test(password)
-        ),
-      PASSWORD_PATTERN_MESSAGE
-    ),
-})
+const registerSchema = z
+  .object({
+    email: z.string().email('Invalid email format'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .refine(
+        (password) =>
+          PASSWORD_REQUIREMENTS.slice(1).every((requirement) =>
+            requirement.test(password)
+          ),
+        PASSWORD_PATTERN_MESSAGE
+      ),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords must match',
+    path: ['confirmPassword'],
+  })
 
 type RegisterFormData = z.infer<typeof registerSchema>
 
@@ -166,7 +171,7 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label htmlFor="password">Password</Label>
           <Input
             id="password"
@@ -183,7 +188,7 @@ export default function RegisterPage() {
           )}
           <div
             id="password-requirements"
-            className="border-2 border-[var(--border)] bg-[var(--paper-2)] p-3"
+            className="border-2 border-[var(--border)] bg-[var(--paper-2)] p-4"
           >
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
               Password must include
@@ -213,6 +218,22 @@ export default function RegisterPage() {
               })}
             </ul>
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            className={authInputClass}
+            {...register('confirmPassword')}
+          />
+          {errors.confirmPassword && (
+            <p role="alert" className="text-sm text-[var(--danger)]">
+              {errors.confirmPassword.message}
+            </p>
+          )}
         </div>
 
         {authError && (
