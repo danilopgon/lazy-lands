@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
@@ -16,10 +16,45 @@ import {
   authButtonClass,
 } from '@/components/auth/auth-card'
 
+const PASSWORD_PATTERN_MESSAGE =
+  'Password must include uppercase, lowercase, number, and special character'
+
+const PASSWORD_REQUIREMENTS = [
+  {
+    label: 'Use at least 8 characters',
+    test: (password: string) => password.length >= 8,
+  },
+  {
+    label: 'Include a lowercase letter',
+    test: (password: string) => /[a-z]/.test(password),
+  },
+  {
+    label: 'Include an uppercase letter',
+    test: (password: string) => /[A-Z]/.test(password),
+  },
+  {
+    label: 'Include a number',
+    test: (password: string) => /\d/.test(password),
+  },
+  {
+    label: 'Include a special character',
+    test: (password: string) => /[^A-Za-z0-9]/.test(password),
+  },
+]
+
 /** Register form schema — email + password validation. */
 const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
-  password: z.string().min(1, 'Password is required'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .refine(
+      (password) =>
+        PASSWORD_REQUIREMENTS.slice(1).every((requirement) =>
+          requirement.test(password)
+        ),
+      PASSWORD_PATTERN_MESSAGE
+    ),
 })
 
 type RegisterFormData = z.infer<typeof registerSchema>
@@ -43,9 +78,15 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+  })
+  const passwordValue = useWatch({
+    control,
+    name: 'password',
+    defaultValue: '',
   })
 
   /**
@@ -131,6 +172,7 @@ export default function RegisterPage() {
             id="password"
             type="password"
             autoComplete="new-password"
+            aria-describedby="password-requirements"
             className={authInputClass}
             {...register('password')}
           />
@@ -139,6 +181,38 @@ export default function RegisterPage() {
               {errors.password.message}
             </p>
           )}
+          <div
+            id="password-requirements"
+            className="border-2 border-[var(--border)] bg-[var(--paper-2)] p-3"
+          >
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
+              Password must include
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-[var(--ink-soft)]">
+              {PASSWORD_REQUIREMENTS.map((requirement) => {
+                const isMet = requirement.test(passwordValue)
+
+                return (
+                  <li
+                    key={requirement.label}
+                    className="flex items-start gap-2"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={
+                        isMet
+                          ? 'font-mono font-semibold text-[var(--good)]'
+                          : 'font-mono font-semibold text-[var(--ink-3)]'
+                      }
+                    >
+                      {isMet ? '✓' : '—'}
+                    </span>
+                    <span>{requirement.label}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
         </div>
 
         {authError && (

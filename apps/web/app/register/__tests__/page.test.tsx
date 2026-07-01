@@ -58,6 +58,34 @@ describe('RegisterPage (AU-002)', () => {
     expect(mockSignUp).not.toHaveBeenCalled()
   })
 
+  it('shows strong password requirements in the register form', () => {
+    render(<RegisterPage />)
+
+    expect(screen.getByText(/use at least 8 characters/i)).toBeInTheDocument()
+    expect(screen.getByText(/include a lowercase letter/i)).toBeInTheDocument()
+    expect(screen.getByText(/include an uppercase letter/i)).toBeInTheDocument()
+    expect(screen.getByText(/include a number/i)).toBeInTheDocument()
+    expect(screen.getByText(/include a special character/i)).toBeInTheDocument()
+  })
+
+  it('blocks signup when the password does not meet strength requirements', async () => {
+    const user = userEvent.setup()
+    render(<RegisterPage />)
+
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /sign up/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /password must include uppercase, lowercase, number, and special character/i
+        )
+      ).toBeInTheDocument()
+    })
+    expect(mockSignUp).not.toHaveBeenCalled()
+  })
+
   it('AU-T-09: valid input → signUp called with emailRedirectTo pointing to /auth/confirm', async () => {
     const user = userEvent.setup()
     mockSignUp.mockResolvedValue({
@@ -67,14 +95,14 @@ describe('RegisterPage (AU-002)', () => {
     render(<RegisterPage />)
 
     await user.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.type(screen.getByLabelText(/password/i), 'Password123!')
     await user.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
       expect(mockSignUp).toHaveBeenCalledWith(
         expect.objectContaining({
           email: 'test@example.com',
-          password: 'password123',
+          password: 'Password123!',
           options: expect.objectContaining({
             emailRedirectTo: expect.stringContaining('/auth/confirm'),
           }),
@@ -92,7 +120,7 @@ describe('RegisterPage (AU-002)', () => {
     render(<RegisterPage />)
 
     await user.type(screen.getByLabelText(/email/i), 'test@example.com')
-    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.type(screen.getByLabelText(/password/i), 'Password123!')
     await user.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
@@ -114,7 +142,7 @@ describe('RegisterPage (AU-002)', () => {
     render(<RegisterPage />)
 
     await user.type(screen.getByLabelText(/email/i), 'existing@example.com')
-    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.type(screen.getByLabelText(/password/i), 'Password123!')
     await user.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
