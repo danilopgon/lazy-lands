@@ -35,11 +35,11 @@ Two main commit boundaries: (1) structural migration, (2) real auth.
 - [x] T-25 · Write failing RTL tests for login form (AU-T-01..07) [TDD — failing]
 - [x] T-26 · Replace login placeholder with real form
 - [x] T-27 · Verify Phase 2C-i green
-- [ ] T-28 · Write failing RTL tests for register form (AU-T-08..11) [TDD — failing]
-- [ ] T-29 · Replace register placeholder with real form
-- [ ] T-30 · Write failing RTL tests for `/auth/confirm` page (AU-T-15..17) [TDD — failing]
-- [ ] T-31 · Create `/auth/confirm` page
-- [ ] T-32 · Verify Phase 2C-ii green
+- [x] T-28 · Write failing RTL tests for register form (AU-T-08..11) [TDD — failing]
+- [x] T-29 · Replace register placeholder with real form
+- [x] T-30 · Write failing RTL tests for `/auth/confirm` page (AU-T-15..17) [TDD — failing]
+- [x] T-31 · Create `/auth/confirm` page
+- [x] T-32 · Verify Phase 2C-ii green
 - [ ] T-33 · Write failing RTL tests for `/forgot-password` page (AU-T-18..20) [TDD — failing]
 - [ ] T-34 · Create `/forgot-password` page
 - [ ] T-35 · Write failing RTL tests for `/auth/reset` page (AU-T-21..24) [TDD — failing]
