@@ -20,7 +20,7 @@ complex relationship graphs, visual timeline, and advanced memory compiler.
 | 0 | Infra and repo | done |
 | 1 | Design prototype | done |
 | 3 | Landing page | done |
-| 4 | Auth | pending |
+| 4 | Auth | done (pending smoke test) |
 | 5 | Campaign creation and AI onboarding | pending |
 | 6 | Campaign view | pending |
 | 7 | Sessions: post-session registration | pending |
@@ -89,7 +89,7 @@ Status: **done**
 
 ## Block 4 — Auth
 
-Status: **pending**
+Status: **done** (pending production smoke test)
 
 Architecture refinement (before first endpoints):
 
@@ -97,29 +97,29 @@ Architecture refinement (before first endpoints):
 
 Dev environment setup (first block where frontend calls FastAPI):
 
-- [ ] Add `package.json` to `services/api` with a `dev` script (`uv run uvicorn app.main:app --reload --port 8000`) so `pnpm dev` launches both Next.js and FastAPI in parallel via Turborepo.
+- [x] Add `package.json` to `services/api` with a `dev` script (`uv run uvicorn app.main:app --reload --port 8000`) so `pnpm dev` launches both Next.js and FastAPI in parallel via Turborepo.
 
 Supabase setup (moved here from Block 0 — first needed in this block):
 
-- [ ] Create Supabase project with email auth enabled.
-- [ ] Run initial schema migration: users table and RLS baseline.
-- [ ] Configure Supabase environment variables in Next.js and FastAPI.
-- [ ] Configure Supabase Auth client in Next.js (SSR cookie handling).
+- [x] Create Supabase project with email auth enabled.
+- [x] Run initial schema migration: users table and RLS baseline.
+- [x] Configure Supabase environment variables in Next.js and FastAPI.
+- [x] Configure Supabase Auth client in Next.js (SSR cookie handling).
 
 Auth screens and logic:
 
-- [ ] Registration screen: email, password and confirmation.
-- [ ] Login screen: email and password.
-- [ ] Client-side form validation.
-- [ ] Supabase Auth integration.
-- [ ] Error handling: email already registered, wrong password, etc.
-- [ ] Post-login redirect to campaign list.
-- [ ] Post-registration redirect to first campaign onboarding.
-- [ ] Logout accessible from navigation.
-- [ ] Protected routes.
-- [ ] HTTP interceptor that injects the Supabase JWT in every request to FastAPI.
-- [ ] `get_current_user` dependency in FastAPI to validate the Supabase JWT.
-- [ ] Tests for protected routes in FastAPI.
+- [x] Registration screen: email, password and confirmation.
+- [x] Login screen: email and password.
+- [x] Client-side form validation.
+- [x] Supabase Auth integration.
+- [x] Error handling: email already registered, wrong password, etc.
+- [x] Post-login redirect to campaign list.
+- [x] Post-registration redirect to first campaign onboarding.
+- [x] Logout accessible from navigation.
+- [x] Protected routes.
+- [x] HTTP interceptor that injects the Supabase JWT in every request to FastAPI.
+- [x] `get_current_user` dependency in FastAPI to validate the Supabase JWT.
+- [x] Tests for protected routes in FastAPI.
 - [ ] End-of-block production smoke test: a real user can register, log in, log out and log back
   in against the deployed frontend/backend using the hosted Supabase project.
 
