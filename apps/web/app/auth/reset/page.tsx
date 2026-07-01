@@ -46,12 +46,14 @@ function ResetContent() {
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
 
-  // Initialize error state immediately when params are absent (no flash on render).
+  // Initialize error state immediately when params are absent or type is not
+  // 'recovery' (no flash on render). S-01: non-recovery type tokens must not
+  // be consumed by the password reset flow.
   const [state, setState] = useState<ResetState>(
-    tokenHash && type ? 'loading' : 'error'
+    tokenHash && type === 'recovery' ? 'loading' : 'error'
   )
   const [errorMessage, setErrorMessage] = useState<string | null>(
-    tokenHash && type ? null : 'Invalid or missing reset link.'
+    tokenHash && type === 'recovery' ? null : 'Invalid or missing reset link.'
   )
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -66,7 +68,8 @@ function ResetContent() {
 
   useEffect(() => {
     // Already in error state from initial render — nothing to do.
-    if (!tokenHash || !type) return
+    // Guard also excludes non-recovery token types (S-01).
+    if (!tokenHash || type !== 'recovery') return
 
     supabase.auth
       .verifyOtp({ token_hash: tokenHash, type: type as EmailOtpType })

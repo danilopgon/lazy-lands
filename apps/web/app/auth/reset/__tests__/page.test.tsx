@@ -36,6 +36,32 @@ describe('ResetPage (AU-006)', () => {
     vi.resetModules()
   })
 
+  it('S-03: missing token_hash → immediate error state; verifyOtp NOT called', async () => {
+    mockSearchParamsGet.mockReturnValue(null)
+
+    render(<ResetPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+    expect(mockVerifyOtp).not.toHaveBeenCalled()
+  })
+
+  it('S-01: token_hash present but type=signup → immediate error; verifyOtp NOT called', async () => {
+    mockSearchParamsGet.mockImplementation((key: string) => {
+      if (key === 'token_hash') return 'valid-hash-123'
+      if (key === 'type') return 'signup'
+      return null
+    })
+
+    render(<ResetPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+    expect(mockVerifyOtp).not.toHaveBeenCalled()
+  })
+
   it('AU-T-21: valid token_hash + type=recovery → verifyOtp succeeds → new password form shown', async () => {
     mockSearchParamsGet.mockImplementation((key: string) => {
       if (key === 'token_hash') return 'valid-hash-123'
