@@ -10,6 +10,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
+import {
+  AuthCard,
+  authInputClass,
+  authButtonClass,
+} from '@/components/auth/auth-card'
 
 /** Register form schema — email + password validation. */
 const registerSchema = z.object({
@@ -77,10 +82,7 @@ export default function RegisterPage() {
 
   if (isSuccess) {
     return (
-      <main
-        id="main-content"
-        className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-      >
+      <AuthCard>
         <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
           Check your email
         </h1>
@@ -88,15 +90,12 @@ export default function RegisterPage() {
           We sent a confirmation link to your inbox. Click it to activate your
           account and start your first campaign.
         </p>
-      </main>
+      </AuthCard>
     )
   }
 
   return (
-    <main
-      id="main-content"
-      className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-    >
+    <AuthCard>
       <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
         Create an account
       </h1>
@@ -116,10 +115,11 @@ export default function RegisterPage() {
             id="email"
             type="email"
             autoComplete="email"
+            className={authInputClass}
             {...register('email')}
           />
           {errors.email && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-[var(--danger)]">
               {errors.email.message}
             </p>
           )}
@@ -131,22 +131,27 @@ export default function RegisterPage() {
             id="password"
             type="password"
             autoComplete="new-password"
+            className={authInputClass}
             {...register('password')}
           />
           {errors.password && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-[var(--danger)]">
               {errors.password.message}
             </p>
           )}
         </div>
 
         {authError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-[var(--danger)]">
             {authError}
           </p>
         )}
 
-        <Button type="submit" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className={authButtonClass}
+        >
           {isSubmitting ? 'Creating account...' : 'Sign up'}
         </Button>
       </form>
@@ -157,6 +162,6 @@ export default function RegisterPage() {
           Sign in
         </Link>
       </p>
-    </main>
+    </AuthCard>
   )
 }

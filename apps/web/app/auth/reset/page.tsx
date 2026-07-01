@@ -12,6 +12,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
+import {
+  AuthCard,
+  authInputClass,
+  authButtonClass,
+} from '@/components/auth/auth-card'
 
 const supabase = createClient()
 
@@ -104,39 +109,30 @@ function ResetContent() {
 
   if (state === 'loading') {
     return (
-      <main
-        id="main-content"
-        className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-      >
+      <AuthCard>
         <p className="text-base leading-relaxed text-[var(--ink-2)]">
           Verifying your reset link&hellip;
         </p>
-      </main>
+      </AuthCard>
     )
   }
 
   if (state === 'error') {
     return (
-      <main
-        id="main-content"
-        className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-      >
-        <p role="alert" className="text-base text-red-600">
+      <AuthCard>
+        <p role="alert" className="text-base text-[var(--danger)]">
           {errorMessage}
         </p>
         <Link href="/forgot-password" className="mt-4 underline">
           Request a new reset link
         </Link>
-      </main>
+      </AuthCard>
     )
   }
 
   if (state === 'success') {
     return (
-      <main
-        id="main-content"
-        className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-      >
+      <AuthCard>
         <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
           Password updated
         </h1>
@@ -148,16 +144,13 @@ function ResetContent() {
             Sign in
           </Link>
         </p>
-      </main>
+      </AuthCard>
     )
   }
 
   // state === 'form'
   return (
-    <main
-      id="main-content"
-      className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-    >
+    <AuthCard>
       <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
         Set a new password
       </h1>
@@ -176,10 +169,11 @@ function ResetContent() {
             id="newPassword"
             type="password"
             autoComplete="new-password"
+            className={authInputClass}
             {...register('newPassword')}
           />
           {errors.newPassword && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-[var(--danger)]">
               {errors.newPassword.message}
             </p>
           )}
@@ -191,26 +185,31 @@ function ResetContent() {
             id="confirmPassword"
             type="password"
             autoComplete="new-password"
+            className={authInputClass}
             {...register('confirmPassword')}
           />
           {errors.confirmPassword && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-[var(--danger)]">
               {errors.confirmPassword.message}
             </p>
           )}
         </div>
 
         {updateError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-[var(--danger)]">
             {updateError}
           </p>
         )}
 
-        <Button type="submit" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className={authButtonClass}
+        >
           {isSubmitting ? 'Updating...' : 'Update password'}
         </Button>
       </form>
-    </main>
+    </AuthCard>
   )
 }
 
@@ -227,14 +226,11 @@ export default function ResetPage() {
   return (
     <Suspense
       fallback={
-        <main
-          id="main-content"
-          className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-        >
+        <AuthCard>
           <p className="text-base leading-relaxed text-[var(--ink-2)]">
             Verifying your reset link&hellip;
           </p>
-        </main>
+        </AuthCard>
       }
     >
       <ResetContent />

@@ -11,6 +11,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
+import {
+  AuthCard,
+  authInputClass,
+  authButtonClass,
+} from '@/components/auth/auth-card'
 
 /** Login form schema — email + password validation. */
 const loginSchema = z.object({
@@ -69,10 +74,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main
-      id="main-content"
-      className="mx-auto flex min-h-screen max-w-[720px] flex-col justify-center px-6 py-16"
-    >
+    <AuthCard>
       <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
         Sign in
       </h1>
@@ -91,10 +93,11 @@ export default function LoginPage() {
             id="email"
             type="email"
             autoComplete="email"
+            className={authInputClass}
             {...register('email')}
           />
           {errors.email && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-[var(--danger)]">
               {errors.email.message}
             </p>
           )}
@@ -106,22 +109,27 @@ export default function LoginPage() {
             id="password"
             type="password"
             autoComplete="current-password"
+            className={authInputClass}
             {...register('password')}
           />
           {errors.password && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-[var(--danger)]">
               {errors.password.message}
             </p>
           )}
         </div>
 
         {authError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-[var(--danger)]">
             {authError}
           </p>
         )}
 
-        <Button type="submit" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className={authButtonClass}
+        >
           {isSubmitting ? 'Signing in...' : 'Sign in'}
         </Button>
       </form>
@@ -138,6 +146,6 @@ export default function LoginPage() {
           Create an account
         </Link>
       </p>
-    </main>
+    </AuthCard>
   )
 }
