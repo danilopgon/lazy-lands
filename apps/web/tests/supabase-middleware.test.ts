@@ -39,18 +39,20 @@ function makeRequest(url: string): NextRequest {
 
 describe('updateSession', () => {
   const originalSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const originalSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const originalSupabasePublishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
   afterEach(() => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = originalSupabaseUrl
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalSupabaseAnonKey
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY =
+      originalSupabasePublishableKey
     supabaseCookiesToSet.length = 0
     vi.clearAllMocks()
   })
 
   it('SM-007: propagates refreshed Supabase Set-Cookie headers on the returned response', async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co'
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'anon-key'
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'publishable-key'
     supabaseCookiesToSet.push({
       name: 'sb-session',
       value: 'refreshed-token',
@@ -68,7 +70,7 @@ describe('updateSession', () => {
 
     expect(createServerClient).toHaveBeenCalledWith(
       'https://example.supabase.co',
-      'anon-key',
+      'publishable-key',
       expect.objectContaining({ cookies: expect.any(Object) })
     )
     expect(user?.id).toBe('user-123')

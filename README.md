@@ -152,20 +152,20 @@ pnpm dev
 
 Copy .env.example to .env and fill in your values.
 
-| Variable                      | Description                      | Default               |
-| ----------------------------- | -------------------------------- | --------------------- |
-| NEXT_PUBLIC_SUPABASE_URL      | Supabase project URL             |                       |
-| NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase anon/public key         |                       |
-| NEXT_PUBLIC_API_URL           | Backend API URL                  | http://localhost:8000 |
-| APP_ENV                       | Backend environment              | development           |
-| API_CORS_ORIGINS              | Allowed CORS origins             | http://localhost:3000 |
-| SUPABASE_URL                  | Supabase URL (backend)           |                       |
-| SUPABASE_ANON_KEY             | Supabase anon key (backend)      |                       |
-| SUPABASE_SERVICE_ROLE_KEY     | Supabase service role key        |                       |
-| SUPABASE_JWT_SECRET           | JWT secret (for verification)    |                       |
-| LLM_PROVIDER                  | LLM provider: fake or openrouter | fake                  |
-| OPENROUTER_API_KEY            | OpenRouter API key (production)  |                       |
-| OPENROUTER_MODEL              | OpenRouter model string          |                       |
+| Variable                             | Description                        | Default               |
+| ------------------------------------ | ---------------------------------- | --------------------- |
+| NEXT_PUBLIC_SUPABASE_URL             | Supabase project URL               |                       |
+| NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | Supabase publishable key           |                       |
+| NEXT_PUBLIC_API_URL                  | Backend API URL                    | http://localhost:8000 |
+| APP_ENV                              | Backend environment                | development           |
+| API_CORS_ORIGINS                     | Allowed CORS origins               | http://localhost:3000 |
+| SUPABASE_URL                         | Supabase URL (backend)             |                       |
+| SUPABASE_PUBLISHABLE_KEY             | Supabase publishable key (backend) |                       |
+| SUPABASE_SERVICE_ROLE_KEY            | Supabase service role key          |                       |
+| SUPABASE_JWT_SECRET                  | JWT secret (for verification)      |                       |
+| LLM_PROVIDER                         | LLM provider: fake or openrouter   | fake                  |
+| OPENROUTER_API_KEY                   | OpenRouter API key (production)    |                       |
+| OPENROUTER_MODEL                     | OpenRouter model string            |                       |
 
 ---
 
@@ -176,10 +176,10 @@ Copy .env.example to .env and fill in your values.
 pnpm supabase start
 
 # Copy output into .env:
-# API URL      -> NEXT_PUBLIC_SUPABASE_URL and SUPABASE_URL
-# anon key     -> NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_ANON_KEY
-# service_role -> SUPABASE_SERVICE_ROLE_KEY
-# JWT secret   -> SUPABASE_JWT_SECRET
+# API URL           -> NEXT_PUBLIC_SUPABASE_URL and SUPABASE_URL
+# publishable key   -> NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY and SUPABASE_PUBLISHABLE_KEY
+# service_role      -> SUPABASE_SERVICE_ROLE_KEY
+# JWT secret        -> SUPABASE_JWT_SECRET
 ```
 
 Note: supabase start not verified locally. WSL2 + Docker Desktop required.

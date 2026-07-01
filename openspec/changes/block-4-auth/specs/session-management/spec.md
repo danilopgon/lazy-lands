@@ -234,7 +234,7 @@ The following scenarios MUST be verified manually against the deployed environme
 |-------------|-------|
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` set | Railway backend |
 | `API_CORS_ORIGINS=<vercel-domain>` set | Railway backend |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` set | Vercel frontend |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` set | Vercel frontend |
 | `NEXT_PUBLIC_API_URL=<railway-backend-url>` set | Vercel frontend |
 | `NEXT_PUBLIC_APP_URL=<vercel-domain>` set | Vercel frontend |
 | Supabase dashboard: Auth → URL configuration lists `/auth/confirm` and `/auth/reset` redirect URLs | Hosted Supabase |

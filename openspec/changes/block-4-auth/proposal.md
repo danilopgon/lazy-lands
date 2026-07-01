@@ -78,7 +78,7 @@ Implement end-to-end authentication (Supabase JWT validation, login/register UI,
 ### Phase 3: Production smoke test
 
 1. Deploy backend to Railway with production env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `API_CORS_ORIGINS=<vercel-domain>`. **No `SUPABASE_JWT_SECRET` needed** — JWT validation uses JWKS derived from `SUPABASE_URL`.
-2. Deploy frontend to Vercel with production env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_API_URL=<railway-url>`, `NEXT_PUBLIC_APP_URL=<vercel-domain>`.
+2. Deploy frontend to Vercel with production env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_API_URL=<railway-url>`, `NEXT_PUBLIC_APP_URL=<vercel-domain>`.
 3. Configure Supabase dashboard: Auth → URL configuration must include `/auth/confirm` and `/auth/reset` redirect URLs for the Vercel domain.
 4. Run smoke test manually: register → confirm email → login → verify `/dashboard` → logout → login again → password recovery flow.
 5. Verify CORS allows Vercel origin in production backend.
