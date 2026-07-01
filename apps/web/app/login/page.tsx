@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -124,6 +125,13 @@ export default function LoginPage() {
           {isSubmitting ? 'Signing in...' : 'Sign in'}
         </Button>
       </form>
+
+      <p className="mt-6 text-sm text-[var(--ink-2)]">
+        Don&apos;t have an account?{' '}
+        <Link href="/register" className="underline">
+          Create an account
+        </Link>
+      </p>
     </main>
   )
 }
