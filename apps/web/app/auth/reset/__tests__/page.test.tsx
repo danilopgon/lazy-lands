@@ -36,6 +36,15 @@ describe('ResetPage (AU-006)', () => {
     vi.resetModules()
   })
 
+  it('offers a back-to-home link in the auth card', async () => {
+    mockSearchParamsGet.mockReturnValue(null)
+
+    render(<ResetPage />)
+
+    const link = await screen.findByRole('link', { name: 'volver al inicio' })
+    expect(link).toHaveAttribute('href', '/')
+  })
+
   it('S-03: missing token_hash → immediate error state; verifyOtp NOT called', async () => {
     mockSearchParamsGet.mockReturnValue(null)
 

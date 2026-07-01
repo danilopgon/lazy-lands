@@ -30,6 +30,15 @@ describe('ConfirmPage (AU-004)', () => {
     vi.resetModules()
   })
 
+  it('offers a back-to-home link in the auth card', async () => {
+    mockSearchParamsGet.mockReturnValue(null)
+
+    render(<ConfirmPage />)
+
+    const link = await screen.findByRole('link', { name: 'volver al inicio' })
+    expect(link).toHaveAttribute('href', '/')
+  })
+
   it('AU-T-15: valid token_hash + type → verifyOtp called → redirect to /dashboard', async () => {
     mockSearchParamsGet.mockImplementation((key: string) => {
       if (key === 'token_hash') return 'valid-hash-123'

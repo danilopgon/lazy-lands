@@ -37,6 +37,13 @@ describe('RegisterPage (AU-002)', () => {
     expect(link).toHaveAttribute('href', '/login')
   })
 
+  it('offers a back-to-home link', () => {
+    render(<RegisterPage />)
+
+    const link = screen.getByRole('link', { name: 'volver al inicio' })
+    expect(link).toHaveAttribute('href', '/')
+  })
+
   it('AU-T-08: invalid email format → validation error; no Supabase call', async () => {
     const user = userEvent.setup()
     render(<RegisterPage />)

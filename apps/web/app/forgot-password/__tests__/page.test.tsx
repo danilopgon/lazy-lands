@@ -25,6 +25,13 @@ describe('ForgotPasswordPage (AU-005)', () => {
     delete process.env.NEXT_PUBLIC_APP_URL
   })
 
+  it('offers a back-to-home link', () => {
+    render(<ForgotPasswordPage />)
+
+    const link = screen.getByRole('link', { name: 'volver al inicio' })
+    expect(link).toHaveAttribute('href', '/')
+  })
+
   it('AU-T-18: invalid email format → validation error; no Supabase call', async () => {
     const user = userEvent.setup()
     render(<ForgotPasswordPage />)

@@ -44,6 +44,13 @@ describe('LoginPage (AU-001)', () => {
     expect(link).toHaveAttribute('href', '/forgot-password')
   })
 
+  it('offers a back-to-home link', () => {
+    render(<LoginPage />)
+
+    const link = screen.getByRole('link', { name: 'volver al inicio' })
+    expect(link).toHaveAttribute('href', '/')
+  })
+
   it('AU-T-01: empty email → validation error; no Supabase call', async () => {
     const user = userEvent.setup()
     render(<LoginPage />)
