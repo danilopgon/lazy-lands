@@ -63,6 +63,25 @@ describe('ForgotPasswordPage (AU-005)', () => {
     })
   })
 
+  it('falls back to the current browser origin when NEXT_PUBLIC_APP_URL is unset', async () => {
+    const user = userEvent.setup()
+    delete process.env.NEXT_PUBLIC_APP_URL
+    mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null })
+    render(<ForgotPasswordPage />)
+
+    await user.type(screen.getByLabelText(/email/i), 'user@example.com')
+    await user.click(screen.getByRole('button', { name: /send/i }))
+
+    await waitFor(() => {
+      expect(mockResetPasswordForEmail).toHaveBeenCalledWith(
+        'user@example.com',
+        expect.objectContaining({
+          redirectTo: `${window.location.origin}/auth/reset`,
+        })
+      )
+    })
+  })
+
   it('AU-T-20 (success): after submit → uniform confirmation message; form non-interactive', async () => {
     const user = userEvent.setup()
     mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null })

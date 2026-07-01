@@ -115,6 +115,9 @@ cp .env.example .env
 # Fill in the values from your Supabase project dashboard
 ```
 
+For frontend-only local development, also copy the frontend values into
+`apps/web/.env.local`.
+
 ### 3. Start Supabase (requires Docker)
 
 ```bash
@@ -156,6 +159,7 @@ Copy .env.example to .env and fill in your values.
 | ------------------------------------ | ---------------------------------- | --------------------- |
 | NEXT_PUBLIC_SUPABASE_URL             | Supabase project URL               |                       |
 | NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | Supabase publishable key           |                       |
+| NEXT_PUBLIC_APP_URL                  | Public frontend URL for auth links | http://localhost:3000 |
 | NEXT_PUBLIC_API_URL                  | Backend API URL                    | http://localhost:8000 |
 | APP_ENV                              | Backend environment                | development           |
 | API_CORS_ORIGINS                     | Allowed CORS origins               | http://localhost:3000 |
@@ -182,9 +186,38 @@ pnpm supabase start
 # JWT secret        -> SUPABASE_JWT_SECRET
 ```
 
-Note: supabase start not verified locally. WSL2 + Docker Desktop required.
+Docker Desktop must be running before `pnpm supabase start`.
+
+If startup fails with `failed to read signing keys`, generate a local signing key
+and save it as `supabase/signing_keys.json`. The CLI prints one JWK object, but
+this project expects a JSON array of JWK objects:
+
+```json
+[{ "kty": "..." }]
+```
+
+`supabase/signing_keys.json` is gitignored. Never commit it.
 
 See [supabase/README.md](./supabase/README.md) for full setup instructions.
+
+### Local Auth smoke testing
+
+1. Start Supabase with Docker Desktop running: `pnpm supabase start`.
+2. Copy the local URL and publishable key into `apps/web/.env.local`:
+
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<local publishable key>
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   ```
+
+3. Restart the frontend dev server after changing env vars.
+4. Request a password reset from the local web app.
+5. Open Mailpit at <http://127.0.0.1:54324> to inspect auth emails.
+
+The Supabase API gateway at <http://127.0.0.1:54321> is not the inbox. If you
+open the wrong URL or path and see `{"message":"no Route matched with those values"}`,
+use the Mailpit URL above.
 
 ---
 

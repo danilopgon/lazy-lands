@@ -26,6 +26,24 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 const supabase = createClient()
 
 /**
+ * Resolve the public app origin used by Supabase recovery redirects.
+ *
+ * Local smoke tests may omit NEXT_PUBLIC_APP_URL, so browser submissions fall
+ * back to the current origin instead of sending an invalid `undefined/...` URL.
+ *
+ * @returns {string} The configured app origin or current browser origin.
+ */
+function resolveAppOrigin() {
+  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim()
+
+  if (configuredOrigin) {
+    return configuredOrigin.replace(/\/+$/, '')
+  }
+
+  return window.location.origin
+}
+
+/**
  * Forgot-password page — sends a password reset email via Supabase.
  *
  * Displays a uniform confirmation message after submission regardless of
@@ -56,7 +74,7 @@ export default function ForgotPasswordPage() {
   async function onSubmit(data: ForgotPasswordFormData) {
     setIsSubmitting(true)
 
-    const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset`
+    const redirectTo = `${resolveAppOrigin()}/auth/reset`
 
     await supabase.auth.resetPasswordForEmail(data.email, { redirectTo })
 
