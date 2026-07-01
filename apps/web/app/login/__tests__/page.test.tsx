@@ -126,6 +126,24 @@ describe('LoginPage (AU-001)', () => {
     expect(mockPush).not.toHaveBeenCalled()
   })
 
+  it('AU-T-08: rejected sign-in → error shown, button re-enabled, no navigation', async () => {
+    const user = userEvent.setup()
+    mockSignInWithPassword.mockRejectedValue(new Error('network down'))
+    render(<LoginPage />)
+
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /sign in/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/unable to sign in right now/i)
+      ).toBeInTheDocument()
+    })
+    expect(mockPush).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeEnabled()
+  })
+
   it('AU-T-07: submit button disabled while in-flight', async () => {
     const user = userEvent.setup()
     let resolvePromise: (value: unknown) => void

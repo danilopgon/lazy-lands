@@ -48,19 +48,23 @@ export default function LoginPage() {
     setAuthError(null)
     setIsSubmitting(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    })
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      })
 
-    setIsSubmitting(false)
+      if (error) {
+        setAuthError(error.message)
+        return
+      }
 
-    if (error) {
-      setAuthError(error.message)
-      return
+      router.push('/dashboard')
+    } catch {
+      setAuthError('Unable to sign in right now. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
-
-    router.push('/dashboard')
   }
 
   return (

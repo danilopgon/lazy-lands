@@ -7,15 +7,20 @@ const supabase = createClient()
  * requests. Designed to be used as the `queryFn` callback for TanStack Query
  * — it is NOT intended for direct use inside components.
  *
- * Usage with TanStack Query:
+ * Usage with TanStack Query — the caller MUST check `response.ok` and throw on
+ * non-2xx, otherwise TanStack Query caches error bodies (401/500) as valid data:
  * ```ts
  * const { data } = useQuery({
  *   queryKey: ['campaigns'],
- *   queryFn: () => apiFetch('/campaigns').then(r => r.json()),
+ *   queryFn: async () => {
+ *     const res = await apiFetch('/campaigns')
+ *     if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+ *     return res.json()
+ *   },
  * })
  * ```
  *
- * @param {string} path - Relative path (prefixed with NEXT_PUBLIC_API_URL) or absolute URL.
+ * @param {string} path - Path starting with `/` (prefixed with NEXT_PUBLIC_API_URL) or an absolute URL.
  * @param {RequestInit} [init] - Optional fetch init options.
  * @returns {Promise<Response>} The raw Response — 4xx/5xx are NOT caught.
  */
