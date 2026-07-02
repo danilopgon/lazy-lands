@@ -2,6 +2,12 @@
 
 Each block unlocks the next. Do not start a block until the previous one is working end-to-end.
 
+> **Delivery order vs build order**: the block sequence above is the *delivery/integration DAG*
+> (demo-driven, sequential). Parallel *build tracks* run ahead of their delivery blocks to
+> front-load risk. Track A (LLM seam enrichment) is done — `LlmProvider` enriched with
+> `complete_json`, JSON guard, fixture fake, and OpenAI-compatible adapter. Track B (frontend
+> components) and Track C (PDF pipeline) are pending. See `block-build-parallelization`.
+
 ## Scope cut
 
 New persistent entities added in the MVP: `Arc`, `MemoryFact`.

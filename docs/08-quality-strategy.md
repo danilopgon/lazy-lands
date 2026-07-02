@@ -78,7 +78,10 @@ Minimum tests:
 - `MemorySuggestionsOutput` valid/invalid.
 - `GeneratedSessionOutput` valid/invalid.
 - Prompt snapshot tests for major prompts.
-- FakeLlmProvider for use case tests.
+- `FakeLlmProvider` with per-schema `register()` API for deterministic use-case tests.
+  Routes fixtures through `parse_llm_json` so tests exercise the real validation path.
+- Opt-in `@pytest.mark.dev_inference` lane for prompt validation against real providers
+  (excluded from CI, auto-skips without API key).
 
 ## RLS checks
 

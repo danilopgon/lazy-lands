@@ -206,6 +206,19 @@ The backend should tolerate common LLM formatting issues:
 
 The guard must never silently accept semantically invalid data.
 
+## Provider registry
+
+The active provider is resolved from the `LLM_PROVIDER` environment variable via
+`build_provider()`. Supported providers: Gemini (free tier), Groq (free tier). Each
+requires its own API key (`GEMINI_API_KEY`, `GROQ_API_KEY`). The default is `fake`
+(deterministic, no network).
+
+## Dev-inference lane
+
+An opt-in `@pytest.mark.dev_inference` marker allows prompt and JSON-contract validation
+against real providers during development. These tests are excluded from CI by default
+(`-m "not dev_inference"`) and auto-skip when the required API key is absent.
+
 ## Trace metadata
 
 Each AI operation should create trace metadata.

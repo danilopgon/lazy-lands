@@ -8,7 +8,8 @@
 
 Lazy Lands calls an LLM for several operations: campaign extraction, session summarization,
 memory suggestion and session generation. The specific provider must not be coupled to the
-application core — in development Ollama is used locally, in production an external API, and
+application core — in development a free-tier provider (Gemini, Groq) is used via the
+OpenAI-compatible adapter, in production an external API, and
 in the future the provider may change without affecting the prompt builder or the data model.
 
 ## Decision
@@ -34,9 +35,12 @@ The prompt builder and generation endpoints do not know which provider they are 
 
 Implementations:
 
-- `FakeLlmProvider` — deterministic, used in tests (no external calls).
-- `OpenRouterProvider` — production default.
-- `OllamaProvider` — optional local development provider.
+- `FakeLlmProvider` — deterministic, used in tests (no external calls). Register per-schema
+  fixtures via `register(schema, payload)`; validation routes through `parse_llm_json`.
+- `OpenAiCompatibleProvider` — single `httpx` adapter covering OpenAI-compatible endpoints
+  (Gemini, Groq free tiers). Seeds the production `OpenRouterProvider`.
+- `build_provider()` — factory that resolves the active provider from `LLM_PROVIDER` env var
+  via a provider registry. Fail-loud on missing API key.
 
 ## Consequences
 
@@ -44,8 +48,8 @@ Implementations:
 
 - Changing provider = changing config, not code.
 - Unit tests for the prompt builder can use a mock of `LlmProvider` without calling any real API.
-- TFM demos work locally with Ollama and in production with an external API without touching
-  the core.
+- TFM demos work locally with free-tier providers and in production with an external API
+  without touching the core.
 
 **Negative / trade-offs:**
 
