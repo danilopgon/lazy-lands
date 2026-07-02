@@ -2,8 +2,8 @@ import pytest
 from pydantic import BaseModel
 
 from app.shared.llm.errors import LlmOutputValidationError
-from app.shared.llm.providers.fake import FakeLlmProvider
 from app.shared.llm.port import LlmProvider
+from app.shared.llm.providers.fake import FakeLlmProvider
 
 
 class TestSchema(BaseModel):
