@@ -120,4 +120,22 @@ describe('ForgotPasswordPage (AU-005)', () => {
       screen.queryByRole('button', { name: /send/i })
     ).not.toBeInTheDocument()
   })
+
+  it('AU-T-20 (rejection): resetPasswordForEmail rejects → uniform confirmation still renders; submit not stuck', async () => {
+    const user = userEvent.setup()
+    mockResetPasswordForEmail.mockRejectedValue(new Error('Network down'))
+    render(<ForgotPasswordPage />)
+
+    await user.type(screen.getByLabelText(/email/i), 'user@example.com')
+    await user.click(screen.getByRole('button', { name: /send/i }))
+
+    // A rejected transport promise must not strand the user on a disabled
+    // "Sending..." button — the uniform confirmation must still render.
+    await waitFor(() => {
+      expect(screen.getByText(/if an account exists/i)).toBeInTheDocument()
+    })
+    expect(
+      screen.queryByRole('button', { name: /send/i })
+    ).not.toBeInTheDocument()
+  })
 })

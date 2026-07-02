@@ -10,57 +10,23 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
+import { resolveAppOrigin } from '@/lib/auth/redirect'
+import {
+  passwordConfirmationSchema,
+  withPasswordMatch,
+} from '@/lib/auth/password'
+import { PasswordRequirements } from '@/components/auth/password-requirements'
 import {
   AuthCard,
   authInputClass,
   authButtonClass,
 } from '@/components/auth/auth-card'
 
-const PASSWORD_PATTERN_MESSAGE =
-  'Password must include uppercase, lowercase, number, and special character'
-
-const PASSWORD_REQUIREMENTS = [
-  {
-    label: 'Use at least 8 characters',
-    test: (password: string) => password.length >= 8,
-  },
-  {
-    label: 'Include a lowercase letter',
-    test: (password: string) => /[a-z]/.test(password),
-  },
-  {
-    label: 'Include an uppercase letter',
-    test: (password: string) => /[A-Z]/.test(password),
-  },
-  {
-    label: 'Include a number',
-    test: (password: string) => /\d/.test(password),
-  },
-  {
-    label: 'Include a special character',
-    test: (password: string) => /[^A-Za-z0-9]/.test(password),
-  },
-]
-
-const registerSchema = z
-  .object({
-    email: z.string().email('Invalid email format'),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .refine(
-        (password) =>
-          PASSWORD_REQUIREMENTS.slice(1).every((requirement) =>
-            requirement.test(password)
-          ),
-        PASSWORD_PATTERN_MESSAGE
-      ),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
+const registerSchema = withPasswordMatch(
+  passwordConfirmationSchema.extend({
+    email: z.email('Invalid email format'),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords must match',
-    path: ['confirmPassword'],
-  })
+)
 
 type RegisterFormData = z.infer<typeof registerSchema>
 
@@ -104,8 +70,7 @@ export default function RegisterPage() {
     setIsSubmitting(true)
 
     try {
-      const emailRedirectTo =
-        (process.env.NEXT_PUBLIC_APP_URL ?? '') + '/auth/confirm'
+      const emailRedirectTo = `${resolveAppOrigin()}/auth/confirm`
 
       const { error } = await supabase.auth.signUp({
         email: data.email,
@@ -186,38 +151,7 @@ export default function RegisterPage() {
               {errors.password.message}
             </p>
           )}
-          <div
-            id="password-requirements"
-            className="border-2 border-[var(--border)] bg-[var(--paper-2)] p-4"
-          >
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
-              Password must include
-            </p>
-            <ul className="mt-2 space-y-1 text-sm text-[var(--ink-soft)]">
-              {PASSWORD_REQUIREMENTS.map((requirement) => {
-                const isMet = requirement.test(passwordValue)
-
-                return (
-                  <li
-                    key={requirement.label}
-                    className="flex items-start gap-2"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={
-                        isMet
-                          ? 'font-mono font-semibold text-[var(--good)]'
-                          : 'font-mono font-semibold text-[var(--ink-3)]'
-                      }
-                    >
-                      {isMet ? '✓' : '—'}
-                    </span>
-                    <span>{requirement.label}</span>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
+          <PasswordRequirements value={passwordValue} />
         </div>
 
         <div className="space-y-2">

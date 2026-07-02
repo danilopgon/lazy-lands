@@ -3,7 +3,7 @@
 <p>Follow this link to reset your Lazy Lands password:</p>
 
 <p>
-  <a href="{{ .SiteURL }}/auth/reset?token_hash={{ .TokenHash }}&type=recovery">
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery">
     Reset your password
   </a>
 </p>

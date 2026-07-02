@@ -19,7 +19,7 @@ import {
 
 /** Login form schema — email + password validation. */
 const loginSchema = z.object({
-  email: z.string().email('Invalid email format'),
+  email: z.email('Invalid email format'),
   password: z.string().min(1, 'Password is required'),
 })
 

@@ -1,3 +1,4 @@
+import { StrictMode } from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -129,14 +130,57 @@ describe('ResetPage (AU-006)', () => {
       expect(screen.getByLabelText(/new password/i)).toBeInTheDocument()
     })
 
+    await user.type(screen.getByLabelText(/new password/i), 'Password123!')
+    await user.type(screen.getByLabelText(/confirm password/i), 'Different123!')
+    await user.click(screen.getByRole('button', { name: /update/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/passwords must match/i)).toBeInTheDocument()
+    })
+    expect(mockUpdateUser).not.toHaveBeenCalled()
+  })
+
+  it('AU-T-23b: weak password lacking complexity → strength error; updateUser NOT called', async () => {
+    mockSearchParamsGet.mockImplementation((key: string) => {
+      if (key === 'token_hash') return 'valid-hash-123'
+      if (key === 'type') return 'recovery'
+      return null
+    })
+    mockVerifyOtp.mockResolvedValue({ data: {}, error: null })
+
+    const user = userEvent.setup()
+    render(<ResetPage />)
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/new password/i)).toBeInTheDocument()
+    })
+
+    // Passes the old min-6 rule but fails the shared complexity policy.
     await user.type(screen.getByLabelText(/new password/i), 'password123')
-    await user.type(screen.getByLabelText(/confirm password/i), 'different456')
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123')
     await user.click(screen.getByRole('button', { name: /update/i }))
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toBeInTheDocument()
     })
     expect(mockUpdateUser).not.toHaveBeenCalled()
+  })
+
+  it('shows the shared password-requirements checklist on the reset form', async () => {
+    mockSearchParamsGet.mockImplementation((key: string) => {
+      if (key === 'token_hash') return 'valid-hash-123'
+      if (key === 'type') return 'recovery'
+      return null
+    })
+    mockVerifyOtp.mockResolvedValue({ data: {}, error: null })
+
+    render(<ResetPage />)
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/new password/i)).toBeInTheDocument()
+    })
+    expect(screen.getByText(/include an uppercase letter/i)).toBeInTheDocument()
+    expect(screen.getByText(/include a special character/i)).toBeInTheDocument()
   })
 
   it('AU-T-24: valid passwords → updateUser called → success message + /login navigation', async () => {
@@ -156,16 +200,16 @@ describe('ResetPage (AU-006)', () => {
       expect(screen.getByLabelText(/new password/i)).toBeInTheDocument()
     })
 
-    await user.type(screen.getByLabelText(/new password/i), 'newpassword123')
+    await user.type(screen.getByLabelText(/new password/i), 'NewPassword123!')
     await user.type(
       screen.getByLabelText(/confirm password/i),
-      'newpassword123'
+      'NewPassword123!'
     )
     await user.click(screen.getByRole('button', { name: /update/i }))
 
     await waitFor(() => {
       expect(mockUpdateUser).toHaveBeenCalledWith({
-        password: 'newpassword123',
+        password: 'NewPassword123!',
       })
     })
 
@@ -180,5 +224,45 @@ describe('ResetPage (AU-006)', () => {
     } else {
       expect(mockAssign).toHaveBeenCalledWith('/login')
     }
+  })
+
+  it('AU-T-25: verifyOtp rejects (network failure) → error state, not stuck on loading', async () => {
+    mockSearchParamsGet.mockImplementation((key: string) => {
+      if (key === 'token_hash') return 'valid-hash-123'
+      if (key === 'type') return 'recovery'
+      return null
+    })
+    mockVerifyOtp.mockRejectedValue(new Error('Network down'))
+
+    render(<ResetPage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+    expect(
+      screen.queryByText(/verifying your reset link/i)
+    ).not.toBeInTheDocument()
+    const link = screen.getByRole('link', { name: /forgot.?password|request/i })
+    expect(link).toHaveAttribute('href', '/forgot-password')
+  })
+
+  it('S-02: StrictMode double-mount → single-use recovery token verified exactly once', async () => {
+    mockSearchParamsGet.mockImplementation((key: string) => {
+      if (key === 'token_hash') return 'single-use-hash'
+      if (key === 'type') return 'recovery'
+      return null
+    })
+    mockVerifyOtp.mockResolvedValue({ data: {}, error: null })
+
+    render(
+      <StrictMode>
+        <ResetPage />
+      </StrictMode>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/new password/i)).toBeInTheDocument()
+    })
+    expect(mockVerifyOtp).toHaveBeenCalledTimes(1)
   })
 })

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
+import { resolveAppOrigin } from '@/lib/auth/redirect'
 import {
   AuthCard,
   authInputClass,
@@ -18,30 +19,12 @@ import {
 
 /** Forgot-password form schema — email validation only. */
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Invalid email format'),
+  email: z.email('Invalid email format'),
 })
 
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 
 const supabase = createClient()
-
-/**
- * Resolve the public app origin used by Supabase recovery redirects.
- *
- * Local smoke tests may omit NEXT_PUBLIC_APP_URL, so browser submissions fall
- * back to the current origin instead of sending an invalid `undefined/...` URL.
- *
- * @returns {string} The configured app origin or current browser origin.
- */
-function resolveAppOrigin() {
-  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim()
-
-  if (configuredOrigin) {
-    return configuredOrigin.replace(/\/+$/, '')
-  }
-
-  return window.location.origin
-}
 
 /**
  * Forgot-password page — sends a password reset email via Supabase.
@@ -76,11 +59,18 @@ export default function ForgotPasswordPage() {
 
     const redirectTo = `${resolveAppOrigin()}/auth/reset`
 
-    await supabase.auth.resetPasswordForEmail(data.email, { redirectTo })
-
-    // Always show uniform message — do NOT branch on error (AU-005.2).
-    setIsSubmitted(true)
-    setIsSubmitting(false)
+    try {
+      await supabase.auth.resetPasswordForEmail(data.email, { redirectTo })
+    } catch {
+      // Swallow transport errors — anti-enumeration means we never surface a
+      // failure to the user (AU-005.2 / NFR-AU-4).
+    } finally {
+      // Always show uniform message — do NOT branch on error (AU-005.2). A
+      // rejected transport promise must still render the confirmation instead
+      // of leaving the submit button stuck disabled (AU-T-20 rejection).
+      setIsSubmitted(true)
+      setIsSubmitting(false)
+    }
   }
 
   if (isSubmitted) {

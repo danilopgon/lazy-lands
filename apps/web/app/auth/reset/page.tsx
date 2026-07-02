@@ -1,7 +1,7 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useSearchParams } from 'next/navigation'
@@ -13,6 +13,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import {
+  passwordConfirmationSchema,
+  withPasswordMatch,
+} from '@/lib/auth/password'
+import { PasswordRequirements } from '@/components/auth/password-requirements'
+import {
   AuthCard,
   authInputClass,
   authButtonClass,
@@ -20,16 +25,8 @@ import {
 
 const supabase = createClient()
 
-/** New-password form schema — min 6 chars + confirmation must match. */
-const resetPasswordSchema = z
-  .object({
-    newPassword: z.string().min(6, 'Password must be at least 6 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
+/** New-password form schema — shares the signup strong-password policy. */
+const resetPasswordSchema = withPasswordMatch(passwordConfirmationSchema)
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 
@@ -61,15 +58,29 @@ function ResetContent() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
   })
+  const passwordValue = useWatch({
+    control,
+    name: 'password',
+    defaultValue: '',
+  })
+
+  const hasVerified = useRef(false)
 
   useEffect(() => {
     // Already in error state from initial render — nothing to do.
     // Guard also excludes non-recovery token types (S-01).
     if (!tokenHash || type !== 'recovery') return
+
+    // Strict Mode re-runs effects in dev; the recovery token is single-use, so
+    // a second verifyOtp would consume/expire it and overwrite the form with an
+    // invalid-token error (S-02). Fire the verification exactly once.
+    if (hasVerified.current) return
+    hasVerified.current = true
 
     supabase.auth
       .verifyOtp({ token_hash: tokenHash, type: type as EmailOtpType })
@@ -80,6 +91,12 @@ function ResetContent() {
         } else {
           setState('form')
         }
+      })
+      .catch(() => {
+        // A rejected promise (transient/network failure) must not strand the
+        // user on the "Verifying…" loading state (AU-T-25).
+        setErrorMessage('Unable to verify your reset link. Please try again.')
+        setState('error')
       })
   }, [tokenHash, type])
 
@@ -94,7 +111,7 @@ function ResetContent() {
 
     try {
       const { error } = await supabase.auth.updateUser({
-        password: data.newPassword,
+        password: data.password,
       })
 
       if (error) {
@@ -166,20 +183,22 @@ function ResetContent() {
         className="mt-8 space-y-6"
         noValidate
       >
-        <div className="space-y-2">
-          <Label htmlFor="newPassword">New password</Label>
+        <div className="space-y-3">
+          <Label htmlFor="password">New password</Label>
           <Input
-            id="newPassword"
+            id="password"
             type="password"
             autoComplete="new-password"
+            aria-describedby="password-requirements"
             className={authInputClass}
-            {...register('newPassword')}
+            {...register('password')}
           />
-          {errors.newPassword && (
+          {errors.password && (
             <p role="alert" className="text-sm text-[var(--danger)]">
-              {errors.newPassword.message}
+              {errors.password.message}
             </p>
           )}
+          <PasswordRequirements value={passwordValue} />
         </div>
 
         <div className="space-y-2">
