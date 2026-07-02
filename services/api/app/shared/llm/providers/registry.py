@@ -1,13 +1,14 @@
 """Provider registry and build_provider factory.
 
 Resolves the active LLM provider from the LLM_PROVIDER environment variable
-(already declared in config.py::Settings.llm_provider) and constructs an
-OpenAiCompatibleProvider with the matching base_url, model, and API key.
+(already declared in config.py::Settings.llm_provider). Returns a configured
+OpenAiCompatibleProvider for real providers, or FakeLlmProvider for tests/dev.
 """
 
 import os
 
 from app.shared.llm.port import LlmProvider
+from app.shared.llm.providers.fake import FakeLlmProvider
 from app.shared.llm.providers.openai_compatible import OpenAiCompatibleProvider
 
 # OpenAI-compatible providers keyed by name.
@@ -28,14 +29,15 @@ PROVIDERS: dict[str, dict[str, str]] = {
 
 
 def build_provider() -> LlmProvider:
-    """Construct an OpenAiCompatibleProvider from LLM_PROVIDER env.
+    """Construct an LlmProvider from LLM_PROVIDER env.
 
-    Reads LLM_PROVIDER from the environment, looks up the matching entry
-    in PROVIDERS, reads the provider's API key from the env var named by
-    api_key_env, and returns a configured OpenAiCompatibleProvider.
+    When LLM_PROVIDER is "fake", returns a FakeLlmProvider (no API key needed).
+    Otherwise looks up the matching entry in PROVIDERS, reads the provider's
+    API key from the env var named by api_key_env, and returns a configured
+    OpenAiCompatibleProvider.
 
     Returns:
-        A configured OpenAiCompatibleProvider.
+        A configured LlmProvider.
 
     Raises:
         ValueError: If LLM_PROVIDER is not set, refers to an unknown provider,
@@ -45,14 +47,17 @@ def build_provider() -> LlmProvider:
     if not provider_name:
         raise ValueError(
             "LLM_PROVIDER environment variable is not set. "
-            "Set it to one of: gemini, groq"
+            "Set it to one of: fake, gemini, groq"
         )
+
+    if provider_name == "fake":
+        return FakeLlmProvider()
 
     entry = PROVIDERS.get(provider_name)
     if entry is None:
         raise ValueError(
             f"Unknown LLM_PROVIDER '{provider_name}'. "
-            f"Must be one of: {', '.join(sorted(PROVIDERS.keys()))}"
+            f"Must be one of: fake, {', '.join(sorted(PROVIDERS.keys()))}"
         )
 
     api_key = os.environ.get(entry["api_key_env"], "").strip()

@@ -2,6 +2,7 @@
 
 import pytest
 
+from app.shared.llm.providers.fake import FakeLlmProvider
 from app.shared.llm.providers.openai_compatible import OpenAiCompatibleProvider
 from app.shared.llm.providers.registry import PROVIDERS, build_provider
 
@@ -41,6 +42,13 @@ def test_008d_missing_key_raises(monkeypatch) -> None:
     with pytest.raises(ValueError) as exc_info:
         build_provider()
     assert "GEMINI_API_KEY" in str(exc_info.value)
+
+
+# LLM-SEAM-008d2: fake provider returns FakeLlmProvider (no API key needed)
+def test_008d2_fake_provider(monkeypatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "fake")
+    provider = build_provider()
+    assert isinstance(provider, FakeLlmProvider)
 
 
 # LLM-SEAM-008e: all base_urls end with /v1 or /openai/
