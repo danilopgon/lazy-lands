@@ -135,6 +135,30 @@ describe('RegisterPage (AU-002)', () => {
     expect(signUpPayload).not.toHaveProperty('confirmPassword')
   })
 
+  it('falls back to an absolute browser-origin emailRedirectTo when NEXT_PUBLIC_APP_URL is unset', async () => {
+    delete process.env.NEXT_PUBLIC_APP_URL
+    const user = userEvent.setup()
+    mockSignUp.mockResolvedValue({
+      data: { user: {}, session: null },
+      error: null,
+    })
+    render(<RegisterPage />)
+
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/^password$/i), 'Password123!')
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password123!')
+    await user.click(screen.getByRole('button', { name: /sign up/i }))
+
+    await waitFor(() => {
+      expect(mockSignUp).toHaveBeenCalled()
+    })
+    // A relative redirect (e.g. "/auth/confirm") fails Supabase's allow-list and
+    // falls back to a pathless SiteURL, breaking the confirmation link.
+    expect(mockSignUp.mock.calls[0][0].options.emailRedirectTo).toBe(
+      `${window.location.origin}/auth/confirm`
+    )
+  })
+
   it('AU-T-10: successful signUp → "Check your email" visible; NOT navigated to /dashboard', async () => {
     const user = userEvent.setup()
     mockSignUp.mockResolvedValue({
