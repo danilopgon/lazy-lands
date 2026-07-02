@@ -39,9 +39,11 @@ Supabase provides authentication, PostgreSQL storage and Row Level Security.
 
 ### AI
 
-- LLM Provider abstraction
-- OpenRouter or external LLM provider in production
-- Optional Ollama provider for local development
+- `LlmProvider` Protocol — `complete_text(prompt) -> str` + `complete_json(prompt, schema) -> T`
+- OpenAI-compatible adapter (`httpx`) + provider registry (Gemini, Groq free tiers)
+- Per-schema `FakeLlmProvider` with `register()` API for deterministic tests
+- `parse_llm_json()` JSON guard — fence-strip + Pydantic validation, single path for all providers
+- `LlmOutputValidationError` — typed, retryable validation-error contract
 - Jinja prompt templates
 - Pydantic output validation
 

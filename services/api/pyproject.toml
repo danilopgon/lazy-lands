@@ -48,3 +48,6 @@ ignore_missing_imports = true
 asyncio_mode = "auto"
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+    "dev_inference: opt-in real-LLM prompt/JSON-contract validation; excluded from default CI",
+]
