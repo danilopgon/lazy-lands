@@ -31,4 +31,16 @@ describe('resolveAppOrigin', () => {
     process.env.NEXT_PUBLIC_APP_URL = '   '
     expect(resolveAppOrigin()).toBe('http://browser.local')
   })
+
+  it('throws a clear error when called outside the browser without the env var', () => {
+    delete process.env.NEXT_PUBLIC_APP_URL
+    vi.stubGlobal('window', undefined)
+    expect(() => resolveAppOrigin()).toThrow(/NEXT_PUBLIC_APP_URL/)
+  })
+
+  it('still returns the configured origin outside the browser', () => {
+    process.env.NEXT_PUBLIC_APP_URL = 'https://app.example.com'
+    vi.stubGlobal('window', undefined)
+    expect(resolveAppOrigin()).toBe('https://app.example.com')
+  })
 })

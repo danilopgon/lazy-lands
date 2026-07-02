@@ -17,6 +17,13 @@ export function PasswordRequirements({ value }: { value: string }) {
       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
         Password must include
       </p>
+      <span className="sr-only" aria-live="polite">
+        {
+          PASSWORD_REQUIREMENTS.filter((requirement) => requirement.test(value))
+            .length
+        }{' '}
+        of {PASSWORD_REQUIREMENTS.length} requirements met
+      </span>
       <ul className="mt-2 space-y-1 text-sm text-[var(--ink-soft)]">
         {PASSWORD_REQUIREMENTS.map((requirement) => {
           const isMet = requirement.test(value)

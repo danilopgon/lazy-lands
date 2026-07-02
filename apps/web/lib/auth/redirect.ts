@@ -18,5 +18,14 @@ export function resolveAppOrigin(): string {
     return configuredOrigin.replace(/\/+$/, '')
   }
 
+  // Shared lib/auth helper: guard against server-side use where `window` is
+  // undefined so a future Server Component / route handler import fails loudly
+  // instead of throwing an opaque `ReferenceError`.
+  if (typeof window === 'undefined') {
+    throw new Error(
+      'resolveAppOrigin() requires NEXT_PUBLIC_APP_URL when called outside the browser'
+    )
+  }
+
   return window.location.origin
 }

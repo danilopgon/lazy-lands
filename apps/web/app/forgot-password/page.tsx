@@ -19,7 +19,7 @@ import {
 
 /** Forgot-password form schema — email validation only. */
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Invalid email format'),
+  email: z.email('Invalid email format'),
 })
 
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>

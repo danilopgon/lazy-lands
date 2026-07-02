@@ -24,7 +24,7 @@ import {
 
 const registerSchema = withPasswordMatch(
   passwordConfirmationSchema.extend({
-    email: z.string().email('Invalid email format'),
+    email: z.email('Invalid email format'),
   })
 )
 
