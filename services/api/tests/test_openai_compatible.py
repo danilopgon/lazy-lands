@@ -59,9 +59,7 @@ async def test_005a_complete_text_mocked() -> None:
 @pytest.mark.asyncio
 async def test_005b_complete_json_fences_through_guard() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        return _mock_text_response(
-            '```json\n{"name": "Gandalf", "level": 20}\n```'
-        )
+        return _mock_text_response('```json\n{"name": "Gandalf", "level": 20}\n```')
 
     client = httpx.AsyncClient(transport=_mock_transport(handler))
     provider = OpenAiCompatibleProvider(

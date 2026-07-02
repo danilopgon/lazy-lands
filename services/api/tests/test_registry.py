@@ -1,6 +1,5 @@
 """Tests for provider registry and build_provider factory (LLM-SEAM-008 a-f)."""
 
-
 import pytest
 
 from app.shared.llm.providers.openai_compatible import OpenAiCompatibleProvider
@@ -29,7 +28,9 @@ def test_008c_build_provider_gemini(monkeypatch) -> None:
     monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
     provider = build_provider()
     assert isinstance(provider, OpenAiCompatibleProvider)
-    assert provider.base_url == "https://generativelanguage.googleapis.com/v1beta/openai/"
+    assert (
+        provider.base_url == "https://generativelanguage.googleapis.com/v1beta/openai/"
+    )
     assert provider.model == "gemini-2.5-flash"
 
 
