@@ -1,4 +1,4 @@
-# Design: Block Build Parallelization — Track A (LLM seam enrichment)
+# Design: LLM Seam Enrichment (Block 5 prerequisite)
 
 ## Technical Approach
 
@@ -184,7 +184,7 @@ def build_provider() -> LlmProvider: ...  # reads LLM_PROVIDER; fail-loud on mis
 |-----|-----------------------------------|
 | `docs/10-roadmap.md` | One clarifying note near line 3 separating **delivery order** from **build order**. Not a block rewrite. |
 | `docs/04-architecture.md` (AI section) | Add `complete_text`/`complete_json(prompt, schema)` signature; replace "Optional Ollama provider" (line 44) with the OpenAI-compatible adapter + provider registry. |
-| `docs/04-architecture.md` (frontend org) | **No touch** — container/presentational deferred to Track B (question-round decision #1). |
+| `docs/04-architecture.md` (frontend org) | **No touch** — container/presentational deferred (question-round decision #1). |
 | `docs/05-ai-system.md` | Small note near JSON validation/guard documenting the opt-in non-CI prompt-validation lane. Signature already present — no signature edit. |
 | `docs/08-quality-strategy.md` | Small note: `FakeLlmProvider` = deterministic CI oracle (per-schema fixtures) + opt-in non-CI lane excluded from default run. |
 | ADR-03 | In-place supersession note (Decision 6 above). Not a new ADR. |

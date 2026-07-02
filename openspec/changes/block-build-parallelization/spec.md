@@ -1,4 +1,4 @@
-# Spec: block-build-parallelization (Track A)
+# Spec: LLM Seam Enrichment
 
 **Change**: block-build-parallelization
 **Capabilities**: `llm-port`, `json-guard`, `fixture-fake`, `openai-compatible-provider`, `dev-inference-lane`

@@ -1,4 +1,4 @@
-# Apply Progress: block-build-parallelization (Track A)
+# Apply Progress: LLM Seam Enrichment
 
 **Status**: ✅ COMPLETE — all 33 tasks across 6 phases
 **Mode**: Strict TDD
