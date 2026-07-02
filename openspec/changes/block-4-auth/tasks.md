@@ -46,7 +46,7 @@ Two main commit boundaries: (1) structural migration, (2) real auth.
 - [x] T-36 · Create `/auth/reset` page
 - [x] T-37 · Verify Phase 2C-iii green
 - [x] T-38 · Full Suite Gate (all PRs merged)
-- [ ] T-39 · Update `supabase-dashboard-setup.md` readiness table
+- [x] T-39 · Update `supabase-dashboard-setup.md` readiness table
 
 ---
 
@@ -902,6 +902,9 @@ Update the readiness table in `openspec/changes/block-4-auth/supabase-dashboard-
 | Custom SMTP configured | Row 5 (Custom SMTP) → `true` |
 
 When ALL rows read `true`, flip `READY_TO_EXECUTE: true` and notify the user.
+
+**Completed 2026-07-02**: User executed the production smoke test manually (register, login, logout,
+login against deployed frontend/backend using hosted Supabase). Block 4 is done.
 
 **Important**: The domain is the FIRST dependency because:
 1. Domain purchase → DNS propagation time

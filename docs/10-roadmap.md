@@ -26,7 +26,7 @@ complex relationship graphs, visual timeline, and advanced memory compiler.
 | 0 | Infra and repo | done |
 | 1 | Design prototype | done |
 | 3 | Landing page | done |
-| 4 | Auth | done (pending smoke test) |
+| 4 | Auth | done |
 | 5 | Campaign creation and AI onboarding | pending |
 | 6 | Campaign view | pending |
 | 7 | Sessions: post-session registration | pending |
@@ -126,7 +126,7 @@ Auth screens and logic:
 - [x] HTTP interceptor that injects the Supabase JWT in every request to FastAPI.
 - [x] `get_current_user` dependency in FastAPI to validate the Supabase JWT.
 - [x] Tests for protected routes in FastAPI.
-- [ ] End-of-block production smoke test: a real user can register, log in, log out and log back
+- [x] End-of-block production smoke test: a real user can register, log in, log out and log back
   in against the deployed frontend/backend using the hosted Supabase project.
 
 ---
