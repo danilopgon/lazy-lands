@@ -1,31 +1,25 @@
 # Supabase Dashboard Configuration Guide — Block 4 Auth
 
-> ## 🔴 EXECUTION GATE — DO NOT RUN THIS GUIDE YET
+> ## ✅ EXECUTED — Block 4 production smoke test passed (2026-07-02)
 >
-> **`READY_TO_EXECUTE: false`**
+> **`READY_TO_EXECUTE: true`** → All readiness gates cleared and checklist completed.
 >
-> This guide is the **end-state deployment runbook** for the Block 4 production smoke test,
-> not a list of tasks for today. Most items depend on work that does not exist yet (a design
-> decision, a deployed Railway service, a live Vercel domain).
->
-> **Do not start until every row in the readiness table below reads `true`.** Claude keeps
-> this table in sync as the change progresses and flips `READY_TO_EXECUTE` to `true` once all
-> rows are ready — that flip is your signal to run the checklist in Section 8.
+> This guide documents the end-state deployment runbook that was used to configure the
+> Block 4 production stack and execute the smoke test. The production facts captured below
+> serve as the runbook archive.
 
-### Readiness table
+### Readiness table (final)
 
 | # | Item | Scope | Unblocks when… | Ready |
 |---|------|-------|----------------|-------|
-| 0 | Domain + Cloudflare DNS | HOSTED | Domain purchased + DNS configured | `false` |
-| 1 | Local ES256 signing keys | LOCAL | Handled inside `sdd-apply` (jwt-auth slice) | `false` |
-| 2 | Redirect URL allow-list | HOSTED | Frontend deployed → real Vercel domain exists | `false` |
+| 0 | Domain + Cloudflare DNS | HOSTED | Domain purchased + DNS configured | `true` — `lazy-lands.com` |
+| 1 | Local ES256 signing keys | LOCAL | Handled inside `sdd-apply` (jwt-auth slice) | `true` |
+| 2 | Redirect URL allow-list | HOSTED | Frontend deployed → real Vercel domain exists | `true` — `lazy-lands.com` |
 | 3 | Confirm email enabled | HOSTED | Already verified ON (2026-06-29) | `true` |
 | 4 | Email templates (token_hash) | HOSTED | `sdd-design` locked verifyOtp + token_hash (decision #2, 2026-06-29) | `true` |
-| 5 | Custom SMTP | HOSTED | Before real user traffic (not required for smoke test) | `false` |
-| 6 | Railway backend env vars | HOSTED | Backend implemented + deployed to Railway | `false` |
-| 7 | Vercel frontend env vars | HOSTED | Frontend deployed + Railway URL known | `false` |
-
-When all rows read `true`, this guide is safe to execute end-to-end.
+| 5 | Custom SMTP | HOSTED | Brevo SMTP configured (required to edit templates) | `true` |
+| 6 | Railway backend env vars | HOSTED | Backend implemented + deployed to Railway | `true` — `scribe.lazy-lands.com` |
+| 7 | Vercel frontend env vars | HOSTED | Frontend deployed + Railway URL known | `true` — `lazy-lands.com` |
 
 ---
 
@@ -356,47 +350,86 @@ Set these for Production (and optionally Preview):
 
 ## 8. Checklist — Ready for Production Smoke Test
 
-Work through this before running the Block 4 smoke test:
+Checked items reflect the actual production configuration executed on 2026-07-02.
 
 **Domain + Cloudflare**
-- [ ] Domain purchased
-- [ ] Domain added to Cloudflare (or using Cloudflare Registrar)
-- [ ] DNS records configured: `<domain>` → Vercel, `scribe.<domain>` → Railway
-- [ ] Custom domain configured in Vercel
-- [ ] Custom domain configured in Railway
-- [ ] `curl -I https://<your-domain>` returns HTTP 200
-- [ ] `curl -I https://scribe.<your-domain>/health` returns HTTP 200
+- [x] Domain purchased (`lazy-lands.com`)
+- [x] Domain added to Cloudflare
+- [x] DNS records configured: `lazy-lands.com` → Vercel, `scribe.lazy-lands.com` → Railway
+- [x] Custom domain configured in Vercel
+- [x] Custom domain configured in Railway
+- [x] `curl -I https://lazy-lands.com` returns HTTP 200
+- [x] `curl -I https://scribe.lazy-lands.com/health` returns HTTP 200
 
 **Local setup**
-- [ ] Signing keys file generated and NOT committed to git
-- [ ] `signing_keys_path` set in `supabase/config.toml`
-- [ ] `supabase stop && supabase start` run after config change
-- [ ] `curl http://127.0.0.1:54321/auth/v1/.well-known/jwks.json` returns ES256 key
+- [x] Signing keys file generated and NOT committed to git
+- [x] `signing_keys_path` set in `supabase/config.toml`
+- [x] `supabase stop && supabase start` run after config change
+- [x] `curl http://127.0.0.1:54321/auth/v1/.well-known/jwks.json` returns ES256 key
 
 **Hosted Supabase dashboard**
-- [ ] Site URL set to Vercel production domain (`https://<your-domain>`)
-- [ ] `/auth/confirm` redirect URLs added for localhost and custom domain
-- [ ] `/auth/reset` redirect URLs added for localhost and custom domain
-- [ ] Email confirmation is enabled
-- [ ] Confirmation email template uses token_hash redirect to `/auth/confirm`
-- [ ] Password recovery email template uses token_hash redirect to `/auth/reset`
-- [ ] Custom SMTP configured (or acknowledged as acceptable for smoke test only)
+- [x] Site URL set to `https://lazy-lands.com`
+- [x] `/auth/confirm` redirect URLs added for `localhost:3000` and `lazy-lands.com`
+- [x] `/auth/reset` redirect URLs added for `localhost:3000` and `lazy-lands.com`
+- [x] Email confirmation is enabled
+- [x] Confirmation email template uses token_hash redirect to `/auth/confirm`
+- [x] Password recovery email template uses token_hash redirect to `/auth/reset`
+- [x] Brevo SMTP configured (required to edit Supabase email templates)
 
 **Railway**
-- [ ] `SUPABASE_URL` set
-- [ ] `SUPABASE_SERVICE_ROLE_KEY` set
-- [ ] `API_CORS_ORIGINS` includes `https://<your-domain>`
-- [ ] `SUPABASE_JWT_SECRET` removed if previously set
+- [x] `SUPABASE_URL` set
+- [x] `SUPABASE_SERVICE_ROLE_KEY` set
+- [x] `API_CORS_ORIGINS` includes `https://lazy-lands.com`
+- [x] `SUPABASE_JWT_SECRET` removed (JWKS-based validation only)
 
 **Vercel**
-- [ ] `NEXT_PUBLIC_SUPABASE_URL` set
-- [ ] `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` set
-- [ ] `NEXT_PUBLIC_API_URL` set to `https://scribe.<your-domain>`
-- [ ] `NEXT_PUBLIC_APP_URL` set to `https://<your-domain>`
+- [x] `NEXT_PUBLIC_SUPABASE_URL` set
+- [x] `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` set
+- [x] `NEXT_PUBLIC_API_URL` set to `https://scribe.lazy-lands.com`
+- [x] `NEXT_PUBLIC_APP_URL` set to `https://lazy-lands.com`
+
+---
+
+## 9. Production Smoke Test Results (2026-07-02)
+
+All smoke test scenarios passed against the production stack:
+
+| Scenario | Result |
+|----------|--------|
+| Sign up with email | ✅ Passed — confirmation email delivered via Brevo SMTP |
+| Email confirmation (token_hash callback) | ✅ Passed — redirect to `/auth/confirm` succeeded |
+| Dashboard access (authenticated) | ✅ Passed — session cookie valid, protected page rendered |
+| Logout | ✅ Passed — session cleared, redirected to login |
+| Password reset request | ✅ Passed — reset email delivered via Brevo SMTP |
+| Password update (token_hash callback) | ✅ Passed — redirect to `/auth/reset` + update flow succeeded |
+| Login with new password | ✅ Passed — new credentials accepted |
+
+**Production facts:**
+- Frontend: `https://lazy-lands.com` (Vercel)
+- Backend: `https://scribe.lazy-lands.com` (Railway)
+- Auth: Supabase hosted project with Brevo SMTP
+- Email templates use `token_hash` callbacks (`{{ .TokenHash }}`, NOT `{{ .ConfirmationURL }}`)
+
+---
+
+## 10. Patch — API_CORS_ORIGINS parsing bug (2026-07-02)
+
+**Bug**: `api_cors_origins` was typed `list[str]` in `config.py`, causing pydantic-settings
+to JSON-decode the env var value before the CSV validator ran. Setting a plain origin like
+`API_CORS_ORIGINS=https://lazy-lands.com` on Railway crashed because it is not valid JSON.
+
+**Fix**: Changed the field type to `typing.Annotated[list[str], NoDecode]` to prevent JSON
+decoding. The `@field_validator(mode="before")` now handles both JSON arrays and
+comma-separated plain strings. Backward-compatible with existing JSON-format values in
+docker-compose and `.env`.
+
+**Files changed:**
+- `services/api/app/shared/config.py` — `Annotated[list[str], NoDecode]` + validator handles JSON and CSV
+- `services/api/tests/test_config.py` — added 5 regression tests for all origin formats
 
 ---
 
 ## Next step
 
-After completing this checklist, run the production smoke test defined in
-`openspec/changes/block-4-auth/specs/session-management/spec.md` (Production smoke test section).
+The Block 4 production smoke test is complete. Continue with the next SDD change block as
+defined in the project roadmap.
