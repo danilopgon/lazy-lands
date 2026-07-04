@@ -32,9 +32,11 @@ jobs:
           persist-credentials: false
 
       - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v3
+        # supabase/setup-cli publishes only exact version tags (no moving v1/v2/v3
+        # major tag), so the action ref must be a full release like v2.1.1.
+        uses: supabase/setup-cli@v2.1.1
         with:
-          version: 2.57.4
+          version: 2.109.0
 
       - name: Link hosted project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
