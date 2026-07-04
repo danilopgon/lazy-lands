@@ -5,19 +5,10 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { OriginBadge } from '@/components/ui/origin-badge'
-import type { ContentSource } from '@/lib/campaigns/schemas'
+import { contentSourceToBadgeOrigin } from '@/lib/campaigns/provenance'
+import type { EntityField, ReviewItem } from './types'
 
-/** Common shape shared by NPC/faction/arc review items. */
-export type ReviewItem = Record<string, string> & {
-  reviewId: string
-  content_source: ContentSource
-}
-
-export type EntityField<T extends ReviewItem> = {
-  key: keyof T & string
-  label: string
-  placeholder: string
-}
+export type { EntityField, ReviewItem } from './types'
 
 type EntitySectionProps<T extends ReviewItem> = {
   title: string
@@ -28,16 +19,6 @@ type EntitySectionProps<T extends ReviewItem> = {
   extraDefaults?: Partial<T>
   onChange: (items: T[]) => void
   testId: string
-}
-
-/**
- * Map a `content_source` value to the shared provenance badge variant.
- *
- * @param {ContentSource} contentSource - The item's provenance value.
- * @returns {'scribe' | 'edited'} The `OriginBadge` variant.
- */
-function toBadgeOrigin(contentSource: ContentSource): 'scribe' | 'edited' {
-  return contentSource === 'llm' ? 'scribe' : 'edited'
 }
 
 /**
@@ -101,6 +82,10 @@ export function EntitySection<T extends ReviewItem>({
     if (editingIndex === index) {
       setEditingIndex(null)
       setEditDraft({})
+    } else if (editingIndex !== null && index < editingIndex) {
+      // Removing an item before the one being edited shifts the array down;
+      // keep editingIndex pointing at the same item instead of a stale slot.
+      setEditingIndex(editingIndex - 1)
     }
   }
 
@@ -203,7 +188,9 @@ export function EntitySection<T extends ReviewItem>({
                     )}
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
-                    <OriginBadge origin={toBadgeOrigin(item.content_source)} />
+                    <OriginBadge
+                      origin={contentSourceToBadgeOrigin(item.content_source)}
+                    />
                     <Button
                       type="button"
                       variant="ghost"

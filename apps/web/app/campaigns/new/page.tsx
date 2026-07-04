@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
+import { Notice } from '@/components/ui/notice'
 import { extractCampaign, CampaignApiError } from '@/lib/campaigns/api'
 import { saveExtractionDraft } from '@/lib/campaigns/draft-storage'
 import {
@@ -133,6 +134,12 @@ export default function NewCampaignPage() {
         draft the pieces; you&apos;ll review and edit everything before anything
         is saved.
       </p>
+
+      {extractError && (
+        <Notice className="mt-6" variant="error" ornament="⚠" role="alert">
+          {extractError}
+        </Notice>
+      )}
 
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -258,15 +265,6 @@ export default function NewCampaignPage() {
             extraction.
           </p>
         </div>
-        {extractError && (
-          <p
-            role="alert"
-            className="mt-4 border-2 border-[var(--danger)] bg-[var(--danger-wash)] p-3 font-mono text-xs text-[var(--danger)]"
-          >
-            {extractError}
-          </p>
-        )}
-
         <div className="mt-6 flex items-center justify-between gap-4">
           <span className="font-mono text-[11px] text-[var(--ink-3)]">
             Your text stays here if the Scribe cannot parse it.
