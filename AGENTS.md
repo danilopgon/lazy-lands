@@ -144,9 +144,14 @@ frontend task (any route in `apps/web/app/`), it MUST:
 1. Read `.agents/skills/frontend-handoff-contract/references/route-map.md` to find the
    handoff file for that route.
 2. Read the handoff component source (e.g., `handoff/app/views-dashboard.jsx`).
-3. Extract the field-by-field checklist (fields, copy, states, layout, tokens).
-4. Include the checklist in the prompt passed to `sdd-spec` as mandatory context.
-5. Ensure the spec, design, and tasks artifacts reference the handoff checklist as
+3. Read `handoff/app/ui.jsx` to identify the shared components the screen relies on
+   (Field, Loading, ErrorNotice, ScribeNotice, OriginBadge, Modal, etc.).
+4. Extract the field-by-field checklist covering, at minimum: fields, copy, **states
+   (loading, error, empty, success — enumerated individually)**, layout, tokens,
+   **shared components used**, and **motion requirements** (entrance choreography,
+   button press physics, quill loading, stamp/strike feedback).
+5. Include the checklist in the prompt passed to `sdd-spec` as mandatory context.
+6. Ensure the spec, design, and tasks artifacts reference the handoff checklist as
    acceptance criteria.
 
 This is non-negotiable. The handoff is the visual specification. If the spec does not
