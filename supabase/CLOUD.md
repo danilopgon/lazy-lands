@@ -160,7 +160,30 @@ destructive operations unless explicitly approved.
 
 ## Current status
 
-This repository does not yet include the CI/CD workflow that performs `supabase db push`.
-Until that workflow exists, any cloud push is a controlled manual bootstrap step. Implementing
-the protected CI/CD migration deployment is planned for the next block, alongside the login and
-hosted-auth work.
+Automated cloud migration deployment is implemented in
+`.github/workflows/deploy-migrations.yml`. It triggers on pushes to `main` that touch
+`supabase/migrations/**`, runs `supabase db push` (dry-run then apply), and is gated by the
+`production` GitHub environment so a human approves before any hosted schema change is applied.
+App-only changes never trigger it (path filter), and a `concurrency` group prevents two deploys
+racing against the same hosted database.
+
+### Required GitHub configuration (one-time)
+
+Add these as encrypted secrets (Settings -> Secrets and variables -> Actions):
+
+- `SUPABASE_ACCESS_TOKEN` — a personal access token (Supabase Dashboard -> Account -> Access Tokens).
+- `SUPABASE_DB_PASSWORD` — the hosted project's database password. Required in CI; without it the
+  CLI silently prompts and exits 0 without pushing.
+- `SUPABASE_PROJECT_ID` — the hosted project ref (Project Settings -> General -> Reference ID).
+
+Then create a `production` environment (Settings -> Environments) and add required reviewers so
+the deploy job pauses for manual approval. Hardening option: pin `supabase/setup-cli` to a fixed
+version instead of `latest`.
+
+### First migration through the pipeline
+
+Block 5 introduces the first post-base-schema migration: an additive `content_source` column on
+`arcs` (nullable, no backfill). Once the Block 5 PR merges to `main`, this workflow deploys that
+migration to the hosted project (after approval). Before relying on it the first time, verify the
+hosted `supabase_migrations` history covers the base schema (`db push --dry-run`), since the base
+schema may have been applied via the dashboard rather than `db push`.

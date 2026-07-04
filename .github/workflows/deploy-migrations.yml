@@ -1,0 +1,46 @@
+name: Deploy Supabase migrations
+
+# Applies pending schema migrations to the hosted Supabase project.
+# Triggers only when migration files land on main, so app-only changes never
+# touch the production database. Gated by the `production` environment: configure
+# required reviewers on it (Settings -> Environments) to keep human approval in
+# the loop before any hosted schema change is applied.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+
+# Never let two migration deploys race against the same hosted database.
+concurrency:
+  group: supabase-migrations-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: latest
+
+      - name: Link hosted project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      # Passing SUPABASE_DB_PASSWORD via env is required: without it the CLI
+      # silently prompts for input and exits 0 without pushing anything.
+      - name: Verify pending migrations (dry run)
+        run: supabase db push --dry-run
+
+      - name: Apply migrations
+        run: supabase db push

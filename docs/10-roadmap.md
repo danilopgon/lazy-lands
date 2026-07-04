@@ -26,7 +26,7 @@ complex relationship graphs, visual timeline, and advanced memory compiler.
 | 1 | Design prototype | done |
 | 3 | Landing page | done |
 | 4 | Auth | done |
-| 5 | Campaign creation and AI onboarding | pending |
+| 5 | Campaign creation and AI onboarding | done |
 | 6 | Campaign view | pending |
 | 7 | Sessions: post-session registration | pending |
 | 8 | Session generation and editing | pending |
@@ -132,15 +132,31 @@ Auth screens and logic:
 
 ## Block 5 — Campaign creation and AI onboarding
 
-Status: **pending**
+Status: **done**
 
-- [ ] New campaign screen: free-text textarea.
-- [ ] FastAPI endpoint `POST /campaigns/extract` — calls the LLM with the extraction prompt.
-- [ ] Pydantic validates the extracted JSON against `ExtractCampaignOutput`.
-- [ ] The LLM returns JSON with NPCs, factions and initial world state.
-- [ ] Save campaign, NPCs and factions to Supabase.
-- [ ] RLS active on `campaigns`, `npcs` and `factions` tables.
-- [ ] Confirmation screen: the DM reviews the extracted data before saving.
+- [x] New campaign screen: free-text textarea, premise bounded 100–8000 characters
+  (backend `Field` + frontend counter).
+- [x] FastAPI endpoint `POST /campaigns/extract` — calls the LLM with the extraction prompt.
+- [x] Pydantic validates the extracted JSON against `ExtractCampaignOutput`.
+- [x] The LLM returns JSON with NPCs, factions, arcs and initial world state.
+- [x] Save campaign, NPCs, factions and arcs to Supabase.
+- [x] RLS active on `campaigns`, `npcs`, `factions` and `arcs` tables.
+- [x] Confirmation screen: the DM reviews the extracted NPCs, factions and arcs before saving.
+- [x] Additive migration: add `content_source` to `arcs` (nullable, no backfill) so arcs carry
+  the same persisted provenance column as NPCs and factions. Deployed this block via the
+  automated `deploy-migrations.yml` pipeline on merge to main.
+- [x] Per-user Supabase client injection — FastAPI routes get user-scoped database clients
+  via `AuthContext`; the `get_user_supabase_client` dependency ensures tenant isolation.
+- [x] Jinja prompt-render helper — shared `render_prompt` with `StrictUndefined`,
+  autoescape off, trim/lstrip blocks.
+- [x] Error mapping — `LlmOutputValidationError` mapped to retryable HTTP without raw LLM
+  output leak.
+- [x] App-layer ownership guard — User A's token cannot write a campaign attributed to
+  User B; `user_id` always equals the caller `auth.uid()` (CP-004, NFR-PU-2).
+- [x] Frontend Zod schemas mirror backend contracts (`content_source`, arcs, priority).
+- [x] Frontend `/campaigns/new/review` with provenance badges (`✦ Scribe` / `✎ Edited`),
+  editable entities, and add/remove support.
+- [x] Full suite green: backend 98 passed + frontend 175 passed; `ruff`/`mypy`/`tsc`/`eslint` clean.
 
 ---
 
@@ -227,7 +243,7 @@ Status: **pending**
 
 ---
 
-## Block 10 — Testing and quality
+## Block 10 — Testing and quality (if needed)
 
 Status: **pending**
 
@@ -256,3 +272,9 @@ Status: **pending**
 - [ ] Minimal RLS tests in Supabase (`campaigns`, `npcs`, `factions`, `sessions`,
   `memory_facts`).
 - [ ] Basic PDF export test.
+
+### Block 11 - Handoff cleanup
+
+Status: **pending**
+
+- [ ] Remove handoff code and update the docs to reflect the final architecture and flow if it changed during development and the specs didn't match the final implementation.
