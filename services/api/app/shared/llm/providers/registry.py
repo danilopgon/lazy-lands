@@ -44,8 +44,7 @@ def build_provider() -> LlmProvider:
     provider_name = settings.llm_provider.strip().lower()
     if not provider_name:
         raise ValueError(
-            "LLM_PROVIDER is not set. "
-            "Set it to one of: fake, gemini, groq"
+            "LLM_PROVIDER is not set. Set it to one of: fake, gemini, groq"
         )
 
     if provider_name == "fake":
