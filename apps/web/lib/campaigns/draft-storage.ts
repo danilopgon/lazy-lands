@@ -8,7 +8,7 @@ import {
  * `/campaigns/new` and `/campaigns/new/review`. There is no server-side
  * draft — `/campaigns/extract` is stateless (NFR-CUI-2).
  */
-const DRAFT_STORAGE_KEY = 'lazy-lands:campaign-extraction-draft'
+export const DRAFT_STORAGE_KEY = 'lazy-lands:campaign-extraction-draft'
 
 /**
  * Save the Scribe's extracted proposal so the review screen can read it
