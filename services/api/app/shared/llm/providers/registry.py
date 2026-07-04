@@ -112,8 +112,7 @@ def build_provider() -> LlmProvider:
         fb_entry = PROVIDERS.get(name)
         if fb_entry is None:
             logger.warning(
-                "Unknown fallback provider %r — skipping. "
-                "Known providers: %s",
+                "Unknown fallback provider %r — skipping. Known providers: %s",
                 name,
                 ", ".join(sorted(PROVIDERS.keys())),
             )

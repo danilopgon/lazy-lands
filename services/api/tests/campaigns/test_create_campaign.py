@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.modules.campaigns.application.create_campaign import CreateCampaign
-from app.modules.campaigns.infrastructure.errors import RepositoryError
 from app.modules.campaigns.errors import CampaignPersistenceError
+from app.modules.campaigns.infrastructure.errors import RepositoryError
 from app.modules.campaigns.schemas import (
     CreateArcRequest,
     CreateCampaignRequest,

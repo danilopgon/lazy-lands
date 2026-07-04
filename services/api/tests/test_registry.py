@@ -8,7 +8,7 @@ from app.shared.llm.providers.openai_compatible import OpenAiCompatibleProvider
 from app.shared.llm.providers.registry import PROVIDERS, build_provider
 
 
-# LLM-SEAM-008a: PROVIDERS dict contains exactly four keys
+# LLM-SEAM-008a: PROVIDERS dict contains exactly four entries
 def test_008a_providers_has_four_entries() -> None:
     assert len(PROVIDERS) == 4
     assert "gemini" in PROVIDERS
@@ -17,9 +17,9 @@ def test_008a_providers_has_four_entries() -> None:
     assert "cerebras" in PROVIDERS
 
 
-# LLM-SEAM-008b: each provider entry has base_url, api_key_attr, model
+# LLM-SEAM-008b: each provider entry has base_url, api_key_env, model
 def test_008b_each_entry_has_required_fields() -> None:
-    required = {"base_url", "api_key_attr", "model"}
+    required = {"base_url", "api_key_env", "model"}
     for name, entry in PROVIDERS.items():
         assert set(entry.keys()) >= required, (
             f"Provider '{name}' missing required fields: {required - set(entry.keys())}"
@@ -28,10 +28,8 @@ def test_008b_each_entry_has_required_fields() -> None:
 
 # LLM-SEAM-008c: build_provider() returns correct OpenAiCompatibleProvider
 def test_008c_build_provider_gemini(monkeypatch) -> None:
-    from app.shared.config import settings
-
-    monkeypatch.setattr(settings, "llm_provider", "gemini")
-    monkeypatch.setattr(settings, "gemini_api_key", "test-gemini-key")
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
     provider = build_provider()
     assert isinstance(provider, OpenAiCompatibleProvider)
     assert (
@@ -42,20 +40,16 @@ def test_008c_build_provider_gemini(monkeypatch) -> None:
 
 # LLM-SEAM-008d: missing API key fails loudly
 def test_008d_missing_key_raises(monkeypatch) -> None:
-    from app.shared.config import settings
-
-    monkeypatch.setattr(settings, "llm_provider", "gemini")
-    monkeypatch.setattr(settings, "gemini_api_key", None)
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     with pytest.raises(ValueError) as exc_info:
         build_provider()
-    assert "gemini_api_key" in str(exc_info.value)
+    assert "GEMINI_API_KEY" in str(exc_info.value)
 
 
 # LLM-SEAM-008d2: fake provider returns FakeLlmProvider (no API key needed)
 def test_008d2_fake_provider(monkeypatch) -> None:
-    from app.shared.config import settings
-
-    monkeypatch.setattr(settings, "llm_provider", "fake")
+    monkeypatch.setenv("LLM_PROVIDER", "fake")
     provider = build_provider()
     assert isinstance(provider, FakeLlmProvider)
 
@@ -72,7 +66,7 @@ def test_008e_base_urls_are_openai_compatible() -> None:
         )
 
 
-# LLM-SEAM-008f: registry imports from shared/llm/openai_compatible, not modules/*
+# LLM-SEAM-008f: registry imports from shared/llm/, not modules/*
 def test_008f_registry_no_modules_import() -> None:
     import ast
     from pathlib import Path
