@@ -8,6 +8,7 @@ the next provider is tried. Non-transient errors propagate immediately.
 
 from __future__ import annotations
 
+import json
 import logging
 import time
 from collections.abc import Callable
@@ -61,12 +62,17 @@ def _is_transient(exc: Exception) -> bool:
     * httpx.DecodingError — the server responded but the body was unparseable
       (treated as a transient infrastructure hiccup, not a permanent auth/config
       problem).
+    * json.JSONDecodeError — HTTP 200 with a malformed or truncated JSON body
+      (the upstream responded successfully but the payload was unparseable;
+      another provider may return valid JSON).
     """
     if isinstance(exc, httpx.HTTPStatusError):
         return exc.response.status_code in _TRANSIENT_STATUSES
     if isinstance(exc, _TRANSIENT_EXCEPTIONS):
         return True
     if isinstance(exc, httpx.DecodingError):
+        return True
+    if isinstance(exc, json.JSONDecodeError):
         return True
     return False
 

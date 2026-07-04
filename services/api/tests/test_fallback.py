@@ -1,5 +1,6 @@
 """Unit tests for FallbackLlmProvider failover and health tracking."""
 
+import json
 import time
 
 import httpx
@@ -63,6 +64,15 @@ def test_transient_timeout() -> None:
 
 def test_transient_decoding_error() -> None:
     assert _is_transient(httpx.DecodingError("bad json"))
+
+
+def test_transient_json_decode_error() -> None:
+    """HTTP 200 with malformed JSON — should be treated as transient
+    so the fallback chain can try the next provider (Codex P2)."""
+    try:
+        json.loads("{invalid")
+    except json.JSONDecodeError as exc:
+        assert _is_transient(exc)
 
 
 def test_not_transient_401() -> None:
@@ -199,3 +209,16 @@ async def test_provider_recovers_after_cooldown_expires(monkeypatch) -> None:
 async def test_fallback_with_empty_list_raises() -> None:
     with pytest.raises(ValueError, match="at least one provider"):
         FallbackLlmProvider([])
+
+
+@pytest.mark.asyncio
+async def test_json_decode_error_triggers_fallback() -> None:
+    """Codex P2: malformed JSON on HTTP 200 should trigger failover,
+    not abort the chain."""
+    a = _StubProvider("a")
+    a._next_text = json.JSONDecodeError("bad json", "{", 1)
+    b = _StubProvider("b")
+    fb = FallbackLlmProvider([a, b])
+    result = await fb.complete_text("hi")
+    assert result == "ok"
+    assert len(b._text_calls) == 1
