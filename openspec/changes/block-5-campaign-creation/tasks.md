@@ -2,8 +2,8 @@
 
 Ordered, dependency-aware implementation checklist. Strict TDD: failing test before
 implementation. Delivery: **single PR with `size:exception` accepted up front** (see
-Review Workload Forecast). The automated Supabase migration CI/CD pipeline is explicitly
-OUT of scope — a separate fast-follow infra PR.
+Review Workload Forecast). The automated Supabase migration CI/CD pipeline
+(`.github/workflows/deploy-migrations.yml`) is now included in this PR.
 
 ---
 
