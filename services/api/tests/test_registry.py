@@ -14,9 +14,9 @@ def test_008a_providers_has_two_entries() -> None:
     assert "groq" in PROVIDERS
 
 
-# LLM-SEAM-008b: each provider entry has base_url, api_key_env, model
+# LLM-SEAM-008b: each provider entry has base_url, api_key_attr, model
 def test_008b_each_entry_has_required_fields() -> None:
-    required = {"base_url", "api_key_env", "model"}
+    required = {"base_url", "api_key_attr", "model"}
     for name, entry in PROVIDERS.items():
         assert set(entry.keys()) >= required, (
             f"Provider '{name}' missing required fields: {required - set(entry.keys())}"
@@ -25,8 +25,10 @@ def test_008b_each_entry_has_required_fields() -> None:
 
 # LLM-SEAM-008c: build_provider() returns correct OpenAiCompatibleProvider
 def test_008c_build_provider_gemini(monkeypatch) -> None:
-    monkeypatch.setenv("LLM_PROVIDER", "gemini")
-    monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
+    from app.shared.config import settings
+
+    monkeypatch.setattr(settings, "llm_provider", "gemini")
+    monkeypatch.setattr(settings, "gemini_api_key", "test-gemini-key")
     provider = build_provider()
     assert isinstance(provider, OpenAiCompatibleProvider)
     assert (
@@ -37,16 +39,20 @@ def test_008c_build_provider_gemini(monkeypatch) -> None:
 
 # LLM-SEAM-008d: missing API key fails loudly
 def test_008d_missing_key_raises(monkeypatch) -> None:
-    monkeypatch.setenv("LLM_PROVIDER", "gemini")
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    from app.shared.config import settings
+
+    monkeypatch.setattr(settings, "llm_provider", "gemini")
+    monkeypatch.setattr(settings, "gemini_api_key", None)
     with pytest.raises(ValueError) as exc_info:
         build_provider()
-    assert "GEMINI_API_KEY" in str(exc_info.value)
+    assert "gemini_api_key" in str(exc_info.value)
 
 
 # LLM-SEAM-008d2: fake provider returns FakeLlmProvider (no API key needed)
 def test_008d2_fake_provider(monkeypatch) -> None:
-    monkeypatch.setenv("LLM_PROVIDER", "fake")
+    from app.shared.config import settings
+
+    monkeypatch.setattr(settings, "llm_provider", "fake")
     provider = build_provider()
     assert isinstance(provider, FakeLlmProvider)
 

@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     supabase_publishable_key: str | None = None
     supabase_service_role_key: str = ""
     llm_provider: str = "fake"
+    gemini_api_key: str | None = None
+    groq_api_key: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
