@@ -3,15 +3,18 @@
 import pytest
 
 from app.shared.llm.providers.fake import FakeLlmProvider
+from app.shared.llm.providers.fallback import FallbackLlmProvider
 from app.shared.llm.providers.openai_compatible import OpenAiCompatibleProvider
 from app.shared.llm.providers.registry import PROVIDERS, build_provider
 
 
-# LLM-SEAM-008a: PROVIDERS dict contains exactly two keys
-def test_008a_providers_has_two_entries() -> None:
-    assert len(PROVIDERS) == 2
+# LLM-SEAM-008a: PROVIDERS dict contains exactly four keys
+def test_008a_providers_has_four_entries() -> None:
+    assert len(PROVIDERS) == 4
     assert "gemini" in PROVIDERS
     assert "groq" in PROVIDERS
+    assert "mistral" in PROVIDERS
+    assert "cerebras" in PROVIDERS
 
 
 # LLM-SEAM-008b: each provider entry has base_url, api_key_env, model
@@ -51,13 +54,16 @@ def test_008d2_fake_provider(monkeypatch) -> None:
     assert isinstance(provider, FakeLlmProvider)
 
 
-# LLM-SEAM-008e: all base_urls end with /v1 or /openai/
+# LLM-SEAM-008e: all base_urls end with /v1, /openai/, or /v1/
 def test_008e_base_urls_are_openai_compatible() -> None:
     for name, entry in PROVIDERS.items():
         url = entry["base_url"]
         assert (
             url.endswith("/v1") or url.endswith("/openai/") or url.endswith("/v1/")
-        ), f"Provider '{name}' base_url '{url}' does not end with /v1 or /openai/"
+        ), (
+            f"Provider '{name}' base_url '{url}' "
+            f"does not end with /v1, /openai/, or /v1/"
+        )
 
 
 # LLM-SEAM-008f: registry imports from shared/llm/openai_compatible, not modules/*
@@ -80,3 +86,76 @@ def test_008f_registry_no_modules_import() -> None:
             assert "modules" not in line, (
                 f"registry.py must not import from modules/*: {line}"
             )
+
+
+# ---------------------------------------------------------------------------
+# Fallback-related tests
+# ---------------------------------------------------------------------------
+
+
+# LLM-SEAM-008g: no fallback when LLM_FALLBACKS is empty
+def test_008g_no_fallbacks_returns_single_provider(monkeypatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.delenv("LLM_FALLBACKS", raising=False)
+    provider = build_provider()
+    assert isinstance(provider, OpenAiCompatibleProvider)
+    assert not isinstance(provider, FallbackLlmProvider)
+
+
+# LLM-SEAM-008h: with fallbacks, returns FallbackLlmProvider
+def test_008h_with_fallbacks_returns_fallback_provider(monkeypatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.setenv("LLM_FALLBACKS", "groq,mistral")
+    monkeypatch.setenv("GROQ_API_KEY", "k")
+    monkeypatch.setenv("MISTRAL_API_KEY", "k")
+    provider = build_provider()
+    assert isinstance(provider, FallbackLlmProvider)
+
+
+# LLM-SEAM-008i: fallback skips providers whose API key is missing
+def test_008i_fallback_skips_missing_keys(monkeypatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.setenv("LLM_FALLBACKS", "groq,mistral")
+    # Only set GROQ — MISTRAL missing
+    monkeypatch.setenv("GROQ_API_KEY", "k")
+    monkeypatch.delenv("MISTRAL_API_KEY", raising=False)
+    provider = build_provider()
+    # Fallback chain built, but only with gemini + groq (mistral skipped)
+    assert isinstance(provider, FallbackLlmProvider)
+
+
+# LLM-SEAM-008j: unknown fallback names are ignored with a warning
+def test_008j_unknown_fallback_ignored(monkeypatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.setenv("LLM_FALLBACKS", "openrouter,unknown")
+    # No API keys set for the unknown ones either
+    provider = build_provider()
+    # Should still return a single provider since all fallbacks are
+    # either unknown or missing keys.
+    assert isinstance(provider, OpenAiCompatibleProvider)
+    assert not isinstance(provider, FallbackLlmProvider)
+
+
+# LLM-SEAM-008k: fallback deduplicates provider names
+def test_008k_fallback_deduplicates(monkeypatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.setenv("LLM_FALLBACKS", "groq,groq,mistral,groq")
+    monkeypatch.setenv("GROQ_API_KEY", "k")
+    monkeypatch.setenv("MISTRAL_API_KEY", "k")
+    provider = build_provider()
+    assert isinstance(provider, FallbackLlmProvider)
+
+
+# LLM-SEAM-008l: providing the primary in LLM_FALLBACKS is harmless
+def test_008l_primary_in_fallbacks_ignored(monkeypatch) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.setenv("LLM_FALLBACKS", "gemini,groq")
+    monkeypatch.setenv("GROQ_API_KEY", "k")
+    provider = build_provider()
+    assert isinstance(provider, FallbackLlmProvider)

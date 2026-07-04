@@ -31,6 +31,7 @@ class OpenAiCompatibleProvider:
         api_key: str,
         model: str,
         *,
+        provider_name: str = "",
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
         """Initialize with endpoint, credentials, and optional HTTP client.
@@ -40,12 +41,15 @@ class OpenAiCompatibleProvider:
                 a path where POST /chat/completions is appended).
             api_key: API key sent as Bearer token in the Authorization header.
             model: Model identifier (e.g. "gemini-2.5-flash").
+            provider_name: Human-readable label for logging and fallback
+                diagnostics (e.g. "gemini", "groq").
             http_client: Optional httpx.AsyncClient for test injection.
                 If None, a default AsyncClient is created internally.
         """
         self.base_url = base_url
         self.api_key = api_key
         self.model = model
+        self.provider_name = provider_name
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
@@ -63,7 +67,7 @@ class OpenAiCompatibleProvider:
         """
         logger.info(
             "LLM call: provider=%s model=%s prompt_length=%d",
-            type(self).__name__,
+            self.provider_name or type(self).__name__,
             self.model,
             len(prompt),
         )

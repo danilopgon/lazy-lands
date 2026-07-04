@@ -18,8 +18,11 @@ class Settings(BaseSettings):
     supabase_publishable_key: str | None = None
     supabase_service_role_key: str = ""
     llm_provider: str = "fake"
+    llm_fallbacks: str = ""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     @field_validator("api_cors_origins", mode="before")
     @classmethod
