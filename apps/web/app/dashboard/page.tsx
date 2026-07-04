@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { LogoutButton } from '@/components/auth/logout-button'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Notice } from '@/components/ui/notice'
@@ -19,13 +20,16 @@ const emptyStats = [
 export default function DashboardPage() {
   return (
     <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
-      <div className="border-b-[3px] border-[var(--line-strong)] pb-6">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
-          Campaigns
-        </p>
-        <h1 className="mt-3 font-serif text-5xl font-semibold tracking-[-0.03em] text-[var(--ink)]">
-          Campaign dashboard
-        </h1>
+      <div className="flex items-start justify-between gap-4 border-b-[3px] border-[var(--line-strong)] pb-6">
+        <div>
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
+            Campaigns
+          </p>
+          <h1 className="mt-3 font-serif text-5xl font-semibold tracking-[-0.03em] text-[var(--ink)]">
+            Campaign dashboard
+          </h1>
+        </div>
+        <LogoutButton />
       </div>
       <StatLedger items={emptyStats} className="mt-8" />
       <EmptyState
@@ -33,8 +37,8 @@ export default function DashboardPage() {
         title="No campaigns on the shelf yet"
         description="The MVP dashboard will list owned campaigns, recent sessions and memory counts after Supabase auth and campaign storage are wired."
         action={
-          <Button asChild variant="secondary">
-            <Link href="/">Back to landing</Link>
+          <Button asChild variant="accent">
+            <Link href="/campaigns/new">Create campaign</Link>
           </Button>
         }
       />

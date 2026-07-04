@@ -64,6 +64,37 @@ describe('proxy — session-management (Phase 2B)', () => {
     expect(result.headers.get('location')).toContain('/login')
   })
 
+  it('redirects unauthenticated users from /campaigns/new/review to /login', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    vi.mocked(updateSession).mockResolvedValue({
+      response: mockResponse,
+      user: null,
+    })
+
+    const { proxy } = await import('../proxy')
+    const request = makeRequest('http://localhost:3000/campaigns/new/review')
+    const result = await proxy(request)
+
+    expect(result.status).toBe(302)
+    expect(result.headers.get('location')).toContain('/login')
+  })
+
+  it('redirects authenticated users from / to /dashboard', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const mockUser: User = { id: 'user-123' } as User
+    vi.mocked(updateSession).mockResolvedValue({
+      response: mockResponse,
+      user: mockUser,
+    })
+
+    const { proxy } = await import('../proxy')
+    const request = makeRequest('http://localhost:3000/')
+    const result = await proxy(request)
+
+    expect(result.status).toBe(302)
+    expect(result.headers.get('location')).toContain('/dashboard')
+  })
+
   it('SM-proxy-02b: preserves session Set-Cookie headers when redirecting unauthenticated /dashboard requests', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
     const cleanupResponse = new NextResponse(null, { status: 200 })

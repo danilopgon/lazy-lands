@@ -14,6 +14,16 @@ describe('decideAuth', () => {
     expect(decideAuth(authenticatedUser, '/dashboard')).toBe('passthrough')
   })
 
+  it('redirects unauthenticated users from /campaigns and nested campaign routes', () => {
+    expect(decideAuth(null, '/campaigns')).toBe('redirect')
+    expect(decideAuth(null, '/campaigns/new')).toBe('redirect')
+    expect(decideAuth(null, '/campaigns/new/review')).toBe('redirect')
+  })
+
+  it('redirects authenticated users from / to /dashboard', () => {
+    expect(decideAuth(authenticatedUser, '/')).toBe('redirectToDashboard')
+  })
+
   it('SM-T-03: passes through unauthenticated user on /', () => {
     expect(decideAuth(null, '/')).toBe('passthrough')
   })
