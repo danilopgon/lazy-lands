@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     llm_provider: str = "fake"
     gemini_api_key: str | None = None
     groq_api_key: str | None = None
+    mistral_api_key: str | None = None
+    cerebras_api_key: str | None = None
+    llm_fallbacks: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
