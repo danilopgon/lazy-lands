@@ -50,7 +50,10 @@ class OpenAiCompatibleProvider:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
-        self._client = http_client or httpx.AsyncClient(headers=headers)
+        self._client = http_client or httpx.AsyncClient(
+            headers=headers,
+            timeout=httpx.Timeout(120.0, connect=10.0),
+        )
 
     async def complete_text(self, prompt: str) -> str:
         """Send a chat completion prompt and return the raw text response.

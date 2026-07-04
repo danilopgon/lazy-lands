@@ -1,7 +1,10 @@
 """FastAPI application entry point — middleware, error handlers, and router wiring."""
 
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.modules.campaigns import routes as campaigns
 from app.modules.campaigns.errors import (
@@ -16,6 +19,8 @@ from app.shared.errors import (
     llm_output_validation_error_handler,
 )
 from app.shared.llm.errors import LlmOutputValidationError
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="lazy-lands-api")
 
@@ -38,5 +43,19 @@ app.add_exception_handler(
     CampaignPersistenceError,
     campaign_persistence_error_handler,  # type: ignore[arg-type]
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(
+    _request: Request, exc: Exception
+) -> JSONResponse:
+    """Catch-all handler that logs the traceback so silent 500s never happen again."""
+    logger.exception("Unhandled exception in request: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal server error — check server logs for details."},
+    )
+
+
 app.include_router(health.router)
 app.include_router(campaigns.router)
