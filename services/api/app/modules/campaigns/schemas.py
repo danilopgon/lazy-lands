@@ -4,40 +4,59 @@
 target and the ``/campaigns/extract`` response model (design Decision 4).
 """
 
-from pydantic import BaseModel, Field
+from typing import Any
 
-from app.modules.campaigns.domain.models import ContentSource, Priority
+from pydantic import BaseModel, Field, model_validator
+
+from app.modules.campaigns.domain import ContentSource, Priority
 
 
-class ExtractedNPC(BaseModel):
+class ScribeExtractedModel(BaseModel):
+    """Base for LLM-extracted entities whose provenance is always the Scribe.
+
+    Extraction output is not DM-authored yet. If an LLM hallucinates
+    ``content_source: manual`` or ``edited``, normalize it before validation so
+    the UI cannot mistake Scribe text for DM-authored text.
+    """
+
+    @model_validator(mode="before")
+    @classmethod
+    def force_scribe_provenance(cls, data: Any) -> Any:
+        """Overwrite extracted entity provenance before field validation."""
+        if isinstance(data, dict):
+            return {**data, "content_source": ContentSource.llm}
+        return data
+
+
+class ExtractedNPC(ScribeExtractedModel):
     """An NPC proposed by the Scribe during extraction."""
 
-    name: str
-    description: str
-    current_state: str
-    motivation: str
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=4000)
+    current_state: str = Field(min_length=1, max_length=1000)
+    motivation: str = Field(min_length=1, max_length=1000)
     content_source: ContentSource = ContentSource.llm
 
 
-class ExtractedFaction(BaseModel):
+class ExtractedFaction(ScribeExtractedModel):
     """A faction proposed by the Scribe during extraction."""
 
-    name: str
-    description: str
-    current_stance: str
-    goals: str
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=4000)
+    current_stance: str = Field(min_length=1, max_length=1000)
+    goals: str = Field(min_length=1, max_length=1000)
     content_source: ContentSource = ContentSource.llm
 
 
-class ExtractedArc(BaseModel):
+class ExtractedArc(ScribeExtractedModel):
     """An arc proposed by the Scribe during extraction.
 
     No ``status`` field — arc status is assigned on persistence, never
     proposed by the LLM (see ``campaign-persistence`` spec, CP-003).
     """
 
-    title: str
-    description: str
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=4000)
     priority: Priority = Priority.medium
     content_source: ContentSource = ContentSource.llm
 
@@ -45,9 +64,9 @@ class ExtractedArc(BaseModel):
 class ExtractCampaignOutput(BaseModel):
     """LLM extraction target AND ``POST /campaigns/extract`` response body."""
 
-    title: str
-    description: str
-    world_state: str
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=4000)
+    world_state: str = Field(min_length=1, max_length=4000)
     npcs: list[ExtractedNPC] = Field(default_factory=list)
     factions: list[ExtractedFaction] = Field(default_factory=list)
     arcs: list[ExtractedArc] = Field(default_factory=list)
@@ -62,20 +81,20 @@ class ExtractRequest(BaseModel):
 class CreateNpcRequest(BaseModel):
     """An NPC in a reviewed ``POST /campaigns`` payload."""
 
-    name: str
-    description: str
-    current_state: str
-    motivation: str
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=4000)
+    current_state: str = Field(min_length=1, max_length=1000)
+    motivation: str = Field(min_length=1, max_length=1000)
     content_source: ContentSource
 
 
 class CreateFactionRequest(BaseModel):
     """A faction in a reviewed ``POST /campaigns`` payload."""
 
-    name: str
-    description: str
-    current_stance: str
-    goals: str
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=4000)
+    current_stance: str = Field(min_length=1, max_length=1000)
+    goals: str = Field(min_length=1, max_length=1000)
     content_source: ContentSource
 
 
@@ -86,8 +105,8 @@ class CreateArcRequest(BaseModel):
     assigned by the persistence layer (``"open"``).
     """
 
-    title: str
-    description: str
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=4000)
     priority: Priority = Priority.medium
     content_source: ContentSource
 
@@ -95,9 +114,9 @@ class CreateArcRequest(BaseModel):
 class CreateCampaignRequest(BaseModel):
     """``POST /campaigns`` request body — the DM-reviewed payload."""
 
-    title: str = Field(min_length=1)
-    description: str = Field(min_length=1)
-    world_state: str = Field(min_length=1)
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=4000)
+    world_state: str = Field(min_length=1, max_length=4000)
     npcs: list[CreateNpcRequest] = Field(default_factory=list)
     factions: list[CreateFactionRequest] = Field(default_factory=list)
     arcs: list[CreateArcRequest] = Field(default_factory=list)

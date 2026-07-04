@@ -10,14 +10,6 @@ from app.modules.campaigns.schemas import (
 )
 
 
-class RepositoryError(Exception):
-    """Raised by any ``CampaignRepository`` implementation on a write failure.
-
-    Living in the domain layer (not infrastructure) lets the application
-    layer catch it without depending on the concrete Supabase adapter.
-    """
-
-
 class CampaignRepository(Protocol):
     """Ordered-insert persistence contract for campaigns and their children.
 

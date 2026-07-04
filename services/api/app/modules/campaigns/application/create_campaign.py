@@ -7,8 +7,9 @@ delete the just-created campaign (cascade removes any inserted children).
 
 import logging
 
-from app.modules.campaigns.domain.ports import CampaignRepository, RepositoryError
+from app.modules.campaigns.domain.ports import CampaignRepository
 from app.modules.campaigns.errors import CampaignPersistenceError
+from app.modules.campaigns.infrastructure.errors import RepositoryError
 from app.modules.campaigns.schemas import CreateCampaignRequest
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,11 @@ class CreateCampaign:
                 compensating delete also fails, ``orphaned_campaign_id`` is
                 set on the error and the failure is logged.
         """
-        campaign_id = self._repository.insert_campaign(user_id, data)
+        try:
+            campaign_id = self._repository.insert_campaign(user_id, data)
+        except RepositoryError as exc:
+            raise CampaignPersistenceError(retryable=True) from exc
+
         try:
             self._repository.insert_npcs(campaign_id, data.npcs)
             self._repository.insert_factions(campaign_id, data.factions)

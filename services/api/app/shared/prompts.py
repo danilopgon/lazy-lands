@@ -31,6 +31,19 @@ _env = Environment(
 )
 
 
+def _template_matches(template_name: str) -> list[Path]:
+    """Find prompt files matching a bare template name across loader roots."""
+    loader = _env.loader
+    if not isinstance(loader, FileSystemLoader):
+        return []
+
+    return [
+        candidate
+        for search_path in loader.searchpath
+        if (candidate := Path(search_path) / template_name).is_file()
+    ]
+
+
 def render_prompt(template_name: str, /, **context: object) -> str:
     """Render a module prompt template by bare filename.
 
@@ -43,4 +56,12 @@ def render_prompt(template_name: str, /, **context: object) -> str:
     Returns:
         The rendered prompt string.
     """
+    if "/" in template_name or "\\" in template_name:
+        raise ValueError("Prompt templates must be addressed by bare filename")
+
+    matches = _template_matches(template_name)
+
+    if len(matches) > 1:
+        raise ValueError(f"Prompt template name is ambiguous: {template_name}")
+
     return _env.get_template(template_name).render(**context)

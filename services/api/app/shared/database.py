@@ -40,9 +40,14 @@ def create_user_supabase_client(access_token: str) -> Client:
     singleton — that pattern is forbidden here because this client carries
     a request-scoped credential (PU-001, NFR-PU-1).
     """
+    if not settings.supabase_publishable_key:
+        raise RuntimeError(
+            "SUPABASE_PUBLISHABLE_KEY is required to create a per-user Supabase client"
+        )
+
     client = create_client(
         str(settings.supabase_url).rstrip("/"),
-        settings.supabase_publishable_key or "",
+        settings.supabase_publishable_key,
     )
     client.postgrest.auth(access_token)
     return client

@@ -59,6 +59,48 @@ async def test_happy_path_returns_validated_output_including_arcs() -> None:
 
 
 @pytest.mark.asyncio
+async def test_llm_supplied_manual_or_edited_provenance_is_forced_to_llm() -> None:
+    provider = FakeLlmProvider()
+    payload = {
+        **VALID_PAYLOAD,
+        "npcs": [
+            {
+                "name": "Captain Vess",
+                "description": "A grizzled smuggler captain.",
+                "current_state": "Hiding in the harbor district.",
+                "motivation": "Wants to find the crown before anyone else.",
+                "content_source": "manual",
+            }
+        ],
+        "factions": [
+            {
+                "name": "The Tidebound Circle",
+                "description": "A cult devoted to the drowned king.",
+                "current_stance": "Actively searching for relics.",
+                "goals": "Resurrect the drowned king.",
+                "content_source": "edited",
+            }
+        ],
+        "arcs": [
+            {
+                "title": "Race for the Crown",
+                "description": "The party races rivals to the sunken ruins.",
+                "priority": "high",
+                "content_source": "manual",
+            }
+        ],
+    }
+    provider.register(ExtractCampaignOutput, payload)
+    use_case = ExtractCampaign(llm_provider=provider)
+
+    result = await use_case.execute("A premise long enough to pass validation " * 3)
+
+    assert result.npcs[0].content_source == "llm"
+    assert result.factions[0].content_source == "llm"
+    assert result.arcs[0].content_source == "llm"
+
+
+@pytest.mark.asyncio
 async def test_invalid_llm_output_raises_llm_output_validation_error() -> None:
     provider = FakeLlmProvider()
     # Missing required "title" field.

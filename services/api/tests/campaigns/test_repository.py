@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.modules.campaigns.domain.ports import RepositoryError
+from app.modules.campaigns.infrastructure.errors import RepositoryError
 from app.modules.campaigns.infrastructure.repository import SupabaseCampaignRepository
 from app.modules.campaigns.schemas import (
     CreateArcRequest,

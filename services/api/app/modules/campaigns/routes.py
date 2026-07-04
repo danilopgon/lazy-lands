@@ -3,6 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from starlette.concurrency import run_in_threadpool
 from supabase import Client
 
 from app.modules.campaigns.application.create_campaign import CreateCampaign
@@ -54,5 +55,5 @@ async def create_campaign(
     """
     repository = SupabaseCampaignRepository(client)
     use_case = CreateCampaign(repository)
-    campaign_id = use_case.execute(ctx.user_id, payload)
+    campaign_id = await run_in_threadpool(use_case.execute, ctx.user_id, payload)
     return CreateCampaignResponse(id=campaign_id)

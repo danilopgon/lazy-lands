@@ -10,7 +10,7 @@ from typing import Any
 from supabase import Client
 
 from app.modules.campaigns.domain.models import ArcStatus
-from app.modules.campaigns.domain.ports import RepositoryError
+from app.modules.campaigns.infrastructure.errors import RepositoryError
 from app.modules.campaigns.schemas import (
     CreateArcRequest,
     CreateCampaignRequest,
