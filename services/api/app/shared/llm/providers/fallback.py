@@ -17,6 +17,7 @@ from typing import Any, TypeVar
 import httpx
 from pydantic import BaseModel
 
+from app.shared.llm.errors import LlmOutputValidationError
 from app.shared.llm.port import LlmProvider
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,9 @@ def _is_transient(exc: Exception) -> bool:
     * json.JSONDecodeError — HTTP 200 with a malformed or truncated JSON body
       (the upstream responded successfully but the payload was unparseable;
       another provider may return valid JSON).
+    * LlmOutputValidationError (retryable) — the ``complete_json`` path wraps
+      unparseable / schema-invalid JSON in this error; when it is retryable the
+      next provider may still return a valid payload.
     """
     if isinstance(exc, httpx.HTTPStatusError):
         return exc.response.status_code in _TRANSIENT_STATUSES
@@ -74,6 +78,8 @@ def _is_transient(exc: Exception) -> bool:
         return True
     if isinstance(exc, json.JSONDecodeError):
         return True
+    if isinstance(exc, LlmOutputValidationError):
+        return exc.retryable
     return False
 
 
@@ -163,6 +169,7 @@ class FallbackLlmProvider:
         """
         now = time.monotonic()
         errors: list[Exception] = []
+        attempted = 0
 
         for i, provider in enumerate(self._providers):
             if now < self._unhealthy_until[i]:
@@ -173,6 +180,7 @@ class FallbackLlmProvider:
                 )
                 continue
 
+            attempted += 1
             try:
                 result = await operation(provider)
             except Exception as exc:
@@ -203,5 +211,22 @@ class FallbackLlmProvider:
                     len(errors),
                 )
             return result
+
+        if attempted == 0:
+            # Every provider is still inside its cooldown window, so the loop
+            # never ran an attempt and `errors` is empty. Surface that state
+            # explicitly instead of a misleading "All 0 provider(s) exhausted".
+            cooldowns = ", ".join(
+                f"{self._names[i]}={max(0, int(self._unhealthy_until[i] - now))}s"
+                for i in range(len(self._providers))
+            )
+            raise AllProvidersExhaustedError(
+                [
+                    RuntimeError(
+                        f"All {len(self._providers)} provider(s) are in cooldown; "
+                        f"no attempt was made (remaining: {cooldowns})."
+                    )
+                ]
+            )
 
         raise AllProvidersExhaustedError(errors)
