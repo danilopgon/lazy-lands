@@ -103,9 +103,7 @@ class FallbackLlmProvider:
                 a transient error is excluded from future attempts.
         """
         if not providers:
-            raise ValueError(
-                "FallbackLlmProvider requires at least one provider"
-            )
+            raise ValueError("FallbackLlmProvider requires at least one provider")
         self._providers = providers
         self._cooldown = cooldown_seconds
         # Monotonic timestamps when each provider's cooldown expires.
@@ -127,9 +125,7 @@ class FallbackLlmProvider:
             "complete_text",
         )
 
-    async def complete_json[T: BaseModel](
-        self, prompt: str, schema: type[T]
-    ) -> T:
+    async def complete_json[T: BaseModel](self, prompt: str, schema: type[T]) -> T:
         """Return a typed completion, trying each healthy provider in order."""
         return await self._try_all(
             lambda p: p.complete_json(prompt, schema),

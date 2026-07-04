@@ -59,9 +59,7 @@ def test_008e_base_urls_are_openai_compatible() -> None:
     for name, entry in PROVIDERS.items():
         url = entry["base_url"]
         assert (
-            url.endswith("/v1")
-            or url.endswith("/openai/")
-            or url.endswith("/v1/")
+            url.endswith("/v1") or url.endswith("/openai/") or url.endswith("/v1/")
         ), (
             f"Provider '{name}' base_url '{url}' "
             f"does not end with /v1, /openai/, or /v1/"
