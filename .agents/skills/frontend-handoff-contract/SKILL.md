@@ -85,27 +85,35 @@ After implementation, perform this review. Do NOT skip. Do NOT abbreviate.
    - Respect `prefers-reduced-motion: reduce`?
    - `data-motion="subtle"`: drop decorative entrances, keep action feedback?
    - `data-motion="off"`: remove all animations and transitions?
-6. **Generate a compliance report:**
+6. **Generate a compliance report.** States are the most commonly-missed
+   category — you MUST enumerate every handoff state on its own line, never
+   collapse them into a single "states: X/Z" score. A state that exists in the
+   handoff but not the implementation (or is implemented with a weaker pattern —
+   e.g. a disabled button instead of a full loading takeover) is a FAIL, not a
+   rounding error.
    ```
    ## Handoff Compliance Report
    - Structure: X/Y elements match
-   - Copy: X/Y strings exact
-   - States: X/Z implemented
+   - Copy: X/Y strings exact (list any paraphrased/generic vs handoff voice)
+   - States (one row PER handoff state — loading, error, empty, success, …):
+     - loading: handoff = <what it shows> | impl = <what it shows> | MATCH/GAP
+     - error:   handoff = <…>            | impl = <…>            | MATCH/GAP
+     - empty:   handoff = <…>            | impl = <…>            | MATCH/GAP
    - Design tokens: X violations found
    - Motion: X/Y animations implemented (list missing)
-   - VERDICT: PASS (>=90% match) / FAIL (<90% match)
+   - VERDICT: PASS (>=90% match AND every state MATCH) / FAIL
    ```
 7. **If FAIL:** fix every gap before reporting completion. Do not report a failing implementation.
 
 ## Decision Gates
 
-| Situation                          | Action                                                                       |
-| ---------------------------------- | ---------------------------------------------------------------------------- |
-| Handoff file not found for route   | Stop. Ask user which handoff file to use.                                    |
-| Spec contradicts handoff           | Flag both. Ask user which wins. Do not silently pick one.                    |
-| Shared component missing           | Build it as reusable component before the page.                              |
-| Self-review finds >2 CRITICAL gaps | Fix all before reporting. Report the fixes made.                             |
-| Unsure about a design detail       | Check `DESIGN.md` first, then `handoff/app/chronicle.css` for the exact CSS. |
+| Situation                          | Action                                                                                                                                                                                                                                                                                          |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Handoff file not found for route   | Stop. Ask user which handoff file to use.                                                                                                                                                                                                                                                       |
+| Spec/tests contradict handoff      | HARD STOP. Surface both to the user and ask which wins. NEVER self-resolve in favor of the spec or of already-passing tests — passing tests that encode a non-handoff behavior are evidence of the gap, not authority over it. Existing green tests do not exempt a screen from handoff review. |
+| Shared component missing           | Build it as reusable component before the page.                                                                                                                                                                                                                                                 |
+| Self-review finds >2 CRITICAL gaps | Fix all before reporting. Report the fixes made.                                                                                                                                                                                                                                                |
+| Unsure about a design detail       | Check `DESIGN.md` first, then `handoff/app/chronicle.css` for the exact CSS.                                                                                                                                                                                                                    |
 
 ## Output Contract
 
