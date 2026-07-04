@@ -28,11 +28,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 2.57.4
 
       - name: Link hosted project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
