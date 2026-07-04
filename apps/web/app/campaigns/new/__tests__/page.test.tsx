@@ -143,6 +143,26 @@ describe('NewCampaignPage (CUI-001)', () => {
     expect(textarea).toHaveValue(tooLong)
   })
 
+  it('blocks submission when the composed payload would exceed the backend limit', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await fillRequiredMeta(user)
+    const textarea = screen.getByLabelText(/premise/i)
+    await user.click(textarea)
+    await user.paste('a'.repeat(7000)) // valid on its own
+    // Extra fields are folded into the same raw_text payload; together they
+    // push the composed string past the backend's 8000-char bound.
+    await user.click(screen.getByLabelText(/additional details/i))
+    await user.paste('b'.repeat(2000))
+    await user.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/trim them under 8000/i)).toBeInTheDocument()
+    })
+    expect(mockExtractCampaign).not.toHaveBeenCalled()
+  })
+
   it('valid premise calls extractCampaign and navigates to review on success', async () => {
     const user = userEvent.setup()
     const payload = {

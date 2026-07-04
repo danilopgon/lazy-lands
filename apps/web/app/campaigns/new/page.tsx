@@ -22,15 +22,16 @@ import {
   extractRequestSchema,
 } from '@/lib/campaigns/schemas'
 
-const campaignFormSchema = extractRequestSchema.extend({
-  name: z.string().trim().min(1, 'Give your campaign a name.'),
-  system: z.string().trim().min(1, "Name the game system you're running."),
-  tone: z.string().optional(),
-  additional_details: z.string().optional(),
-})
-type CampaignFormValues = z.infer<typeof campaignFormSchema>
+/** The fields `composeRawText` folds into the single `raw_text` payload. */
+type ComposableCampaign = {
+  name: string
+  system: string
+  tone?: string
+  raw_text: string
+  additional_details?: string
+}
 
-function composeRawText(data: CampaignFormValues): string {
+function composeRawText(data: ComposableCampaign): string {
   return [
     data.name.trim() ? `Campaign name: ${data.name}` : null,
     data.system.trim() ? `Game system: ${data.system}` : null,
@@ -43,6 +44,28 @@ function composeRawText(data: CampaignFormValues): string {
     .filter(Boolean)
     .join('\n\n')
 }
+
+const campaignFormSchema = extractRequestSchema
+  .extend({
+    name: z.string().trim().min(1, 'Give your campaign a name.'),
+    system: z.string().trim().min(1, "Name the game system you're running."),
+    tone: z.string().optional(),
+    additional_details: z.string().optional(),
+  })
+  // The composed payload — not raw_text alone — is what the backend receives
+  // and bounds at MAX_CAMPAIGN_PREMISE_LENGTH. Validate the total so a long
+  // name/tone/details field can't slip past the per-field checks.
+  .superRefine((data, ctx) => {
+    const composedLength = composeRawText(data).length
+    if (composedLength > MAX_CAMPAIGN_PREMISE_LENGTH) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['raw_text'],
+        message: `Your notes total ${composedLength} characters — trim them under ${MAX_CAMPAIGN_PREMISE_LENGTH} so the Scribe can hold them.`,
+      })
+    }
+  })
+type CampaignFormValues = z.infer<typeof campaignFormSchema>
 
 /**
  * `/campaigns/new` — the DM's free-text premise form (CUI-001).
