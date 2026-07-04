@@ -9,6 +9,7 @@ import type { ContentSource } from '@/lib/campaigns/schemas'
 
 /** Common shape shared by NPC/faction/arc review items. */
 export type ReviewItem = Record<string, string> & {
+  reviewId: string
   content_source: ContentSource
 }
 
@@ -97,14 +98,23 @@ export function EntitySection<T extends ReviewItem>({
    */
   function removeItem(index: number) {
     onChange(items.filter((_, i) => i !== index))
+    if (editingIndex === index) {
+      setEditingIndex(null)
+      setEditDraft({})
+    }
   }
 
   /** Append the drafted new item, marked as DM-authored. */
   function addItem() {
     if (!draft[primaryField.key]) return
+    const reviewId =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `${testId}-${Date.now()}`
     const newItem = {
       ...extraDefaults,
       ...draft,
+      reviewId,
       content_source: 'manual',
     } as unknown as T
     onChange([...items, newItem])
@@ -114,7 +124,7 @@ export function EntitySection<T extends ReviewItem>({
 
   return (
     <section className="mt-8" data-testid={`${testId}-section`}>
-      <div className="flex items-center justify-between border-b-2 border-[var(--border)] pb-2">
+      <div className="flex items-center justify-between pb-2">
         <h3 className="font-serif text-xl font-semibold text-[var(--ink)]">
           {title}{' '}
           <span className="text-sm text-[var(--ink-3)]">· {items.length}</span>
@@ -132,118 +142,121 @@ export function EntitySection<T extends ReviewItem>({
         </Button>
       </div>
 
-      {items.length === 0 && !adding && (
-        <p className="mt-3 text-sm text-[var(--ink-3)]">
-          Nothing here yet. Add a {singular} manually if the Scribe missed one.
-        </p>
-      )}
+      <div className="border-2 border-[var(--border)] bg-[var(--paper)] px-4 shadow-[6px_6px_0_var(--shadow)]">
+        {items.length === 0 && !adding && (
+          <p className="py-3 text-sm text-[var(--ink-3)]">
+            Nothing here yet. Add a {singular} manually if the Scribe missed
+            one.
+          </p>
+        )}
 
-      <ul className="mt-2 space-y-2">
-        {items.map((item, index) => (
-          <li
-            key={index}
-            data-testid={`${testId}-item`}
-            className="border-b border-dotted border-[var(--border)] py-3"
-          >
-            {editingIndex === index ? (
+        <ul className="divide-y divide-dotted divide-[var(--border)]">
+          {items.map((item, index) => (
+            <li
+              key={item.reviewId}
+              data-testid={`${testId}-item`}
+              className="py-3"
+            >
+              {editingIndex === index ? (
+                <div className="space-y-2">
+                  {fields.map((field) => (
+                    <Input
+                      key={field.key}
+                      placeholder={field.label}
+                      value={(editDraft[field.key] as string) ?? ''}
+                      onChange={(e) =>
+                        setEditDraft({
+                          ...editDraft,
+                          [field.key]: e.target.value,
+                        })
+                      }
+                    />
+                  ))}
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => saveEdit(index)}
+                    >
+                      Save changes
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingIndex(null)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-serif text-base text-[var(--ink)]">
+                      {item[primaryField.key]}
+                    </div>
+                    {fields[1] && (
+                      <div className="truncate text-sm text-[var(--ink-2)]">
+                        {item[fields[1].key]}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <OriginBadge origin={toBadgeOrigin(item.content_source)} />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => startEdit(index)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeItem(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+
+          {adding && (
+            <li className="border-t border-dotted border-[var(--border)] py-3">
               <div className="space-y-2">
                 {fields.map((field) => (
                   <Input
                     key={field.key}
-                    placeholder={field.label}
-                    value={(editDraft[field.key] as string) ?? ''}
+                    placeholder={field.placeholder}
+                    value={(draft[field.key] as string) ?? ''}
                     onChange={(e) =>
-                      setEditDraft({
-                        ...editDraft,
-                        [field.key]: e.target.value,
-                      })
+                      setDraft({ ...draft, [field.key]: e.target.value })
                     }
                   />
                 ))}
                 <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => saveEdit(index)}
-                  >
-                    Save changes
+                  <Button type="button" size="sm" onClick={addItem}>
+                    Add
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => setEditingIndex(null)}
+                    onClick={() => setAdding(false)}
                   >
                     Cancel
                   </Button>
                 </div>
               </div>
-            ) : (
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="font-serif text-base text-[var(--ink)]">
-                    {item[primaryField.key]}
-                  </div>
-                  {fields[1] && (
-                    <div className="truncate text-sm text-[var(--ink-2)]">
-                      {item[fields[1].key]}
-                    </div>
-                  )}
-                </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  <OriginBadge origin={toBadgeOrigin(item.content_source)} />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => startEdit(index)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeItem(index)}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              </div>
-            )}
-          </li>
-        ))}
-
-        {adding && (
-          <li className="border-t border-dotted border-[var(--border)] py-3">
-            <div className="space-y-2">
-              {fields.map((field) => (
-                <Input
-                  key={field.key}
-                  placeholder={field.placeholder}
-                  value={(draft[field.key] as string) ?? ''}
-                  onChange={(e) =>
-                    setDraft({ ...draft, [field.key]: e.target.value })
-                  }
-                />
-              ))}
-              <div className="flex gap-2">
-                <Button type="button" size="sm" onClick={addItem}>
-                  Add
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setAdding(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </li>
-        )}
-      </ul>
+            </li>
+          )}
+        </ul>
+      </div>
     </section>
   )
 }

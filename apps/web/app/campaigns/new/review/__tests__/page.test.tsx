@@ -87,10 +87,13 @@ describe('ReviewCampaignPage (CUI-002)', () => {
     vi.resetModules()
   })
 
-  it('renders title, description, world_state, npcs, factions, and arcs from local state', () => {
+  it('renders title, description, world_state, npcs, factions, and arcs from local state', async () => {
     renderPage()
 
-    expect(screen.getByText('Shadows over Phandalin')).toBeInTheDocument()
+    // Prose blocks render read-only (EditableProse) until the DM clicks Edit.
+    expect(
+      await screen.findByText('Shadows over Phandalin')
+    ).toBeInTheDocument()
     expect(
       screen.getByText('A frontier town beset by goblins')
     ).toBeInTheDocument()
@@ -100,6 +103,16 @@ describe('ReviewCampaignPage (CUI-002)', () => {
     expect(screen.getByText('Elandra')).toBeInTheDocument()
     expect(screen.getByText('Redbrands')).toBeInTheDocument()
     expect(screen.getByText('The Sundered Crown')).toBeInTheDocument()
+  })
+
+  it('redirects to campaign creation when no extraction draft exists', async () => {
+    mockReadExtractionDraft.mockReturnValue(null)
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/campaigns/new')
+    })
   })
 
   it('shows the Scribe badge for llm-sourced items', () => {
@@ -214,6 +227,49 @@ describe('ReviewCampaignPage (CUI-002)', () => {
     })
   })
 
+  it('submits edited campaign title and description', async () => {
+    const user = userEvent.setup()
+    mockCreateCampaign.mockResolvedValue({ id: 'campaign-123' })
+    renderPage()
+
+    const titleSection = screen.getByTestId('prose-title')
+    await user.click(
+      within(titleSection).getByRole('button', { name: /edit/i })
+    )
+    await user.clear(within(titleSection).getByLabelText(/campaign title/i))
+    await user.type(
+      within(titleSection).getByLabelText(/campaign title/i),
+      'Ashes of Neverwinter'
+    )
+    await user.click(
+      within(titleSection).getByRole('button', { name: /save changes/i })
+    )
+
+    const descSection = screen.getByTestId('prose-description')
+    await user.click(within(descSection).getByRole('button', { name: /edit/i }))
+    await user.clear(
+      within(descSection).getByLabelText(/campaign description/i)
+    )
+    await user.type(
+      within(descSection).getByLabelText(/campaign description/i),
+      'A city rebuilds while old powers stir beneath it'
+    )
+    await user.click(
+      within(descSection).getByRole('button', { name: /save changes/i })
+    )
+
+    await user.click(screen.getByRole('button', { name: /confirm/i }))
+
+    await waitFor(() => {
+      expect(mockCreateCampaign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Ashes of Neverwinter',
+          description: 'A city rebuilds while old powers stir beneath it',
+        })
+      )
+    })
+  })
+
   it('a successful save redirects to the campaign detail route', async () => {
     const user = userEvent.setup()
     mockCreateCampaign.mockResolvedValue({ id: 'campaign-123' })
@@ -250,5 +306,51 @@ describe('ReviewCampaignPage (CUI-002)', () => {
     // The removal must still be reflected — nothing resets on failure.
     expect(screen.queryByText('Elandra')).not.toBeInTheDocument()
     expect(mockPush).not.toHaveBeenCalled()
+  })
+
+  it('shows the Scribe quill takeover while the campaign is being created', async () => {
+    const user = userEvent.setup()
+    let resolveCreate: (value: unknown) => void
+    mockCreateCampaign.mockReturnValue(
+      new Promise((resolve) => {
+        resolveCreate = resolve
+      })
+    )
+    renderPage()
+
+    await screen.findByText('Elandra')
+    await user.click(screen.getByRole('button', { name: /confirm/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/binding your chronicle/i)).toBeInTheDocument()
+    })
+    // The review form is gone while the Scribe binds the chronicle.
+    expect(screen.queryByText('Elandra')).not.toBeInTheDocument()
+
+    resolveCreate!({ id: 'campaign-xyz' })
+  })
+
+  it('editing a Scribe-drafted prose block flips its badge to Edited', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    const titleSection = screen.getByTestId('prose-title')
+    expect(within(titleSection).getByText(/scribe/i)).toBeInTheDocument()
+
+    await user.click(
+      within(titleSection).getByRole('button', { name: /edit/i })
+    )
+    await user.clear(within(titleSection).getByLabelText(/campaign title/i))
+    await user.type(
+      within(titleSection).getByLabelText(/campaign title/i),
+      'Ashes of Neverwinter'
+    )
+    await user.click(
+      within(titleSection).getByRole('button', { name: /save changes/i })
+    )
+
+    await waitFor(() => {
+      expect(within(titleSection).getByText(/edited/i)).toBeInTheDocument()
+    })
   })
 })
