@@ -7,6 +7,10 @@ name: Deploy Supabase migrations
 # the loop before any hosted schema change is applied.
 
 on:
+  # Manual trigger so a maintainer can deploy pending migrations on demand
+  # (e.g. when the migration files already landed on main via a merged PR and
+  # no further migration change will re-fire the push trigger).
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
