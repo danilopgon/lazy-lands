@@ -67,9 +67,9 @@ class ExtractCampaignOutput(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=1, max_length=4000)
     world_state: str = Field(min_length=1, max_length=4000)
-    npcs: list[ExtractedNPC] = Field(default_factory=list)
-    factions: list[ExtractedFaction] = Field(default_factory=list)
-    arcs: list[ExtractedArc] = Field(default_factory=list)
+    npcs: list[ExtractedNPC] = Field(default_factory=list, max_length=100)
+    factions: list[ExtractedFaction] = Field(default_factory=list, max_length=100)
+    arcs: list[ExtractedArc] = Field(default_factory=list, max_length=100)
 
 
 class ExtractRequest(BaseModel):
@@ -117,9 +117,9 @@ class CreateCampaignRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=1, max_length=4000)
     world_state: str = Field(min_length=1, max_length=4000)
-    npcs: list[CreateNpcRequest] = Field(default_factory=list)
-    factions: list[CreateFactionRequest] = Field(default_factory=list)
-    arcs: list[CreateArcRequest] = Field(default_factory=list)
+    npcs: list[CreateNpcRequest] = Field(default_factory=list, max_length=100)
+    factions: list[CreateFactionRequest] = Field(default_factory=list, max_length=100)
+    arcs: list[CreateArcRequest] = Field(default_factory=list, max_length=100)
 
 
 class CreateCampaignResponse(BaseModel):
