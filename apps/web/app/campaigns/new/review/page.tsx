@@ -1,6 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import Link from 'next/link'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
@@ -324,16 +330,46 @@ function ReviewCampaignClient({
 }
 
 /** `/campaigns/new/review` — mounted shell that avoids sessionStorage prerender access. */
+/**
+ * Read the sessionStorage draft through `useSyncExternalStore` so the server
+ * (and the first client/hydration render) see `undefined` while the browser
+ * reads the real value on the next render — no sessionStorage access during
+ * render, no hydration mismatch, and no setState inside an effect. The snapshot
+ * is cached per instance so its reference stays stable across renders.
+ *
+ * @returns {ReviewDraftState | null | undefined} `undefined` before the draft
+ *   is resolved, then the stored draft or `null` when none exists.
+ */
+function useStoredDraft(): ReviewDraftState | null | undefined {
+  const cache = useRef<{ loaded: boolean; value: ReviewDraftState | null }>({
+    loaded: false,
+    value: null,
+  })
+
+  const getSnapshot = useCallback((): ReviewDraftState | null => {
+    if (!cache.current.loaded) {
+      cache.current.value = loadInitialDraft()
+      cache.current.loaded = true
+    }
+    return cache.current.value
+  }, [])
+
+  const getServerSnapshot = useCallback((): undefined => undefined, [])
+  const subscribe = useCallback(() => () => {}, [])
+
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+}
+
 export default function ReviewCampaignPage() {
   const router = useRouter()
-  const [initialDraft] = useState(loadInitialDraft)
+  const initialDraft = useStoredDraft()
 
   // Redirect from an effect, never during render: calling router.push() while
   // rendering runs the App Router's history code, which touches the bare
   // `location` global and throws `ReferenceError: location is not defined`
   // during static prerendering (Node has no `location`).
   useEffect(() => {
-    if (!initialDraft) {
+    if (initialDraft === null) {
       router.push('/campaigns/new')
     }
   }, [initialDraft, router])
