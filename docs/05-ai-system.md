@@ -46,17 +46,26 @@ class LlmProvider(Protocol):
 
 ## Prompt templates
 
-Prompt templates should be versioned.
+Prompt templates are versioned Jinja files. This document is the **prompt catalog**: it
+describes each prompt's purpose, inputs, output and validation schema (the contract). The
+executable template bodies live **per module**, next to the code that owns them, per ADR-05
+(modular monolith / nested layers). Do not centralize prompt bodies in a shared directory —
+each prompt belongs to its owning module.
 
-Suggested templates:
+Location convention: `services/api/app/modules/<module>/prompts/<name>_v<N>.jinja`
 
 ```text
-prompts/templates/
-  extract_campaign_v1.jinja
-  summarize_campaign_v1.jinja
-  suggest_memory_facts_v1.jinja
-  generate_session_v1.jinja
+services/api/app/modules/
+  campaigns/prompts/extract_campaign_v1.jinja
+  sessions/prompts/summarize_campaign_v1.jinja
+  sessions/prompts/suggest_memory_facts_v1.jinja
+  sessions/prompts/generate_session_v1.jinja
 ```
+
+Bump the `_vN` suffix for any prompt change that affects output shape or behavior, and record
+the active version in trace metadata (`prompt_version`). Block 5 introduces the first template
+(`campaigns/prompts/extract_campaign_v1.jinja`) and a minimal shared Jinja render helper in
+`services/api/app/shared/` that later modules reuse.
 
 ## Prompt: extract campaign
 

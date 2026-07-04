@@ -1,8 +1,9 @@
 """Provider registry and build_provider factory.
 
-Resolves the active LLM provider from the LLM_PROVIDER environment variable
-(already declared in config.py::Settings.llm_provider). Returns a configured
-OpenAiCompatibleProvider for real providers, or FakeLlmProvider for tests/dev.
+Resolves the active LLM provider from the LLM_PROVIDER environment variable.
+Returns a configured OpenAiCompatibleProvider for real providers,
+a FallbackLlmProvider when LLM_FALLBACKS is set, or FakeLlmProvider for
+tests/dev.
 """
 
 import logging

@@ -101,6 +101,9 @@ EXPECTED_COLUMN_TYPES: dict[str, dict[str, str]] = {
         "created_at": "timestamp with time zone",
         "updated_at": "timestamp with time zone",
     },
+    # NOTE: "arcs" also has an enum-typed "content_source" column (added by the
+    # block-5 migration), listed in EXPECTED_ENUM_COLUMNS below, not here — enum
+    # columns are verified separately (data_type == "USER-DEFINED").
 }
 
 # Enum-typed columns: (table, column) -> enum type name (udt_name in pg_catalog).
@@ -110,6 +113,7 @@ EXPECTED_ENUM_COLUMNS: dict[tuple[str, str], str] = {
     ("factions", "content_source"): "content_source",
     ("arcs", "status"): "arc_status",
     ("arcs", "priority"): "priority",
+    ("arcs", "content_source"): "content_source",
     ("memory_facts", "importance"): "importance",
     ("memory_facts", "status"): "memory_status",
 }

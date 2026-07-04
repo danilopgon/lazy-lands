@@ -1,10 +1,10 @@
 """Supabase ES256 JWT validation via JWKS singleton — FastAPI auth dependency."""
 
 import json
-from typing import Annotated
+from typing import Annotated, NamedTuple
 
 import jwt
-from fastapi import Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 
 from app.shared.config import settings
 
@@ -43,16 +43,29 @@ def _unauthorized() -> HTTPException:
     )
 
 
-async def get_current_user(
+class AuthContext(NamedTuple):
+    """Validated auth data derived from a single JWT decode.
+
+    Carrying both the user id and the raw access token lets a single
+    validation pass serve both id-only callers (``get_current_user``) and
+    callers that also need the raw bearer token to construct a per-user
+    Supabase client (``get_user_supabase_client``).
+    """
+
+    user_id: str
+    access_token: str
+
+
+async def get_auth_context(
     authorization: Annotated[str | None, Header()] = None,
-) -> str:
+) -> AuthContext:
     """FastAPI dependency — validates a Supabase ES256 JWT.
 
     Extracts the Bearer token from the Authorization header, resolves the
     signing key via the JWKS endpoint singleton, and decodes with strict
     audience + issuer checks.  Every failure path raises HTTP 401 with a
-    WWW-Authenticate: Bearer header.  Returns the ``sub`` claim as a str
-    (the Supabase user UUID) for downstream handlers.
+    WWW-Authenticate: Bearer header.  Returns both the ``sub`` claim (the
+    Supabase user UUID) and the raw access token for downstream handlers.
     """
     if not authorization or not authorization.startswith("Bearer "):
         raise _unauthorized()
@@ -85,4 +98,11 @@ async def get_current_user(
     if not sub or not isinstance(sub, str):
         raise _unauthorized()
 
-    return sub
+    return AuthContext(user_id=sub, access_token=token)
+
+
+async def get_current_user(
+    ctx: Annotated[AuthContext, Depends(get_auth_context)],
+) -> str:
+    """Thin id-only wrapper over ``get_auth_context`` (back-compat)."""
+    return ctx.user_id

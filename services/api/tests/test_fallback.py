@@ -69,10 +69,20 @@ def test_transient_decoding_error() -> None:
 def test_transient_json_decode_error() -> None:
     """HTTP 200 with malformed JSON — should be treated as transient
     so the fallback chain can try the next provider (Codex P2)."""
-    try:
+    with pytest.raises(json.JSONDecodeError) as exc_info:
         json.loads("{invalid")
-    except json.JSONDecodeError as exc:
-        assert _is_transient(exc)
+    assert _is_transient(exc_info.value)
+
+
+def test_transient_retryable_output_validation_error() -> None:
+    """complete_json wraps malformed JSON in LlmOutputValidationError; a
+    retryable one must allow the fallback chain to try the next provider."""
+    from app.shared.llm.errors import LlmOutputValidationError
+
+    assert _is_transient(LlmOutputValidationError("Schema", "{bad", retryable=True))
+    assert not _is_transient(
+        LlmOutputValidationError("Schema", "{bad", retryable=False)
+    )
 
 
 def test_not_transient_401() -> None:
@@ -222,3 +232,27 @@ async def test_json_decode_error_triggers_fallback() -> None:
     result = await fb.complete_text("hi")
     assert result == "ok"
     assert len(b._text_calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_all_in_cooldown_raises_clear_error() -> None:
+    """When every provider is still in cooldown, no attempt is made and the
+    error must explain the cooldown instead of "All 0 provider(s) exhausted"."""
+    a = _StubProvider("a")
+    a._next_text = httpx.ConnectError("boom")
+    b = _StubProvider("b")
+    b._next_text = httpx.TimeoutException("boom")
+    fb = FallbackLlmProvider([a, b], cooldown_seconds=60.0)
+
+    # First call trips both providers into cooldown.
+    with pytest.raises(AllProvidersExhaustedError):
+        await fb.complete_text("hi")
+    calls_before = len(a._text_calls) + len(b._text_calls)
+
+    # Second call — both still in cooldown, so nothing is attempted.
+    with pytest.raises(AllProvidersExhaustedError) as exc_info:
+        await fb.complete_text("hi")
+
+    assert exc_info.value.errors  # not empty — clear diagnostics
+    assert "cooldown" in str(exc_info.value).lower()
+    assert len(a._text_calls) + len(b._text_calls) == calls_before

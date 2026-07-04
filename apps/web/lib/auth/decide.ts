@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js'
 
-const PROTECTED = ['/dashboard']
+const PROTECTED = ['/dashboard', '/campaigns']
+type AuthDecision = 'redirect' | 'redirectToDashboard' | 'passthrough'
 
 /**
  * Pure routing decision function.
@@ -15,10 +16,11 @@ const PROTECTED = ['/dashboard']
  * @param {string} pathname - The current request pathname.
  * @returns {'redirect'|'passthrough'} "redirect" if the user should be sent to login, "passthrough" otherwise.
  */
-export function decideAuth(
-  user: User | null,
-  pathname: string
-): 'redirect' | 'passthrough' {
+export function decideAuth(user: User | null, pathname: string): AuthDecision {
+  if (pathname === '/' && user) {
+    return 'redirectToDashboard'
+  }
+
   const isProtected = PROTECTED.some(
     (p) => pathname === p || pathname.startsWith(p + '/')
   )

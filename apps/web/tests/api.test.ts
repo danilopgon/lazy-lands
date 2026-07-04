@@ -100,6 +100,25 @@ describe('apiFetch — HTTP client (AU-003)', () => {
     expect(url).toBe('https://external.example.com/data')
   })
 
+  it('fails loudly instead of calling a frontend-relative backend path when API URL is missing', async () => {
+    delete process.env.NEXT_PUBLIC_API_URL
+    const mockGetSession = vi.fn().mockResolvedValue({
+      data: { session: null },
+    })
+    setupMock(mockGetSession)
+
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('ok', { status: 200 }))
+
+    const { apiFetch } = await import('../lib/api')
+
+    await expect(apiFetch('/campaigns/extract')).rejects.toThrow(
+      /NEXT_PUBLIC_API_URL/
+    )
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
   it('AU-003.3: returns raw Response without catching errors', async () => {
     const mockGetSession = vi.fn().mockResolvedValue({
       data: { session: null },

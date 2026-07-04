@@ -8,7 +8,7 @@ from app.shared.llm.providers.openai_compatible import OpenAiCompatibleProvider
 from app.shared.llm.providers.registry import PROVIDERS, build_provider
 
 
-# LLM-SEAM-008a: PROVIDERS dict contains exactly four keys
+# LLM-SEAM-008a: PROVIDERS dict contains exactly four entries
 def test_008a_providers_has_four_entries() -> None:
     assert len(PROVIDERS) == 4
     assert "gemini" in PROVIDERS
@@ -66,7 +66,7 @@ def test_008e_base_urls_are_openai_compatible() -> None:
         )
 
 
-# LLM-SEAM-008f: registry imports from shared/llm/openai_compatible, not modules/*
+# LLM-SEAM-008f: registry imports from shared/llm/, not modules/*
 def test_008f_registry_no_modules_import() -> None:
     import ast
     from pathlib import Path

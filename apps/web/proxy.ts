@@ -50,7 +50,19 @@ export async function proxy(request: NextRequest) {
 
   const pathname = new URL(request.url).pathname
 
-  if (decideAuth(user, pathname) === 'redirect') {
+  const decision = decideAuth(user, pathname)
+
+  if (decision === 'redirectToDashboard') {
+    const redirect = NextResponse.redirect(new URL('/dashboard', request.url), {
+      status: 302,
+    })
+
+    copySetCookieHeaders(response.headers, redirect.headers)
+
+    return redirect
+  }
+
+  if (decision === 'redirect') {
     const redirect = NextResponse.redirect(new URL('/login', request.url), {
       status: 302,
     })

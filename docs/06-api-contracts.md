@@ -73,7 +73,8 @@ Response:
       "name": "string",
       "description": "string",
       "current_state": "string",
-      "motivation": "string"
+      "motivation": "string",
+      "content_source": "llm"
     }
   ],
   "factions": [
@@ -81,14 +82,16 @@ Response:
       "name": "string",
       "description": "string",
       "current_stance": "string",
-      "goals": "string"
+      "goals": "string",
+      "content_source": "llm"
     }
   ],
   "arcs": [
     {
       "title": "string",
       "description": "string",
-      "priority": "medium"
+      "priority": "medium",
+      "content_source": "llm"
     }
   ]
 }
@@ -98,6 +101,9 @@ Notes:
 
 - This endpoint does not persist data.
 - It returns data for DM review.
+- Every NPC, faction, and arc carries a `content_source` field: `llm` (Scribe-authored,
+  untouched), `edited` (DM-modified), or `manual` (DM-added). The provenance badges on
+  the frontend derive from this field.
 
 ### `POST /campaigns`
 
@@ -110,9 +116,32 @@ Request:
   "title": "string",
   "description": "string",
   "world_state": "string",
-  "npcs": [],
-  "factions": [],
-  "arcs": []
+  "npcs": [
+    {
+      "name": "string",
+      "description": "string",
+      "current_state": "string",
+      "motivation": "string",
+      "content_source": "edited"
+    }
+  ],
+  "factions": [
+    {
+      "name": "string",
+      "description": "string",
+      "current_stance": "string",
+      "goals": "string",
+      "content_source": "edited"
+    }
+  ],
+  "arcs": [
+    {
+      "title": "string",
+      "description": "string",
+      "priority": "medium",
+      "content_source": "manual"
+    }
+  ]
 }
 ```
 
@@ -161,7 +190,8 @@ Request:
 {
   "title": "string",
   "description": "string",
-  "priority": "medium"
+  "priority": "medium",
+  "content_source": "manual"
 }
 ```
 
