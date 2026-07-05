@@ -5,7 +5,7 @@
 - Current work unit: Work Unit 1 — Backend read paths
 - Mode: Strict TDD
 - Delivery strategy: single PR with accepted `size:exception`
-- Progress: 9 / 85 tasks complete
+- Progress: 9 / 85 tasks complete + PR #28 review-fix pass applied
 
 ## Completed Tasks
 
@@ -28,6 +28,7 @@
 | 1.5/1.6 | `tests/campaigns/test_schema.py` | Unit | ✅ 18/18 existing campaign tests passed before edits | ✅ Missing response schema imports failed at collection | ✅ Same focused pytest command → 24 passed | ✅ Covered nullable summary/detail fields, entity counts, and child response nullability | ➖ None beyond type-clean response models |
 | 1.7/1.8 | `tests/campaigns/test_routes.py` | Integration | ✅ 18/18 existing campaign tests passed before edits | ✅ New GET route tests failed before routes existed | ✅ Same focused pytest command → 24 passed | ✅ Covered 200 list, 200 empty, 401 unauthenticated, 200 detail with children, and two 404 paths | ✅ Broke long assertions into readable structures; route behavior unchanged |
 | 1.9 | Backend command suite | Verification | ✅ Focused suite green before broad commands | ➖ Verification task, no new production behavior | ✅ `uv run pytest` → 184 passed, 1 skipped; `uv run ruff check app/` → passed; `uv run mypy app` → passed | ➖ Command gate only | ✅ Fixed initial `uv run mypy` invocation to target `app` |
+| PR #28 review fixes | `tests/campaigns/test_repository.py`, `tests/campaigns/test_use_cases.py`, `tests/campaigns/test_routes.py` | Unit + integration | ✅ 24/24 focused campaign read tests passed before edits | ✅ New tests failed for malformed campaign ids, empty count-list normalization, system/tone select fields, and unauthenticated detail access | ✅ Focused campaign suite → 29 passed; full backend suite → 187 passed, 1 skipped | ✅ Covered `unknown` and `undefined`, list + detail select contracts, and count aliases as `[]` | ✅ Ruff format/check, Ruff lint, and mypy all green |
 
 ## Tests / Commands Run
 
@@ -40,8 +41,10 @@
 
 ## Deviations / Issues
 
-- `CampaignSummary` / `CampaignDetailResponse` include nullable `system` and `tone` fields for the future WU3 migration, but the WU1 repository intentionally does not select those missing columns yet. They therefore serialize as `null` until WU3 adds and wires the columns.
+- `CampaignSummary` / `CampaignDetailResponse` include nullable `system` and `tone` fields for the future WU3 migration. The repository now selects those fields for list/detail responses to match the frontend read contract; they serialize as `null` for rows without structured values.
 - The list query selects count aliases through Supabase relationship counts and normalizes nested count rows if PostgREST returns them in embedded form.
+- PR #28 review fixes added a UUID guard before campaign-detail repository access so malformed ids such as `unknown` / `undefined` return the uniform 404 instead of reaching Supabase uuid equality.
+- PR #28 OpenSpec/docs corrections aligned routes to the actual backend paths (no `/api` prefix), flat create routes with `campaign_id` in request bodies, no edit-time `content_source` restamp, non-empty `tone`, Modal focus/ARIA requirements, and existing root `.env.example` audit-only language.
 - No migrations, write endpoints, Block 5 `composeRawText`, or arc enum changes were touched in WU1.
 
 ## Remaining Tasks

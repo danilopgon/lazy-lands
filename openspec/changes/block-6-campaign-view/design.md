@@ -177,7 +177,7 @@ frozen domain models (no `id` on them; no consumer).
 ### 4.2 `application/` — one use case per file (matches `create_campaign.py` / `extract_campaign.py`)
 
 - Reads: `get_campaigns.py` → `GetCampaigns`; `get_campaign_detail.py` → `GetCampaignDetail`
-  (campaign + npcs + factions + **arcs**; 404 if campaign row absent under RLS).
+    (campaign + npcs + factions + **arcs**; 404 if campaign row absent under RLS or the id is not a valid UUID).
 - Updates: `update_campaign.py` (world_state/system/tone), `update_npc.py`, `update_faction.py`,
   `update_arc.py` — each owns the `exclude_unset`/empty-guard and `None`→404 translation.
 - Creates: `create_npc.py`, `create_faction.py`, `create_arc.py` — each forces
@@ -693,7 +693,7 @@ reviewable **work-units** in this order, applied in batches with apply-progress 
    - Create/update/delete use-cases + repo methods + routes for npcs/factions/arcs (incl. the 6.4
      ownership pre-check) + entity modals (add/edit/delete confirm) + mutation wiring + RLS
      ownership tests (incl. the INSERT-miss→404 and delete-return pins).
-4. **Docs / ENV sweep** (proposal Part 2) — additive text + `.env.example`; last, no code coupling.
+4. **Docs / ENV sweep** (proposal Part 2) — additive text + root `.env.example` audit/update only if variables changed; last, no code coupling.
 
 Rationale: reads unblock the UI without touching data; migrations+writes are the risk-bearing
 core kept together so a batch boundary never lands mid-migration; docs close out. Each batch is

@@ -32,7 +32,7 @@ class SupabaseCampaignRepository:
             response = (
                 self._client.table("campaigns")
                 .select(
-                    "id,title,description,updated_at,"
+                    "id,title,description,updated_at,system,tone,"
                     "npc_count:npcs(count),"
                     "faction_count:factions(count),"
                     "arc_count:arcs(count)"
@@ -50,7 +50,7 @@ class SupabaseCampaignRepository:
         try:
             response = (
                 self._client.table("campaigns")
-                .select("id,title,description,world_state,updated_at")
+                .select("id,title,description,world_state,updated_at,system,tone")
                 .eq("id", campaign_id)
                 .execute()
             )
@@ -186,6 +186,6 @@ class SupabaseCampaignRepository:
             value = normalized.get(output_key)
             if isinstance(value, list) and value and isinstance(value[0], dict):
                 normalized[output_key] = value[0].get("count", 0)
-            elif value is None:
+            elif value is None or value == []:
                 normalized[output_key] = 0
         return normalized

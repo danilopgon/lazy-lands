@@ -58,8 +58,9 @@ Commit message: `feat(campaigns): add campaign list/detail read endpoints with n
       `None` until Migration A lands in Work Unit 3; do not block schema shape on the
       migration).
 - [x] 1.7 Write failing route tests (FastAPI `TestClient`, dependency overrides) for
-      `GET /api/campaigns` (200 list, 200 empty, 401 unauthenticated) and
-      `GET /api/campaigns/{id}` (200 with children, 404 non-owner, 404 unknown id) in
+      `GET /campaigns` (200 list, 200 empty, 401 unauthenticated) and
+      `GET /campaigns/{id}` (200 with children, 401 unauthenticated, 404 non-owner,
+      404 unknown/malformed id before Supabase uuid equality) in
       `services/api/tests/campaigns/test_routes.py`.
 - [x] 1.8 Implement `GET ""` and `GET "/{campaign_id}"` on the existing
       `router = APIRouter(prefix="/campaigns")` in `routes.py` (design §4.5); register
@@ -116,7 +117,7 @@ Commit message: `feat(web): add Field/Modal primitives and campaign list/detail 
       shows title, system+tone line, "Updated {date}" footer, "Open chronicle →" link;
       full card clickable. Omit (do not fabricate) the status pill and
       Sessions/Memories stat columns per spec; NPCs/Factions/Open-arcs columns render
-      live only if `GET /api/campaigns` list data includes counts — otherwise omit and
+      live only if `GET /campaigns` list data includes counts — otherwise omit and
       flag in self-review (this is a spec-flagged decision point, not a silent cut).
 - [ ] 2.3.4 Adversarial self-review: dashboard vs `views-dashboard.jsx` — full
       Handoff Compliance Report (states enumerated individually, motion checked).
@@ -222,7 +223,7 @@ Commit message: `feat(campaigns): persist system/tone on campaigns without chang
 - [ ] 3A.6 Re-run the golden fold test (3A.1) — MUST still pass unmodified. Run the
       full Block-5 extraction suite — MUST be green and unmodified.
 - [ ] 3A.7 Now that `system`/`tone` persist, write failing tests + implement:
-      `GET /api/campaigns/{id}` returns populated `system`/`tone` for a campaign that
+      `GET /campaigns/{id}` returns populated `system`/`tone` for a campaign that
       has them (campaign-view spec: "Persist and edit campaign system and tone" read
       scenario). Update `CampaignDetailResponse` usage if needed (schema already
       declared in Work Unit 1.6).
@@ -260,10 +261,10 @@ Commit message: `feat(campaigns): add create/update/delete for npcs, factions, a
       and tone".
 - [ ] 3C.2 Implement `UpdateCampaignRequest` (design §Decision 2), `update_campaign`
       port + repo method (design §4.1/§4.3), `application/update_campaign.py`, and
-      `PATCH /api/campaigns/{id}` route.
+      `PATCH /campaigns/{id}` route.
 - [ ] 3C.3 ⚠ Write failing tests for the **create ownership pre-check** (design §6.4,
       risk #2 — load-bearing): a forged/non-owned `campaign_id` on
-      `POST /campaigns/{id}/npcs` (and factions, arcs) returns 404 via the pre-check
+      `POST /npcs` with `campaign_id` in the body (and factions, arcs) returns 404 via the pre-check
       path, NOT a 500 from an uncaught `42501` RLS raise. This is the single most
       important security test in this unit — write it before any create use case
       exists.
@@ -279,7 +280,7 @@ Commit message: `feat(campaigns): add create/update/delete for npcs, factions, a
       `arcs_router` (design §4.5) — including validation that arc `priority`/`status`
       reject invalid codes with 422.
 - [ ] 3C.6 Write failing tests for `update_npc`/`update_faction`/`update_arc` use
-      cases (partial PATCH, `content_source=edited` on success, empty→422, 404 on
+      cases (partial PATCH, no `content_source` restamp on edit, empty→422, 404 on
       repo `None`) and repo methods.
 - [ ] 3C.7 Implement `UpdateNpcRequest`/`UpdateFactionRequest`/`UpdateArcRequest`
       schemas, `update_npc`/`update_faction`/`update_arc` port + repo methods,
@@ -362,8 +363,8 @@ Commit message: `feat(web): wire campaign/npc/faction/arc create-edit-delete mod
 
 Commit message: `docs: document Block 6 campaign view endpoints, routes, and scope`
 
-- [ ] 4.1 Update root `.env.example` if any new env var was introduced (expected:
-      none — verify and note "no change" if so).
+- [ ] 4.1 Audit existing root `.env.example` if any new env var was introduced (expected:
+      none — verify and note "no change" if so). Do not create another env example.
 - [ ] 4.2 Update root `README.md` with the new routes (`/dashboard` real list,
       `/campaigns/:id`, `/campaigns/:id/npcs`, `/campaigns/:id/factions`,
       `/campaigns/:id/arcs`) if the README enumerates app routes.

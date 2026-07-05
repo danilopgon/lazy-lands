@@ -11,6 +11,8 @@ from app.main import app
 from app.shared.database import get_user_supabase_client
 from app.shared.security import AuthContext, get_auth_context
 
+CAMPAIGN_ID = "11111111-1111-4111-8111-111111111111"
+
 
 @pytest.fixture
 def client() -> TestClient:
@@ -89,13 +91,38 @@ def test_get_campaigns_unauthenticated_returns_401() -> None:
     assert response.status_code == 401
 
 
+def test_get_campaign_detail_unauthenticated_returns_401() -> None:
+    local_client = TestClient(app)
+
+    response = local_client.get(f"/campaigns/{CAMPAIGN_ID}")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.parametrize("campaign_id", ["unknown", "undefined"])
+def test_get_campaign_detail_malformed_id_returns_404_without_querying(
+    client: TestClient, campaign_id: str
+) -> None:
+    mock_client = MagicMock()
+    mock_client.table.side_effect = AssertionError(
+        "malformed ids must not query Supabase"
+    )
+    app.dependency_overrides[get_auth_context] = _auth
+    app.dependency_overrides[get_user_supabase_client] = lambda: mock_client
+
+    response = client.get(f"/campaigns/{campaign_id}")
+
+    assert response.status_code == 404
+    assert response.json() == {"error": "Not found."}
+    mock_client.table.assert_not_called()
+
 
 def test_get_campaign_detail_returns_children(client: TestClient) -> None:
     mock_client = MagicMock()
     campaign = MagicMock(
         data=[
             {
-                "id": "campaign-1",
+                "id": CAMPAIGN_ID,
                 "title": "Sombras",
                 "description": "D",
                 "world_state": "W",
@@ -120,11 +147,11 @@ def test_get_campaign_detail_returns_children(client: TestClient) -> None:
     app.dependency_overrides[get_auth_context] = _auth
     app.dependency_overrides[get_user_supabase_client] = lambda: mock_client
 
-    response = client.get("/campaigns/campaign-1")
+    response = client.get(f"/campaigns/{CAMPAIGN_ID}")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["id"] == "campaign-1"
+    assert body["id"] == CAMPAIGN_ID
     assert body["npcs"] == [
         {
             "id": "npc-1",
@@ -149,7 +176,7 @@ def test_get_campaign_detail_returns_404_when_not_visible_or_unknown(
     app.dependency_overrides[get_auth_context] = _auth
     app.dependency_overrides[get_user_supabase_client] = lambda: mock_client
 
-    response = client.get("/campaigns/unknown")
+    response = client.get(f"/campaigns/{CAMPAIGN_ID}")
 
     assert response.status_code == 404
     assert response.json() == {"error": "Not found."}

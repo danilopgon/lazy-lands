@@ -1,5 +1,7 @@
 """GetCampaignDetail use case — compose campaign and child rows."""
 
+from uuid import UUID
+
 from app.modules.campaigns.domain.ports import CampaignRepository
 from app.modules.campaigns.errors import CampaignNotFoundError
 from app.modules.campaigns.schemas import (
@@ -19,6 +21,11 @@ class GetCampaignDetail:
 
     def execute(self, campaign_id: str) -> CampaignDetailResponse:
         """Fetch a campaign and its NPCs, factions, and arcs."""
+        try:
+            UUID(campaign_id)
+        except ValueError as exc:
+            raise CampaignNotFoundError() from exc
+
         campaign = self._repository.get_campaign(campaign_id)
         if campaign is None:
             raise CampaignNotFoundError()

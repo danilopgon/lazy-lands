@@ -20,7 +20,7 @@ every mutation and the modal UX that triggers them.
 
 ### Requirement: Overwrite campaign world state, system, and tone
 
-The system MUST expose `PATCH /api/campaigns/{id}` accepting a partial body of
+The system MUST expose `PATCH /campaigns/{id}` accepting a partial body of
 `{ world_state?: string, system?: string, tone?: string }` — only supplied fields are
 updated (`model_dump(exclude_unset=True, exclude_none=True)` semantics) — for a campaign
 owned by the requesting user. Campaign `status` is out of MVP scope and MUST be rejected
@@ -34,7 +34,7 @@ Validation:
 - `world_state`, when supplied, MUST be a non-empty string after trimming.
 - `system`, when supplied, MUST be a non-empty string after trimming (mirrors its
   required-on-create constraint).
-- `tone`, when supplied, MAY be an empty string (tone is optional at creation too).
+- `tone`, when supplied, MUST be a non-empty string after trimming. Optional means it may be omitted, not blanked.
 - An empty request body (no fields supplied) MUST be rejected with 422.
 - Exact max-length bounds are a design/implementation detail consistent with existing
   free-text fields in this codebase, not a spec-level constraint here.
@@ -42,271 +42,295 @@ Validation:
 #### Scenario: Owner overwrites world state
 
 - GIVEN campaign `c1` belongs to user A with `world_state = "old text"`
-- WHEN user A calls `PATCH /api/campaigns/c1` with `{ "world_state": "new text" }`
+- WHEN user A calls `PATCH /campaigns/c1` with `{ "world_state": "new text" }`
 - THEN the response is 200 with `world_state = "new text"`
-- AND a subsequent `GET /api/campaigns/c1` reflects `"new text"`
+- AND a subsequent `GET /campaigns/c1` reflects `"new text"`
 
 #### Scenario: Partial update touches only supplied fields
 
 - GIVEN campaign `c1` has `world_state = "w"`, `system = "D&D 5e"`, `tone = "Grim"`
-- WHEN user A calls `PATCH /api/campaigns/c1` with `{ "tone": "Hopeful" }`
+- WHEN user A calls `PATCH /campaigns/c1` with `{ "tone": "Hopeful" }`
 - THEN the response is 200 with `tone = "Hopeful"` and `world_state`/`system` unchanged
+
+#### Scenario: Empty tone rejected
+
+- GIVEN campaign `c1` belongs to user A
+- WHEN user A calls `PATCH /campaigns/c1` with `{ "tone": "   " }`
+- THEN the response is 422 and `tone` is unchanged
 
 #### Scenario: Empty world state rejected
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `PATCH /api/campaigns/c1` with `{ "world_state": "   " }`
+- WHEN user A calls `PATCH /campaigns/c1` with `{ "world_state": "   " }`
 - THEN the response is 422 and `world_state` is unchanged
 
 #### Scenario: Empty request body rejected
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `PATCH /api/campaigns/c1` with `{}`
+- WHEN user A calls `PATCH /campaigns/c1` with `{}`
 - THEN the response is 422 and nothing is changed
 
 #### Scenario: Non-owner cannot patch
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user B calls `PATCH /api/campaigns/c1` with any body
+- WHEN user B calls `PATCH /campaigns/c1` with any body
 - THEN the write MUST NOT apply
 - AND the response is 404 (uniform not-found-vs-forbidden convention, see `campaign-view`)
 
 ### Requirement: Create, edit, and delete NPCs
 
 The system MUST expose:
-- `POST /api/campaigns/{id}/npcs` — create an NPC under campaign `{id}`, accepting
-  `{ name, description, current_state, motivation }` (all required; field names per the
+- `POST /npcs` — create an NPC under a campaign, accepting
+  `{ campaign_id, name, description?, current_state?, motivation? }` in the body (only `campaign_id`
+  and `name` required; blank optional fields are treated as omitted; field names per the
   domain model — the handoff's "Current status" maps to `current_state`). The server
   assigns `content_source = "manual"` on the created NPC; the response is the created NPC
   representation including its new `id`.
-- `PATCH /api/npcs/{id}` — partial update of `{ name?, description?, current_state?, motivation? }`
-  for an NPC belonging to a campaign owned by the requesting user. On any successful edit,
-  the server sets `content_source = "edited"` (so the `OriginBadge` reflects DM
-  involvement even if the NPC originated from extraction). Empty body → 422.
-- `DELETE /api/npcs/{id}` — permanently removes the NPC. No confirmation step is enforced
+- `PATCH /npcs/{id}` — partial update of `{ name?, description?, current_state?, motivation? }`
+  for an NPC belonging to a campaign owned by the requesting user. Edits do not restamp
+  `content_source`; provenance history is out of Block 6 scope. Empty body → 422.
+- `DELETE /npcs/{id}` — permanently removes the NPC. No confirmation step is enforced
   server-side (the handoff's delete action has no confirmation dialog); response is 204
   on success.
 
 #### Scenario: Owner creates an NPC
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `POST /api/campaigns/c1/npcs` with
-  `{ "name": "Toblen Stonehill", "description": "Innkeeper", "current_state": "Active", "motivation": "Protect the inn" }`
+- WHEN user A calls `POST /npcs` with
+  `{ "campaign_id": "c1", "name": "Toblen Stonehill", "description": "Innkeeper", "current_state": "Active", "motivation": "Protect the inn" }`
 - THEN the response is 201 with the new NPC including its `id` and `content_source = "manual"`
 
 #### Scenario: Create under a campaign not owned by the caller
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user B calls `POST /api/campaigns/c1/npcs` with a valid body
+- WHEN user B calls `POST /npcs` with a valid body containing `{ "campaign_id": "c1" }`
 - THEN the write MUST NOT apply and the response is 404
 
-#### Scenario: Create with missing required field rejected
+#### Scenario: Create with missing name rejected
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `POST /api/campaigns/c1/npcs` with `{ "name": "Toblen" }` (missing
-  `description`, `current_state`, `motivation`)
+- WHEN user A calls `POST /npcs` with `{ "campaign_id": "c1" }` (missing `name`)
 - THEN the response is 422 and no NPC is created
+
+#### Scenario: Create accepts omitted optional add-mode fields
+
+- GIVEN campaign `c1` belongs to user A
+- WHEN user A calls `POST /npcs` with `{ "campaign_id": "c1", "name": "Toblen" }`
+- THEN the response is 201 with nullable `description`, `current_state`, and `motivation`
 
 #### Scenario: Owner edits an NPC
 
 - GIVEN NPC `n1` belongs to a campaign owned by user A
-- WHEN user A calls `PATCH /api/npcs/n1` with
+- WHEN user A calls `PATCH /npcs/n1` with
   `{ "name": "Toblen Stonehill", "current_state": "Anxious", "motivation": "Protect the inn" }`
-- THEN the response is 200 reflecting the new values and `content_source = "edited"`
+- THEN the response is 200 reflecting the new values
 - AND a subsequent read of the campaign detail shows the updated NPC
 
 #### Scenario: Invalid NPC id or not owned (PATCH)
 
 - GIVEN NPC `n1` does not belong to a campaign owned by user A (or does not exist)
-- WHEN user A calls `PATCH /api/npcs/n1`
+- WHEN user A calls `PATCH /npcs/n1`
 - THEN the write MUST NOT apply and the response is 404
 
 #### Scenario: Empty name rejected
 
 - GIVEN NPC `n1` belongs to a campaign owned by user A
-- WHEN user A calls `PATCH /api/npcs/n1` with `{ "name": "" }`
+- WHEN user A calls `PATCH /npcs/n1` with `{ "name": "" }`
 - THEN the response is 422 and the NPC is unchanged
 
 #### Scenario: Empty PATCH body rejected
 
 - GIVEN NPC `n1` belongs to a campaign owned by user A
-- WHEN user A calls `PATCH /api/npcs/n1` with `{}`
+- WHEN user A calls `PATCH /npcs/n1` with `{}`
 - THEN the response is 422 and the NPC is unchanged
 
 #### Scenario: Owner deletes an NPC
 
 - GIVEN NPC `n1` belongs to a campaign owned by user A
-- WHEN user A calls `DELETE /api/npcs/n1`
+- WHEN user A calls `DELETE /npcs/n1`
 - THEN the response is 204
-- AND a subsequent `GET /api/campaigns/{id}` no longer lists `n1`
+- AND a subsequent `GET /campaigns/{id}` no longer lists `n1`
 
 #### Scenario: Non-owner cannot delete
 
 - GIVEN NPC `n1` belongs to a campaign owned by user A
-- WHEN user B calls `DELETE /api/npcs/n1`
+- WHEN user B calls `DELETE /npcs/n1`
 - THEN the delete MUST NOT apply and the response is 404
 
 ### Requirement: Create, edit, and delete factions
 
 The system MUST expose:
-- `POST /api/campaigns/{id}/factions` — create a faction under campaign `{id}`, accepting
-  `{ name, description, current_stance, goals }` (all required; the handoff's "posture"
-  and "objective" map to `current_stance` and `goals` respectively). Server assigns
+- `POST /factions` — create a faction under a campaign, accepting
+  `{ campaign_id, name, description?, current_stance?, goals? }` in the body (only
+  `campaign_id` and `name` required; blank optional fields are treated as omitted; the
+  handoff's "posture" and "objective" map to `current_stance` and `goals` respectively). Server assigns
   `content_source = "manual"`; response is the created faction including its `id`.
-- `PATCH /api/factions/{id}` — partial update of `{ name?, description?, current_stance?, goals? }`
-  for a faction belonging to a campaign owned by the requesting user. Sets
-  `content_source = "edited"` on success. Empty body → 422.
-- `DELETE /api/factions/{id}` — permanently removes the faction. No server-side
+- `PATCH /factions/{id}` — partial update of `{ name?, description?, current_stance?, goals? }`
+  for a faction belonging to a campaign owned by the requesting user. Edits do not restamp
+  `content_source`; provenance history is out of Block 6 scope. Empty body → 422.
+- `DELETE /factions/{id}` — permanently removes the faction. No server-side
   confirmation step. Response is 204 on success.
 
 #### Scenario: Owner creates a faction
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `POST /api/campaigns/c1/factions` with
-  `{ "name": "Black Bear Guild", "description": "Dock smugglers", "current_stance": "Neutral", "goals": "Control the docks" }`
+- WHEN user A calls `POST /factions` with
+  `{ "campaign_id": "c1", "name": "Black Bear Guild", "description": "Dock smugglers", "current_stance": "Neutral", "goals": "Control the docks" }`
 - THEN the response is 201 with the new faction including its `id` and
   `content_source = "manual"`
 
 #### Scenario: Create under a campaign not owned by the caller
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user B calls `POST /api/campaigns/c1/factions` with a valid body
+- WHEN user B calls `POST /factions` with a valid body containing `{ "campaign_id": "c1" }`
 - THEN the write MUST NOT apply and the response is 404
 
-#### Scenario: Create with missing required field rejected
+#### Scenario: Create with missing name rejected
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `POST /api/campaigns/c1/factions` with `{ "name": "Black Bear Guild" }`
+- WHEN user A calls `POST /factions` with `{ "campaign_id": "c1" }`
 - THEN the response is 422 and no faction is created
+
+#### Scenario: Create accepts omitted optional add-mode fields
+
+- GIVEN campaign `c1` belongs to user A
+- WHEN user A calls `POST /factions` with `{ "campaign_id": "c1", "name": "Black Bear Guild" }`
+- THEN the response is 201 with nullable `description`, `current_stance`, and `goals`
 
 #### Scenario: Owner edits a faction
 
 - GIVEN faction `f1` belongs to a campaign owned by user A
-- WHEN user A calls `PATCH /api/factions/f1` with
+- WHEN user A calls `PATCH /factions/f1` with
   `{ "name": "Black Bear Guild", "current_stance": "Hostile", "goals": "Control the docks" }`
-- THEN the response is 200 reflecting the new values and `content_source = "edited"`
+- THEN the response is 200 reflecting the new values
 
 #### Scenario: Invalid faction id or not owned (PATCH)
 
 - GIVEN faction `f1` does not belong to a campaign owned by user A (or does not exist)
-- WHEN user A calls `PATCH /api/factions/f1`
+- WHEN user A calls `PATCH /factions/f1`
 - THEN the write MUST NOT apply and the response is 404
 
 #### Scenario: Empty name rejected
 
 - GIVEN faction `f1` belongs to a campaign owned by user A
-- WHEN user A calls `PATCH /api/factions/f1` with `{ "name": "" }`
+- WHEN user A calls `PATCH /factions/f1` with `{ "name": "" }`
 - THEN the response is 422 and the faction is unchanged
 
 #### Scenario: Empty PATCH body rejected
 
 - GIVEN faction `f1` belongs to a campaign owned by user A
-- WHEN user A calls `PATCH /api/factions/f1` with `{}`
+- WHEN user A calls `PATCH /factions/f1` with `{}`
 - THEN the response is 422 and the faction is unchanged
 
 #### Scenario: Owner deletes a faction
 
 - GIVEN faction `f1` belongs to a campaign owned by user A
-- WHEN user A calls `DELETE /api/factions/f1`
+- WHEN user A calls `DELETE /factions/f1`
 - THEN the response is 204
-- AND a subsequent `GET /api/campaigns/{id}` no longer lists `f1`
+- AND a subsequent `GET /campaigns/{id}` no longer lists `f1`
 
 #### Scenario: Non-owner cannot delete
 
 - GIVEN faction `f1` belongs to a campaign owned by user A
-- WHEN user B calls `DELETE /api/factions/f1`
+- WHEN user B calls `DELETE /factions/f1`
 - THEN the delete MUST NOT apply and the response is 404
 
 ### Requirement: Create, edit, and delete arcs (NEW)
 
 The system MUST expose:
-- `POST /api/campaigns/{id}/arcs` — create an arc under campaign `{id}`, accepting
-  `{ title, description, priority, status }` (all required; reduced-scope field set per
+- `POST /arcs` — create an arc under a campaign, accepting
+  `{ campaign_id, title, description?, priority?, status? }` in the body (`campaign_id` and
+  `title` required; blank optional `description` is treated as omitted; reduced-scope field set per
   proposal A2 — `npcs`/`factions` cross-refs and `lastSession` are Out of MVP / Block 7
   and MUST NOT be accepted). `priority` MUST validate against the codes `high`, `medium`,
   `low`. `status` MUST validate against the codes `active`, `dormant`, `resolved`,
   `discarded` (see Requirement below). If `status` is omitted, the server defaults it to
   `active`. Server assigns `content_source = "manual"`; response is the created arc
   including its `id`.
-- `PATCH /api/arcs/{id}` — partial update of `{ title?, description?, priority?, status? }`
-  for an arc belonging to a campaign owned by the requesting user. Sets
-  `content_source = "edited"` on success. Empty body → 422.
-- `DELETE /api/arcs/{id}` — permanently removes the arc. No server-side confirmation step.
+- `PATCH /arcs/{id}` — partial update of `{ title?, description?, priority?, status? }`
+  for an arc belonging to a campaign owned by the requesting user. Edits do not restamp
+  `content_source`; provenance history is out of Block 6 scope. Empty body → 422.
+- `DELETE /arcs/{id}` — permanently removes the arc. No server-side confirmation step.
   Response is 204 on success.
 
-There is no separate `GET /api/arcs` endpoint; arcs are read as part of
-`GET /api/campaigns/{id}` (see `campaign-view`).
+There is no separate `GET /arcs` endpoint; arcs are read as part of
+`GET /campaigns/{id}` (see `campaign-view`).
 
 #### Scenario: Owner creates an arc
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `POST /api/campaigns/c1/arcs` with
-  `{ "title": "The missing caravan", "description": "...", "priority": "high", "status": "active" }`
+- WHEN user A calls `POST /arcs` with
+  `{ "campaign_id": "c1", "title": "The missing caravan", "description": "...", "priority": "high", "status": "active" }`
 - THEN the response is 201 with the new arc including its `id` and
   `content_source = "manual"`
 
 #### Scenario: Create defaults status to active when omitted
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `POST /api/campaigns/c1/arcs` with
-  `{ "title": "The missing caravan", "description": "...", "priority": "medium" }`
+- WHEN user A calls `POST /arcs` with
+  `{ "campaign_id": "c1", "title": "The missing caravan", "description": "...", "priority": "medium" }`
 - THEN the response is 201 with `status = "active"`
 
 #### Scenario: Create under a campaign not owned by the caller
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user B calls `POST /api/campaigns/c1/arcs` with a valid body
+- WHEN user B calls `POST /arcs` with a valid body containing `{ "campaign_id": "c1" }`
 - THEN the write MUST NOT apply and the response is 404
 
-#### Scenario: Create with missing required field rejected
+#### Scenario: Create with missing title rejected
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `POST /api/campaigns/c1/arcs` with `{ "title": "The missing caravan" }`
-  (missing `description` and `priority`)
+- WHEN user A calls `POST /arcs` with `{ "campaign_id": "c1" }` (missing `title`)
 - THEN the response is 422 and no arc is created
+
+#### Scenario: Create accepts omitted optional add-mode fields
+
+- GIVEN campaign `c1` belongs to user A
+- WHEN user A calls `POST /arcs` with `{ "campaign_id": "c1", "title": "The missing caravan" }`
+- THEN the response is 201 with `status = "active"`, default priority, and nullable `description`
 
 #### Scenario: Create with invalid priority or status code rejected
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `POST /api/campaigns/c1/arcs` with
-  `{ "title": "X", "description": "Y", "priority": "urgent", "status": "active" }`
+- WHEN user A calls `POST /arcs` with
+  `{ "campaign_id": "c1", "title": "X", "description": "Y", "priority": "urgent", "status": "active" }`
 - THEN the response is 422 (`"urgent"` is not a valid priority code) and no arc is created
 
 #### Scenario: Owner edits an arc
 
 - GIVEN arc `a1` belongs to a campaign owned by user A with `status = "active"`
-- WHEN user A calls `PATCH /api/arcs/a1` with `{ "status": "resolved" }`
-- THEN the response is 200 with `status = "resolved"` and `content_source = "edited"`
+- WHEN user A calls `PATCH /arcs/a1` with `{ "status": "resolved" }`
+- THEN the response is 200 with `status = "resolved"`
 
 #### Scenario: Invalid arc id or not owned (PATCH)
 
 - GIVEN arc `a1` does not belong to a campaign owned by user A (or does not exist)
-- WHEN user A calls `PATCH /api/arcs/a1`
+- WHEN user A calls `PATCH /arcs/a1`
 - THEN the write MUST NOT apply and the response is 404
 
 #### Scenario: Empty title rejected
 
 - GIVEN arc `a1` belongs to a campaign owned by user A
-- WHEN user A calls `PATCH /api/arcs/a1` with `{ "title": "" }`
+- WHEN user A calls `PATCH /arcs/a1` with `{ "title": "" }`
 - THEN the response is 422 and the arc is unchanged
 
 #### Scenario: Empty PATCH body rejected
 
 - GIVEN arc `a1` belongs to a campaign owned by user A
-- WHEN user A calls `PATCH /api/arcs/a1` with `{}`
+- WHEN user A calls `PATCH /arcs/a1` with `{}`
 - THEN the response is 422 and the arc is unchanged
 
 #### Scenario: Owner deletes an arc
 
 - GIVEN arc `a1` belongs to a campaign owned by user A
-- WHEN user A calls `DELETE /api/arcs/a1`
+- WHEN user A calls `DELETE /arcs/a1`
 - THEN the response is 204
-- AND a subsequent `GET /api/campaigns/{id}` no longer lists `a1`
+- AND a subsequent `GET /campaigns/{id}` no longer lists `a1`
 
 #### Scenario: Non-owner cannot delete
 
 - GIVEN arc `a1` belongs to a campaign owned by user A
-- WHEN user B calls `DELETE /api/arcs/a1`
+- WHEN user B calls `DELETE /arcs/a1`
 - THEN the delete MUST NOT apply and the response is 404
 
 ### Requirement: Arc status enum uses stable lowercase codes
@@ -322,14 +346,14 @@ concern; this requirement only specifies the API-level validation surface.
 #### Scenario: Valid status codes accepted
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `PATCH /api/arcs/a1` with `{ "status": "dormant" }` for an arc `a1` in
+- WHEN user A calls `PATCH /arcs/a1` with `{ "status": "dormant" }` for an arc `a1` in
   that campaign
 - THEN the response is 200 with `status = "dormant"`
 
 #### Scenario: Invalid status code rejected
 
 - GIVEN arc `a1` belongs to a campaign owned by user A
-- WHEN user A calls `PATCH /api/arcs/a1` with `{ "status": "open" }` (legacy pre-migration
+- WHEN user A calls `PATCH /arcs/a1` with `{ "status": "open" }` (legacy pre-migration
   code, no longer valid)
 - THEN the response is 422 and the arc is unchanged
 
@@ -356,7 +380,9 @@ both simultaneously).
 
 The system MUST provide a reusable `Modal` component matching the handoff contract:
 renders a title, a close button, body content, an optional footer, closes on Escape key,
-and closes on backdrop click (click outside the modal panel).
+closes on backdrop click (click outside the modal panel), traps focus while open,
+returns focus to the invoking trigger on close, and exposes dialog semantics with
+`role="dialog"`, `aria-modal="true"`, and `aria-labelledby`.
 
 #### Scenario: Modal closes on Escape
 
@@ -376,14 +402,28 @@ and closes on backdrop click (click outside the modal panel).
 - WHEN the user clicks inside the modal panel body
 - THEN `onClose` does NOT fire
 
+#### Scenario: Modal traps and restores focus
+
+- GIVEN an open `Modal` launched from a trigger button
+- WHEN the user tabs past the last focusable control or shift-tabs before the first
+- THEN focus cycles within the modal
+- WHEN the modal closes
+- THEN focus returns to the trigger button
+
+#### Scenario: Modal exposes ARIA dialog semantics
+
+- GIVEN an open `Modal` with title "Edit NPC"
+- WHEN assistive technology inspects the modal
+- THEN the dialog has `role="dialog"`, `aria-modal="true"`, and an accessible name from `aria-labelledby`
+
 ### Requirement: NPC create/edit modal UX
 
 The system MUST render an NPC modal (`NpcModal` per handoff) in two modes:
 - **Add** — reachable from "+ New NPC" on `/campaigns/:id/npcs`, opens empty (default
-  `current_state = "Active"`), submits via `POST /api/campaigns/{id}/npcs`.
+  `current_state = "Active"`), submits via `POST /npcs` with `campaign_id` in the body.
 - **Edit** — reachable from the "Edit" action per row, pre-filled with the NPC's current
   `name`, `description`, `current_state` ("Current status" select: Active/Scheming/
-  Anxious/Threat), and `motivation`, submits via `PATCH /api/npcs/{id}`.
+  Anxious/Threat), and `motivation`, submits via `PATCH /npcs/{id}`.
 
 **Deferred, Out of MVP** (per proposal A7): the handoff's `relation` (relation to party)
 and `faction` (related faction) fields have no backing persistence contract. The
@@ -409,7 +449,7 @@ on success, modal closes and the list reflects the created/updated NPC, with
 - GIVEN the add modal is open with `name = "Toblen"`, `description = "Innkeeper"`,
   `motivation = "Protect the inn"`
 - WHEN the DM clicks "Add NPC"
-- THEN `POST /api/campaigns/c1/npcs` is called with those fields
+- THEN `POST /npcs` is called with `campaign_id` and those fields
 - AND on success the modal closes and the new NPC appears in the list
 
 #### Scenario: Edit modal pre-fills current values
@@ -423,7 +463,7 @@ on success, modal closes and the list reflects the created/updated NPC, with
 
 - GIVEN the edit modal is open for NPC `n1` with a changed `motivation`
 - WHEN the DM clicks "Save changes"
-- THEN `PATCH /api/npcs/n1` is called with the updated fields
+- THEN `PATCH /npcs/n1` is called with the updated fields
 - AND on success the modal closes and the list shows the new motivation
 
 #### Scenario: Cancel discards changes
@@ -436,18 +476,18 @@ on success, modal closes and the list reflects the created/updated NPC, with
 
 - GIVEN NPC `n1` is listed on `/campaigns/c1/npcs`
 - WHEN the DM clicks "Delete" on `n1`
-- THEN `DELETE /api/npcs/n1` is called and, on success, `n1` no longer renders in the list
+- THEN `DELETE /npcs/n1` is called and, on success, `n1` no longer renders in the list
 
 ### Requirement: Faction create/edit modal UX
 
 The system MUST render a faction modal (`FactionModal` per handoff) in two modes:
 - **Add** — reachable from "+ New faction" on `/campaigns/:id/factions`, opens empty
   (default `current_stance = "Neutral"`), submits via
-  `POST /api/campaigns/{id}/factions`.
+  `POST /factions` with `campaign_id` in the body.
 - **Edit** — reachable from the "Edit" action per row, pre-filled with `name`,
   `description`, `current_stance` ("Current posture" select: Hostile/Transactional/
   Opportunistic/Friendly/Neutral), and `goals` ("Objective" field), submits via
-  `PATCH /api/factions/{id}`.
+  `PATCH /factions/{id}`.
 
 **Deferred, Out of MVP / Block 8** (per proposal A7): the handoff's `influence`
 ("Resources / influence"), `npcs`, `arcs`, and `lastReaction` fields have no backing
@@ -468,7 +508,7 @@ disabled while `name` is empty).
 - GIVEN the add modal is open with `name = "Black Bear Guild"`,
   `description = "Dock smugglers"`, `goals = "Control the docks"`
 - WHEN the DM clicks "Add faction"
-- THEN `POST /api/campaigns/c1/factions` is called with those fields
+- THEN `POST /factions` is called with `campaign_id` and those fields
 - AND on success the modal closes and the new faction appears in the list
 
 #### Scenario: Edit modal pre-fills current values
@@ -482,7 +522,7 @@ disabled while `name` is empty).
 
 - GIVEN the edit modal is open for faction `f1` with a changed `current_stance`
 - WHEN the DM clicks "Save changes"
-- THEN `PATCH /api/factions/f1` is called with the updated fields
+- THEN `PATCH /factions/f1` is called with the updated fields
 - AND on success the modal closes and the list shows the new stance
 
 #### Scenario: Cancel discards changes
@@ -495,7 +535,7 @@ disabled while `name` is empty).
 
 - GIVEN faction `f1` is listed on `/campaigns/c1/factions`
 - WHEN the DM clicks "Delete" on `f1`
-- THEN `DELETE /api/factions/f1` is called and, on success, `f1` no longer renders in the
+- THEN `DELETE /factions/f1` is called and, on success, `f1` no longer renders in the
   list
 
 ### Requirement: Arc create/edit modal UX (NEW)
@@ -503,10 +543,10 @@ disabled while `name` is empty).
 The system MUST render an arc modal (`ArcModal` per handoff) in two modes:
 - **Add** — reachable from "+ New arc" on `/campaigns/:id/arcs`, opens with defaults
   `priority = "Medium"` / `status = "Active"` (mapped to codes `medium` / `active`),
-  submits via `POST /api/campaigns/{id}/arcs`.
+  submits via `POST /arcs` with `campaign_id` in the body.
 - **Edit** — reachable from the "Edit" action per row, pre-filled with `title`,
   `description`, `priority` (select: High/Medium/Low), and `status` (select:
-  Active/Dormant/Resolved/Discarded), submits via `PATCH /api/arcs/{id}`.
+  Active/Dormant/Resolved/Discarded), submits via `PATCH /arcs/{id}`.
 
 **Deferred, Out of MVP** (per proposal A2/A7): the handoff's "Related NPCs" and "Related
 factions" free-text fields have no backing persistence contract (relationship graph,
@@ -529,8 +569,8 @@ Motion: same pattern as the NPC/faction modals.
 - GIVEN the add modal is open with `title = "The missing caravan"`,
   `description = "..."`, `priority = "High"`, `status = "Active"`
 - WHEN the DM clicks "Add arc"
-- THEN `POST /api/campaigns/c1/arcs` is called with
-  `{ "title": "The missing caravan", "description": "...", "priority": "high", "status": "active" }`
+- THEN `POST /arcs` is called with
+  `{ "campaign_id": "c1", "title": "The missing caravan", "description": "...", "priority": "high", "status": "active" }`
   (UI display values mapped to lowercase codes)
 - AND on success the modal closes and the new arc appears in the list
 
@@ -545,7 +585,7 @@ Motion: same pattern as the NPC/faction modals.
 
 - GIVEN the edit modal is open for arc `a1` with `status` changed to "Resolved"
 - WHEN the DM clicks "Save changes"
-- THEN `PATCH /api/arcs/a1` is called with `{ "status": "resolved" }` (plus any other
+- THEN `PATCH /arcs/a1` is called with `{ "status": "resolved" }` (plus any other
   changed fields)
 - AND on success the modal closes and the list shows the new status, dimmed per the
   resolved-state styling
@@ -560,4 +600,4 @@ Motion: same pattern as the NPC/faction modals.
 
 - GIVEN arc `a1` is listed on `/campaigns/c1/arcs`
 - WHEN the DM clicks "Delete" on `a1`
-- THEN `DELETE /api/arcs/a1` is called and, on success, `a1` no longer renders in the list
+- THEN `DELETE /arcs/a1` is called and, on success, `a1` no longer renders in the list

@@ -18,33 +18,33 @@ capability owns the read paths and the screen-level rendering checklists; it ref
 
 ### Requirement: List owned campaigns
 
-The system MUST expose `GET /api/campaigns` returning only campaigns owned by the
+The system MUST expose `GET /campaigns` returning only campaigns owned by the
 authenticated user, ordered by `updated_at` descending.
 
-Response item: `{ id, title, description, updated_at }` (existing contract, unchanged).
+Response item: `{ id, title, description, updated_at, system, tone, npc_count, faction_count, arc_count }`.
 Campaign `status` is out of MVP scope and MUST NOT appear in this response.
 
 #### Scenario: DM has campaigns
 
 - GIVEN an authenticated DM owns 2 campaigns
-- WHEN they call `GET /api/campaigns`
+- WHEN they call `GET /campaigns`
 - THEN the response is 200 with exactly those 2 campaigns, newest `updated_at` first
 
 #### Scenario: DM owns no campaigns
 
 - GIVEN an authenticated DM owns 0 campaigns
-- WHEN they call `GET /api/campaigns`
+- WHEN they call `GET /campaigns`
 - THEN the response is 200 with an empty array
 
 #### Scenario: Unauthenticated request
 
 - GIVEN no valid Supabase JWT is provided
-- WHEN `GET /api/campaigns` is called
+- WHEN `GET /campaigns` is called
 - THEN the response is 401
 
 ### Requirement: Read campaign detail with children
 
-The system MUST expose `GET /api/campaigns/{id}` returning the campaign's fields
+The system MUST expose `GET /campaigns/{id}` returning the campaign's fields
 (`id`, `title`, `description`, `world_state`, `system`, `tone`, `updated_at`) plus
 `npcs[]`, `factions[]`, and `arcs[]` (**all** arcs regardless of `status` — the arcs list
 screen and the detail's "needing attention" slice both derive from this same array;
@@ -56,21 +56,28 @@ asserted on here.
 #### Scenario: Owner reads their campaign
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `GET /api/campaigns/c1`
+- WHEN user A calls `GET /campaigns/c1`
 - THEN the response is 200 including `world_state`, `system`, `tone`, `npcs[]`,
   `factions[]`, `arcs[]` (all statuses)
 
 #### Scenario: Non-owner attempts to read
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user B calls `GET /api/campaigns/c1`
+- WHEN user B calls `GET /campaigns/c1`
 - THEN the response is 404 (not-found-vs-forbidden convention: see below)
 
 #### Scenario: Campaign does not exist
 
 - GIVEN no campaign with id `unknown-id` exists
-- WHEN an authenticated user calls `GET /api/campaigns/unknown-id`
+- WHEN an authenticated user calls `GET /campaigns/unknown-id`
 - THEN the response is 404
+
+#### Scenario: Malformed campaign id returns not found before querying
+
+- GIVEN an authenticated user calls with a non-UUID id such as `unknown` or `undefined`
+- WHEN they call `GET /campaigns/unknown`
+- THEN the response is 404
+- AND Supabase is not queried with an invalid uuid equality filter
 
 **Locked design decision** (was open, now resolved by proposal amendment A6): non-owner
 access returns **404**, indistinguishable from not-found, never 403. This convention is
@@ -81,14 +88,14 @@ on campaigns, NPCs, factions, and arcs.
 
 The system MUST persist `system` (required) and `tone` (optional) as structured fields on
 `campaigns`, in addition to (not instead of) the existing Block-5 behavior of folding them
-into `raw_text` via `composeRawText` for extraction. `GET /api/campaigns/{id}` MUST
-include `system` and `tone`. `PATCH /api/campaigns/{id}` MUST accept partial updates to
+into `raw_text` via `composeRawText` for extraction. `GET /campaigns/{id}` MUST
+include `system` and `tone`. `PATCH /campaigns/{id}` MUST accept partial updates to
 `system` and `tone` alongside `world_state` (see Requirement below in `entity-management`
 for the shared partial-PATCH contract). Campaign `status` remains out of MVP scope and is
 never accepted or returned by any Block 6 endpoint.
 
 **Constraint (non-negotiable, protects shipped Block 5 behavior):** the campaign creation
-flow (`POST /api/campaigns`, out of this change's endpoint list but affected by this
+flow (`POST /campaigns`, out of this change's endpoint list but affected by this
 requirement) MUST continue to fold `system`/`tone` into the composed `raw_text` exactly as
 today, so Block-5 extraction behavior and its tests are unchanged, AND additionally carry
 `system`/`tone` as structured fields on the create payload for structural persistence.
@@ -96,13 +103,13 @@ today, so Block-5 extraction behavior and its tests are unchanged, AND additiona
 #### Scenario: Detail shows system and tone
 
 - GIVEN campaign `c1` has `system = "D&D 5e"` and `tone = "Grim, low-magic"`
-- WHEN `GET /api/campaigns/c1` is called
+- WHEN `GET /campaigns/c1` is called
 - THEN the response includes `"system": "D&D 5e"` and `"tone": "Grim, low-magic"`
 
 #### Scenario: System and tone are editable
 
 - GIVEN campaign `c1` belongs to user A
-- WHEN user A calls `PATCH /api/campaigns/c1` with `{ "tone": "Hopeful, high fantasy" }`
+- WHEN user A calls `PATCH /campaigns/c1` with `{ "tone": "Hopeful, high fantasy" }`
 - THEN the response is 200 with the updated `tone` and unchanged `system`/`world_state`
 
 ### Requirement: Dashboard campaign list screen
@@ -122,7 +129,7 @@ Field-by-field checklist (source of truth: handoff):
   - **Deferred, do not implement as data-bound**: the handoff's status pill (campaign
     `status` — Out of MVP, no backend field); the Sessions and Memories stat columns
     (Block 7 — no session/memory data exists yet). Render NPCs, Factions, and Open-arcs
-    counts live from `GET /api/campaigns` list data or, if the list endpoint does not
+    counts live from `GET /campaigns` list data or, if the list endpoint does not
     include counts, treat the remaining columns as a follow-up rather than silently
     fabricating numbers — this MUST be called out in the implementation's adversarial
     self-review if counts require an endpoint shape not specced here.
@@ -131,7 +138,7 @@ Field-by-field checklist (source of truth: handoff):
 
 States (each MUST be implemented individually, per contract skill):
 - **loading**: initial fetch in flight → use `Loading` primitive (quill animation) while
-  `GET /api/campaigns` resolves
+  `GET /campaigns` resolves
 - **error**: fetch fails → `ErrorNotice` with retry action
 - **empty**: 0 campaigns → `EmptyState` with title "Your chronicle starts here", CTA
   "+ Create your first campaign" → `/campaigns/new`
@@ -157,7 +164,7 @@ cards use `.ll-rise` entrance; buttons follow standard press physics. Respect
 
 #### Scenario: Fetch fails
 
-- GIVEN `GET /api/campaigns` returns a 5xx or network error
+- GIVEN `GET /campaigns` returns a 5xx or network error
 - WHEN `/dashboard` mounts
 - THEN `ErrorNotice` renders with a retry action that re-triggers the fetch
 
@@ -177,7 +184,7 @@ two-column layout rhythm (do not collapse to a single column).
 
 Field-by-field checklist:
 - Breadcrumb: Campaigns / {campaign name}
-- Header: `Kicker` "Campaign · {system} · {tone}" (live, from `GET /api/campaigns/{id}`),
+- Header: `Kicker` "Campaign · {system} · {tone}" (live, from `GET /campaigns/{id}`),
   H1 campaign name, subtitle with update info
   - **Deferred**: "Log session" and "Prepare next session" header buttons → Block 7
     (sessions/generation). MUST NOT be wired to live endpoints; either omit or render
@@ -189,7 +196,7 @@ Field-by-field checklist:
 - World-state section (`/01 The state of the world`): serif paragraph display by default;
   "Edit" link toggles into a `textarea` + "Save changes"/"Cancel" buttons — this is the
   in-scope editable field for this capability (mutation mechanics: see this capability's
-  own `PATCH /api/campaigns/{id}` requirement above)
+  own `PATCH /campaigns/{id}` requirement above)
 - **Deferred, static placeholder** — `ScribeNotice` block above the two-column layout →
   Block 7 (memory review). Omit for Block 6; do not render a `ScribeNotice` with fabricated
   content.
@@ -199,7 +206,7 @@ Field-by-field checklist:
 - **Deferred, static placeholder** — `/04 Active memories` (right column) → Block 7. Same
   treatment: dimmed static card, not data-bound.
 - `/03 Arcs needing attention` (right column) is **live**: renders up to 3 arcs from
-  `GET /api/campaigns/{id}`'s `arcs[]`, filtered client-side to `status` in
+  `GET /campaigns/{id}`'s `arcs[]`, filtered client-side to `status` in
   (`active`, `dormant`), with a "All arcs →" link to `/campaigns/:id/arcs`.
 - Shared components used: `Shell`, `Kicker`
 
@@ -221,7 +228,7 @@ physics on Save/Cancel/Edit links.
 - GIVEN campaign `c1` belongs to the requesting DM
 - WHEN `/campaigns/c1` mounts
 - THEN `system`, `tone`, world state, stat bar (NPCs/Factions/Arcs), and the arcs-needing-
-  attention section render with data from `GET /api/campaigns/c1`, while Recent sessions
+  attention section render with data from `GET /campaigns/c1`, while Recent sessions
   and Active memories render as dimmed static placeholders
 
 #### Scenario: Campaign not found or not owned

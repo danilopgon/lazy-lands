@@ -10,6 +10,8 @@ from app.modules.campaigns.application.get_campaign_detail import GetCampaignDet
 from app.modules.campaigns.application.get_campaigns import GetCampaigns
 from app.modules.campaigns.errors import CampaignNotFoundError
 
+CAMPAIGN_ID = "11111111-1111-4111-8111-111111111111"
+
 
 def test_get_campaigns_returns_repository_rows_in_existing_order() -> None:
     repo = MagicMock()
@@ -36,7 +38,7 @@ def test_get_campaigns_returns_empty_list() -> None:
 def test_get_campaign_detail_composes_campaign_children_and_arcs() -> None:
     repo = MagicMock()
     repo.get_campaign.return_value = {
-        "id": "campaign-1",
+        "id": CAMPAIGN_ID,
         "title": "Sombras",
         "description": "A frontier chronicle",
         "world_state": "The town waits.",
@@ -50,14 +52,24 @@ def test_get_campaign_detail_composes_campaign_children_and_arcs() -> None:
         [{"id": "arc-1", "title": "Missing caravan", "status": "open"}],
     )
 
-    detail = GetCampaignDetail(repo).execute("campaign-1")
+    detail = GetCampaignDetail(repo).execute(CAMPAIGN_ID)
 
-    assert detail.id == "campaign-1"
+    assert detail.id == CAMPAIGN_ID
     assert [npc.id for npc in detail.npcs] == ["npc-1"]
     assert [faction.id for faction in detail.factions] == ["faction-1"]
     assert [arc.id for arc in detail.arcs] == ["arc-1"]
-    repo.get_campaign.assert_called_once_with("campaign-1")
-    repo.get_campaign_children.assert_called_once_with("campaign-1")
+    repo.get_campaign.assert_called_once_with(CAMPAIGN_ID)
+    repo.get_campaign_children.assert_called_once_with(CAMPAIGN_ID)
+
+
+def test_get_campaign_detail_rejects_malformed_id_before_repository_query() -> None:
+    repo = MagicMock()
+
+    with pytest.raises(CampaignNotFoundError):
+        GetCampaignDetail(repo).execute("undefined")
+
+    repo.get_campaign.assert_not_called()
+    repo.get_campaign_children.assert_not_called()
 
 
 def test_get_campaign_detail_raises_not_found_when_campaign_not_visible() -> None:
@@ -65,6 +77,7 @@ def test_get_campaign_detail_raises_not_found_when_campaign_not_visible() -> Non
     repo.get_campaign.return_value = None
 
     with pytest.raises(CampaignNotFoundError):
-        GetCampaignDetail(repo).execute("missing")
+        GetCampaignDetail(repo).execute(CAMPAIGN_ID)
 
+    repo.get_campaign.assert_called_once_with(CAMPAIGN_ID)
     repo.get_campaign_children.assert_not_called()

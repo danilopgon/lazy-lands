@@ -26,7 +26,7 @@ Handoff prototypes: `handoff/app/views-dashboard.jsx`, `views-detail.jsx`, `view
 
 | File | Edit |
 |------|------|
-| Root `.env.example` (net-new) | Enumerate real vars (no secrets): `LLM_PROVIDER`, `GEMINI/GROQ/MISTRAL/CEREBRAS_API_KEY`, `LLM_FALLBACKS`, Supabase + `NEXT_PUBLIC_API_URL`. Root only. |
+| Root `.env.example` (exists) | Audit/update only if variables changed; otherwise document no-change. Keep enumerating real vars (no secrets): `LLM_PROVIDER`, `GEMINI/GROQ/MISTRAL/CEREBRAS_API_KEY`, `LLM_FALLBACKS`, Supabase + `NEXT_PUBLIC_API_URL`. Root only; do not create another file. |
 | `README.md` | Replace fictional `OPENROUTER_*` with real provider/`LLM_FALLBACKS` vars; drop unused `SUPABASE_JWT_SECRET`; fix `cp .env.example .env` to work. |
 | `services/api/README.md` | `SUPABASE_ANON_KEY` → `SUPABASE_PUBLISHABLE_KEY`; de-stale the "Block 0 only" description. |
 | `docs/04-architecture.md`, `docs/05-ai-system.md` | Add Mistral + Cerebras providers and `FallbackLlmProvider` / `LLM_FALLBACKS` semantics. |

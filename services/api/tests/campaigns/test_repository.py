@@ -174,9 +174,35 @@ def test_list_campaigns_selects_summary_fields_ordered_by_updated_at_desc() -> N
     assert [row["id"] for row in rows] == ["new", "old"]
     client.table.assert_any_call("campaigns")
     client.table.return_value.select.assert_called_once()
+    select_arg = client.table.return_value.select.call_args[0][0]
+    assert "system" in select_arg
+    assert "tone" in select_arg
     client.table.return_value.select.return_value.order.assert_called_once_with(
         "updated_at", desc=True
     )
+
+
+def test_list_campaigns_normalizes_empty_count_lists_to_zero() -> None:
+    client = MagicMock()
+    execute_result = MagicMock()
+    execute_result.data = [
+        {
+            "id": "campaign-1",
+            "title": "Sombras",
+            "npc_count": [],
+            "faction_count": [],
+            "arc_count": [],
+        }
+    ]
+    order_query = client.table.return_value.select.return_value.order.return_value
+    order_query.execute.return_value = execute_result
+    repo = SupabaseCampaignRepository(client)
+
+    rows = repo.list_campaigns()
+
+    assert rows[0]["npc_count"] == 0
+    assert rows[0]["faction_count"] == 0
+    assert rows[0]["arc_count"] == 0
 
 
 def test_get_campaign_returns_first_row_or_none_on_rls_miss() -> None:
@@ -191,6 +217,9 @@ def test_get_campaign_returns_first_row_or_none_on_rls_miss() -> None:
 
     assert row == {"id": "campaign-1", "title": "Visible"}
     client.table.assert_any_call("campaigns")
+    select_arg = client.table.return_value.select.call_args[0][0]
+    assert "system" in select_arg
+    assert "tone" in select_arg
     client.table.return_value.select.return_value.eq.assert_called_once_with(
         "id", "campaign-1"
     )
