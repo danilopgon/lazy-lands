@@ -71,6 +71,52 @@ Commit message: `feat(campaigns): add campaign list/detail read endpoints with n
 
 ---
 
+## Work Unit 1.5 — Backend campaigns module architecture refactor (mechanical, no behavior change)
+
+Commit message(s): `refactor(campaigns): split application into queries/commands` /
+`refactor(campaigns): split schemas into api/schemas and application/contracts` /
+`refactor(campaigns): inject query/command handlers via Depends` /
+`refactor(campaigns): remove domain/models.py compatibility barrel` /
+`docs: align block-6 design/tasks with the WU1.5 module layout`
+
+Owner-locked plan (see design §Decision 4 preamble). Behavior unchanged; the existing
+test suite (green before and after) is the safety net — no new tests written, no
+assertions changed except import-path-only adjustments forced by the file moves.
+
+- [x] 1.5.1 Split `application/` into `application/queries/` (`get_campaigns.py`,
+      `get_campaign_detail.py`) and `application/commands/` (`create_campaign.py`,
+      `extract_campaign.py`); update all importers.
+- [x] 1.5.2 Split the flat `schemas.py` into `api/schemas/{campaign,npc,faction,arc}/
+      {requests,responses}.py` (HTTP DTOs) and `application/contracts.py`
+      (LLM-extraction models: `ScribeExtractedModel`, `Extracted*`,
+      `ExtractCampaignOutput`); `ExtractRequest` placed in
+      `api/schemas/campaign/requests.py` (judgment call — pure HTTP input DTO, no LLM
+      contract semantics).
+- [x] 1.5.3 Add `api/dependencies.py` with one `Depends` provider per handler
+      (`provide_get_campaigns`, `provide_get_campaign_detail`,
+      `provide_create_campaign`, `provide_extract_campaign`, `get_llm_provider`); move
+      `routes.py` → `api/routes.py` and rewire every route body to receive its handler
+      via `Depends` instead of constructing `SupabaseCampaignRepository`/use cases
+      inline.
+- [x] 1.5.4 Remove the `domain/models.py` compatibility barrel; repoint every importer
+      (`infrastructure/repository.py`, `domain/ports.py`, tests) to `domain/__init__.py`
+      or the concrete `domain/{arc,campaign,faction,npc,enums}.py` modules.
+- [x] 1.5.5 Update test import paths only (never assertions/logic) across
+      `tests/campaigns/*.py`; the one behavior-preserving exception is
+      `test_routes_extract.py::test_statelessness_no_db_writes_on_any_path`, whose
+      monkeypatch target moved from `routes_module.SupabaseCampaignRepository` to
+      `api.dependencies.SupabaseCampaignRepository` (the class reference moved with the
+      Depends refactor; the assertion itself — extract must never construct a
+      repository — is unchanged).
+- [x] 1.5.6 Run `uv run pytest`, `uv run ruff format --check app/ tests/`,
+      `uv run ruff check app/ tests/`, `uv run mypy app` from `services/api/` — confirm
+      189 passed / 1 skipped (same as pre-refactor baseline) and all gates green.
+- [x] 1.5.7 Align docs: `design.md` §Decision 4 (this file's WU1.5 preamble),
+      `tasks.md` (this section), `apply-progress.md` (WU1.5 entry) — done as part of
+      this work unit, not deferred to Work Unit 4.
+
+---
+
 ## Work Unit 2 — Frontend read paths + shared primitives
 
 Commit message: `feat(web): add Field/Modal primitives and campaign list/detail read screens`
@@ -192,6 +238,13 @@ This unit is the risk-bearing core (touches shipped Block-5 create path and the 
 enum). Sub-slice 3A/3B/3C/3D internally but keep them in the same work unit per design
 §9's "Migration B + its code touchpoints as one atomic work-unit" and §10 guidance —
 do not let a batch boundary land mid-migration.
+
+**Post-WU1.5 layout note:** the new `npcs_router`/`factions_router`/`arcs_router` (3C)
+and their schemas land under `api/` — routes in `api/routes.py` (or a split
+`api/routes/` package, implementer's discretion) and schemas in
+`api/schemas/{npc,faction,arc}/{requests,responses}.py`, following the WU1.5 layout
+rather than the pre-refactor flat `routes.py`/`schemas.py`. New use cases go under
+`application/queries/` (reads) or `application/commands/` (writes) per their nature.
 
 ### 3A — Migration A: campaign `system`/`tone` ⚠
 

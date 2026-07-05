@@ -5,6 +5,13 @@
 **Area:** Backend / Architecture
 **Refined:** 2026-06-28 — Nested layer structure within modules
 **Refined:** 2026-06-29 — Feature modules grouped under `app/modules/` to separate domain modules from the shared kernel
+**Refined:** 2026-07-05 — WU1.5 (Block 6): `campaigns/` split flat `routes.py`/`schemas.py`
+into `api/` (`routes.py`, `dependencies.py` for `Depends`-injected handlers,
+`schemas/{entity}/{requests,responses}.py`), split `application/` into `queries/`/`commands/`,
+and moved LLM-extraction contract models into `application/contracts.py`. This is the pattern
+other modules should follow once they outgrow the flat single-file layout described below; the
+example trees in this ADR are left as originally written for historical context — see
+`docs/04-architecture.md` for the current `campaigns/` tree.
 
 ## Context and problem
 

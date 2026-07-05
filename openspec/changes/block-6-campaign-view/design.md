@@ -140,6 +140,49 @@ Registered in `app/main.py`. `CampaignValidationError` (empty patch) → 422 (re
 
 All under `services/api/app/modules/campaigns/`.
 
+**WU1.5 architecture refactor (mechanical, landed before this slice's CRUD work; behavior
+unchanged, existing suite as safety net).** Two smells were fixed ahead of the CRUD-heavy work
+below so it lands on clean layer ownership instead of compounding them:
+
+1. **Flat `schemas.py` mixed layers** (HTTP DTOs + LLM-extraction contract models in one file).
+   Fixed by giving each layer its own home: HTTP request/response DTOs moved to
+   **`api/schemas/{campaign,npc,faction,arc}/{requests,responses}.py`** (hybrid split — per
+   entity, then by direction); LLM-extraction contract models (`ScribeExtractedModel`,
+   `Extracted*`, `ExtractCampaignOutput`) moved to **`application/contracts.py`**.
+2. **Routes wired infrastructure directly** (`repo = SupabaseCampaignRepository(client); uc =
+   UseCase(repo)` inline in the route body). Fixed with **FastAPI `Depends`-injected handlers**:
+   new **`api/dependencies.py`** exposes one provider per handler
+   (`provide_get_campaigns`, `provide_get_campaign_detail`, `provide_create_campaign`,
+   `provide_extract_campaign`, plus `get_llm_provider`) that builds the handler with the
+   per-user-scoped repository/LLM provider. Routes declare
+   `handler: Annotated[UseCase, Depends(provide_x)]` and only call `.execute()` — no
+   infrastructure construction in route bodies.
+
+Additional mechanical moves: `routes.py` → **`api/routes.py`**; the application layer split into
+**`application/queries/`** (`get_campaigns.py`, `get_campaign_detail.py`) and
+**`application/commands/`** (`create_campaign.py`, `extract_campaign.py`); the `domain/models.py`
+compatibility barrel (superseded by `domain/__init__.py`) was removed — importers use
+`domain/__init__.py` or the concrete `domain/{arc,campaign,faction,npc,enums}.py` modules
+directly. `infrastructure/{repository.py,errors.py}` are unchanged in shape; the two `errors.py`
+files (module-root `errors.py` for use-case/HTTP-mapped exceptions,
+`infrastructure/errors.py` for `RepositoryError`) remain intentionally separate — consolidating
+them was explicitly deselected for this slice.
+
+Known pre-existing coupling **not** fixed by WU1.5 (mechanical refactor only, not a redesign):
+`application/` and `domain/ports.py` still import HTTP DTOs from `api/schemas/` (e.g.
+`CreateCampaignRequest`, `CampaignSummary`) because the use cases and the `CampaignRepository`
+Protocol are typed directly against those DTOs. This is backwards from strict Clean Architecture
+(inner layers depending on the outer HTTP layer) but predates WU1.5 and was out of scope to
+redesign here — flagged for a future slice if it becomes a real pain point.
+
+**The subsections below (4.1–4.6) describe the CRUD-extension design; read them against the
+post-WU1.5 tree** — `routes.py` means `api/routes.py`, `schemas.py` means the relevant
+`api/schemas/{entity}/{requests,responses}.py` file, and new use cases land under
+`application/queries/` or `application/commands/` per their read/write nature. **WU3's routers
+(the three new flat `npcs_router`/`factions_router`/`arcs_router`) and their new schemas land
+under `api/`** — `api/routes.py` (or a split `api/routes/` package, at WU3's discretion) and
+`api/schemas/{npc,faction,arc}/`, following the WU1.5 layout rather than the flat pre-refactor one.
+
 ### 4.1 `domain/ports.py` — extend the `CampaignRepository` Protocol
 
 Add reads, updates, creates, deletes, and arcs (still a Protocol; the application layer depends

@@ -78,7 +78,7 @@ LLM Provider
 
 The backend follows a **Modular Monolith with nested Clean/Hexagonal layers per module** (see ADR-05).
 
-Each feature module (`campaigns`, `sessions`, `memory`, `generation`) encapsulates its own `domain/`, `application/`, `infrastructure/`, `routes.py`, `schemas.py`, and `prompts/`. This combines feature-based cohesion with layered discipline.
+Each feature module (`campaigns`, `sessions`, `memory`, `generation`) encapsulates its own `domain/`, `application/`, `infrastructure/`, `api/` (routes + DTOs), and `prompts/`. This combines feature-based cohesion with layered discipline. `campaigns` further splits `application/` into `queries/`/`commands/` and `api/schemas/` by entity — see the module tree below for the pattern other modules can follow as they grow.
 
 Transversal concerns (config, security, Supabase client, LLM provider port + adapters) live in a `shared/` kernel imported by all modules.
 
@@ -97,16 +97,28 @@ app/
   modules/
     campaigns/
       domain/
-        models.py
+        arc.py, campaign.py, faction.py, npc.py, enums.py
         ports.py
       application/
-        extract_campaign.py
-        create_campaign.py
-        get_campaign.py
+        queries/
+          get_campaigns.py
+          get_campaign_detail.py
+        commands/
+          create_campaign.py
+          extract_campaign.py
+        contracts.py        # LLM-extraction contract models
       infrastructure/
         repository.py
-      routes.py
-      schemas.py
+        errors.py
+      api/
+        routes.py
+        dependencies.py      # Depends providers, one per handler
+        schemas/
+          campaign/requests.py, responses.py
+          npc/requests.py, responses.py
+          faction/requests.py, responses.py
+          arc/requests.py, responses.py
+      errors.py
       prompts/
         extract_campaign_v1.jinja
 

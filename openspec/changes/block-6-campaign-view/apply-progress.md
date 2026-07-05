@@ -2,10 +2,11 @@
 
 ## Status
 
-- Current work unit: Work Unit 1 — Backend read paths
-- Mode: Strict TDD
+- Current work unit: Work Unit 1.5 — Backend campaigns module architecture refactor
+- Mode: Strict TDD (WU1.5 is a behavior-preserving mechanical refactor — no new
+  tests written; existing suite is the safety net, per owner-locked plan)
 - Delivery strategy: single PR with accepted `size:exception`
-- Progress: 9 / 85 tasks complete + PR #28 review-fix pass applied
+- Progress: 16 / 92 tasks complete (WU1: 9 + WU1.5: 7) + PR #28 review-fix pass applied
 
 ## Completed Tasks
 
@@ -46,6 +47,54 @@
 - PR #28 review fixes added a UUID guard before campaign-detail repository access so malformed ids such as `unknown` / `undefined` return the uniform 404 instead of reaching Supabase uuid equality.
 - PR #28 OpenSpec/docs corrections aligned routes to the actual backend paths (no `/api` prefix), flat create routes with `campaign_id` in request bodies, no edit-time `content_source` restamp, non-empty `tone`, Modal focus/ARIA requirements, and existing root `.env.example` audit-only language.
 - No migrations, write endpoints, Block 5 `composeRawText`, or arc enum changes were touched in WU1.
+
+## Work Unit 1.5 — Backend campaigns module architecture refactor (mechanical, no behavior change)
+
+- [x] 1.5.1 Split `application/` into `application/queries/` (`get_campaigns.py`,
+      `get_campaign_detail.py`) and `application/commands/` (`create_campaign.py`,
+      `extract_campaign.py`).
+- [x] 1.5.2 Split flat `schemas.py` into `api/schemas/{campaign,npc,faction,arc}/
+      {requests,responses}.py` and `application/contracts.py` (LLM-extraction
+      models). `ExtractRequest` placed in `api/schemas/campaign/requests.py`
+      (judgment call, logged below).
+- [x] 1.5.3 Added `api/dependencies.py` (Depends providers per handler); moved
+      `routes.py` → `api/routes.py`; rewired every route to receive its
+      query/command handler via `Depends` instead of constructing
+      `SupabaseCampaignRepository` inline.
+- [x] 1.5.4 Removed `domain/models.py` compatibility barrel; repointed
+      `infrastructure/repository.py` and `domain/ports.py` to `domain/enums.py` /
+      `api/schemas/*` directly.
+- [x] 1.5.5 Updated import paths across all `tests/campaigns/*.py`; no assertions or
+      test logic changed.
+- [x] 1.5.6 Gates: `uv run pytest` → 189 passed, 1 skipped (baseline-identical);
+      `uv run ruff format --check app/ tests/` → pass; `uv run ruff check app/ tests/`
+      → pass; `uv run mypy app` → pass.
+- [x] 1.5.7 Docs aligned: `design.md` §Decision 4 preamble, `tasks.md` (this WU1.5
+      section + WU3 layout note), `apply-progress.md` (this entry).
+
+### Judgment call
+
+`ExtractRequest` was placed in `api/schemas/campaign/requests.py` rather than
+`application/contracts.py`. Rationale: it is a pure HTTP input DTO (single
+`raw_text` field enforcing the trust boundary at the route), with no LLM-contract
+semantics of its own — unlike `ExtractCampaignOutput`, which the LLM provider's
+`complete_json` call validates against directly. Keeping it beside
+`CreateCampaignRequest` in `api/schemas/campaign/requests.py` matches its sibling
+DTO's placement and keeps `application/contracts.py` scoped strictly to the
+extraction *output* contract.
+
+### Known pre-existing coupling not fixed (out of scope for WU1.5)
+
+`application/{queries,commands}/*.py` and `domain/ports.py` import HTTP DTOs
+(`CreateCampaignRequest`, `CampaignSummary`, `CampaignDetailResponse`,
+`NpcResponse`, `FactionResponse`, `ArcResponse`) from `api/schemas/`. This means
+the application layer and the `CampaignRepository` Protocol depend on the
+outer HTTP layer — backwards from strict Clean Architecture. This predates
+WU1.5 (the same use cases imported directly from the flat `schemas.py` before);
+WU1.5 only relocated the import paths without redesigning the dependency
+direction, per the owner-locked scope (mechanical refactor, no relitigating
+the schema-layer boundary). Flagged for a future slice if it becomes a real
+pain point.
 
 ## Remaining Tasks
 
