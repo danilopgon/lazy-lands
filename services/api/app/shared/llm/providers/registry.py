@@ -1,14 +1,14 @@
 """Provider registry and build_provider factory.
 
-Resolves the active LLM provider from the LLM_PROVIDER environment variable.
+Resolves the active LLM provider from application settings.
 Returns a configured OpenAiCompatibleProvider for real providers,
 a FallbackLlmProvider when LLM_FALLBACKS is set, or FakeLlmProvider for
 tests/dev.
 """
 
 import logging
-import os
 
+from app.shared.config import Settings
 from app.shared.llm.port import LlmProvider
 from app.shared.llm.providers.fake import FakeLlmProvider
 from app.shared.llm.providers.fallback import FallbackLlmProvider
@@ -43,12 +43,19 @@ PROVIDERS: dict[str, dict[str, str]] = {
 }
 
 
-def _build_single(name: str, entry: dict[str, str]) -> OpenAiCompatibleProvider:
+def _get_provider_api_key(settings: Settings, api_key_env: str) -> str:
+    value = getattr(settings, api_key_env.lower(), None)
+    return (value or "").strip()
+
+
+def _build_single(
+    settings: Settings, name: str, entry: dict[str, str]
+) -> OpenAiCompatibleProvider:
     """Create an OpenAiCompatibleProvider for a single registered provider.
 
-    Reads the API key from the env var specified in *entry*.
+    Reads the API key from the settings field named by *entry*.
     """
-    api_key = os.environ.get(entry["api_key_env"], "").strip()
+    api_key = _get_provider_api_key(settings, entry["api_key_env"])
     if not api_key:
         raise ValueError(
             f"API key environment variable '{entry['api_key_env']}' "
@@ -63,13 +70,12 @@ def _build_single(name: str, entry: dict[str, str]) -> OpenAiCompatibleProvider:
 
 
 def build_provider() -> LlmProvider:
-    """Construct an LlmProvider from LLM_PROVIDER env.
+    """Construct an LlmProvider from application settings.
 
     When LLM_PROVIDER is "fake", returns a FakeLlmProvider (no API key needed).
 
     Otherwise looks up the matching entry in PROVIDERS, reads the provider's
-    API key from the env var named by api_key_env, and returns a configured
-    OpenAiCompatibleProvider.
+    API key from settings, and returns a configured OpenAiCompatibleProvider.
 
     If LLM_FALLBACKS is set (comma-separated provider names), returns a
     ``FallbackLlmProvider`` that wraps the primary provider PLUS every
@@ -80,13 +86,14 @@ def build_provider() -> LlmProvider:
         A configured LlmProvider (single or fallback).
 
     Raises:
-        ValueError: If LLM_PROVIDER is not set, refers to an unknown provider,
-            or the required API key env var for the primary is missing.
+        ValueError: If LLM_PROVIDER refers to an unknown provider, or the
+            required API key setting for the primary is missing.
     """
-    primary = os.environ.get("LLM_PROVIDER", "").strip().lower()
+    settings = Settings()  # type: ignore[call-arg]
+    primary = settings.llm_provider.strip().lower()
     if not primary:
         raise ValueError(
-            "LLM_PROVIDER environment variable is not set. "
+            "LLM_PROVIDER setting is not set. "
             "Set it to one of: fake, gemini, groq, mistral, cerebras"
         )
 
@@ -100,10 +107,10 @@ def build_provider() -> LlmProvider:
             f"Must be one of: fake, {', '.join(sorted(PROVIDERS.keys()))}"
         )
 
-    primary_provider = _build_single(primary, entry)
+    primary_provider = _build_single(settings, primary, entry)
 
     # ---- Fallback chain ------------------------------------------------
-    fallback_names = _parse_fallback_names()
+    fallback_names = _parse_fallback_names(settings, primary)
     if not fallback_names:
         return primary_provider  # no fallbacks configured — fast path
 
@@ -117,7 +124,7 @@ def build_provider() -> LlmProvider:
                 ", ".join(sorted(PROVIDERS.keys())),
             )
             continue
-        api_key = os.environ.get(fb_entry["api_key_env"], "").strip()
+        api_key = _get_provider_api_key(settings, fb_entry["api_key_env"])
         if not api_key:
             logger.info(
                 "Skipping fallback %r — %s not set.",
@@ -144,17 +151,16 @@ def build_provider() -> LlmProvider:
     return FallbackLlmProvider(chain)
 
 
-def _parse_fallback_names() -> list[str]:
-    """Return a deduplicated, ordered list of fallback provider names from env.
+def _parse_fallback_names(settings: Settings, primary: str) -> list[str]:
+    """Return a deduplicated, ordered list of fallback provider names.
 
     Reads ``LLM_FALLBACKS`` (comma- or space-separated) and ignores any value
     that matches the primary provider.
     """
-    raw = os.environ.get("LLM_FALLBACKS", "").strip()
+    raw = settings.llm_fallbacks.strip()
     if not raw:
         return []
 
-    primary = os.environ.get("LLM_PROVIDER", "").strip().lower()
     names: list[str] = []
     for token in raw.replace(",", " ").split():
         name = token.strip().lower()

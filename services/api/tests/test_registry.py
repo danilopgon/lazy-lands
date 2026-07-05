@@ -38,8 +38,51 @@ def test_008c_build_provider_gemini(monkeypatch) -> None:
     assert provider.model == "gemini-2.5-flash"
 
 
+def test_build_provider_reads_provider_from_settings_env_file(
+    monkeypatch, tmp_path
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    tmp_path.joinpath(".env").write_text(
+        "LLM_PROVIDER=gemini\nGEMINI_API_KEY=dotenv-gemini-key\n",
+        encoding="utf-8",
+    )
+
+    provider = build_provider()
+
+    assert isinstance(provider, OpenAiCompatibleProvider)
+    assert provider.provider_name == "gemini"
+    assert provider.api_key == "dotenv-gemini-key"
+
+
+def test_build_provider_reads_fallbacks_from_settings_env_file(
+    monkeypatch, tmp_path
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    for name in (
+        "LLM_PROVIDER",
+        "LLM_FALLBACKS",
+        "GEMINI_API_KEY",
+        "GROQ_API_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    tmp_path.joinpath(".env").write_text(
+        "LLM_PROVIDER=gemini\n"
+        "GEMINI_API_KEY=dotenv-gemini-key\n"
+        "LLM_FALLBACKS=groq\n"
+        "GROQ_API_KEY=dotenv-groq-key\n",
+        encoding="utf-8",
+    )
+
+    provider = build_provider()
+
+    assert isinstance(provider, FallbackLlmProvider)
+
+
 # LLM-SEAM-008d: missing API key fails loudly
-def test_008d_missing_key_raises(monkeypatch) -> None:
+def test_008d_missing_key_raises(monkeypatch, tmp_path) -> None:
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     with pytest.raises(ValueError) as exc_info:
