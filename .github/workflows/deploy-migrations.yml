@@ -42,6 +42,15 @@ jobs:
         with:
           version: 2.109.0
 
+      # config.toml sets auth.signing_keys_path, and `db push` eagerly parses
+      # the whole [auth] block, so it fails if the file is missing. The real key
+      # is gitignored (local-dev only) and never reaches CI. Generate an
+      # ephemeral one purely to satisfy config parsing: no local stack runs here,
+      # so this key is never used. `gen signing-key` prints a bare JWK object,
+      # but signing_keys_path expects a JWK array, so wrap it with jq.
+      - name: Provision ephemeral signing key (satisfies config parsing)
+        run: supabase gen signing-key --algorithm ES256 | jq -c '[.]' > supabase/signing_keys.json
+
       - name: Link hosted project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
