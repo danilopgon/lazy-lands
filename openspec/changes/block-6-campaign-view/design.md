@@ -141,47 +141,124 @@ Registered in `app/main.py`. `CampaignValidationError` (empty patch) → 422 (re
 All under `services/api/app/modules/campaigns/`.
 
 **WU1.5 architecture refactor (mechanical, landed before this slice's CRUD work; behavior
-unchanged, existing suite as safety net).** Two smells were fixed ahead of the CRUD-heavy work
-below so it lands on clean layer ownership instead of compounding them:
+unchanged, existing suite as safety net).** Landed in three passes, each fixing one smell so the
+CRUD-heavy work below lands on clean layer ownership instead of compounding them:
 
 1. **Flat `schemas.py` mixed layers** (HTTP DTOs + LLM-extraction contract models in one file).
    Fixed by giving each layer its own home: HTTP request/response DTOs moved to
-   **`api/schemas/{campaign,npc,faction,arc}/{requests,responses}.py`** (hybrid split — per
-   entity, then by direction); LLM-extraction contract models (`ScribeExtractedModel`,
-   `Extracted*`, `ExtractCampaignOutput`) moved to **`application/contracts.py`**.
+   `api/schemas/{campaign,npc,faction,arc}/{requests,responses}.py` (hybrid split — per entity,
+   then by direction); LLM-extraction contract models (`ScribeExtractedModel`, `Extracted*`,
+   `ExtractCampaignOutput`) moved to `application/contracts.py`.
 2. **Routes wired infrastructure directly** (`repo = SupabaseCampaignRepository(client); uc =
-   UseCase(repo)` inline in the route body). Fixed with **FastAPI `Depends`-injected handlers**:
-   new **`api/dependencies.py`** exposes one provider per handler
-   (`provide_get_campaigns`, `provide_get_campaign_detail`, `provide_create_campaign`,
-   `provide_extract_campaign`, plus `get_llm_provider`) that builds the handler with the
-   per-user-scoped repository/LLM provider. Routes declare
-   `handler: Annotated[UseCase, Depends(provide_x)]` and only call `.execute()` — no
-   infrastructure construction in route bodies.
+   UseCase(repo)` inline in the route body). Fixed with FastAPI `Depends`-injected handlers:
+   `api/dependencies.py` exposes one provider per handler (`provide_get_campaigns`,
+   `provide_get_campaign_detail`, `provide_create_campaign`, `provide_extract_campaign`, plus
+   `get_llm_provider`) that builds the handler with the per-user-scoped repository/LLM provider.
+   Routes declare `handler: Annotated[UseCase, Depends(provide_x)]` and only call `.execute()`.
+3. **Dependency-rule violation (pass 2, follow-up to pass 1's initial mechanical move):**
+   `domain/ports.py` and `application/{queries,commands}` were found importing HTTP DTOs from
+   `api/schemas/` — an outward-to-inward dependency the first pass's mechanical import-path move
+   had preserved rather than fixed. Corrected by inverting the direction: the `CampaignRepository`
+   port now speaks domain entities/primitives (`NPC`, `Faction`, `NewArc`, plus plain
+   `str` scalars for `insert_campaign`), the `api` layer maps `CreateCampaignRequest` →
+   `CreateCampaignCommand` (a small application-owned command DTO) before invoking
+   `CreateCampaign`, and the query read models (`CampaignSummary`, `CampaignDetailResponse`,
+   `NpcResponse`, `FactionResponse`, `ArcResponse`) moved from `api/schemas/*/responses.py` into
+   `application/read_models/` — owned by the layer that produces them, imported by `api/routes.py`
+   for FastAPI `response_model` (a legal inward `api -> application` dependency).
+4. **Errors layer mixed classes and HTTP handlers (pass 3):** the module-root `errors.py` mixed
+   exception *classes* (`CampaignNotFoundError`, `CampaignPersistenceError`) with FastAPI
+   exception *handlers* (`async def ..._handler(...) -> JSONResponse`) — a presentation concern
+   with no business rule of its own. Split: the classes moved to `application/errors.py` (they are
+   raised by the queries/commands that detect the RLS miss or translate `RepositoryError`); the
+   handlers moved to `api/exception_handlers.py` and are registered from there in `app/main.py`.
+   The module root no longer holds any layer-specific code — `errors.py` at
+   `app/modules/campaigns/errors.py` no longer exists.
 
-Additional mechanical moves: `routes.py` → **`api/routes.py`**; the application layer split into
-**`application/queries/`** (`get_campaigns.py`, `get_campaign_detail.py`) and
-**`application/commands/`** (`create_campaign.py`, `extract_campaign.py`); the `domain/models.py`
-compatibility barrel (superseded by `domain/__init__.py`) was removed — importers use
-`domain/__init__.py` or the concrete `domain/{arc,campaign,faction,npc,enums}.py` modules
-directly. `infrastructure/{repository.py,errors.py}` are unchanged in shape; the two `errors.py`
-files (module-root `errors.py` for use-case/HTTP-mapped exceptions,
-`infrastructure/errors.py` for `RepositoryError`) remain intentionally separate — consolidating
-them was explicitly deselected for this slice.
+Additional mechanical moves from pass 1 (unaffected by passes 2–3): `routes.py` → `api/routes.py`;
+the application layer split into `application/queries/` (`get_campaigns.py`,
+`get_campaign_detail.py`) and `application/commands/` (`create_campaign.py`,
+`extract_campaign.py`); the `domain/models.py` compatibility barrel (superseded by
+`domain/__init__.py`) was removed — importers use `domain/__init__.py` or the concrete
+`domain/{arc,campaign,faction,npc,enums}.py` modules directly. `infrastructure/repository.py` is
+unchanged in shape (only its parameter types followed the port); `infrastructure/errors.py`
+(`RepositoryError`) is unchanged and stays put — it is an adapter/port failure, not an
+application-level outcome or a presentation concern, so it does not belong in either of the two
+files pass 3 split.
 
-Known pre-existing coupling **not** fixed by WU1.5 (mechanical refactor only, not a redesign):
-`application/` and `domain/ports.py` still import HTTP DTOs from `api/schemas/` (e.g.
-`CreateCampaignRequest`, `CampaignSummary`) because the use cases and the `CampaignRepository`
-Protocol are typed directly against those DTOs. This is backwards from strict Clean Architecture
-(inner layers depending on the outer HTTP layer) but predates WU1.5 and was out of scope to
-redesign here — flagged for a future slice if it becomes a real pain point.
+**Final tree after WU1.5** (all under `services/api/app/modules/campaigns/`):
 
-**The subsections below (4.1–4.6) describe the CRUD-extension design; read them against the
-post-WU1.5 tree** — `routes.py` means `api/routes.py`, `schemas.py` means the relevant
-`api/schemas/{entity}/{requests,responses}.py` file, and new use cases land under
-`application/queries/` or `application/commands/` per their read/write nature. **WU3's routers
-(the three new flat `npcs_router`/`factions_router`/`arcs_router`) and their new schemas land
-under `api/`** — `api/routes.py` (or a split `api/routes/` package, at WU3's discretion) and
-`api/schemas/{npc,faction,arc}/`, following the WU1.5 layout rather than the flat pre-refactor one.
+```text
+campaigns/
+├── domain/                      # innermost layer — no outward imports at all
+│   ├── arc.py                   # Arc (persisted, full invariant incl. status), NewArc (creation-
+│   │                            #   time shape, no status — assigned by the repository)
+│   ├── campaign.py              # Campaign (id/user_id + scalars; not on the create path — see 4.1)
+│   ├── faction.py                # Faction
+│   ├── npc.py                    # NPC
+│   ├── enums.py                  # ArcStatus, ContentSource, Priority
+│   └── ports.py                  # CampaignRepository Protocol — speaks domain entities/scalars only
+├── application/                  # depends on domain only
+│   ├── errors.py                  # CampaignNotFoundError, CampaignPersistenceError
+│   ├── contracts.py               # LLM-extraction models (ScribeExtractedModel, Extracted*, ExtractCampaignOutput)
+│   ├── read_models/                # query output shapes, per entity
+│   │   ├── campaign.py            # CampaignSummary, CampaignDetailResponse
+│   │   ├── npc.py, faction.py, arc.py  # NpcResponse, FactionResponse, ArcResponse
+│   ├── queries/                    # get_campaigns.py -> GetCampaigns, get_campaign_detail.py -> GetCampaignDetail
+│   └── commands/                    # create_campaign.py -> CreateCampaign + CreateCampaignCommand,
+│                                     #   extract_campaign.py -> ExtractCampaign
+├── infrastructure/                  # depends on domain (+ application only for RepositoryError-adjacent typing); implements the port
+│   ├── repository.py                # SupabaseCampaignRepository — takes domain entities/scalars, never api DTOs
+│   └── errors.py                     # RepositoryError (adapter/port failure — distinct from application/errors.py)
+├── api/                              # outermost layer — the only layer allowed to import from every inner layer
+│   ├── routes.py                     # thin handlers + the one request->command mapper (_to_create_campaign_command)
+│   ├── dependencies.py                # Depends providers, one per handler
+│   ├── exception_handlers.py          # FastAPI handlers mapping application/errors.py exceptions to JSON
+│   └── schemas/                        # HTTP DTOs — requests only (responses live in application/read_models/)
+│       ├── campaign/requests.py, responses.py  # responses.py keeps only CreateCampaignResponse ({id})
+│       ├── npc/requests.py
+│       ├── faction/requests.py
+│       └── arc/requests.py
+└── prompts/
+    └── extract_campaign_v1.jinja
+```
+
+### Layering / dependency-direction rules (binding — read before adding WU3 code)
+
+The allowed dependency arrows point **inward only**: `api -> application -> domain`,
+`infrastructure -> domain` (and `infrastructure` may implement application-facing shapes, but
+never imports `api`). Concretely:
+
+- **`domain/`** imports nothing from `application/`, `infrastructure/`, or `api/`. Ports
+  (`domain/ports.py`) are typed against domain entities (`NPC`, `Faction`, `NewArc`, `Arc`,
+  `Campaign`) and plain scalars — never against `Create*Request`/`*Response` DTOs.
+- **`application/`** imports from `domain/` only (plus stdlib/pydantic). It never imports from
+  `api/` or `infrastructure/`. Request DTOs never cross into `application/` — if a command needs
+  the request's data, the **api layer maps request -> domain entities/a small application-owned
+  command DTO** before calling the command (see `api/routes.py::_to_create_campaign_command` for
+  the pattern). Query outputs are **application-owned read models**
+  (`application/read_models/`), never HTTP response DTOs borrowed from `api/schemas/`.
+- **`infrastructure/`** implements the `domain/ports.py` Protocol; its method signatures must
+  match the port exactly (domain entities/scalars in, `dict`/`bool`/`str` out at the port
+  boundary). It never imports from `api/`.
+- **`api/`** is the only layer allowed to import from `domain/`, `application/`, and
+  `infrastructure/` (via `api/dependencies.py`, which wires `infrastructure.repository` into
+  application handlers). HTTP DTOs (`api/schemas/*/requests.py`) and FastAPI exception handlers
+  (`api/exception_handlers.py`) live here and must never be imported by `domain/` or
+  `application/`.
+- **Acceptance check (must hold before every merge to this module):**
+  `grep -rn "campaigns.api" app/modules/campaigns/domain app/modules/campaigns/application` must
+  return nothing, and neither `domain/` nor `application/` may import `fastapi`, `JSONResponse`,
+  or any HTTP-layer type.
+- **WU3 must follow this pattern for every new endpoint**: the three new flat
+  `npcs_router`/`factions_router`/`arcs_router` and their request schemas land under `api/`
+  (`api/routes.py` or a split `api/routes/` package, implementer's discretion, and
+  `api/schemas/{npc,faction,arc}/requests.py`); their `Update*Request`/`Create*Input` DTOs stay
+  api-only and get mapped to domain entities/command DTOs at the api boundary exactly like
+  `CreateCampaignCommand`; their read-side additions (if any) land in `application/read_models/`;
+  any new port methods (`update_*`, `create_*`, `delete_*` in §4.1 below) are typed against domain
+  entities/scalars, not DTOs; any new application-level exceptions land in `application/errors.py`
+  with their HTTP mapping in `api/exception_handlers.py`.
 
 ### 4.1 `domain/ports.py` — extend the `CampaignRepository` Protocol
 

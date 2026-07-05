@@ -78,7 +78,7 @@ LLM Provider
 
 The backend follows a **Modular Monolith with nested Clean/Hexagonal layers per module** (see ADR-05).
 
-Each feature module (`campaigns`, `sessions`, `memory`, `generation`) encapsulates its own `domain/`, `application/`, `infrastructure/`, `api/` (routes + DTOs), and `prompts/`. This combines feature-based cohesion with layered discipline. `campaigns` further splits `application/` into `queries/`/`commands/` and `api/schemas/` by entity — see the module tree below for the pattern other modules can follow as they grow.
+Each feature module (`campaigns`, `sessions`, `memory`, `generation`) encapsulates its own `domain/`, `application/`, `infrastructure/`, `api/` (routes + DTOs), and `prompts/`. This combines feature-based cohesion with layered discipline. `campaigns` further splits `application/` into `queries/`/`commands/`/`read_models/`/`contracts.py`/`errors.py` and `api/` into `routes.py`/`dependencies.py`/`exception_handlers.py`/`schemas/` (requests only, per entity) — see the module tree below for the pattern other modules can follow as they grow. The dependency direction is strictly inward (`api -> application -> domain`, `infrastructure -> domain`): `domain/` and `application/` never import from `api/`, and HTTP DTOs/FastAPI exception handlers never cross into them.
 
 Transversal concerns (config, security, Supabase client, LLM provider port + adapters) live in a `shared/` kernel imported by all modules.
 
@@ -96,29 +96,33 @@ Each feature module contains nested layer directories:
 app/
   modules/
     campaigns/
-      domain/
-        arc.py, campaign.py, faction.py, npc.py, enums.py
-        ports.py
-      application/
+      domain/                    # no outward imports at all
+        arc.py                   # Arc (persisted, full invariant), NewArc (creation-time, no status)
+        campaign.py, faction.py, npc.py, enums.py
+        ports.py                 # CampaignRepository Protocol — speaks domain entities/scalars only
+      application/                # depends on domain/ only
+        errors.py                 # CampaignNotFoundError, CampaignPersistenceError
+        contracts.py               # LLM-extraction contract models
+        read_models/                # query output shapes, per entity
+          campaign.py, npc.py, faction.py, arc.py
         queries/
           get_campaigns.py
           get_campaign_detail.py
         commands/
-          create_campaign.py
+          create_campaign.py       # CreateCampaign + CreateCampaignCommand
           extract_campaign.py
-        contracts.py        # LLM-extraction contract models
-      infrastructure/
+      infrastructure/               # implements the port; depends on domain/ only
         repository.py
-        errors.py
-      api/
-        routes.py
-        dependencies.py      # Depends providers, one per handler
-        schemas/
-          campaign/requests.py, responses.py
-          npc/requests.py, responses.py
-          faction/requests.py, responses.py
-          arc/requests.py, responses.py
-      errors.py
+        errors.py                   # RepositoryError (adapter/port failure)
+      api/                          # outermost layer; the only layer that imports every inner one
+        routes.py                   # thin handlers + request->domain/command mapper(s)
+        dependencies.py              # Depends providers, one per handler
+        exception_handlers.py        # FastAPI handlers mapping application/errors.py exceptions
+        schemas/                     # HTTP request DTOs only (responses live in application/read_models/)
+          campaign/requests.py, responses.py  # responses.py: CreateCampaignResponse only
+          npc/requests.py
+          faction/requests.py
+          arc/requests.py
       prompts/
         extract_campaign_v1.jinja
 

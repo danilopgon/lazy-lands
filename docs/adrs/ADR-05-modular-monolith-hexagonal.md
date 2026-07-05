@@ -5,13 +5,28 @@
 **Area:** Backend / Architecture
 **Refined:** 2026-06-28 — Nested layer structure within modules
 **Refined:** 2026-06-29 — Feature modules grouped under `app/modules/` to separate domain modules from the shared kernel
-**Refined:** 2026-07-05 — WU1.5 (Block 6): `campaigns/` split flat `routes.py`/`schemas.py`
+**Refined:** 2026-07-05 — WU1.5 (Block 6), pass 1: `campaigns/` split flat `routes.py`/`schemas.py`
 into `api/` (`routes.py`, `dependencies.py` for `Depends`-injected handlers,
 `schemas/{entity}/{requests,responses}.py`), split `application/` into `queries/`/`commands/`,
 and moved LLM-extraction contract models into `application/contracts.py`. This is the pattern
 other modules should follow once they outgrow the flat single-file layout described below; the
 example trees in this ADR are left as originally written for historical context — see
 `docs/04-architecture.md` for the current `campaigns/` tree.
+**Refined:** 2026-07-05 — WU1.5 (Block 6), pass 2 (owner-approved follow-up, same-day): the pass 1
+move had preserved rather than fixed a dependency-rule violation (`domain/ports.py` and
+`application/{queries,commands}` importing HTTP DTOs from `api/schemas/`). Fixed by making the
+`CampaignRepository` port speak domain entities/scalars only (`NPC`, `Faction`, a new
+creation-time domain type `NewArc`, plain `str` scalars) and moving the query read models
+(`CampaignSummary`, `CampaignDetailResponse`, `NpcResponse`, `FactionResponse`, `ArcResponse`) out
+of `api/schemas/*/responses.py` into `application/read_models/` — the layer that produces them.
+Also split module-root `errors.py` (which mixed exception classes with FastAPI handlers) into
+`application/errors.py` (classes) and `api/exception_handlers.py` (handlers); the module root no
+longer holds any layer-specific code. **Binding dependency-direction rule going forward for every
+module, not just `campaigns`:** the allowed arrows point inward only — `api -> application ->
+domain`, `infrastructure -> domain` — and `domain`/`application` must never import from `api`
+(no HTTP DTOs, no `fastapi`/`JSONResponse` types). See `docs/04-architecture.md` and
+`openspec/changes/block-6-campaign-view/design.md` §Decision 4 for the full worked example and
+the acceptance-check grep.
 
 ## Context and problem
 

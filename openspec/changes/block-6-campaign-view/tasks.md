@@ -115,6 +115,62 @@ assertions changed except import-path-only adjustments forced by the file moves.
       `tasks.md` (this section), `apply-progress.md` (WU1.5 entry) — done as part of
       this work unit, not deferred to Work Unit 4.
 
+### WU1.5 follow-up — dependency-rule fix + errors layer separation (owner-approved extension)
+
+Commit message(s): `refactor(campaigns): make the repository port speak domain entities` /
+`refactor(campaigns): move query read models into application` /
+`refactor(campaigns): split errors into application classes and api handlers` /
+`docs: document the final WU1.5 layering and dependency-direction rules`
+
+Same-branch follow-up after 1.5.7's docs pass surfaced (and the owner confirmed fixing) a
+dependency-rule violation the first WU1.5 pass had carried over mechanically: `domain/ports.py`
+and `application/{queries,commands}` imported HTTP DTOs from `api/schemas/`. Fixed now
+(WU3 adds 3 more CRUD entities × POST/PATCH/DELETE — leaving this unfixed would have
+multiplied the smell per endpoint). Still behavior-unchanged; still the existing suite as the
+safety net.
+
+- [x] 1.5.8 `domain/ports.py`: change `CampaignRepository`'s write methods to take domain
+      entities (`NPC`, `Faction`) or a new creation-time domain type (`NewArc` — an arc without
+      `status`, since status is always repository-assigned, never client- or LLM-supplied) and
+      plain scalars (`insert_campaign(user_id, title, description, world_state)`) instead of
+      `Create*Request` DTOs. `infrastructure/repository.py` updated to match the new signatures
+      (body unchanged — field names line up exactly between the old DTOs and the domain
+      entities).
+- [x] 1.5.9 `application/commands/create_campaign.py`: add `CreateCampaignCommand` (a small
+      frozen dataclass: `title`, `description`, `world_state`, `npcs: list[NPC]`,
+      `factions: list[Faction]`, `arcs: list[NewArc]`) as `CreateCampaign.execute`'s input type,
+      replacing `CreateCampaignRequest`. `api/routes.py` gains
+      `_to_create_campaign_command(payload)`, the one place that maps the HTTP request DTO into
+      domain entities/the command DTO — the api layer owns this translation so
+      `application`/`domain` never import `api`.
+- [x] 1.5.10 Move the query read models (`CampaignSummary`, `CampaignDetailResponse`,
+      `NpcResponse`, `FactionResponse`, `ArcResponse`) from `api/schemas/*/responses.py` into
+      `application/read_models/{campaign,npc,faction,arc}.py`; `api/schemas/{npc,faction,arc}/
+      responses.py` removed (nothing left in them); `api/schemas/campaign/responses.py` keeps
+      only `CreateCampaignResponse` (a pure presentation wrapper — judgment call, logged in
+      apply-progress). `application/queries/*.py` and `api/routes.py` updated to import the read
+      models from `application/read_models/`.
+- [x] 1.5.11 Split the module-root `errors.py` (which mixed exception classes with FastAPI
+      `async def ..._handler(...) -> JSONResponse` handlers): classes
+      (`CampaignNotFoundError`, `CampaignPersistenceError`) → `application/errors.py`; handlers
+      → `api/exception_handlers.py`, registered from there in `app/main.py`. Module-root
+      `errors.py` deleted. `infrastructure/errors.py` (`RepositoryError`) is unaffected — it is
+      an adapter/port failure, not an application outcome or a presentation concern.
+- [x] 1.5.12 Update test import paths only across `tests/campaigns/*.py` (construct domain
+      entities/`CreateCampaignCommand` instead of `Create*Request` DTOs where the port/command
+      signature changed; import read models and error classes from their new homes) — no
+      assertions changed.
+- [x] 1.5.13 Run `uv run pytest`, `uv run ruff format --check app/ tests/`,
+      `uv run ruff check app/ tests/`, `uv run mypy app` — confirm 189 passed / 1 skipped and all
+      gates green. Run the acceptance greps:
+      `grep -rn "campaigns.api" app/modules/campaigns/domain app/modules/campaigns/application`
+      (must be empty) and confirm no `fastapi`/`JSONResponse` imports in `domain/`/`application/`.
+- [x] 1.5.14 Document the final architecture: `design.md` §Decision 4 (full final tree +
+      explicit **Layering / dependency-direction rules** subsection binding on WU3),
+      `tasks.md` (this section), `apply-progress.md` (mark the previously-flagged coupling
+      RESOLVED), `docs/04-architecture.md` (campaigns tree), `docs/adrs/ADR-05-…md` (extend the
+      "Refined" note — append, don't rewrite the historical decision).
+
 ---
 
 ## Work Unit 2 — Frontend read paths + shared primitives
@@ -239,12 +295,20 @@ enum). Sub-slice 3A/3B/3C/3D internally but keep them in the same work unit per 
 §9's "Migration B + its code touchpoints as one atomic work-unit" and §10 guidance —
 do not let a batch boundary land mid-migration.
 
-**Post-WU1.5 layout note:** the new `npcs_router`/`factions_router`/`arcs_router` (3C)
-and their schemas land under `api/` — routes in `api/routes.py` (or a split
-`api/routes/` package, implementer's discretion) and schemas in
-`api/schemas/{npc,faction,arc}/{requests,responses}.py`, following the WU1.5 layout
-rather than the pre-refactor flat `routes.py`/`schemas.py`. New use cases go under
-`application/queries/` (reads) or `application/commands/` (writes) per their nature.
+**Post-WU1.5 layout note (binding — see design §Decision 4's Layering / dependency-direction
+rules):** the new `npcs_router`/`factions_router`/`arcs_router` (3C) and their **request**
+schemas land under `api/` — routes in `api/routes.py` (or a split `api/routes/` package,
+implementer's discretion) and requests in `api/schemas/{npc,faction,arc}/requests.py`. New
+use cases go under `application/queries/` (reads) or `application/commands/` (writes); their
+**read-side** additions land in `application/read_models/` (never `api/schemas/*/responses.py`
+— that pattern was removed in WU1.5's follow-up pass). Any new `update_*`/`create_*`/`delete_*`
+port methods (§4.1) are typed against domain entities/scalars, never DTOs — mirror
+`insert_npcs`/`insert_factions`/`insert_arcs`'s domain-entity-in pattern, and the api layer maps
+each `Update*Request`/`CreateNpcInput`-family DTO to a domain entity or a small
+application-owned command DTO before calling the use case, exactly like
+`_to_create_campaign_command`. Any new application-level exception goes in
+`application/errors.py`, with its HTTP mapping added to `api/exception_handlers.py` — never a
+new module-root `errors.py`.
 
 ### 3A — Migration A: campaign `system`/`tone` ⚠
 
