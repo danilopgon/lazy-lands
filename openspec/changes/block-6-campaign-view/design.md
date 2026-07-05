@@ -207,7 +207,7 @@ campaigns/
 │   ├── queries/                    # get_campaigns.py -> GetCampaigns, get_campaign_detail.py -> GetCampaignDetail
 │   └── commands/                    # create_campaign.py -> CreateCampaign + CreateCampaignCommand,
 │                                     #   extract_campaign.py -> ExtractCampaign
-├── infrastructure/                  # depends on domain (+ application only for RepositoryError-adjacent typing); implements the port
+├── infrastructure/                  # depends on domain only; implements the port
 │   ├── repository.py                # SupabaseCampaignRepository — takes domain entities/scalars, never api DTOs
 │   └── errors.py                     # RepositoryError (adapter/port failure — distinct from application/errors.py)
 ├── api/                              # outermost layer — the only layer allowed to import from every inner layer
@@ -226,8 +226,7 @@ campaigns/
 ### Layering / dependency-direction rules (binding — read before adding WU3 code)
 
 The allowed dependency arrows point **inward only**: `api -> application -> domain`,
-`infrastructure -> domain` (and `infrastructure` may implement application-facing shapes, but
-never imports `api`). Concretely:
+`infrastructure -> domain` (never imports `application` or `api`). Concretely:
 
 - **`domain/`** imports nothing from `application/`, `infrastructure/`, or `api/`. Ports
   (`domain/ports.py`) are typed against domain entities (`NPC`, `Faction`, `NewArc`, `Arc`,
@@ -247,9 +246,10 @@ never imports `api`). Concretely:
   (`api/exception_handlers.py`) live here and must never be imported by `domain/` or
   `application/`.
 - **Acceptance check (must hold before every merge to this module):**
-  `grep -rn "campaigns.api" app/modules/campaigns/domain app/modules/campaigns/application` must
-  return nothing, and neither `domain/` nor `application/` may import `fastapi`, `JSONResponse`,
-  or any HTTP-layer type.
+  `grep -rnE "campaigns[./]api|from app\.modules\.campaigns import .*\bapi\b" app/modules/campaigns/domain app/modules/campaigns/application`
+  must return nothing — the regex catches dotted (`campaigns.api`), path, aliased, and
+  `from … import api` spellings, not just the literal string — and neither `domain/` nor
+  `application/` may import `fastapi`, `JSONResponse`, or any HTTP-layer type.
 - **WU3 must follow this pattern for every new endpoint**: the three new flat
   `npcs_router`/`factions_router`/`arcs_router` and their request schemas land under `api/`
   (`api/routes.py` or a split `api/routes/` package, implementer's discretion, and
