@@ -175,3 +175,28 @@ Future enforcement can be useful if comments start drifting again, but it should
 | TSDoc validation | Keep exported API docs consistent. | Best reserved for package/public API surfaces, not every app component. |
 
 If enforcement is added later, start narrow: public backend dependencies, exported frontend utilities, and exceptions for tests and internal components.
+
+## Issue and PR Tracking
+
+Use GitHub issues for bugs and improvements that need explicit tracking before implementation.
+
+| Work type | Tracking convention |
+| --- | --- |
+| Bug | Create a GitHub issue with the `bug` label before opening the fixing PR. Link the PR to that issue. |
+| Improvement | Create a GitHub issue with an improvement/enhancement label before opening the PR. Link the PR to that issue. |
+| Planned SDD work | Use the active SDD artifacts as the planning source. Create an issue only when the work is also a bug or improvement that needs separate tracking. |
+
+The PR description should make the tracking relationship visible with a closing or reference line such as `Fixes #29` or `Refs #29`. This keeps product bugs and UX improvements searchable without forcing every planned feature slice to create an issue.
+
+## Handoff Deviations
+
+`DESIGN.md` and `handoff/` remain the visual source of truth, but they are not allowed to preserve a known bug or UX regression.
+
+If a bug fix or improvement conflicts with the handoff during implementation, handoff review, or SDD planning:
+
+1. Surface the contradiction explicitly to the user.
+2. Explain the UX/product reason for deviating from the handoff.
+3. Record the decision in the relevant issue, PR, SDD artifact, or docs.
+4. Implement the approved bug fix or improvement instead of silently matching the outdated handoff.
+
+Do not assume the exception silently. The handoff can be overridden, but only with an explicit user-visible decision.
