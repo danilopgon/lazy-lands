@@ -5,6 +5,7 @@ repository (or LLM provider) so route bodies never wire infrastructure
 directly.
 """
 
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
@@ -22,8 +23,14 @@ from app.shared.llm.port import LlmProvider
 from app.shared.llm.providers.registry import build_provider
 
 
+@lru_cache
 def get_llm_provider() -> LlmProvider:
-    """FastAPI dependency wrapping ``build_provider`` — overridable in tests."""
+    """FastAPI dependency wrapping ``build_provider``.
+
+    Cached for the process lifetime so the extract path does not rebuild
+    ``Settings`` (re-reading env/.env) on every request. Tests override this
+    via ``dependency_overrides``, which bypasses the cache entirely.
+    """
     return build_provider()
 
 
