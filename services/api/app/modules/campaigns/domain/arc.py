@@ -15,3 +15,19 @@ class Arc(BaseModel):
     priority: Priority
     status: ArcStatus
     content_source: ContentSource
+
+
+class NewArc(BaseModel):
+    """An arc pending its initial persistence-assigned status.
+
+    Status is never accepted from the client or the LLM (``campaign-persistence``
+    spec, CP-003) — the repository always assigns ``ArcStatus.open`` on insert,
+    so this creation-time shape has no ``status`` field at all.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    title: str
+    description: str
+    priority: Priority
+    content_source: ContentSource
