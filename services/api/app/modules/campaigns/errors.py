@@ -35,6 +35,17 @@ class CampaignPersistenceError(Exception):
         super().__init__("Campaign persistence failed")
 
 
+class CampaignNotFoundError(Exception):
+    """Raised when a targeted resource returns no rows under caller-scoped RLS."""
+
+
+async def campaign_not_found_error_handler(
+    _request: Request, _exc: CampaignNotFoundError
+) -> JSONResponse:
+    """Map RLS misses and unknown ids to a uniform 404."""
+    return JSONResponse(status_code=404, content={"error": "Not found."})
+
+
 async def campaign_persistence_error_handler(
     _request: Request, exc: CampaignPersistenceError
 ) -> JSONResponse:

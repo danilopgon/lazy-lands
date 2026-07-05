@@ -156,3 +156,69 @@ def test_delete_campaign_calls_eq_id(client=None) -> None:
     client.table.return_value.delete.return_value.eq.assert_called_once_with(
         "id", "campaign-1"
     )
+
+
+def test_list_campaigns_selects_summary_fields_ordered_by_updated_at_desc() -> None:
+    client = MagicMock()
+    execute_result = MagicMock()
+    execute_result.data = [
+        {"id": "new", "title": "New", "updated_at": "2026-07-02T00:00:00Z"},
+        {"id": "old", "title": "Old", "updated_at": "2026-07-01T00:00:00Z"},
+    ]
+    order_query = client.table.return_value.select.return_value.order.return_value
+    order_query.execute.return_value = execute_result
+    repo = SupabaseCampaignRepository(client)
+
+    rows = repo.list_campaigns()
+
+    assert [row["id"] for row in rows] == ["new", "old"]
+    client.table.assert_any_call("campaigns")
+    client.table.return_value.select.assert_called_once()
+    client.table.return_value.select.return_value.order.assert_called_once_with(
+        "updated_at", desc=True
+    )
+
+
+def test_get_campaign_returns_first_row_or_none_on_rls_miss() -> None:
+    client = MagicMock()
+    execute_result = MagicMock()
+    execute_result.data = [{"id": "campaign-1", "title": "Visible"}]
+    query = client.table.return_value.select.return_value.eq.return_value
+    query.execute.return_value = execute_result
+    repo = SupabaseCampaignRepository(client)
+
+    row = repo.get_campaign("campaign-1")
+
+    assert row == {"id": "campaign-1", "title": "Visible"}
+    client.table.assert_any_call("campaigns")
+    client.table.return_value.select.return_value.eq.assert_called_once_with(
+        "id", "campaign-1"
+    )
+
+    execute_result.data = []
+    assert repo.get_campaign("missing") is None
+
+
+def test_get_campaign_children_returns_all_child_collections() -> None:
+    client = MagicMock()
+    npc_result = MagicMock(data=[{"id": "npc-1", "name": "Toblen"}])
+    faction_result = MagicMock(data=[])
+    arc_result = MagicMock(data=[{"id": "arc-1", "title": "Missing caravan"}])
+    eq_query = client.table.return_value.select.return_value.eq.return_value
+    eq_query.execute.side_effect = [
+        npc_result,
+        faction_result,
+        arc_result,
+    ]
+    repo = SupabaseCampaignRepository(client)
+
+    npcs, factions, arcs = repo.get_campaign_children("campaign-1")
+
+    assert npcs == [{"id": "npc-1", "name": "Toblen"}]
+    assert factions == []
+    assert arcs == [{"id": "arc-1", "title": "Missing caravan"}]
+    assert [call.args[0] for call in client.table.call_args_list[-3:]] == [
+        "npcs",
+        "factions",
+        "arcs",
+    ]

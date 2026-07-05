@@ -8,8 +8,12 @@ from supabase import Client
 
 from app.modules.campaigns.application.create_campaign import CreateCampaign
 from app.modules.campaigns.application.extract_campaign import ExtractCampaign
+from app.modules.campaigns.application.get_campaign_detail import GetCampaignDetail
+from app.modules.campaigns.application.get_campaigns import GetCampaigns
 from app.modules.campaigns.infrastructure.repository import SupabaseCampaignRepository
 from app.modules.campaigns.schemas import (
+    CampaignDetailResponse,
+    CampaignSummary,
     CreateCampaignRequest,
     CreateCampaignResponse,
     ExtractCampaignOutput,
@@ -41,6 +45,27 @@ async def extract_campaign(
     """
     use_case = ExtractCampaign(llm_provider=llm_provider)
     return await use_case.execute(payload.raw_text)
+
+
+@router.get("", response_model=list[CampaignSummary])
+async def list_campaigns(
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+) -> list[CampaignSummary]:
+    """Return campaigns visible to the authenticated caller."""
+    repository = SupabaseCampaignRepository(client)
+    use_case = GetCampaigns(repository)
+    return await run_in_threadpool(use_case.execute)
+
+
+@router.get("/{campaign_id}", response_model=CampaignDetailResponse)
+async def get_campaign_detail(
+    campaign_id: str,
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+) -> CampaignDetailResponse:
+    """Return one campaign plus NPC, faction, and arc children."""
+    repository = SupabaseCampaignRepository(client)
+    use_case = GetCampaignDetail(repository)
+    return await run_in_threadpool(use_case.execute, campaign_id)
 
 
 @router.post("", response_model=CreateCampaignResponse)

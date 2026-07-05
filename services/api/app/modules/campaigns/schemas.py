@@ -9,6 +9,7 @@ from typing import Any
 from pydantic import BaseModel, Field, model_validator
 
 from app.modules.campaigns.domain import ContentSource, Priority
+from app.modules.campaigns.domain.enums import ArcStatus
 
 
 class ScribeExtractedModel(BaseModel):
@@ -126,3 +127,65 @@ class CreateCampaignResponse(BaseModel):
     """``POST /campaigns`` success response body."""
 
     id: str
+
+
+class NpcResponse(BaseModel):
+    """NPC row returned with campaign detail."""
+
+    id: str
+    name: str
+    description: str | None = None
+    current_state: str | None = None
+    motivation: str | None = None
+    content_source: ContentSource | None = None
+
+
+class FactionResponse(BaseModel):
+    """Faction row returned with campaign detail."""
+
+    id: str
+    name: str
+    description: str | None = None
+    current_stance: str | None = None
+    goals: str | None = None
+    content_source: ContentSource | None = None
+
+
+class ArcResponse(BaseModel):
+    """Arc row returned with campaign detail."""
+
+    id: str
+    title: str
+    description: str | None = None
+    priority: Priority | None = None
+    status: ArcStatus | None = None
+    content_source: ContentSource | None = None
+
+
+class CampaignSummary(BaseModel):
+    """Campaign summary returned by ``GET /campaigns``."""
+
+    id: str
+    title: str
+    description: str | None = None
+    updated_at: str | None = None
+    system: str | None = None
+    tone: str | None = None
+    npc_count: int = 0
+    faction_count: int = 0
+    arc_count: int = 0
+
+
+class CampaignDetailResponse(BaseModel):
+    """Campaign detail returned by ``GET /campaigns/{id}``."""
+
+    id: str
+    title: str
+    description: str | None = None
+    world_state: str | None = None
+    system: str | None = None
+    tone: str | None = None
+    updated_at: str | None = None
+    npcs: list[NpcResponse] = Field(default_factory=list)
+    factions: list[FactionResponse] = Field(default_factory=list)
+    arcs: list[ArcResponse] = Field(default_factory=list)

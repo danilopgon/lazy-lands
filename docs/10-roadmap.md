@@ -273,7 +273,7 @@ Status: **pending**
   `memory_facts`).
 - [ ] Basic PDF export test.
 
-### Block 11 - Handoff cleanup
+### Block 11 - Handoff cleanup (if needed)
 
 Status: **pending**
 
