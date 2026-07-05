@@ -8,7 +8,9 @@ from fastapi.responses import JSONResponse
 
 from app.modules.campaigns import routes as campaigns
 from app.modules.campaigns.errors import (
+    CampaignNotFoundError,
     CampaignPersistenceError,
+    campaign_not_found_error_handler,
     campaign_persistence_error_handler,
 )
 from app.modules.health import routes as health
@@ -42,6 +44,10 @@ app.add_exception_handler(
 app.add_exception_handler(
     CampaignPersistenceError,
     campaign_persistence_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    CampaignNotFoundError,
+    campaign_not_found_error_handler,  # type: ignore[arg-type]
 )
 
 

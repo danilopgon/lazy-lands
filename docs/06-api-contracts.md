@@ -5,8 +5,11 @@ This document defines the expected FastAPI endpoints for the Lazy Lands MVP.
 Base path:
 
 ```text
-/api
+/
 ```
+
+The FastAPI app mounts MVP routers directly at their resource paths (for example,
+`/campaigns`). Do not add an `/api` prefix unless the application routing changes.
 
 Authentication:
 
@@ -155,16 +158,16 @@ Response:
 
 ### `GET /campaigns/{campaign_id}`
 
-Returns campaign detail.
+Returns campaign detail. Malformed non-UUID ids return the same uniform 404 as unknown
+or non-owned campaigns before applying a Supabase uuid equality filter.
 
 Response includes:
 
-- Campaign fields.
+- Campaign fields including `system` and `tone`.
 - NPCs.
 - Factions.
-- Open arcs.
-- Recent sessions.
-- Active MemoryFacts.
+- Arcs.
+- Recent sessions and active MemoryFacts are Block 7 and are not part of the Block 6 response.
 
 ### `PATCH /campaigns/{campaign_id}`
 
@@ -174,26 +177,94 @@ Request:
 
 ```json
 {
-  "world_state": "string"
+  "world_state": "string",
+  "system": "string",
+  "tone": "string"
 }
 ```
 
-## Arcs
+The body is partial but must include at least one supported field. Supplied strings must be
+non-empty after trimming.
 
-### `POST /campaigns/{campaign_id}/arcs`
+## NPCs
 
-Creates an open arc.
+### `POST /npcs`
+
+Creates a manual NPC under a caller-owned campaign.
 
 Request:
 
 ```json
 {
+  "campaign_id": "uuid",
+  "name": "string",
+  "description": "string",
+  "current_state": "string",
+  "motivation": "string"
+}
+```
+
+Only `campaign_id` and `name` are required. Blank optional add-mode fields are treated as
+omitted. The server assigns `content_source = "manual"`.
+
+### `PATCH /npcs/{npc_id}`
+
+Partially updates NPC fields. Edits do not restamp `content_source` in Block 6.
+
+### `DELETE /npcs/{npc_id}`
+
+Deletes an NPC owned through the caller's campaign; returns 204 on success and 404 on RLS miss.
+
+## Factions
+
+### `POST /factions`
+
+Creates a manual faction under a caller-owned campaign.
+
+Request:
+
+```json
+{
+  "campaign_id": "uuid",
+  "name": "string",
+  "description": "string",
+  "current_stance": "string",
+  "goals": "string"
+}
+```
+
+Only `campaign_id` and `name` are required. Blank optional add-mode fields are treated as
+omitted. The server assigns `content_source = "manual"`.
+
+### `PATCH /factions/{faction_id}`
+
+Partially updates faction fields. Edits do not restamp `content_source` in Block 6.
+
+### `DELETE /factions/{faction_id}`
+
+Deletes a faction owned through the caller's campaign; returns 204 on success and 404 on RLS miss.
+
+## Arcs
+
+### `POST /arcs`
+
+Creates a manual arc under a caller-owned campaign.
+
+Request:
+
+```json
+{
+  "campaign_id": "uuid",
   "title": "string",
   "description": "string",
   "priority": "medium",
-  "content_source": "manual"
+  "status": "active"
 }
 ```
+
+Only `campaign_id` and `title` are required. Blank optional `description` is treated as
+omitted; `priority`/`status` default according to the backend schema. The server assigns
+`content_source = "manual"`.
 
 ### `PATCH /arcs/{arc_id}`
 

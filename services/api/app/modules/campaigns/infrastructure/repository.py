@@ -5,7 +5,7 @@ write here goes through the caller-scoped client injected at construction
 time (PU-003, NFR-CP-1).
 """
 
-from typing import Any
+from typing import Any, cast
 
 from supabase import Client
 
@@ -25,6 +25,74 @@ class SupabaseCampaignRepository:
     def __init__(self, client: Client) -> None:
         """Initialize with a per-user (never service-role) Supabase client."""
         self._client = client
+
+    def list_campaigns(self) -> list[dict]:
+        """List caller-visible campaigns ordered by most recent update."""
+        try:
+            response = (
+                self._client.table("campaigns")
+                # system/tone are re-added in WU3 alongside the migration that
+                # creates those columns; selecting them before they exist makes
+                # PostgREST 400 ("column does not exist"), not return null.
+                .select(
+                    "id,title,description,updated_at,"
+                    "npc_count:npcs(count),"
+                    "faction_count:factions(count),"
+                    "arc_count:arcs(count)"
+                )
+                .order("updated_at", desc=True)
+                .execute()
+            )
+        except Exception as exc:
+            raise RepositoryError("Failed to list campaigns") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        return [self._normalize_campaign_summary(row) for row in rows]
+
+    def get_campaign(self, campaign_id: str) -> dict | None:
+        """Fetch a single caller-visible campaign, returning None on RLS miss."""
+        try:
+            response = (
+                self._client.table("campaigns")
+                # system/tone are re-added in WU3 with the migration that creates them.
+                .select("id,title,description,world_state,updated_at")
+                .eq("id", campaign_id)
+                .execute()
+            )
+        except Exception as exc:
+            raise RepositoryError("Failed to get campaign") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        return rows[0] if rows else None
+
+    def get_campaign_children(
+        self, campaign_id: str
+    ) -> tuple[list[dict], list[dict], list[dict]]:
+        """Fetch NPCs, factions, and arcs for a campaign through caller-scoped RLS."""
+        try:
+            npcs = (
+                self._client.table("npcs")
+                .select("id,name,description,current_state,motivation,content_source")
+                .eq("campaign_id", campaign_id)
+                .execute()
+            )
+            factions = (
+                self._client.table("factions")
+                .select("id,name,description,current_stance,goals,content_source")
+                .eq("campaign_id", campaign_id)
+                .execute()
+            )
+            arcs = (
+                self._client.table("arcs")
+                .select("id,title,description,priority,status,content_source")
+                .eq("campaign_id", campaign_id)
+                .execute()
+            )
+        except Exception as exc:
+            raise RepositoryError("Failed to get campaign children") from exc
+        return (
+            cast(list[dict[str, Any]], npcs.data or []),
+            cast(list[dict[str, Any]], factions.data or []),
+            cast(list[dict[str, Any]], arcs.data or []),
+        )
 
     def insert_campaign(self, user_id: str, data: CreateCampaignRequest) -> str:
         """Insert the campaign row; return the new campaign id."""
@@ -114,3 +182,14 @@ class SupabaseCampaignRepository:
             self._client.table(table).insert(rows).execute()
         except Exception as exc:
             raise RepositoryError(f"Failed to insert into {table}") from exc
+
+    @staticmethod
+    def _normalize_campaign_summary(row: dict[str, Any]) -> dict[str, Any]:
+        normalized = dict(row)
+        for output_key in ("npc_count", "faction_count", "arc_count"):
+            value = normalized.get(output_key)
+            if isinstance(value, list) and value and isinstance(value[0], dict):
+                normalized[output_key] = value[0].get("count", 0)
+            elif value is None or value == []:
+                normalized[output_key] = 0
+        return normalized
