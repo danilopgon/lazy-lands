@@ -2,12 +2,9 @@
 
 from typing import Protocol
 
-from app.modules.campaigns.schemas import (
-    CreateArcRequest,
-    CreateCampaignRequest,
-    CreateFactionRequest,
-    CreateNpcRequest,
-)
+from app.modules.campaigns.domain.arc import NewArc
+from app.modules.campaigns.domain.faction import Faction
+from app.modules.campaigns.domain.npc import NPC
 
 
 class CampaignRepository(Protocol):
@@ -17,6 +14,9 @@ class CampaignRepository(Protocol):
     so the application layer (``CreateCampaign`` use case) can orchestrate
     the parent-first insert order and issue a compensating delete on child
     failure (design Decision 5).
+
+    Parameter types are domain entities (or plain scalars), never HTTP DTOs —
+    the domain layer must not depend on the outer ``api`` layer (ADR-05).
     """
 
     def list_campaigns(self) -> list[dict]:
@@ -33,21 +33,21 @@ class CampaignRepository(Protocol):
         """Return NPC, faction, and arc rows for a caller-visible campaign."""
         ...
 
-    def insert_campaign(self, user_id: str, data: CreateCampaignRequest) -> str:
+    def insert_campaign(
+        self, user_id: str, title: str, description: str, world_state: str
+    ) -> str:
         """Insert the campaign row; return the new campaign id."""
         ...
 
-    def insert_npcs(self, campaign_id: str, npcs: list[CreateNpcRequest]) -> None:
+    def insert_npcs(self, campaign_id: str, npcs: list[NPC]) -> None:
         """Bulk-insert NPC rows for the given campaign. No-op if empty."""
         ...
 
-    def insert_factions(
-        self, campaign_id: str, factions: list[CreateFactionRequest]
-    ) -> None:
+    def insert_factions(self, campaign_id: str, factions: list[Faction]) -> None:
         """Bulk-insert faction rows for the given campaign. No-op if empty."""
         ...
 
-    def insert_arcs(self, campaign_id: str, arcs: list[CreateArcRequest]) -> None:
+    def insert_arcs(self, campaign_id: str, arcs: list[NewArc]) -> None:
         """Bulk-insert arc rows for the given campaign. No-op if empty."""
         ...
 

@@ -6,13 +6,33 @@ delete the just-created campaign (cascade removes any inserted children).
 """
 
 import logging
+from dataclasses import dataclass, field
 
+from app.modules.campaigns.application.errors import CampaignPersistenceError
+from app.modules.campaigns.domain.arc import NewArc
+from app.modules.campaigns.domain.faction import Faction
+from app.modules.campaigns.domain.npc import NPC
 from app.modules.campaigns.domain.ports import CampaignRepository
-from app.modules.campaigns.errors import CampaignPersistenceError
 from app.modules.campaigns.infrastructure.errors import RepositoryError
-from app.modules.campaigns.schemas import CreateCampaignRequest
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class CreateCampaignCommand:
+    """Input for the CreateCampaign command — decoupled from any HTTP DTO.
+
+    The ``api`` layer maps ``CreateCampaignRequest`` (and its nested
+    Create*Request DTOs) into this shape before invoking the command, so the
+    application layer never imports from ``api`` (ADR-05).
+    """
+
+    title: str
+    description: str
+    world_state: str
+    npcs: list[NPC] = field(default_factory=list)
+    factions: list[Faction] = field(default_factory=list)
+    arcs: list[NewArc] = field(default_factory=list)
 
 
 class CreateCampaign:
@@ -22,7 +42,7 @@ class CreateCampaign:
         """Initialize with a CampaignRepository (Protocol, never concrete)."""
         self._repository = repository
 
-    def execute(self, user_id: str, data: CreateCampaignRequest) -> str:
+    def execute(self, user_id: str, data: CreateCampaignCommand) -> str:
         """Insert campaign -> npcs -> factions -> arcs; compensate on failure.
 
         Args:
@@ -39,7 +59,9 @@ class CreateCampaign:
                 set on the error and the failure is logged.
         """
         try:
-            campaign_id = self._repository.insert_campaign(user_id, data)
+            campaign_id = self._repository.insert_campaign(
+                user_id, data.title, data.description, data.world_state
+            )
         except RepositoryError as exc:
             raise CampaignPersistenceError(retryable=True) from exc
 

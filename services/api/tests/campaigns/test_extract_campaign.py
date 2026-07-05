@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.campaigns.application.extract_campaign import ExtractCampaign
-from app.modules.campaigns.schemas import ExtractCampaignOutput
+from app.modules.campaigns.application.commands.extract_campaign import ExtractCampaign
+from app.modules.campaigns.application.contracts import ExtractCampaignOutput
 from app.shared.llm.errors import LlmOutputValidationError
 from app.shared.llm.providers.fake import FakeLlmProvider
 

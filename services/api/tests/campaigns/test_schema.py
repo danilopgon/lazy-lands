@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from app.modules.campaigns.schemas import (
-    ArcResponse,
+from app.modules.campaigns.application.read_models.arc import ArcResponse
+from app.modules.campaigns.application.read_models.campaign import (
     CampaignDetailResponse,
     CampaignSummary,
-    FactionResponse,
-    NpcResponse,
 )
+from app.modules.campaigns.application.read_models.faction import FactionResponse
+from app.modules.campaigns.application.read_models.npc import NpcResponse
 
 
 def test_campaign_summary_includes_nullable_system_tone_and_entity_counts() -> None:

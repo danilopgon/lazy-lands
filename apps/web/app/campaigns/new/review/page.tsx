@@ -132,6 +132,7 @@ function ReviewCampaignClient({
   const router = useRouter()
   const [draft, setDraft] = useState(initialDraft)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
 
   const mutation = useMutation({
     mutationFn: (payload: CreateCampaignRequest) => createCampaign(payload),
@@ -140,6 +141,7 @@ function ReviewCampaignClient({
       router.push(`/campaigns/${result.id}`)
     },
     onError: (err: unknown) => {
+      setIsCreating(false)
       setSaveError(
         err instanceof CampaignApiError
           ? err.message
@@ -151,6 +153,7 @@ function ReviewCampaignClient({
   /** Build the reviewed payload and submit it via `POST /campaigns`. */
   function handleConfirm() {
     setSaveError(null)
+    setIsCreating(true)
     const payload: CreateCampaignRequest = {
       title: draft.title,
       description: draft.description,
@@ -188,7 +191,7 @@ function ReviewCampaignClient({
 
   // Persisting the campaign runs the same quill takeover as the extraction step
   // — the animation covers the create round-trip so the screen never looks stuck.
-  if (mutation.isPending) {
+  if (isCreating) {
     return (
       <main id="main-content" className="mx-auto max-w-[820px] px-6 py-16">
         <LoadingScribe
@@ -320,9 +323,11 @@ function ReviewCampaignClient({
         <Button
           type="button"
           onClick={handleConfirm}
-          disabled={mutation.isPending}
+          disabled={isCreating || mutation.isPending}
         >
-          {mutation.isPending ? 'Creating...' : 'Confirm & create campaign'}
+          {isCreating || mutation.isPending
+            ? 'Creating...'
+            : 'Confirm & create campaign'}
         </Button>
       </div>
     </main>

@@ -79,6 +79,7 @@ type CampaignFormValues = z.infer<typeof campaignFormSchema>
 export default function NewCampaignPage() {
   const router = useRouter()
   const [extractError, setExtractError] = useState<string | null>(null)
+  const [isExtracting, setIsExtracting] = useState(false)
 
   const {
     register,
@@ -104,6 +105,7 @@ export default function NewCampaignPage() {
       router.push('/campaigns/new/review')
     },
     onError: (err: unknown) => {
+      setIsExtracting(false)
       setExtractError(
         err instanceof CampaignApiError
           ? err.message
@@ -119,13 +121,14 @@ export default function NewCampaignPage() {
    */
   function onSubmit(data: CampaignFormValues) {
     setExtractError(null)
+    setIsExtracting(true)
     mutation.mutate(composeRawText(data))
   }
 
   // While the Scribe extracts, replace the whole form with the quill loading
   // takeover — the animation is what covers the AI "thinking" latency, and a
   // static disabled form reads as if the page had frozen.
-  if (mutation.isPending) {
+  if (isExtracting) {
     return (
       <main id="main-content" className="mx-auto max-w-[720px] px-6 py-16">
         <LoadingScribe
@@ -136,7 +139,7 @@ export default function NewCampaignPage() {
     )
   }
 
-  const isSubmitting = mutation.isPending
+  const isSubmitting = isExtracting || mutation.isPending
 
   return (
     <main id="main-content" className="mx-auto max-w-[720px] px-6 py-16">

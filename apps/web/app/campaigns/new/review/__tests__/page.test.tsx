@@ -330,6 +330,31 @@ describe('ReviewCampaignPage (CUI-002)', () => {
     resolveCreate!({ id: 'campaign-xyz' })
   })
 
+  it('keeps stale review content hidden after creation resolves and navigation has been requested', async () => {
+    const user = userEvent.setup()
+    let resolveCreate: (value: { id: string }) => void
+    mockCreateCampaign.mockReturnValue(
+      new Promise((resolve) => {
+        resolveCreate = resolve
+      })
+    )
+    renderPage()
+
+    await screen.findByText('Elandra')
+    await user.click(screen.getByRole('button', { name: /confirm/i }))
+
+    await screen.findByText(/binding your chronicle/i)
+
+    resolveCreate!({ id: 'campaign-xyz' })
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/campaigns/campaign-xyz')
+    })
+    expect(screen.getByText(/binding your chronicle/i)).toBeInTheDocument()
+    expect(screen.queryByText('Elandra')).not.toBeInTheDocument()
+    expect(screen.queryByText(/what the scribe found/i)).not.toBeInTheDocument()
+  })
+
   it('editing a Scribe-drafted prose block flips its badge to Edited', async () => {
     const user = userEvent.setup()
     renderPage()

@@ -13,7 +13,7 @@ from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1, generate_pri
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.modules.campaigns.routes import get_llm_provider
+from app.modules.campaigns.api.dependencies import get_llm_provider
 from app.shared.config import settings
 from app.shared.llm.errors import LlmOutputValidationError
 from app.shared.llm.providers.fake import FakeLlmProvider
@@ -85,7 +85,9 @@ def client():
 def test_happy_path_returns_200_with_content_source_llm(
     client, auth_header, fake_provider
 ) -> None:
-    from app.modules.campaigns.schemas import ExtractCampaignOutput  # noqa: PLC0415
+    from app.modules.campaigns.application.contracts import (  # noqa: PLC0415
+        ExtractCampaignOutput,
+    )
 
     fake_provider.register(
         ExtractCampaignOutput,
@@ -156,7 +158,7 @@ def test_statelessness_no_db_writes_on_any_path(
     client, auth_header, fake_provider
 ) -> None:
     """No repository/client is constructed on the extract path at all."""
-    import app.modules.campaigns.routes as routes_module  # noqa: PLC0415
+    import app.modules.campaigns.api.dependencies as dependencies_module  # noqa: PLC0415
 
     with pytest.MonkeyPatch.context() as mp:
         called = {"n": 0}
@@ -166,10 +168,15 @@ def test_statelessness_no_db_writes_on_any_path(
             raise AssertionError("extract must never construct a repository")
 
         mp.setattr(
-            routes_module, "SupabaseCampaignRepository", _fail_if_called, raising=True
+            dependencies_module,
+            "SupabaseCampaignRepository",
+            _fail_if_called,
+            raising=True,
         )
 
-        from app.modules.campaigns.schemas import ExtractCampaignOutput  # noqa: PLC0415
+        from app.modules.campaigns.application.contracts import (  # noqa: PLC0415
+            ExtractCampaignOutput,
+        )
 
         fake_provider.register(ExtractCampaignOutput, VALID_PAYLOAD)
 
@@ -184,7 +191,9 @@ def test_statelessness_no_db_writes_on_any_path(
 def test_malformed_llm_output_maps_to_retryable_error_no_raw_leak(
     client, auth_header, fake_provider
 ) -> None:
-    from app.modules.campaigns.schemas import ExtractCampaignOutput  # noqa: PLC0415
+    from app.modules.campaigns.application.contracts import (  # noqa: PLC0415
+        ExtractCampaignOutput,
+    )
 
     # Missing required "title" -> LlmOutputValidationError inside the guard.
     fake_provider.register(

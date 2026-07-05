@@ -246,4 +246,40 @@ describe('NewCampaignPage (CUI-001)', () => {
       arcs: [],
     })
   })
+
+  it('keeps stale form content hidden after extraction resolves and navigation has been requested', async () => {
+    const user = userEvent.setup()
+    const payload = {
+      title: 'Shadows over Phandalin',
+      description: 'desc',
+      world_state: 'state',
+      npcs: [],
+      factions: [],
+      arcs: [],
+    }
+    let resolvePromise: (value: typeof payload) => void
+    mockExtractCampaign.mockReturnValue(
+      new Promise((resolve) => {
+        resolvePromise = resolve
+      })
+    )
+    renderPage()
+
+    await fillRequiredMeta(user)
+    const textarea = screen.getByLabelText(/premise/i)
+    await user.click(textarea)
+    await user.paste(VALID_PREMISE)
+    await user.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await screen.findByText(/reading your world/i)
+
+    resolvePromise!(payload)
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/campaigns/new/review')
+    })
+    expect(screen.getByText(/reading your world/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/premise/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/start a new chronicle/i)).not.toBeInTheDocument()
+  })
 })

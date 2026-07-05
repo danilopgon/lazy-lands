@@ -9,14 +9,11 @@ from typing import Any, cast
 
 from supabase import Client
 
-from app.modules.campaigns.domain.models import ArcStatus
+from app.modules.campaigns.domain.arc import NewArc
+from app.modules.campaigns.domain.enums import ArcStatus
+from app.modules.campaigns.domain.faction import Faction
+from app.modules.campaigns.domain.npc import NPC
 from app.modules.campaigns.infrastructure.errors import RepositoryError
-from app.modules.campaigns.schemas import (
-    CreateArcRequest,
-    CreateCampaignRequest,
-    CreateFactionRequest,
-    CreateNpcRequest,
-)
 
 
 class SupabaseCampaignRepository:
@@ -94,7 +91,9 @@ class SupabaseCampaignRepository:
             cast(list[dict[str, Any]], arcs.data or []),
         )
 
-    def insert_campaign(self, user_id: str, data: CreateCampaignRequest) -> str:
+    def insert_campaign(
+        self, user_id: str, title: str, description: str, world_state: str
+    ) -> str:
         """Insert the campaign row; return the new campaign id."""
         try:
             response = (
@@ -102,9 +101,9 @@ class SupabaseCampaignRepository:
                 .insert(
                     {
                         "user_id": user_id,
-                        "title": data.title,
-                        "description": data.description,
-                        "world_state": data.world_state,
+                        "title": title,
+                        "description": description,
+                        "world_state": world_state,
                     }
                 )
                 .execute()
@@ -117,7 +116,7 @@ class SupabaseCampaignRepository:
             raise RepositoryError("Campaign insert returned no rows")
         return str(rows[0]["id"])
 
-    def insert_npcs(self, campaign_id: str, npcs: list[CreateNpcRequest]) -> None:
+    def insert_npcs(self, campaign_id: str, npcs: list[NPC]) -> None:
         """Bulk-insert NPC rows. No-op if empty."""
         if not npcs:
             return
@@ -134,9 +133,7 @@ class SupabaseCampaignRepository:
         ]
         self._write("npcs", rows)
 
-    def insert_factions(
-        self, campaign_id: str, factions: list[CreateFactionRequest]
-    ) -> None:
+    def insert_factions(self, campaign_id: str, factions: list[Faction]) -> None:
         """Bulk-insert faction rows. No-op if empty."""
         if not factions:
             return
@@ -153,7 +150,7 @@ class SupabaseCampaignRepository:
         ]
         self._write("factions", rows)
 
-    def insert_arcs(self, campaign_id: str, arcs: list[CreateArcRequest]) -> None:
+    def insert_arcs(self, campaign_id: str, arcs: list[NewArc]) -> None:
         """Bulk-insert arc rows with status="open". No-op if empty."""
         if not arcs:
             return

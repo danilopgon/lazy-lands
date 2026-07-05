@@ -22,9 +22,11 @@ import uuid
 import httpx
 import pytest
 
-from app.modules.campaigns.application.create_campaign import CreateCampaign
+from app.modules.campaigns.application.commands.create_campaign import (
+    CreateCampaign,
+    CreateCampaignCommand,
+)
 from app.modules.campaigns.infrastructure.repository import SupabaseCampaignRepository
-from app.modules.campaigns.schemas import CreateCampaignRequest
 from app.shared.config import settings
 from app.shared.database import create_user_supabase_client, get_supabase_client
 
@@ -81,7 +83,7 @@ def test_campaign_created_under_authenticated_users_own_user_id(two_test_users) 
     client_a = create_user_supabase_client(token_a)
     use_case = CreateCampaign(SupabaseCampaignRepository(client_a))
 
-    payload = CreateCampaignRequest(
+    payload = CreateCampaignCommand(
         title="Ownership Test Campaign", description="D", world_state="W"
     )
     campaign_id = use_case.execute(user_a_id, payload)
@@ -109,7 +111,7 @@ def test_user_b_client_cannot_read_user_a_campaign(two_test_users) -> None:
     client_b = create_user_supabase_client(token_b)
 
     use_case = CreateCampaign(SupabaseCampaignRepository(client_a))
-    payload = CreateCampaignRequest(
+    payload = CreateCampaignCommand(
         title="Owned By A", description="D", world_state="W"
     )
     campaign_id = use_case.execute(user_a_id, payload)
