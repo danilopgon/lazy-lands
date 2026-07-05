@@ -19,6 +19,20 @@ class CampaignRepository(Protocol):
     failure (design Decision 5).
     """
 
+    def list_campaigns(self) -> list[dict]:
+        """List campaigns visible to the caller, ordered newest first."""
+        ...
+
+    def get_campaign(self, campaign_id: str) -> dict | None:
+        """Return one caller-visible campaign row, or None on RLS miss."""
+        ...
+
+    def get_campaign_children(
+        self, campaign_id: str
+    ) -> tuple[list[dict], list[dict], list[dict]]:
+        """Return NPC, faction, and arc rows for a caller-visible campaign."""
+        ...
+
     def insert_campaign(self, user_id: str, data: CreateCampaignRequest) -> str:
         """Insert the campaign row; return the new campaign id."""
         ...

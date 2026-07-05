@@ -1,4 +1,4 @@
-# Documentation and Comment Conventions
+# Code Documentation and Comment Conventions
 
 Write code so readers understand the happy path without comments. Add comments and docstrings only when they preserve context that is not obvious from the code itself.
 
