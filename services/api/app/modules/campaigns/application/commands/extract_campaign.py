@@ -4,7 +4,7 @@ LLM-only; no database access (statelessness is enforced by simply never
 importing a repository here — see campaign-extraction spec, CE-006).
 """
 
-from app.modules.campaigns.schemas import ExtractCampaignOutput
+from app.modules.campaigns.application.contracts import ExtractCampaignOutput
 from app.shared.llm.port import LlmProvider
 from app.shared.prompts import render_prompt
 

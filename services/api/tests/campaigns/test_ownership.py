@@ -22,9 +22,9 @@ import uuid
 import httpx
 import pytest
 
-from app.modules.campaigns.application.create_campaign import CreateCampaign
+from app.modules.campaigns.api.schemas.campaign.requests import CreateCampaignRequest
+from app.modules.campaigns.application.commands.create_campaign import CreateCampaign
 from app.modules.campaigns.infrastructure.repository import SupabaseCampaignRepository
-from app.modules.campaigns.schemas import CreateCampaignRequest
 from app.shared.config import settings
 from app.shared.database import create_user_supabase_client, get_supabase_client
 

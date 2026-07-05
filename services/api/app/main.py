@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.modules.campaigns import routes as campaigns
+from app.modules.campaigns.api import routes as campaigns
 from app.modules.campaigns.errors import (
     CampaignNotFoundError,
     CampaignPersistenceError,

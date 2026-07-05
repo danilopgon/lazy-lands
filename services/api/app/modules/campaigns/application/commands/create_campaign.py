@@ -7,10 +7,10 @@ delete the just-created campaign (cascade removes any inserted children).
 
 import logging
 
+from app.modules.campaigns.api.schemas.campaign.requests import CreateCampaignRequest
 from app.modules.campaigns.domain.ports import CampaignRepository
 from app.modules.campaigns.errors import CampaignPersistenceError
 from app.modules.campaigns.infrastructure.errors import RepositoryError
-from app.modules.campaigns.schemas import CreateCampaignRequest
 
 logger = logging.getLogger(__name__)
 

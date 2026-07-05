@@ -9,14 +9,12 @@ from typing import Any, cast
 
 from supabase import Client
 
-from app.modules.campaigns.domain.models import ArcStatus
+from app.modules.campaigns.api.schemas.arc.requests import CreateArcRequest
+from app.modules.campaigns.api.schemas.campaign.requests import CreateCampaignRequest
+from app.modules.campaigns.api.schemas.faction.requests import CreateFactionRequest
+from app.modules.campaigns.api.schemas.npc.requests import CreateNpcRequest
+from app.modules.campaigns.domain.enums import ArcStatus
 from app.modules.campaigns.infrastructure.errors import RepositoryError
-from app.modules.campaigns.schemas import (
-    CreateArcRequest,
-    CreateCampaignRequest,
-    CreateFactionRequest,
-    CreateNpcRequest,
-)
 
 
 class SupabaseCampaignRepository:

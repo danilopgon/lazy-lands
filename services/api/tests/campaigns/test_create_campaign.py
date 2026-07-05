@@ -6,15 +6,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.modules.campaigns.application.create_campaign import CreateCampaign
+from app.modules.campaigns.api.schemas.arc.requests import CreateArcRequest
+from app.modules.campaigns.api.schemas.campaign.requests import CreateCampaignRequest
+from app.modules.campaigns.api.schemas.faction.requests import CreateFactionRequest
+from app.modules.campaigns.api.schemas.npc.requests import CreateNpcRequest
+from app.modules.campaigns.application.commands.create_campaign import CreateCampaign
 from app.modules.campaigns.errors import CampaignPersistenceError
 from app.modules.campaigns.infrastructure.errors import RepositoryError
-from app.modules.campaigns.schemas import (
-    CreateArcRequest,
-    CreateCampaignRequest,
-    CreateFactionRequest,
-    CreateNpcRequest,
-)
 
 
 def _payload(with_children: bool = True) -> CreateCampaignRequest:

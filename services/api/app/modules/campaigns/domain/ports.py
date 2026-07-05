@@ -2,12 +2,10 @@
 
 from typing import Protocol
 
-from app.modules.campaigns.schemas import (
-    CreateArcRequest,
-    CreateCampaignRequest,
-    CreateFactionRequest,
-    CreateNpcRequest,
-)
+from app.modules.campaigns.api.schemas.arc.requests import CreateArcRequest
+from app.modules.campaigns.api.schemas.campaign.requests import CreateCampaignRequest
+from app.modules.campaigns.api.schemas.faction.requests import CreateFactionRequest
+from app.modules.campaigns.api.schemas.npc.requests import CreateNpcRequest
 
 
 class CampaignRepository(Protocol):

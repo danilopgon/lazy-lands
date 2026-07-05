@@ -12,14 +12,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.modules.campaigns.api.schemas.arc.requests import CreateArcRequest
+from app.modules.campaigns.api.schemas.campaign.requests import CreateCampaignRequest
+from app.modules.campaigns.api.schemas.faction.requests import CreateFactionRequest
+from app.modules.campaigns.api.schemas.npc.requests import CreateNpcRequest
 from app.modules.campaigns.infrastructure.errors import RepositoryError
 from app.modules.campaigns.infrastructure.repository import SupabaseCampaignRepository
-from app.modules.campaigns.schemas import (
-    CreateArcRequest,
-    CreateCampaignRequest,
-    CreateFactionRequest,
-    CreateNpcRequest,
-)
 
 
 def _mock_client_with_campaign_id(campaign_id: str = "campaign-1") -> MagicMock:
