@@ -15,22 +15,72 @@ from app.modules.campaigns.api.schemas.campaign.requests import (
     CreateCampaignRequest,
     ExtractRequest,
 )
-from app.modules.campaigns.api.schemas.campaign.responses import (
-    CampaignDetailResponse,
-    CampaignSummary,
-    CreateCampaignResponse,
+from app.modules.campaigns.api.schemas.campaign.responses import CreateCampaignResponse
+from app.modules.campaigns.application.commands.create_campaign import (
+    CreateCampaign,
+    CreateCampaignCommand,
 )
-from app.modules.campaigns.application.commands.create_campaign import CreateCampaign
 from app.modules.campaigns.application.commands.extract_campaign import ExtractCampaign
 from app.modules.campaigns.application.contracts import ExtractCampaignOutput
 from app.modules.campaigns.application.queries.get_campaign_detail import (
     GetCampaignDetail,
 )
 from app.modules.campaigns.application.queries.get_campaigns import GetCampaigns
+from app.modules.campaigns.application.read_models.campaign import (
+    CampaignDetailResponse,
+    CampaignSummary,
+)
+from app.modules.campaigns.domain.arc import NewArc
+from app.modules.campaigns.domain.faction import Faction
+from app.modules.campaigns.domain.npc import NPC
 from app.shared.dependencies import get_current_user
 from app.shared.security import AuthContext, get_auth_context
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
+
+
+def _to_create_campaign_command(
+    payload: CreateCampaignRequest,
+) -> CreateCampaignCommand:
+    """Map the HTTP request DTO into the command's domain-shaped input.
+
+    The api layer owns this translation so neither ``application`` nor
+    ``domain`` ever import from ``api`` (ADR-05).
+    """
+    return CreateCampaignCommand(
+        title=payload.title,
+        description=payload.description,
+        world_state=payload.world_state,
+        npcs=[
+            NPC(
+                name=npc.name,
+                description=npc.description,
+                current_state=npc.current_state,
+                motivation=npc.motivation,
+                content_source=npc.content_source,
+            )
+            for npc in payload.npcs
+        ],
+        factions=[
+            Faction(
+                name=faction.name,
+                description=faction.description,
+                current_stance=faction.current_stance,
+                goals=faction.goals,
+                content_source=faction.content_source,
+            )
+            for faction in payload.factions
+        ],
+        arcs=[
+            NewArc(
+                title=arc.title,
+                description=arc.description,
+                priority=arc.priority,
+                content_source=arc.content_source,
+            )
+            for arc in payload.arcs
+        ],
+    )
 
 
 @router.post("/extract", response_model=ExtractCampaignOutput)
@@ -73,5 +123,6 @@ async def create_campaign(
 
     Writes go through the per-user Supabase client only (PU-003, NFR-CP-1).
     """
-    campaign_id = await run_in_threadpool(handler.execute, ctx.user_id, payload)
+    command = _to_create_campaign_command(payload)
+    campaign_id = await run_in_threadpool(handler.execute, ctx.user_id, command)
     return CreateCampaignResponse(id=campaign_id)

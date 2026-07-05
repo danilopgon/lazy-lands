@@ -6,11 +6,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.modules.campaigns.application.errors import CampaignNotFoundError
 from app.modules.campaigns.application.queries.get_campaign_detail import (
     GetCampaignDetail,
 )
 from app.modules.campaigns.application.queries.get_campaigns import GetCampaigns
-from app.modules.campaigns.errors import CampaignNotFoundError
 
 CAMPAIGN_ID = "11111111-1111-4111-8111-111111111111"
 

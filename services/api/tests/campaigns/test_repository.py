@@ -12,10 +12,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.modules.campaigns.api.schemas.arc.requests import CreateArcRequest
-from app.modules.campaigns.api.schemas.campaign.requests import CreateCampaignRequest
-from app.modules.campaigns.api.schemas.faction.requests import CreateFactionRequest
-from app.modules.campaigns.api.schemas.npc.requests import CreateNpcRequest
+from app.modules.campaigns.domain.arc import NewArc
+from app.modules.campaigns.domain.faction import Faction
+from app.modules.campaigns.domain.npc import NPC
 from app.modules.campaigns.infrastructure.errors import RepositoryError
 from app.modules.campaigns.infrastructure.repository import SupabaseCampaignRepository
 
@@ -32,9 +31,8 @@ def _mock_client_with_campaign_id(campaign_id: str = "campaign-1") -> MagicMock:
 def test_insert_campaign_returns_new_id() -> None:
     client = _mock_client_with_campaign_id("campaign-abc")
     repo = SupabaseCampaignRepository(client)
-    data = CreateCampaignRequest(title="T", description="D", world_state="W")
 
-    campaign_id = repo.insert_campaign("user-1", data)
+    campaign_id = repo.insert_campaign("user-1", "T", "D", "W")
 
     assert campaign_id == "campaign-abc"
     client.table.assert_any_call("campaigns")
@@ -46,10 +44,9 @@ def test_insert_campaign_raises_repository_error_when_no_rows_returned() -> None
     execute_result.data = []
     client.table.return_value.insert.return_value.execute.return_value = execute_result
     repo = SupabaseCampaignRepository(client)
-    data = CreateCampaignRequest(title="T", description="D", world_state="W")
 
     with pytest.raises(RepositoryError):
-        repo.insert_campaign("user-1", data)
+        repo.insert_campaign("user-1", "T", "D", "W")
 
 
 def test_insert_npcs_no_op_when_empty() -> None:
@@ -64,7 +61,7 @@ def test_insert_npcs_no_op_when_empty() -> None:
 def test_insert_npcs_writes_content_source_and_campaign_id() -> None:
     client = MagicMock()
     repo = SupabaseCampaignRepository(client)
-    npc = CreateNpcRequest(
+    npc = NPC(
         name="N",
         description="d",
         current_state="s",
@@ -84,9 +81,7 @@ def test_insert_npcs_writes_content_source_and_campaign_id() -> None:
 def test_insert_arcs_sets_status_open_and_persists_content_source() -> None:
     client = MagicMock()
     repo = SupabaseCampaignRepository(client)
-    arc = CreateArcRequest(
-        title="A", description="d", priority="high", content_source="edited"
-    )
+    arc = NewArc(title="A", description="d", priority="high", content_source="edited")
 
     repo.insert_arcs("campaign-1", [arc])
 
@@ -100,7 +95,7 @@ def test_insert_arcs_sets_status_open_and_persists_content_source() -> None:
 def test_insert_factions_writes_expected_shape() -> None:
     client = MagicMock()
     repo = SupabaseCampaignRepository(client)
-    faction = CreateFactionRequest(
+    faction = Faction(
         name="F",
         description="d",
         current_stance="s",
@@ -122,7 +117,7 @@ def test_write_wraps_postgrest_exception_as_repository_error() -> None:
         "PostgREST failure"
     )
     repo = SupabaseCampaignRepository(client)
-    npc = CreateNpcRequest(
+    npc = NPC(
         name="N",
         description="d",
         current_state="s",

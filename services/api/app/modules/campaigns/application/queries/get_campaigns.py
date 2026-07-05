@@ -1,6 +1,6 @@
 """GetCampaigns use case — read caller-visible campaign summaries."""
 
-from app.modules.campaigns.api.schemas.campaign.responses import CampaignSummary
+from app.modules.campaigns.application.read_models.campaign import CampaignSummary
 from app.modules.campaigns.domain.ports import CampaignRepository
 
 

@@ -6,24 +6,26 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.modules.campaigns.api.schemas.arc.requests import CreateArcRequest
-from app.modules.campaigns.api.schemas.campaign.requests import CreateCampaignRequest
-from app.modules.campaigns.api.schemas.faction.requests import CreateFactionRequest
-from app.modules.campaigns.api.schemas.npc.requests import CreateNpcRequest
-from app.modules.campaigns.application.commands.create_campaign import CreateCampaign
-from app.modules.campaigns.errors import CampaignPersistenceError
+from app.modules.campaigns.application.commands.create_campaign import (
+    CreateCampaign,
+    CreateCampaignCommand,
+)
+from app.modules.campaigns.application.errors import CampaignPersistenceError
+from app.modules.campaigns.domain.arc import NewArc
+from app.modules.campaigns.domain.faction import Faction
+from app.modules.campaigns.domain.npc import NPC
 from app.modules.campaigns.infrastructure.errors import RepositoryError
 
 
-def _payload(with_children: bool = True) -> CreateCampaignRequest:
+def _payload(with_children: bool = True) -> CreateCampaignCommand:
     if not with_children:
-        return CreateCampaignRequest(title="T", description="D", world_state="W")
-    return CreateCampaignRequest(
+        return CreateCampaignCommand(title="T", description="D", world_state="W")
+    return CreateCampaignCommand(
         title="T",
         description="D",
         world_state="W",
         npcs=[
-            CreateNpcRequest(
+            NPC(
                 name="N",
                 description="d",
                 current_state="s",
@@ -32,7 +34,7 @@ def _payload(with_children: bool = True) -> CreateCampaignRequest:
             )
         ],
         factions=[
-            CreateFactionRequest(
+            Faction(
                 name="F",
                 description="d",
                 current_stance="s",
@@ -41,9 +43,7 @@ def _payload(with_children: bool = True) -> CreateCampaignRequest:
             )
         ],
         arcs=[
-            CreateArcRequest(
-                title="A", description="d", priority="high", content_source="llm"
-            )
+            NewArc(title="A", description="d", priority="high", content_source="llm")
         ],
     )
 

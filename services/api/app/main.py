@@ -7,11 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.modules.campaigns.api import routes as campaigns
-from app.modules.campaigns.errors import (
-    CampaignNotFoundError,
-    CampaignPersistenceError,
+from app.modules.campaigns.api.exception_handlers import (
     campaign_not_found_error_handler,
     campaign_persistence_error_handler,
+)
+from app.modules.campaigns.application.errors import (
+    CampaignNotFoundError,
+    CampaignPersistenceError,
 )
 from app.modules.health import routes as health
 from app.shared.config import settings

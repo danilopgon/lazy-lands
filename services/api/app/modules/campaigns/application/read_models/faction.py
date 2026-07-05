@@ -1,4 +1,4 @@
-"""Faction HTTP response DTO."""
+"""Faction read model returned by campaign queries."""
 
 from pydantic import BaseModel
 

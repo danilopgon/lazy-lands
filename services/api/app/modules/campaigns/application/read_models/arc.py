@@ -1,4 +1,4 @@
-"""Arc HTTP response DTO."""
+"""Arc read model returned by campaign queries."""
 
 from pydantic import BaseModel
 

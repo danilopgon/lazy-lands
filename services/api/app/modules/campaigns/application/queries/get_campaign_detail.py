@@ -2,12 +2,14 @@
 
 from uuid import UUID
 
-from app.modules.campaigns.api.schemas.arc.responses import ArcResponse
-from app.modules.campaigns.api.schemas.campaign.responses import CampaignDetailResponse
-from app.modules.campaigns.api.schemas.faction.responses import FactionResponse
-from app.modules.campaigns.api.schemas.npc.responses import NpcResponse
+from app.modules.campaigns.application.errors import CampaignNotFoundError
+from app.modules.campaigns.application.read_models.arc import ArcResponse
+from app.modules.campaigns.application.read_models.campaign import (
+    CampaignDetailResponse,
+)
+from app.modules.campaigns.application.read_models.faction import FactionResponse
+from app.modules.campaigns.application.read_models.npc import NpcResponse
 from app.modules.campaigns.domain.ports import CampaignRepository
-from app.modules.campaigns.errors import CampaignNotFoundError
 
 
 class GetCampaignDetail:

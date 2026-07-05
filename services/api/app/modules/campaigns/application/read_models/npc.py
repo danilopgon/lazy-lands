@@ -1,4 +1,4 @@
-"""NPC HTTP response DTO."""
+"""NPC read model returned by campaign queries."""
 
 from pydantic import BaseModel
 

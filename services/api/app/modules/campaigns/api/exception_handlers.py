@@ -1,9 +1,11 @@
-"""Campaign-persistence-specific exception and its FastAPI error handler.
+"""FastAPI exception handlers for campaign application errors.
 
-Colocated in the ``campaigns`` module (not ``shared/errors.py``) — this
-exception is module-specific, and ``shared/`` must not import from
+Colocated in the ``campaigns`` module's ``api`` layer (not ``shared/errors.py``)
+— these handlers are module-specific, and ``shared/`` must not import from
 ``modules/*`` (ADR-05 rule 3: the dependency direction is module -> shared,
-never the reverse).
+never the reverse). The exception *classes* they map live in
+``application/errors.py``; HTTP mapping is a presentation concern and stays
+here, in ``api``.
 """
 
 import logging
@@ -11,32 +13,12 @@ import logging
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+from app.modules.campaigns.application.errors import (
+    CampaignNotFoundError,
+    CampaignPersistenceError,
+)
+
 logger = logging.getLogger(__name__)
-
-
-class CampaignPersistenceError(Exception):
-    """Raised when the create-campaign use case cannot fully persist a campaign.
-
-    Attributes:
-        retryable: Whether the frontend may retry with the same reviewed
-            payload. Always True today (design Decision 5).
-        orphaned_campaign_id: Set only when the compensating delete itself
-            failed — surfaced so it can be manually cleaned up.
-    """
-
-    def __init__(
-        self,
-        retryable: bool = True,
-        orphaned_campaign_id: str | None = None,
-    ) -> None:
-        """Initialize with retry flag and optional orphaned campaign id."""
-        self.retryable = retryable
-        self.orphaned_campaign_id = orphaned_campaign_id
-        super().__init__("Campaign persistence failed")
-
-
-class CampaignNotFoundError(Exception):
-    """Raised when a targeted resource returns no rows under caller-scoped RLS."""
 
 
 async def campaign_not_found_error_handler(
