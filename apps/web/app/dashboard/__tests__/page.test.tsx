@@ -228,6 +228,20 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Open arcs')).toBeInTheDocument()
   })
 
+  it('renders Sessions and Memories as "—" placeholders (Block 7 — not yet data-bound)', async () => {
+    mockGetCampaigns.mockResolvedValue([buildCampaign()])
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Shadows over Phandalin')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('Sessions')).toBeInTheDocument()
+    expect(screen.getByText('Memories')).toBeInTheDocument()
+    // Two placeholder columns, both showing an em dash instead of a count.
+    expect(screen.getAllByText('—')).toHaveLength(2)
+  })
+
   it('shows the campaign count and session summary in the subtitle', async () => {
     mockGetCampaigns.mockResolvedValue([
       buildCampaign(),

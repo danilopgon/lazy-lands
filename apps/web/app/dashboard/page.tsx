@@ -23,10 +23,7 @@ export default function DashboardPage() {
 
   return (
     <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
-      <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        Your chronicles
-      </div>
-      <div className="mt-3.5 flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
             Campaigns
@@ -34,21 +31,18 @@ export default function DashboardPage() {
           <h1 className="mt-2 font-serif text-[38px] font-semibold tracking-[-0.03em] text-[var(--ink)]">
             Your chronicles
           </h1>
-          <p className="mt-1 text-sm text-[var(--ink-2)]">
-            {isLoading
-              ? 'Loading…'
-              : error
+          {!isLoading && (
+            <p className="mt-1 text-sm text-[var(--ink-2)]">
+              {error
                 ? 'Something went wrong'
                 : data && data.length > 0
                   ? `${data.length} campaigns`
                   : 'No campaigns yet'}
-          </p>
+            </p>
+          )}
         </div>
-        {!isLoading && !error && data && data.length > 0 && (
-          <Button
-            variant="accent"
-            onClick={() => router.push('/campaigns/new')}
-          >
+        {!isLoading && (
+          <Button variant="ink" onClick={() => router.push('/campaigns/new')}>
             + New campaign
           </Button>
         )}

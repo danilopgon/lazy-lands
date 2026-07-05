@@ -2,12 +2,11 @@ import { z } from 'zod'
 
 import { contentSourceSchema, prioritySchema } from './enums'
 
-export const arcStatusSchema = z.enum([
-  'active',
-  'dormant',
-  'resolved',
-  'discarded',
-])
+// Mirrors the Postgres `arc_status` enum and `ArcStatus` domain value object
+// (`services/api/app/modules/campaigns/domain/enums.py`). Only `open` arcs are
+// active narrative threads; `resolved`/`dropped` are terminal. See
+// docs/03-domain-model.md §Arc.
+export const arcStatusSchema = z.enum(['open', 'resolved', 'dropped'])
 export type ArcStatus = z.infer<typeof arcStatusSchema>
 
 export const npcResponseSchema = z.object({

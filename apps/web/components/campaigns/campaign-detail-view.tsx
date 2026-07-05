@@ -2,20 +2,12 @@ import Link from 'next/link'
 
 import { WorldStateEditor } from './world-state-editor'
 
+import { formatShortDate } from '@/lib/format'
+
 import type { CampaignDetailResponse } from '@/lib/campaigns/schemas'
 
 type CampaignDetailViewProps = {
   campaign: CampaignDetailResponse
-}
-
-/** Format an ISO date string as a short locale date for display. */
-function formatRelativeDate(iso: string): string {
-  const date = new Date(iso)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
 }
 
 /**
@@ -27,15 +19,15 @@ function formatRelativeDate(iso: string): string {
  */
 export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
   const kicker = [campaign.system, campaign.tone].filter(Boolean).join(' · ')
-  const activeArcs = campaign.arcs.filter(
-    (arc) => arc.status === 'active' || arc.status === 'dormant'
-  )
-  const visibleArcs = activeArcs.slice(0, 3)
+  // Only `open` arcs are unresolved threads that need attention; `resolved`
+  // and `dropped` are terminal (docs/03-domain-model.md §Arc).
+  const openArcs = campaign.arcs.filter((arc) => arc.status === 'open')
+  const visibleArcs = openArcs.slice(0, 3)
 
   return (
     <div className="ll-view-enter">
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        <Link href="/campaigns" className="hover:text-[var(--ink)]">
+        <Link href="/dashboard" className="hover:text-[var(--ink)]">
           Campaigns
         </Link>{' '}
         / <b className="text-[var(--ink)]">{campaign.title}</b>
@@ -52,7 +44,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
             {campaign.title}
           </h1>
           <p className="mt-1 text-sm text-[var(--ink-2)]">
-            Updated {formatRelativeDate(campaign.updated_at)}
+            Updated {formatShortDate(campaign.updated_at)}
           </p>
         </div>
       </div>
@@ -161,13 +153,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                     {arc.description}
                   </div>
                 )}
-                <span
-                  className={`mt-1 inline-block font-mono text-[10px] font-semibold uppercase tracking-[0.08em] ${
-                    arc.status === 'dormant'
-                      ? 'text-[var(--accent)]'
-                      : 'text-[var(--ink-3)]'
-                  }`}
-                >
+                <span className="mt-1 inline-block font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
                   {arc.status}
                 </span>
               </div>
