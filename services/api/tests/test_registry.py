@@ -42,8 +42,8 @@ def test_build_provider_reads_provider_from_settings_env_file(
     monkeypatch, tmp_path
 ) -> None:
     monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("LLM_PROVIDER", raising=False)
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    for name in ("LLM_PROVIDER", "LLM_FALLBACKS", "GEMINI_API_KEY", "GROQ_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
     tmp_path.joinpath(".env").write_text(
         "LLM_PROVIDER=gemini\nGEMINI_API_KEY=dotenv-gemini-key\n",
         encoding="utf-8",
