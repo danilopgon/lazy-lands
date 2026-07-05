@@ -175,8 +175,10 @@ def test_list_campaigns_selects_summary_fields_ordered_by_updated_at_desc() -> N
     client.table.assert_any_call("campaigns")
     client.table.return_value.select.assert_called_once()
     select_arg = client.table.return_value.select.call_args[0][0]
-    assert "system" in select_arg
-    assert "tone" in select_arg
+    # system/tone are not selected until WU3 creates those columns; selecting
+    # them before they exist would 400 on PostgREST (re-added with the migration).
+    assert "system" not in select_arg
+    assert "tone" not in select_arg
     client.table.return_value.select.return_value.order.assert_called_once_with(
         "updated_at", desc=True
     )
@@ -218,8 +220,9 @@ def test_get_campaign_returns_first_row_or_none_on_rls_miss() -> None:
     assert row == {"id": "campaign-1", "title": "Visible"}
     client.table.assert_any_call("campaigns")
     select_arg = client.table.return_value.select.call_args[0][0]
-    assert "system" in select_arg
-    assert "tone" in select_arg
+    # system/tone are not selected until WU3 creates those columns (see repository).
+    assert "system" not in select_arg
+    assert "tone" not in select_arg
     client.table.return_value.select.return_value.eq.assert_called_once_with(
         "id", "campaign-1"
     )
