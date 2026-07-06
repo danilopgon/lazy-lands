@@ -31,21 +31,14 @@ SUPABASE_SERVICE_ROLE_KEY=<service_role key from supabase status>
 SUPABASE_JWT_SECRET=<JWT secret for local verification>
 ```
 
-If `pnpm supabase start` fails with `failed to read signing keys`, create a local
-signing key file at `supabase/signing_keys.json`. The Supabase CLI prints a
-single JWK object, but `signing_keys_path = "./signing_keys.json"` expects a JSON
-array:
+If `pnpm supabase start` fails with `failed to read signing keys`, generate them
+from the repo root:
 
-```json
-[
-  {
-    "kty": "...",
-    "kid": "..."
-  }
-]
+```bash
+pnpm setup:keys
 ```
 
-`supabase/signing_keys.json` is gitignored and must stay local.
+This creates `supabase/signing_keys.json` (gitignored) with the correct format.
 
 ## Local Auth smoke testing
 

@@ -24,8 +24,14 @@ class Priority(StrEnum):
 
 
 class ArcStatus(StrEnum):
-    """Arc lifecycle status (matches the Postgres ``arc_status`` enum)."""
+    """Arc lifecycle status (matches the Postgres ``arc_status`` enum).
 
-    open = "open"
+    Reconciled to the product's stable codes in Migration B (design Decision 9):
+    ``active``/``dormant`` are unresolved threads; ``resolved``/``discarded`` are
+    terminal. Display labels live in the frontend, never stored.
+    """
+
+    active = "active"
+    dormant = "dormant"
     resolved = "resolved"
-    dropped = "dropped"
+    discarded = "discarded"

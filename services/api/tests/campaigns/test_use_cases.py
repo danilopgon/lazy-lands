@@ -51,7 +51,7 @@ def test_get_campaign_detail_composes_campaign_children_and_arcs() -> None:
     repo.get_campaign_children.return_value = (
         [{"id": "npc-1", "name": "Toblen"}],
         [{"id": "faction-1", "name": "Guild"}],
-        [{"id": "arc-1", "title": "Missing caravan", "status": "open"}],
+        [{"id": "arc-1", "title": "Missing caravan", "status": "active"}],
     )
 
     detail = GetCampaignDetail(repo).execute(CAMPAIGN_ID)

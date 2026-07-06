@@ -188,15 +188,13 @@ pnpm supabase start
 
 Docker Desktop must be running before `pnpm supabase start`.
 
-If startup fails with `failed to read signing keys`, generate a local signing key
-and save it as `supabase/signing_keys.json`. The CLI prints one JWK object, but
-this project expects a JSON array of JWK objects:
+If startup fails with `failed to read signing keys`, generate them with:
 
-```json
-[{ "kty": "..." }]
+```bash
+pnpm setup:keys
 ```
 
-`supabase/signing_keys.json` is gitignored. Never commit it.
+This creates `supabase/signing_keys.json` (gitignored) with the correct format.
 
 See [supabase/README.md](./supabase/README.md) for full setup instructions.
 

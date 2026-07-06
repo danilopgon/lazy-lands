@@ -30,6 +30,8 @@ class CreateCampaignCommand:
     title: str
     description: str
     world_state: str
+    system: str
+    tone: str | None = None
     npcs: list[NPC] = field(default_factory=list)
     factions: list[Faction] = field(default_factory=list)
     arcs: list[NewArc] = field(default_factory=list)
@@ -60,7 +62,12 @@ class CreateCampaign:
         """
         try:
             campaign_id = self._repository.insert_campaign(
-                user_id, data.title, data.description, data.world_state
+                user_id,
+                data.title,
+                data.description,
+                data.world_state,
+                data.system,
+                data.tone,
             )
         except RepositoryError as exc:
             raise CampaignPersistenceError(retryable=True) from exc

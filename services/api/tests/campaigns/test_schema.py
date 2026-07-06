@@ -48,9 +48,9 @@ def test_campaign_detail_response_allows_nullable_fields_and_children() -> None:
         updated_at="2026-07-02T00:00:00Z",
         npcs=[NpcResponse(id="npc-1", name="Toblen")],
         factions=[FactionResponse(id="faction-1", name="Guild")],
-        arcs=[ArcResponse(id="arc-1", title="Missing caravan", status="open")],
+        arcs=[ArcResponse(id="arc-1", title="Missing caravan", status="active")],
     )
 
     assert detail.npcs[0].description is None
     assert detail.factions[0].current_stance is None
-    assert detail.arcs[0].status == "open"
+    assert detail.arcs[0].status == "active"

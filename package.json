@@ -14,6 +14,7 @@
     "test": "turbo test",
     "supabase:reset": "supabase db reset",
     "supabase:seed-auth": "tsx supabase/scripts/seed-auth.ts",
+    "setup:keys": "node scripts/gen-signing-keys.mjs",
     "quality": "pnpm lint && pnpm typecheck && pnpm test && pnpm lint:guardrails",
     "quality:strict": "pnpm format:check && pnpm quality",
     "format": "prettier --write .",

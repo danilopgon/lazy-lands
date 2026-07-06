@@ -1,51 +1,75 @@
-import Link from 'next/link'
+'use client'
 
-import { LogoutButton } from '@/components/auth/logout-button'
+import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+
 import { Button } from '@/components/ui/button'
-import { EmptyState } from '@/components/ui/empty-state'
+import { LoadingScribe } from '@/components/ui/loading-scribe'
 import { Notice } from '@/components/ui/notice'
-import { StatLedger } from '@/components/ui/stat-ledger'
-
-const emptyStats = [
-  { value: '0', label: 'Campaigns' },
-  { value: '0', label: 'Accepted memories' },
-  { value: '0', label: 'Open arcs' },
-]
+import { CampaignList } from '@/components/campaigns/campaign-list'
+import { getCampaigns } from '@/lib/campaigns/api'
 
 /**
- * Campaign dashboard — placeholder empty state until auth and data are wired.
+ * Campaign dashboard — fetches and displays the authenticated user's campaigns.
  *
  * @returns {React.ReactElement} The dashboard page element.
  */
 export default function DashboardPage() {
+  const router = useRouter()
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: getCampaigns,
+  })
+
   return (
     <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
-      <div className="flex items-start justify-between gap-4 border-b-[3px] border-[var(--line-strong)] pb-6">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
             Campaigns
           </p>
-          <h1 className="mt-3 font-serif text-5xl font-semibold tracking-[-0.03em] text-[var(--ink)]">
-            Campaign dashboard
+          <h1 className="mt-2 font-serif text-[38px] font-semibold tracking-[-0.03em] text-[var(--ink)]">
+            Your chronicles
           </h1>
+          {!isLoading && (
+            <p className="mt-1 text-sm text-[var(--ink-2)]">
+              {error
+                ? 'Something went wrong'
+                : data && data.length > 0
+                  ? `${data.length} campaign${data.length === 1 ? '' : 's'}`
+                  : 'No campaigns yet'}
+            </p>
+          )}
         </div>
-        <LogoutButton />
-      </div>
-      <StatLedger items={emptyStats} className="mt-8" />
-      <EmptyState
-        className="mt-8"
-        title="No campaigns on the shelf yet"
-        description="The MVP dashboard will list owned campaigns, recent sessions and memory counts after Supabase auth and campaign storage are wired."
-        action={
-          <Button asChild variant="accent">
-            <Link href="/campaigns/new">Create campaign</Link>
+        {!isLoading && (
+          <Button variant="ink" onClick={() => router.push('/campaigns/new')}>
+            + New campaign
           </Button>
-        }
-      />
-      <Notice className="mt-8" variant="plain" ornament="◆">
-        Auth guards must be added before real campaign data appears here. Until
-        then, this route is a Print Chronicle empty state for smoke tests.
-      </Notice>
+        )}
+      </div>
+
+      {isLoading && (
+        <LoadingScribe
+          className="mt-8"
+          title="The Scribe is writing"
+          caption="Fetching your campaigns"
+        />
+      )}
+
+      {error && (
+        <Notice className="mt-7" variant="error">
+          <p>Something went wrong while loading your campaigns.</p>
+          <button
+            type="button"
+            className="mt-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
+            onClick={() => refetch()}
+          >
+            Retry
+          </button>
+        </Notice>
+      )}
+
+      {!isLoading && !error && data && <CampaignList campaigns={data} />}
     </main>
   )
 }

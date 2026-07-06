@@ -34,7 +34,13 @@ class CampaignRepository(Protocol):
         ...
 
     def insert_campaign(
-        self, user_id: str, title: str, description: str, world_state: str
+        self,
+        user_id: str,
+        title: str,
+        description: str,
+        world_state: str,
+        system: str,
+        tone: str | None,
     ) -> str:
         """Insert the campaign row; return the new campaign id."""
         ...
@@ -53,4 +59,50 @@ class CampaignRepository(Protocol):
 
     def delete_campaign(self, campaign_id: str) -> None:
         """Compensating delete; cascades to any already-inserted children."""
+        ...
+
+    # --- WU3 partial updates (None -> 404 on RLS miss) --------------------
+
+    def update_campaign(self, campaign_id: str, changes: dict) -> dict | None:
+        """Patch a campaign's mutable columns; None on RLS miss."""
+        ...
+
+    def update_npc(self, npc_id: str, changes: dict) -> dict | None:
+        """Patch an NPC; None on RLS miss."""
+        ...
+
+    def update_faction(self, faction_id: str, changes: dict) -> dict | None:
+        """Patch a faction; None on RLS miss."""
+        ...
+
+    def update_arc(self, arc_id: str, changes: dict) -> dict | None:
+        """Patch an arc; None on RLS miss."""
+        ...
+
+    # --- WU3 manual creates (return the inserted row) ---------------------
+
+    def create_npc(self, data: dict) -> dict:
+        """Insert one DM-authored NPC row; return it."""
+        ...
+
+    def create_faction(self, data: dict) -> dict:
+        """Insert one DM-authored faction row; return it."""
+        ...
+
+    def create_arc(self, data: dict) -> dict:
+        """Insert one DM-authored arc row; return it."""
+        ...
+
+    # --- WU3 hard deletes (False -> 404 on RLS miss) ----------------------
+
+    def delete_npc(self, npc_id: str) -> bool:
+        """Delete an NPC; False on RLS miss."""
+        ...
+
+    def delete_faction(self, faction_id: str) -> bool:
+        """Delete a faction; False on RLS miss."""
+        ...
+
+    def delete_arc(self, arc_id: str) -> bool:
+        """Delete an arc; False on RLS miss."""
         ...

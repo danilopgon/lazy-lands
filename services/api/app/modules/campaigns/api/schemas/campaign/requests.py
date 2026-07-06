@@ -19,6 +19,19 @@ class CreateCampaignRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=1, max_length=4000)
     world_state: str = Field(min_length=1, max_length=4000)
+    system: str = Field(min_length=1, max_length=200)
+    tone: str | None = Field(default=None, max_length=200)
     npcs: list[CreateNpcRequest] = Field(default_factory=list, max_length=100)
     factions: list[CreateFactionRequest] = Field(default_factory=list, max_length=100)
     arcs: list[CreateArcRequest] = Field(default_factory=list, max_length=100)
+
+
+class UpdateCampaignRequest(BaseModel):
+    """``PATCH /campaigns/{id}`` body — partial edit of world_state/system/tone.
+
+    All fields optional; an empty patch is rejected (422) by the use case.
+    """
+
+    world_state: str | None = Field(default=None, min_length=1, max_length=4000)
+    system: str | None = Field(default=None, min_length=1, max_length=200)
+    tone: str | None = Field(default=None, max_length=200)

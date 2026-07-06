@@ -28,11 +28,8 @@ class SupabaseCampaignRepository:
         try:
             response = (
                 self._client.table("campaigns")
-                # system/tone are re-added in WU3 alongside the migration that
-                # creates those columns; selecting them before they exist makes
-                # PostgREST 400 ("column does not exist"), not return null.
                 .select(
-                    "id,title,description,updated_at,"
+                    "id,title,description,updated_at,system,tone,"
                     "npc_count:npcs(count),"
                     "faction_count:factions(count),"
                     "arc_count:arcs(count)"
@@ -50,8 +47,7 @@ class SupabaseCampaignRepository:
         try:
             response = (
                 self._client.table("campaigns")
-                # system/tone are re-added in WU3 with the migration that creates them.
-                .select("id,title,description,world_state,updated_at")
+                .select("id,title,description,world_state,system,tone,updated_at")
                 .eq("id", campaign_id)
                 .execute()
             )
@@ -92,7 +88,13 @@ class SupabaseCampaignRepository:
         )
 
     def insert_campaign(
-        self, user_id: str, title: str, description: str, world_state: str
+        self,
+        user_id: str,
+        title: str,
+        description: str,
+        world_state: str,
+        system: str,
+        tone: str | None,
     ) -> str:
         """Insert the campaign row; return the new campaign id."""
         try:
@@ -104,6 +106,8 @@ class SupabaseCampaignRepository:
                         "title": title,
                         "description": description,
                         "world_state": world_state,
+                        "system": system,
+                        "tone": tone,
                     }
                 )
                 .execute()
@@ -151,7 +155,7 @@ class SupabaseCampaignRepository:
         self._write("factions", rows)
 
     def insert_arcs(self, campaign_id: str, arcs: list[NewArc]) -> None:
-        """Bulk-insert arc rows with status="open". No-op if empty."""
+        """Bulk-insert arc rows with status="active". No-op if empty."""
         if not arcs:
             return
         rows: list[dict[str, Any]] = [
@@ -160,7 +164,7 @@ class SupabaseCampaignRepository:
                 "title": arc.title,
                 "description": arc.description,
                 "priority": arc.priority.value,
-                "status": ArcStatus.open.value,
+                "status": ArcStatus.active.value,
                 "content_source": arc.content_source.value,
             }
             for arc in arcs
@@ -173,6 +177,77 @@ class SupabaseCampaignRepository:
             self._client.table("campaigns").delete().eq("id", campaign_id).execute()
         except Exception as exc:
             raise RepositoryError("Failed to delete campaign") from exc
+
+    def update_campaign(self, campaign_id: str, changes: dict) -> dict | None:
+        """Patch a campaign's mutable columns; None on RLS miss."""
+        return self._update("campaigns", campaign_id, changes)
+
+    def update_npc(self, npc_id: str, changes: dict) -> dict | None:
+        """Patch an NPC; None on RLS miss."""
+        return self._update("npcs", npc_id, changes)
+
+    def update_faction(self, faction_id: str, changes: dict) -> dict | None:
+        """Patch a faction; None on RLS miss."""
+        return self._update("factions", faction_id, changes)
+
+    def update_arc(self, arc_id: str, changes: dict) -> dict | None:
+        """Patch an arc; None on RLS miss."""
+        return self._update("arcs", arc_id, changes)
+
+    def create_npc(self, data: dict) -> dict:
+        """Insert one DM-authored NPC row; return it."""
+        return self._create("npcs", data)
+
+    def create_faction(self, data: dict) -> dict:
+        """Insert one DM-authored faction row; return it."""
+        return self._create("factions", data)
+
+    def create_arc(self, data: dict) -> dict:
+        """Insert one DM-authored arc row; return it."""
+        return self._create("arcs", data)
+
+    def delete_npc(self, npc_id: str) -> bool:
+        """Delete an NPC; False on RLS miss."""
+        return self._delete("npcs", npc_id)
+
+    def delete_faction(self, faction_id: str) -> bool:
+        """Delete a faction; False on RLS miss."""
+        return self._delete("factions", faction_id)
+
+    def delete_arc(self, arc_id: str) -> bool:
+        """Delete an arc; False on RLS miss."""
+        return self._delete("arcs", arc_id)
+
+    def _update(self, table: str, row_id: str, changes: dict) -> dict | None:
+        """PATCH one row by id. Empty `data` (RLS UPDATE miss) -> None."""
+        try:
+            response = (
+                self._client.table(table).update(changes).eq("id", row_id).execute()
+            )
+        except Exception as exc:
+            raise RepositoryError(f"Failed to update {table}") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        return rows[0] if rows else None
+
+    def _create(self, table: str, data: dict) -> dict:
+        """INSERT one row and return it. Forged parent raises 42501 (backstop)."""
+        try:
+            response = self._client.table(table).insert(data).execute()
+        except Exception as exc:
+            raise RepositoryError(f"Failed to insert into {table}") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        if not rows:
+            raise RepositoryError(f"Insert into {table} returned no rows")
+        return rows[0]
+
+    def _delete(self, table: str, row_id: str) -> bool:
+        """DELETE one row by id. Empty returned rows (RLS DELETE miss) -> False."""
+        try:
+            response = self._client.table(table).delete().eq("id", row_id).execute()
+        except Exception as exc:
+            raise RepositoryError(f"Failed to delete from {table}") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        return bool(rows)
 
     def _write(self, table: str, rows: list[dict[str, Any]]) -> None:
         try:

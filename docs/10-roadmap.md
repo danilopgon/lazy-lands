@@ -27,7 +27,7 @@ complex relationship graphs, visual timeline, and advanced memory compiler.
 | 3 | Landing page | done |
 | 4 | Auth | done |
 | 5 | Campaign creation and AI onboarding | done |
-| 6 | Campaign view | pending |
+| 6 | Campaign view | in progress |
 | 7 | Sessions: post-session registration | pending |
 | 8 | Session generation and editing | pending |
 | 9 | PDF export | pending |
@@ -162,15 +162,16 @@ Status: **done**
 
 ## Block 6 — Campaign view
 
-Status: **pending**
+Status: **in progress**
 
-- [ ] Campaign list for the logged-in user.
-- [ ] Campaign detail view: title, description, world state.
-- [ ] NPC list with name, description, current status and motivation.
-- [ ] Faction list with name, description and current stance.
-- [ ] Manual editing of world state (free-text field).
-- [ ] Basic NPC editing: name, status, motivation.
-- [ ] Basic faction editing: name, stance, goals.
+- [x] Campaign list for the logged-in user (`/dashboard`).
+- [x] Campaign detail view: title, description, world state, system/tone, stat bar.
+- [x] NPC list with name, description, current status and motivation.
+- [x] Faction list with name, description and current stance.
+- [x] Arc list with title, description, priority and status (`active/dormant/resolved/discarded`).
+- [x] Manual editing of world state (free-text field), wired to `PATCH /campaigns/{id}`.
+- [x] Full NPC / faction / arc create, edit and delete via modals (`POST/PATCH/DELETE`).
+- [ ] Docs sweep, `sdd-verify`, and archive to close the change.
 
 ---
 

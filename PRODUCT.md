@@ -93,7 +93,7 @@ Route map as implemented in the prototype (hash-router; real build should use re
 | `/campaigns/[id]`                       | Campaign detail      | World state, metrics, recent sessions, recent active memories, arcs needing attention, primary actions.                                                                                                  |
 | `/campaigns/[id]/npcs`                  | NPCs                 | Per NPC: name, description, status, motivation, party relation, faction, related sessions, origin. CRUD + filter.                                                                                        |
 | `/campaigns/[id]/factions`              | Factions             | Per faction: description, posture, objective, influence, related NPCs/arcs, last reaction. CRUD + change posture.                                                                                        |
-| `/campaigns/[id]/arcs`                  | Open arcs            | Per arc: title, description, priority, status (active/paused/resolved/dismissed), related entities, last session, **include in next generation** toggle.                                                 |
+| `/campaigns/[id]/arcs`                  | Open arcs            | Per arc: title, description, priority, status (active/dormant/resolved/discarded), related entities, last session, **include in next generation** toggle.                                                 |
 | `/campaigns/[id]/sessions/new`          | Log session          | Title, number, summary, consequences, world/NPC/faction changes, arcs touched, private notes. **Summary required**; save+process loading; error preserves text.                                          |
 | `/campaigns/[id]/memory/review`         | Review memories      | Suggestions (type, content, importance, source, related entities, _why_); accept/edit/dismiss; accepted-memories section; empty state.                                                                   |
 | `/campaigns/[id]/prepare`               | Prepare next session | Shows context that will be used (summary, last session, world, NPCs, factions, open arcs, accepted memories); optional goal/tone/pace/difficulty/instructions; generate w/ loading.                      |
@@ -151,10 +151,13 @@ This package is a **visual + behavioral base for development**, realistic enough
 
 ## 10. Current frontend implementation status
 
-`apps/web` is the production Next.js target. It currently implements the Block 0 scaffold:
+`apps/web` is the production Next.js target. Through Block 6 it implements:
 
-- `/` renders the product landing page using the Print Chronicle palette, fonts, hard borders and ink shadows.
-- `/login`, `/register` and `/dashboard` are stable placeholder routes, not finished product flows.
-- Authentication, protected campaign data, campaign creation, memory review and session generation are still governed by the MVP screen inventory above and the SDD docs under `docs/`.
+- `/` — the product landing page (Print Chronicle palette, fonts, hard borders, ink shadows).
+- `/login`, `/register`, auth confirmation and password reset — real Supabase auth flows (Block 4).
+- `/campaigns/new` and `/campaigns/new/review` — free-text premise → AI extraction → reviewed create (Block 5).
+- `/dashboard` — the DM's campaign list.
+- `/campaigns/[id]` — detail: system/tone, world state (view + inline edit), stat bar, arcs needing attention. Recent sessions and active memories are dimmed "coming in a later chapter" placeholders (Block 7).
+- `/campaigns/[id]/npcs`, `/factions`, `/arcs` — entity lists with full create / edit / delete via modals.
 
-Do not treat placeholders as product behavior. They exist to keep navigation and smoke tests stable while the real flows are implemented.
+Sessions, memory review and session generation remain governed by the MVP screen inventory above and the SDD docs under `docs/` (Blocks 7–8). Their placeholder slots are intentional and are not product behavior yet.

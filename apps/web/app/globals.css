@@ -114,6 +114,36 @@ body {
   color: var(--accent-deep);
 }
 
+/* ─── Scrollbars — Print Chronicle: thin, hard (radius 0), ink on paper ─── */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dotted) transparent;
+}
+
+/* WebKit / Chromium */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  /* 3px transparent border carves the thumb into a thin ink bar with no
+     rounding — matches the hard-edged DNA (radius 0 everywhere). */
+  background-color: var(--dotted);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ink-3);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 @keyframes ll-marquee {
   from {
     transform: translateX(0);
@@ -245,6 +275,38 @@ body {
   transform: translateY(2px);
 }
 
+/* ─── Campaign Detail View ─────────────────────────────────────── */
+
+@keyframes ll-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ll-view-enter {
+  animation: ll-view-enter 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ll-rule-anim {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: ll-view-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) 150ms both;
+}
+
+.ll-dropcap::first-letter {
+  float: left;
+  font-size: 3.2em;
+  line-height: 0.85;
+  font-weight: 600;
+  padding: 0.05em 0.1em 0 0;
+  color: var(--ink);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -260,7 +322,9 @@ body {
   .ll-enter-2,
   .ll-enter-3,
   .ll-enter-4,
-  .ll-enter-5 {
+  .ll-enter-5,
+  .ll-view-enter,
+  .ll-rule-anim {
     opacity: 1 !important;
     transform: none !important;
   }

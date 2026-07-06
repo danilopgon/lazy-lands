@@ -151,6 +151,7 @@ describe('campaigns schemas (mirrors services/api schemas.py)', () => {
       title: 'Shadows over Phandalin',
       description: 'A frontier town beset by goblins',
       world_state: 'Uneasy calm',
+      system: 'D&D 5e',
       npcs: [],
       factions: [],
       arcs: [],

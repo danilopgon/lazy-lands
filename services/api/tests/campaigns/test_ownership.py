@@ -84,7 +84,10 @@ def test_campaign_created_under_authenticated_users_own_user_id(two_test_users) 
     use_case = CreateCampaign(SupabaseCampaignRepository(client_a))
 
     payload = CreateCampaignCommand(
-        title="Ownership Test Campaign", description="D", world_state="W"
+        title="Ownership Test Campaign",
+        description="D",
+        world_state="W",
+        system="D&D 5e",
     )
     campaign_id = use_case.execute(user_a_id, payload)
 
@@ -112,7 +115,7 @@ def test_user_b_client_cannot_read_user_a_campaign(two_test_users) -> None:
 
     use_case = CreateCampaign(SupabaseCampaignRepository(client_a))
     payload = CreateCampaignCommand(
-        title="Owned By A", description="D", world_state="W"
+        title="Owned By A", description="D", world_state="W", system="D&D 5e"
     )
     campaign_id = use_case.execute(user_a_id, payload)
 

@@ -59,6 +59,10 @@ type ReviewDraftState = {
   title: string
   description: string
   worldState: string
+  // Carried from the new-campaign form through the draft; persisted verbatim
+  // on the campaign (system required, tone optional).
+  system: string
+  tone: string | null
   // UI-only provenance flags — never sent to the backend. They flip the
   // "Scribe" badge to "Edited by you" once the DM revises a prose block.
   titleEdited: boolean
@@ -96,6 +100,12 @@ const ARC_FIELDS: EntityField<ArcItem>[] = [
   { key: 'description', label: 'Description', placeholder: 'Description' },
 ]
 
+/**
+ * Read the stored extraction draft (client-only) and shape it into the review
+ * screen's state, assigning stable reviewIds. Returns null on the server or
+ * when no draft is stored.
+ * @returns {ReviewDraftState | null} The review state, or null when unavailable.
+ */
 function loadInitialDraft(): ReviewDraftState | null {
   if (typeof window === 'undefined') return null
   const storedDraft = readExtractionDraft()
@@ -105,6 +115,8 @@ function loadInitialDraft(): ReviewDraftState | null {
     title: storedDraft.title,
     description: storedDraft.description,
     worldState: storedDraft.world_state,
+    system: storedDraft.system,
+    tone: storedDraft.tone,
     titleEdited: false,
     descriptionEdited: false,
     worldStateEdited: false,
@@ -123,7 +135,12 @@ function loadInitialDraft(): ReviewDraftState | null {
   }
 }
 
-/** Client-only state container for the review screen. */
+/**
+ * Client-only state container for the review screen.
+ * @param {object} root0 - The component props.
+ * @param {ReviewDraftState} root0.initialDraft - The draft loaded from storage.
+ * @returns {React.ReactElement} The review screen.
+ */
 function ReviewCampaignClient({
   initialDraft,
 }: {
@@ -158,6 +175,8 @@ function ReviewCampaignClient({
       title: draft.title,
       description: draft.description,
       world_state: draft.worldState,
+      system: draft.system,
+      tone: draft.tone,
       npcs: draft.npcs.map(
         ({ name, description, current_state, motivation, content_source }) => ({
           name,
@@ -365,6 +384,11 @@ function useStoredDraft(): ReviewDraftState | null | undefined {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }
 
+/**
+ * Review screen route: loads the stored draft and renders the client container,
+ * redirecting to `/campaigns/new` when there is no draft.
+ * @returns {React.ReactElement | null} The review screen, or null while redirecting.
+ */
 export default function ReviewCampaignPage() {
   const router = useRouter()
   const initialDraft = useStoredDraft()

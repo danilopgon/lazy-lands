@@ -35,6 +35,8 @@ const draft = {
   title: 'Shadows over Phandalin',
   description: 'A frontier town beset by goblins',
   world_state: 'Uneasy calm after the goblin raids',
+  system: 'D&D 5e',
+  tone: 'Grim survival',
   npcs: [
     {
       name: 'Elandra',
