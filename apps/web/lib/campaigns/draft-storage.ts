@@ -31,6 +31,8 @@ export type CampaignDraft = z.infer<typeof campaignDraftSchema>
  *
  * @param {ExtractCampaignOutput} draft - The extracted campaign payload.
  * @param {{ system: string; tone?: string | null }} meta - The DM's system/tone from the new-campaign form.
+ * @param {string} meta.system - The game system (e.g. "D&D 5e").
+ * @param {string | null} [meta.tone] - The optional campaign tone.
  */
 export function saveExtractionDraft(
   draft: ExtractCampaignOutput,

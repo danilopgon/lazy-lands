@@ -200,7 +200,14 @@ export async function getCampaignDetail(
   return campaignDetailResponseSchema.parse(await response.json())
 }
 
-/** Parse a JSON mutation response, throwing CampaignApiError on non-2xx. */
+/**
+ * Parse a JSON mutation response, throwing CampaignApiError on non-2xx.
+ * @param {string} path - The API path (e.g. "/npcs/{id}").
+ * @param {'POST' | 'PATCH'} method - The HTTP method.
+ * @param {unknown} body - The JSON request body.
+ * @param {z.ZodType<T>} schema - Zod schema the response is parsed with.
+ * @returns {Promise<T>} The validated response.
+ */
 async function mutate<T>(
   path: string,
   method: 'POST' | 'PATCH',
@@ -218,7 +225,11 @@ async function mutate<T>(
   return schema.parse(await response.json())
 }
 
-/** DELETE a resource; resolves on 2xx, throws CampaignApiError otherwise. */
+/**
+ * DELETE a resource; resolves on 2xx, throws CampaignApiError otherwise.
+ * @param {string} path - The API path (e.g. "/npcs/{id}").
+ * @returns {Promise<void>} Resolves when the delete succeeds.
+ */
 async function remove(path: string): Promise<void> {
   const response = await apiFetch(path, { method: 'DELETE' })
   if (!response.ok) {
@@ -226,7 +237,12 @@ async function remove(path: string): Promise<void> {
   }
 }
 
-/** `PATCH /campaigns/{id}` — partial edit of world_state/system/tone. */
+/**
+ * `PATCH /campaigns/{id}` — partial edit of world_state/system/tone.
+ * @param {string} id - The campaign id.
+ * @param {UpdateCampaignPayload} payload - The fields to update.
+ * @returns {Promise<CampaignMutationResponse>} The updated campaign row.
+ */
 export async function updateCampaign(
   id: string,
   payload: UpdateCampaignPayload
@@ -239,14 +255,23 @@ export async function updateCampaign(
   )
 }
 
-/** `POST /npcs` — create a DM-authored NPC. */
+/**
+ * `POST /npcs` — create a DM-authored NPC.
+ * @param {CreateNpcPayload} payload - The NPC to create (scoped by campaign_id).
+ * @returns {Promise<NpcResponse>} The created NPC.
+ */
 export async function createNpc(
   payload: CreateNpcPayload
 ): Promise<NpcResponse> {
   return mutate('/npcs', 'POST', payload, npcResponseSchema)
 }
 
-/** `PATCH /npcs/{id}` — partial NPC edit. */
+/**
+ * `PATCH /npcs/{id}` — partial NPC edit.
+ * @param {string} id - The NPC id.
+ * @param {UpdateNpcPayload} payload - The fields to update.
+ * @returns {Promise<NpcResponse>} The updated NPC.
+ */
 export async function updateNpc(
   id: string,
   payload: UpdateNpcPayload
@@ -254,19 +279,32 @@ export async function updateNpc(
   return mutate(`/npcs/${id}`, 'PATCH', payload, npcResponseSchema)
 }
 
-/** `DELETE /npcs/{id}`. */
+/**
+ * `DELETE /npcs/{id}`.
+ * @param {string} id - The NPC id.
+ * @returns {Promise<void>} Resolves when the NPC is deleted.
+ */
 export async function deleteNpc(id: string): Promise<void> {
   return remove(`/npcs/${id}`)
 }
 
-/** `POST /factions` — create a DM-authored faction. */
+/**
+ * `POST /factions` — create a DM-authored faction.
+ * @param {CreateFactionPayload} payload - The faction to create (scoped by campaign_id).
+ * @returns {Promise<FactionResponse>} The created faction.
+ */
 export async function createFaction(
   payload: CreateFactionPayload
 ): Promise<FactionResponse> {
   return mutate('/factions', 'POST', payload, factionResponseSchema)
 }
 
-/** `PATCH /factions/{id}` — partial faction edit. */
+/**
+ * `PATCH /factions/{id}` — partial faction edit.
+ * @param {string} id - The faction id.
+ * @param {UpdateFactionPayload} payload - The fields to update.
+ * @returns {Promise<FactionResponse>} The updated faction.
+ */
 export async function updateFaction(
   id: string,
   payload: UpdateFactionPayload
@@ -274,19 +312,32 @@ export async function updateFaction(
   return mutate(`/factions/${id}`, 'PATCH', payload, factionResponseSchema)
 }
 
-/** `DELETE /factions/{id}`. */
+/**
+ * `DELETE /factions/{id}`.
+ * @param {string} id - The faction id.
+ * @returns {Promise<void>} Resolves when the faction is deleted.
+ */
 export async function deleteFaction(id: string): Promise<void> {
   return remove(`/factions/${id}`)
 }
 
-/** `POST /arcs` — create a DM-authored arc. */
+/**
+ * `POST /arcs` — create a DM-authored arc.
+ * @param {CreateArcPayload} payload - The arc to create (scoped by campaign_id).
+ * @returns {Promise<ArcResponse>} The created arc.
+ */
 export async function createArc(
   payload: CreateArcPayload
 ): Promise<ArcResponse> {
   return mutate('/arcs', 'POST', payload, arcResponseSchema)
 }
 
-/** `PATCH /arcs/{id}` — partial arc edit (status changes flow through here). */
+/**
+ * `PATCH /arcs/{id}` — partial arc edit (status changes flow through here).
+ * @param {string} id - The arc id.
+ * @param {UpdateArcPayload} payload - The fields to update.
+ * @returns {Promise<ArcResponse>} The updated arc.
+ */
 export async function updateArc(
   id: string,
   payload: UpdateArcPayload
@@ -294,7 +345,11 @@ export async function updateArc(
   return mutate(`/arcs/${id}`, 'PATCH', payload, arcResponseSchema)
 }
 
-/** `DELETE /arcs/{id}`. */
+/**
+ * `DELETE /arcs/{id}`.
+ * @param {string} id - The arc id.
+ * @returns {Promise<void>} Resolves when the arc is deleted.
+ */
 export async function deleteArc(id: string): Promise<void> {
   return remove(`/arcs/${id}`)
 }

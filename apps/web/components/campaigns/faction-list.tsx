@@ -66,6 +66,8 @@ export function FactionList({
  *
  * @param {object} root0 - The faction row props.
  * @param {FactionResponse} root0.faction - The faction to render.
+ * @param {(faction: FactionResponse) => void} [root0.onEdit] - Open the edit modal.
+ * @param {(faction: FactionResponse) => void} [root0.onDelete] - Open the delete confirm.
  * @returns {React.ReactElement} The faction row element.
  */
 function FactionRow({

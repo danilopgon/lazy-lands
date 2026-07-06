@@ -23,7 +23,11 @@ type ArcModalProps = {
 const PRIORITIES: Priority[] = ['high', 'medium', 'low']
 const STATUSES: ArcStatus[] = ['active', 'dormant', 'resolved', 'discarded']
 
-/** Present a stable lowercase code as a capitalized label (design Decision 9). */
+/**
+ * Present a stable lowercase code as a capitalized label (design Decision 9).
+ * @param {string} code - The lowercase enum code (e.g. "active").
+ * @returns {string} The capitalized label (e.g. "Active").
+ */
 function label(code: string): string {
   return code.charAt(0).toUpperCase() + code.slice(1)
 }

@@ -55,6 +55,8 @@ export function NpcList({ npcs, onAdd, onEdit, onDelete }: NpcListProps) {
  *
  * @param {object} root0 - The NPC row props.
  * @param {NpcResponse} root0.npc - The NPC to render.
+ * @param {(npc: NpcResponse) => void} [root0.onEdit] - Open the edit modal.
+ * @param {(npc: NpcResponse) => void} [root0.onDelete] - Open the delete confirm.
  * @returns {React.ReactElement} The NPC row element.
  */
 function NpcRow({

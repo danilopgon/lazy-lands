@@ -35,6 +35,17 @@ const eslintConfig = [
     },
   },
   {
+    // JSDoc documents the production API surface, not test fixtures/helpers
+    // (buildX factories, renderPage, etc.). Relax the doc rules for tests.
+    files: ['**/*.test.{ts,tsx}', '**/__tests__/**'],
+    rules: {
+      'jsdoc/require-jsdoc': 'off',
+      'jsdoc/require-param': 'off',
+      'jsdoc/require-returns': 'off',
+      'jsdoc/require-description': 'off',
+    },
+  },
+  {
     ignores: [
       '.next/**',
       'out/**',

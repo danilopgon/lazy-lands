@@ -40,6 +40,7 @@ type EntityListScreenProps = {
  * @param {string} root0.title - Screen title and last breadcrumb segment.
  * @param {string} root0.addLabel - Label for the primary add action.
  * @param {(campaign: CampaignDetailResponse) => string} root0.subtitle - Builds the count subtitle.
+ * @param {() => void} [root0.onAdd] - Invoked when the primary add action is pressed.
  * @param {(campaign: CampaignDetailResponse) => React.ReactNode} root0.children - Renders the entity rows.
  * @returns {React.ReactElement} The entity list screen element.
  */

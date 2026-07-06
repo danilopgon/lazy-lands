@@ -13,7 +13,11 @@ type ArcListProps = {
   onDelete?: (arc: ArcResponse) => void
 }
 
-/** Terminal arcs (resolved/discarded) are dimmed; active/dormant are in play. */
+/**
+ * Terminal arcs (resolved/discarded) are dimmed; active/dormant are in play.
+ * @param {ArcStatus | null} status - The arc's lifecycle status.
+ * @returns {boolean} True when the arc is resolved or discarded.
+ */
 function isTerminal(status: ArcStatus | null): boolean {
   return status === 'resolved' || status === 'discarded'
 }
@@ -26,6 +30,9 @@ function isTerminal(status: ArcStatus | null): boolean {
  *
  * @param {object} root0 - The arc list props.
  * @param {ArcResponse[]} root0.arcs - The arcs to render.
+ * @param {() => void} [root0.onAdd] - Open the create modal.
+ * @param {(arc: ArcResponse) => void} [root0.onEdit] - Open the edit modal for a row.
+ * @param {(arc: ArcResponse) => void} [root0.onDelete] - Open the delete confirm for a row.
  * @returns {React.ReactElement} The arc list element.
  */
 export function ArcList({ arcs, onAdd, onEdit, onDelete }: ArcListProps) {
@@ -59,6 +66,8 @@ export function ArcList({ arcs, onAdd, onEdit, onDelete }: ArcListProps) {
  *
  * @param {object} root0 - The arc row props.
  * @param {ArcResponse} root0.arc - The arc to render.
+ * @param {(arc: ArcResponse) => void} [root0.onEdit] - Open the edit modal.
+ * @param {(arc: ArcResponse) => void} [root0.onDelete] - Open the delete confirm.
  * @returns {React.ReactElement} The arc row element.
  */
 function ArcRow({
