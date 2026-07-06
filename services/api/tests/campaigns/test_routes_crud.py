@@ -198,9 +198,7 @@ def test_patch_arc_null_status_or_priority_returns_422(client, field) -> None:
         ("/arcs", {"title": "New"}, {"id": "arc-1", "title": "New"}),
     ],
 )
-def test_patch_entity_stamps_content_source_edited(
-    client, prefix, body, row
-) -> None:
+def test_patch_entity_stamps_content_source_edited(client, prefix, body, row) -> None:
     # A DM edit flips provenance to "edited" so the UI badge shows ✎, not ✦.
     mock = _mock_client(write_data=[row])
     _use(mock)
