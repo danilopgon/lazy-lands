@@ -9,7 +9,7 @@ class CreateArcRequest(BaseModel):
     """An arc in a reviewed ``POST /campaigns`` payload.
 
     No ``status`` field accepted from the client — status is always
-    assigned by the persistence layer (``"open"``).
+    assigned by the persistence layer (``"active"``).
     """
 
     title: str = Field(min_length=1, max_length=200)

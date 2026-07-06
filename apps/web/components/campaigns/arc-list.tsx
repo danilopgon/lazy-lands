@@ -10,9 +10,9 @@ type ArcListProps = {
   arcs: ArcResponse[]
 }
 
-/** Terminal arcs (resolved/dropped) are dimmed; only `open` is still in play. */
+/** Terminal arcs (resolved/discarded) are dimmed; active/dormant are in play. */
 function isTerminal(status: ArcStatus | null): boolean {
-  return status === 'resolved' || status === 'dropped'
+  return status === 'resolved' || status === 'discarded'
 }
 
 /**

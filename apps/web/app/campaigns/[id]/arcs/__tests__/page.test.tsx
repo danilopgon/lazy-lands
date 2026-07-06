@@ -31,7 +31,7 @@ function buildArc(overrides: Partial<ArcResponse> = {}): ArcResponse {
     title: 'The Spider Pact',
     description: 'A deal in the shadows',
     priority: 'high',
-    status: 'open',
+    status: 'active',
     content_source: 'llm',
     ...overrides,
   }
@@ -123,31 +123,37 @@ describe('ArcsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('The Spider Pact')).toBeInTheDocument()
     })
-    expect(screen.getByText('open')).toBeInTheDocument()
+    expect(screen.getByText('active')).toBeInTheDocument()
     expect(screen.getByText(/high priority/i)).toBeInTheDocument()
     expect(screen.getByText(/a deal in the shadows/i)).toBeInTheDocument()
     expect(screen.getByText(/scribe/i)).toBeInTheDocument()
   })
 
-  it('counts only open arcs as "threads still in play" and still shows terminal arcs', async () => {
+  it('counts active/dormant arcs as "threads still in play" and still shows terminal arcs', async () => {
     mockGetCampaignDetail.mockResolvedValue(
       buildDetail({
         arcs: [
-          buildArc({ id: 'a1', title: 'Open Thread', status: 'open' }),
-          buildArc({ id: 'a2', title: 'Resolved Thread', status: 'resolved' }),
-          buildArc({ id: 'a3', title: 'Dropped Thread', status: 'dropped' }),
+          buildArc({ id: 'a1', title: 'Active Thread', status: 'active' }),
+          buildArc({ id: 'a2', title: 'Dormant Thread', status: 'dormant' }),
+          buildArc({ id: 'a3', title: 'Resolved Thread', status: 'resolved' }),
+          buildArc({
+            id: 'a4',
+            title: 'Discarded Thread',
+            status: 'discarded',
+          }),
         ],
       })
     )
     renderPage()
 
     await waitFor(() => {
-      expect(screen.getByText('Open Thread')).toBeInTheDocument()
+      expect(screen.getByText('Active Thread')).toBeInTheDocument()
     })
     // Terminal arcs are dimmed but never hidden.
+    expect(screen.getByText('Dormant Thread')).toBeInTheDocument()
     expect(screen.getByText('Resolved Thread')).toBeInTheDocument()
-    expect(screen.getByText('Dropped Thread')).toBeInTheDocument()
-    expect(screen.getByText('1 threads still in play')).toBeInTheDocument()
+    expect(screen.getByText('Discarded Thread')).toBeInTheDocument()
+    expect(screen.getByText('2 threads still in play')).toBeInTheDocument()
   })
 
   it('does not render fabricated npcs/factions/last-session or generation controls', async () => {

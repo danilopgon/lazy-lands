@@ -16,7 +16,7 @@ export default function ArcsPage() {
       addLabel="+ New arc"
       subtitle={(campaign) => {
         const inPlay = campaign.arcs.filter(
-          (arc) => arc.status === 'open'
+          (arc) => arc.status === 'active' || arc.status === 'dormant'
         ).length
         return `${inPlay} threads still in play`
       }}

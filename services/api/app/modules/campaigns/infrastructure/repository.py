@@ -155,7 +155,7 @@ class SupabaseCampaignRepository:
         self._write("factions", rows)
 
     def insert_arcs(self, campaign_id: str, arcs: list[NewArc]) -> None:
-        """Bulk-insert arc rows with status="open". No-op if empty."""
+        """Bulk-insert arc rows with status="active". No-op if empty."""
         if not arcs:
             return
         rows: list[dict[str, Any]] = [
@@ -164,7 +164,7 @@ class SupabaseCampaignRepository:
                 "title": arc.title,
                 "description": arc.description,
                 "priority": arc.priority.value,
-                "status": ArcStatus.open.value,
+                "status": ArcStatus.active.value,
                 "content_source": arc.content_source.value,
             }
             for arc in arcs

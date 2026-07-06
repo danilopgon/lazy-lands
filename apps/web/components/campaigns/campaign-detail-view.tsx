@@ -19,9 +19,11 @@ type CampaignDetailViewProps = {
  */
 export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
   const kicker = [campaign.system, campaign.tone].filter(Boolean).join(' · ')
-  // Only `open` arcs are unresolved threads that need attention; `resolved`
-  // and `dropped` are terminal (docs/03-domain-model.md §Arc).
-  const openArcs = campaign.arcs.filter((arc) => arc.status === 'open')
+  // `active`/`dormant` arcs are the unresolved threads that need attention;
+  // `resolved`/`discarded` are terminal (design Decision 9).
+  const openArcs = campaign.arcs.filter(
+    (arc) => arc.status === 'active' || arc.status === 'dormant'
+  )
   const visibleArcs = openArcs.slice(0, 3)
 
   return (

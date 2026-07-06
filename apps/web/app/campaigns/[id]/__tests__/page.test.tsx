@@ -60,7 +60,7 @@ function buildCampaignDetail(
         title: 'The Spider Pact',
         description: 'A mysterious deal in the shadows',
         priority: 'high',
-        status: 'open',
+        status: 'active',
         content_source: 'manual',
       },
       {
@@ -68,7 +68,7 @@ function buildCampaignDetail(
         title: 'The Lost Mine',
         description: 'An ancient mine rediscovered',
         priority: 'medium',
-        status: 'open',
+        status: 'dormant',
         content_source: 'llm',
       },
       {
@@ -76,7 +76,7 @@ function buildCampaignDetail(
         title: 'Redbrand Menace',
         description: 'Bandits terrorizing the town',
         priority: 'high',
-        status: 'open',
+        status: 'active',
         content_source: 'manual',
       },
     ],
@@ -246,40 +246,40 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByText(/the town of phandalin/i)).toBeInTheDocument()
   })
 
-  it('filters arcs to open status and shows max 3 with "All arcs" link', async () => {
+  it('filters arcs to active/dormant status and shows max 3 with "All arcs" link', async () => {
     mockGetCampaignDetail.mockResolvedValue(
       buildCampaignDetail({
         arcs: [
           {
             id: 'arc-1',
-            title: 'First Open Arc',
+            title: 'First Active Arc',
             description: 'desc',
             priority: 'high',
-            status: 'open',
+            status: 'active',
             content_source: 'manual',
           },
           {
             id: 'arc-2',
-            title: 'Second Open Arc',
+            title: 'A Dormant Arc',
             description: 'desc',
             priority: 'medium',
-            status: 'open',
+            status: 'dormant',
             content_source: 'manual',
           },
           {
             id: 'arc-3',
-            title: 'Third Open Arc',
+            title: 'Third Active Arc',
             description: 'desc',
             priority: 'low',
-            status: 'open',
+            status: 'active',
             content_source: 'manual',
           },
           {
             id: 'arc-4',
-            title: 'Fourth Open Arc',
+            title: 'Fourth Active Arc',
             description: 'desc',
             priority: 'low',
-            status: 'open',
+            status: 'active',
             content_source: 'manual',
           },
           {
@@ -292,10 +292,10 @@ describe('CampaignDetailPage', () => {
           },
           {
             id: 'arc-6',
-            title: 'Dropped Arc',
+            title: 'Discarded Arc',
             description: 'desc',
             priority: 'low',
-            status: 'dropped',
+            status: 'discarded',
             content_source: 'manual',
           },
         ],
@@ -309,13 +309,13 @@ describe('CampaignDetailPage', () => {
       ).toBeInTheDocument()
     })
 
-    // Only open arcs need attention, capped at 3.
-    expect(screen.getByText('First Open Arc')).toBeInTheDocument()
-    expect(screen.getByText('Second Open Arc')).toBeInTheDocument()
-    expect(screen.getByText('Third Open Arc')).toBeInTheDocument()
-    expect(screen.queryByText('Fourth Open Arc')).not.toBeInTheDocument()
+    // active/dormant arcs need attention, capped at 3; terminal arcs excluded.
+    expect(screen.getByText('First Active Arc')).toBeInTheDocument()
+    expect(screen.getByText('A Dormant Arc')).toBeInTheDocument()
+    expect(screen.getByText('Third Active Arc')).toBeInTheDocument()
+    expect(screen.queryByText('Fourth Active Arc')).not.toBeInTheDocument()
     expect(screen.queryByText('Resolved Arc')).not.toBeInTheDocument()
-    expect(screen.queryByText('Dropped Arc')).not.toBeInTheDocument()
+    expect(screen.queryByText('Discarded Arc')).not.toBeInTheDocument()
 
     const allArcsLink = screen.getByRole('link', { name: /all arcs/i })
     expect(allArcsLink).toHaveAttribute('href', '/campaigns/camp-1/arcs')

@@ -3,10 +3,15 @@ import { z } from 'zod'
 import { contentSourceSchema, prioritySchema } from './enums'
 
 // Mirrors the Postgres `arc_status` enum and `ArcStatus` domain value object
-// (`services/api/app/modules/campaigns/domain/enums.py`). Only `open` arcs are
-// active narrative threads; `resolved`/`dropped` are terminal. See
-// docs/03-domain-model.md §Arc.
-export const arcStatusSchema = z.enum(['open', 'resolved', 'dropped'])
+// after Migration B (Block 6 WU3, design Decision 9). `active`/`dormant` are
+// unresolved threads; `resolved`/`discarded` are terminal. Display labels
+// (Active/Dormant/…) live in the presentation layer, never stored.
+export const arcStatusSchema = z.enum([
+  'active',
+  'dormant',
+  'resolved',
+  'discarded',
+])
 export type ArcStatus = z.infer<typeof arcStatusSchema>
 
 export const npcResponseSchema = z.object({

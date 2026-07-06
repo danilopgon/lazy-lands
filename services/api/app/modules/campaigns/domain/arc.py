@@ -21,7 +21,7 @@ class NewArc(BaseModel):
     """An arc pending its initial persistence-assigned status.
 
     Status is never accepted from the client or the LLM (``campaign-persistence``
-    spec, CP-003) — the repository always assigns ``ArcStatus.open`` on insert,
+    spec, CP-003) — the repository always assigns ``ArcStatus.active`` on insert,
     so this creation-time shape has no ``status`` field at all.
     """
 

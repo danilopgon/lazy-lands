@@ -50,7 +50,7 @@ const VALID_ARC = {
   title: 'The Sundered Crown',
   description: 'A war of succession looms',
   priority: 'high' as const,
-  status: 'open' as const,
+  status: 'active' as const,
   content_source: 'llm' as const,
 }
 
@@ -120,7 +120,7 @@ describe('getCampaignDetail', () => {
     expect(result.npcs).toHaveLength(1)
     expect(result.factions).toHaveLength(1)
     expect(result.arcs).toHaveLength(1)
-    expect(result.arcs[0].status).toBe('open')
+    expect(result.arcs[0].status).toBe('active')
   })
 
   it('throws CampaignNotFoundError on 404 response', async () => {

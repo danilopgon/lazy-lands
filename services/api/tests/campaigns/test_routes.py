@@ -135,7 +135,7 @@ def test_get_campaign_detail_returns_children(client: TestClient) -> None:
     npcs = MagicMock(data=[{"id": "npc-1", "name": "Toblen"}])
     factions = MagicMock(data=[{"id": "faction-1", "name": "Guild"}])
     arcs = MagicMock(
-        data=[{"id": "arc-1", "title": "Missing caravan", "status": "open"}]
+        data=[{"id": "arc-1", "title": "Missing caravan", "status": "active"}]
     )
     eq_query = mock_client.table.return_value.select.return_value.eq.return_value
     eq_query.execute.side_effect = [

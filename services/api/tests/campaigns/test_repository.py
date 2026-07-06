@@ -100,7 +100,7 @@ def test_insert_npcs_writes_content_source_and_campaign_id() -> None:
     assert inserted_rows[0]["content_source"] == "llm"
 
 
-def test_insert_arcs_sets_status_open_and_persists_content_source() -> None:
+def test_insert_arcs_sets_status_active_and_persists_content_source() -> None:
     client = MagicMock()
     repo = SupabaseCampaignRepository(client)
     arc = NewArc(title="A", description="d", priority="high", content_source="edited")
@@ -109,7 +109,7 @@ def test_insert_arcs_sets_status_open_and_persists_content_source() -> None:
 
     insert_call = client.table.return_value.insert
     inserted_rows = insert_call.call_args[0][0]
-    assert inserted_rows[0]["status"] == "open"
+    assert inserted_rows[0]["status"] == "active"
     assert inserted_rows[0]["priority"] == "high"
     assert inserted_rows[0]["content_source"] == "edited"
 

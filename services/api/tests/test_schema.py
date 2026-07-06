@@ -32,7 +32,7 @@ EXPECTED_TABLES = {
 # truth), NOT the stale table in proposal/design. See the T-06 note in tasks.md.
 EXPECTED_ENUMS: dict[str, set[str]] = {
     "content_source": {"llm", "edited", "manual"},
-    "arc_status": {"open", "resolved", "dropped"},
+    "arc_status": {"active", "dormant", "resolved", "discarded"},
     "priority": {"high", "medium", "low"},
     "importance": {"high", "medium", "low"},
     "memory_status": {"active", "archived"},
