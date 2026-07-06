@@ -31,3 +31,7 @@ class CampaignPersistenceError(Exception):
 
 class CampaignNotFoundError(Exception):
     """Raised when a targeted resource returns no rows under caller-scoped RLS."""
+
+
+class CampaignValidationError(Exception):
+    """Raised when a PATCH carries no fields to change (empty patch) -> 422."""

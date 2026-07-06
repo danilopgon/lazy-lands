@@ -178,6 +178,82 @@ class SupabaseCampaignRepository:
         except Exception as exc:
             raise RepositoryError("Failed to delete campaign") from exc
 
+    def update_campaign(self, campaign_id: str, changes: dict) -> dict | None:
+        """Patch a campaign's mutable columns; None on RLS miss."""
+        return self._update("campaigns", campaign_id, changes)
+
+    def update_npc(self, npc_id: str, changes: dict) -> dict | None:
+        """Patch an NPC; None on RLS miss."""
+        return self._update("npcs", npc_id, changes)
+
+    def update_faction(self, faction_id: str, changes: dict) -> dict | None:
+        """Patch a faction; None on RLS miss."""
+        return self._update("factions", faction_id, changes)
+
+    def update_arc(self, arc_id: str, changes: dict) -> dict | None:
+        """Patch an arc; None on RLS miss."""
+        return self._update("arcs", arc_id, changes)
+
+    def create_npc(self, data: dict) -> dict:
+        """Insert one DM-authored NPC row; return it."""
+        return self._create("npcs", data)
+
+    def create_faction(self, data: dict) -> dict:
+        """Insert one DM-authored faction row; return it."""
+        return self._create("factions", data)
+
+    def create_arc(self, data: dict) -> dict:
+        """Insert one DM-authored arc row; return it."""
+        return self._create("arcs", data)
+
+    def delete_npc(self, npc_id: str) -> bool:
+        """Delete an NPC; False on RLS miss."""
+        return self._delete("npcs", npc_id)
+
+    def delete_faction(self, faction_id: str) -> bool:
+        """Delete a faction; False on RLS miss."""
+        return self._delete("factions", faction_id)
+
+    def delete_arc(self, arc_id: str) -> bool:
+        """Delete an arc; False on RLS miss."""
+        return self._delete("arcs", arc_id)
+
+    def _update(self, table: str, row_id: str, changes: dict) -> dict | None:
+        """PATCH one row by id. Empty `data` (RLS UPDATE miss) -> None."""
+        try:
+            response = (
+                self._client.table(table)
+                .update(changes)
+                .eq("id", row_id)
+                .execute()
+            )
+        except Exception as exc:
+            raise RepositoryError(f"Failed to update {table}") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        return rows[0] if rows else None
+
+    def _create(self, table: str, data: dict) -> dict:
+        """INSERT one row and return it. Forged parent raises 42501 (backstop)."""
+        try:
+            response = self._client.table(table).insert(data).execute()
+        except Exception as exc:
+            raise RepositoryError(f"Failed to insert into {table}") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        if not rows:
+            raise RepositoryError(f"Insert into {table} returned no rows")
+        return rows[0]
+
+    def _delete(self, table: str, row_id: str) -> bool:
+        """DELETE one row by id. Empty returned rows (RLS DELETE miss) -> False."""
+        try:
+            response = (
+                self._client.table(table).delete().eq("id", row_id).execute()
+            )
+        except Exception as exc:
+            raise RepositoryError(f"Failed to delete from {table}") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        return bool(rows)
+
     def _write(self, table: str, rows: list[dict[str, Any]]) -> None:
         try:
             self._client.table(table).insert(rows).execute()

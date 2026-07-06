@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from app.modules.campaigns.application.errors import (
     CampaignNotFoundError,
     CampaignPersistenceError,
+    CampaignValidationError,
 )
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,15 @@ async def campaign_not_found_error_handler(
 ) -> JSONResponse:
     """Map RLS misses and unknown ids to a uniform 404."""
     return JSONResponse(status_code=404, content={"error": "Not found."})
+
+
+async def campaign_validation_error_handler(
+    _request: Request, _exc: CampaignValidationError
+) -> JSONResponse:
+    """Map an empty PATCH (nothing to change) to 422."""
+    return JSONResponse(
+        status_code=422, content={"error": "Provide at least one field to update."}
+    )
 
 
 async def campaign_persistence_error_handler(

@@ -10,10 +10,12 @@ from app.modules.campaigns.api import routes as campaigns
 from app.modules.campaigns.api.exception_handlers import (
     campaign_not_found_error_handler,
     campaign_persistence_error_handler,
+    campaign_validation_error_handler,
 )
 from app.modules.campaigns.application.errors import (
     CampaignNotFoundError,
     CampaignPersistenceError,
+    CampaignValidationError,
 )
 from app.modules.health import routes as health
 from app.shared.config import settings
@@ -51,6 +53,10 @@ app.add_exception_handler(
     CampaignNotFoundError,
     campaign_not_found_error_handler,  # type: ignore[arg-type]
 )
+app.add_exception_handler(
+    CampaignValidationError,
+    campaign_validation_error_handler,  # type: ignore[arg-type]
+)
 
 
 @app.exception_handler(Exception)
@@ -67,3 +73,6 @@ async def unhandled_exception_handler(
 
 app.include_router(health.router)
 app.include_router(campaigns.router)
+app.include_router(campaigns.npcs_router)
+app.include_router(campaigns.factions_router)
+app.include_router(campaigns.arcs_router)
