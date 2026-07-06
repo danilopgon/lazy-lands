@@ -112,13 +112,15 @@ export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
         />
       </Field>
       <Field label="Current state">
-        <Input
+        <Textarea
+          rows={2}
           value={currentState}
           onChange={(e) => setCurrentState(e.target.value)}
         />
       </Field>
       <Field label="Motivation">
-        <Input
+        <Textarea
+          rows={2}
           value={motivation}
           onChange={(e) => setMotivation(e.target.value)}
         />

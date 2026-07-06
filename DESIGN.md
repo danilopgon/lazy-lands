@@ -31,7 +31,7 @@ The system is driven by attributes on `<html>`. No JS framework required — jus
 
 | Attribute       | Values                            | Effect                                                                                                                        |
 | --------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `data-theme`    | `light` (default)                 | MVP ships light-only. Dark theme remains a post-MVP consideration, not a current production requirement.                       |
+| `data-theme`    | `light` (default)                 | MVP ships light-only. Dark theme remains a post-MVP consideration, not a current production requirement.                      |
 | `data-motion`   | `full` (default), `subtle`, `off` | `subtle` drops entrance choreography but keeps action feedback (stamp/strike/press). `off` kills all animation + transitions. |
 | `--tex-opacity` | `0`–`1` (default `0.5`)           | Inline style on `<html>`; controls paper-texture intensity.                                                                   |
 
@@ -98,16 +98,16 @@ Three families, loaded from Google Fonts. **Load all three or the system breaks*
 
 ### Type scale (reference values)
 
-| Use                                       | Family | Size / weight  | Notes                                                    |
-| ----------------------------------------- | ------ | -------------- | -------------------------------------------------------- |
-| Page title `.ll-h1`                       | Serif  | 38px / 600     | `letter-spacing: -0.022em`, line-height 1.04             |
-| Hero headline                             | Serif  | 56px / 600     | `letter-spacing: -0.028em`, `text-wrap: balance`         |
+| Use                                       | Family | Size / weight  | Notes                                                       |
+| ----------------------------------------- | ------ | -------------- | ----------------------------------------------------------- |
+| Page title `.ll-h1`                       | Serif  | 38px / 600     | `letter-spacing: -0.022em`, line-height 1.04                |
+| Hero headline                             | Serif  | 56px / 600     | `letter-spacing: -0.028em`, `text-wrap: balance`            |
 | Section head `.ll-secthead h3`            | Serif  | 19px / 600     | Preceded by a 9px emerald square, **or** a mono `/01` index |
-| Stat value `.ll-stat .v`                  | Serif  | 30px / 600     |                                                          |
-| Body                                      | Sans   | 14.5px / 1.5   |                                                          |
-| Long-form (`.ll-textarea`, draft `.body`) | Serif  | 15px / 1.6     | Reading comfort                                          |
-| Labels / nav / pills                      | Mono   | 9.5–11px / 600 | uppercase, `letter-spacing: 0.07–0.12em`                 |
-| Eyebrow `.ll-kicker`                      | Mono   | 10.5px / 600   | uppercase, emerald                                      |
+| Stat value `.ll-stat .v`                  | Serif  | 30px / 600     |                                                             |
+| Body                                      | Sans   | 14.5px / 1.5   |                                                             |
+| Long-form (`.ll-textarea`, draft `.body`) | Serif  | 15px / 1.6     | Reading comfort                                             |
+| Labels / nav / pills                      | Mono   | 9.5–11px / 600 | uppercase, `letter-spacing: 0.07–0.12em`                    |
+| Eyebrow `.ll-kicker`                      | Mono   | 10.5px / 600   | uppercase, emerald                                          |
 
 **Section numbering.** Sequential pages use a mono index instead of the square bullet:
 `<div class="ll-secthead numbered"><span class="ll-sectnum">/01</span><h3>…</h3></div>`.
@@ -120,6 +120,7 @@ Three families, loaded from Google Fonts. **Load all three or the system breaks*
 - **Elevation = hard offset shadow.** Standard card `6px 6px 0 var(--shadow)`; buttons `3px 3px 0`; toast/modal `4–8px`. The accent shadow (`box-shadow: …0 var(--accent)`) marks Scribe/AI surfaces.
 - **Page widths:** `.ll-page` max 1140px; `.ll-page.mid` 900px; `.ll-page.narrow` 720px. Gutter 40px desktop / 18px mobile.
 - **Breakpoint:** single `@media (max-width: 900px)` — two-column editorial layouts collapse to one, stat ledger wraps, masthead scrolls horizontally.
+- **Scrollbars are themed** (`globals.css`): thin, hard-edged (radius 0, matching the DNA), a `var(--dotted)` ink bar on a transparent track that darkens to `var(--ink-3)` on hover. Overflowing surfaces (e.g. the modal body) scroll within a bounded height rather than pushing the page.
 
 ---
 

@@ -119,11 +119,11 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          'w-full max-w-lg border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)] motion-safe:animate-in motion-safe:zoom-in-95 motion-reduced:animate-none',
+          'flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)] motion-safe:animate-in motion-safe:zoom-in-95 motion-reduced:animate-none',
           className
         )}
       >
-        <div className="flex items-center justify-between border-b-2 border-[var(--line)] px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b-2 border-[var(--line)] px-6 py-4">
           <h3
             id={titleId}
             className="font-serif text-xl font-semibold tracking-[-0.015em] text-[var(--ink)]"
@@ -139,11 +139,14 @@ export function Modal({
             ✕
           </button>
         </div>
-        <div ref={bodyRef} className="px-6 py-5">
+        <div
+          ref={bodyRef}
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-5"
+        >
           {children}
         </div>
         {footer && (
-          <div className="flex items-center justify-end gap-3 border-t-2 border-[var(--line)] px-6 py-4">
+          <div className="flex shrink-0 items-center justify-end gap-3 border-t-2 border-[var(--line)] px-6 py-4">
             {footer}
           </div>
         )}

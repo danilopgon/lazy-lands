@@ -114,6 +114,36 @@ body {
   color: var(--accent-deep);
 }
 
+/* ─── Scrollbars — Print Chronicle: thin, hard (radius 0), ink on paper ─── */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dotted) transparent;
+}
+
+/* WebKit / Chromium */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  /* 3px transparent border carves the thumb into a thin ink bar with no
+     rounding — matches the hard-edged DNA (radius 0 everywhere). */
+  background-color: var(--dotted);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ink-3);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 @keyframes ll-marquee {
   from {
     transform: translateX(0);

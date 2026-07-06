@@ -120,13 +120,18 @@ export function FactionModal({
         />
       </Field>
       <Field label="Current stance">
-        <Input
+        <Textarea
+          rows={2}
           value={currentStance}
           onChange={(e) => setCurrentStance(e.target.value)}
         />
       </Field>
       <Field label="Objective">
-        <Input value={goals} onChange={(e) => setGoals(e.target.value)} />
+        <Textarea
+          rows={2}
+          value={goals}
+          onChange={(e) => setGoals(e.target.value)}
+        />
       </Field>
     </Modal>
   )
