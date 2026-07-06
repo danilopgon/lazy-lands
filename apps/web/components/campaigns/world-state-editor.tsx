@@ -1,45 +1,83 @@
 import { useRef, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Notice } from '@/components/ui/notice'
+import { updateCampaign, CampaignApiError } from '@/lib/campaigns/api'
 
 type WorldStateEditorProps = {
+  campaignId: string
   initialValue: string | null
 }
 
 /**
- * World state inline editor — view/edit toggle with local state management.
- * Save/Cancel buttons render but the mutation call (PATCH) is NOT wired yet — that's WU3.
+ * World state inline editor — view/edit toggle wired to `PATCH /campaigns/{id}`.
+ *
+ * Save persists via the `updateCampaign` mutation and invalidates the campaign
+ * detail query; on error the textarea stays open with the unsaved draft intact
+ * and an inline error shows (design §5.3, campaign-view spec save-error state).
  *
  * @param {object} root0 - The world state editor props.
+ * @param {string} root0.campaignId - The campaign whose world state is edited.
  * @param {string | null} root0.initialValue - The initial world state text.
  * @returns {React.ReactElement} The world state editor element.
  */
-export function WorldStateEditor({ initialValue }: WorldStateEditorProps) {
+export function WorldStateEditor({
+  campaignId,
+  initialValue,
+}: WorldStateEditorProps) {
+  const queryClient = useQueryClient()
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState(initialValue ?? '')
   const [displayValue, setDisplayValue] = useState(initialValue ?? '')
+  const [error, setError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const mutation = useMutation({
+    mutationFn: (world_state: string) =>
+      updateCampaign(campaignId, { world_state }),
+    onSuccess: (result) => {
+      setDisplayValue(result.world_state ?? '')
+      setIsEditing(false)
+      setError(null)
+      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] })
+    },
+    onError: (err: unknown) => {
+      setError(
+        err instanceof CampaignApiError
+          ? err.message
+          : 'Could not save the world state. Please try again.'
+      )
+    },
+  })
 
   const handleEdit = () => {
     setDraft(displayValue)
+    setError(null)
     setIsEditing(true)
     setTimeout(() => textareaRef.current?.focus(), 0)
   }
 
   const handleSave = () => {
-    setDisplayValue(draft)
-    setIsEditing(false)
+    setError(null)
+    mutation.mutate(draft)
   }
 
   const handleCancel = () => {
     setDraft(displayValue)
+    setError(null)
     setIsEditing(false)
   }
 
   if (isEditing) {
     return (
       <div>
+        {error ? (
+          <Notice className="mb-2" variant="error">
+            <p>{error}</p>
+          </Notice>
+        ) : null}
         <Textarea
           ref={textareaRef}
           rows={5}
@@ -48,10 +86,20 @@ export function WorldStateEditor({ initialValue }: WorldStateEditorProps) {
           autoFocus
         />
         <div className="mt-2 flex gap-2">
-          <Button size="sm" variant="accent" onClick={handleSave}>
-            Save changes
+          <Button
+            size="sm"
+            variant="accent"
+            onClick={handleSave}
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending ? 'Saving…' : 'Save changes'}
           </Button>
-          <Button size="sm" variant="secondary" onClick={handleCancel}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleCancel}
+            disabled={mutation.isPending}
+          >
             Cancel
           </Button>
         </div>

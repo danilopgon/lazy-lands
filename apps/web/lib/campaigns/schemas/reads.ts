@@ -57,6 +57,20 @@ export const campaignSummarySchema = z.object({
 })
 export type CampaignSummary = z.infer<typeof campaignSummarySchema>
 
+/** Body returned by `PATCH /campaigns/{id}` — the affected row, no children. */
+export const campaignMutationResponseSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  world_state: z.string().nullable(),
+  system: z.string().nullable(),
+  tone: z.string().nullable(),
+  updated_at: z.string().nullable(),
+})
+export type CampaignMutationResponse = z.infer<
+  typeof campaignMutationResponseSchema
+>
+
 export const campaignDetailResponseSchema = z.object({
   id: z.string(),
   title: z.string(),

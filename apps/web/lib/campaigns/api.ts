@@ -7,12 +7,64 @@ import {
   createCampaignResponseSchema,
   campaignSummarySchema,
   campaignDetailResponseSchema,
+  campaignMutationResponseSchema,
+  npcResponseSchema,
+  factionResponseSchema,
+  arcResponseSchema,
   type ExtractCampaignOutput,
   type CreateCampaignRequest,
   type CreateCampaignResponse,
   type CampaignSummary,
   type CampaignDetailResponse,
+  type CampaignMutationResponse,
+  type NpcResponse,
+  type FactionResponse,
+  type ArcResponse,
+  type Priority,
+  type ArcStatus,
 } from './schemas'
+
+/** Partial campaign edit accepted by `PATCH /campaigns/{id}`. */
+export type UpdateCampaignPayload = {
+  world_state?: string
+  system?: string
+  tone?: string | null
+}
+
+/** Body for `POST /npcs` (create) — `campaign_id` scopes ownership. */
+export type CreateNpcPayload = {
+  campaign_id: string
+  name: string
+  description?: string | null
+  current_state?: string | null
+  motivation?: string | null
+}
+/** Partial NPC edit for `PATCH /npcs/{id}`. */
+export type UpdateNpcPayload = Partial<Omit<CreateNpcPayload, 'campaign_id'>>
+
+/** Body for `POST /factions`. */
+export type CreateFactionPayload = {
+  campaign_id: string
+  name: string
+  description?: string | null
+  current_stance?: string | null
+  goals?: string | null
+}
+/** Partial faction edit for `PATCH /factions/{id}`. */
+export type UpdateFactionPayload = Partial<
+  Omit<CreateFactionPayload, 'campaign_id'>
+>
+
+/** Body for `POST /arcs`. */
+export type CreateArcPayload = {
+  campaign_id: string
+  title: string
+  description?: string | null
+  priority?: Priority
+  status?: ArcStatus
+}
+/** Partial arc edit for `PATCH /arcs/{id}`. */
+export type UpdateArcPayload = Partial<Omit<CreateArcPayload, 'campaign_id'>>
 
 /** Generic fallback shown when the backend error body has no recognizable message. */
 const FALLBACK_ERROR_MESSAGE = 'Something went wrong. Please try again.'
@@ -134,4 +186,103 @@ export async function getCampaignDetail(
   }
 
   return campaignDetailResponseSchema.parse(await response.json())
+}
+
+/** Parse a JSON mutation response, throwing CampaignApiError on non-2xx. */
+async function mutate<T>(
+  path: string,
+  method: 'POST' | 'PATCH',
+  body: unknown,
+  schema: z.ZodType<T>
+): Promise<T> {
+  const response = await apiFetch(path, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    throw new CampaignApiError(await extractErrorMessage(response))
+  }
+  return schema.parse(await response.json())
+}
+
+/** DELETE a resource; resolves on 2xx, throws CampaignApiError otherwise. */
+async function remove(path: string): Promise<void> {
+  const response = await apiFetch(path, { method: 'DELETE' })
+  if (!response.ok) {
+    throw new CampaignApiError(await extractErrorMessage(response))
+  }
+}
+
+/** `PATCH /campaigns/{id}` — partial edit of world_state/system/tone. */
+export async function updateCampaign(
+  id: string,
+  payload: UpdateCampaignPayload
+): Promise<CampaignMutationResponse> {
+  return mutate(
+    `/campaigns/${id}`,
+    'PATCH',
+    payload,
+    campaignMutationResponseSchema
+  )
+}
+
+/** `POST /npcs` — create a DM-authored NPC. */
+export async function createNpc(
+  payload: CreateNpcPayload
+): Promise<NpcResponse> {
+  return mutate('/npcs', 'POST', payload, npcResponseSchema)
+}
+
+/** `PATCH /npcs/{id}` — partial NPC edit. */
+export async function updateNpc(
+  id: string,
+  payload: UpdateNpcPayload
+): Promise<NpcResponse> {
+  return mutate(`/npcs/${id}`, 'PATCH', payload, npcResponseSchema)
+}
+
+/** `DELETE /npcs/{id}`. */
+export async function deleteNpc(id: string): Promise<void> {
+  return remove(`/npcs/${id}`)
+}
+
+/** `POST /factions` — create a DM-authored faction. */
+export async function createFaction(
+  payload: CreateFactionPayload
+): Promise<FactionResponse> {
+  return mutate('/factions', 'POST', payload, factionResponseSchema)
+}
+
+/** `PATCH /factions/{id}` — partial faction edit. */
+export async function updateFaction(
+  id: string,
+  payload: UpdateFactionPayload
+): Promise<FactionResponse> {
+  return mutate(`/factions/${id}`, 'PATCH', payload, factionResponseSchema)
+}
+
+/** `DELETE /factions/{id}`. */
+export async function deleteFaction(id: string): Promise<void> {
+  return remove(`/factions/${id}`)
+}
+
+/** `POST /arcs` — create a DM-authored arc. */
+export async function createArc(
+  payload: CreateArcPayload
+): Promise<ArcResponse> {
+  return mutate('/arcs', 'POST', payload, arcResponseSchema)
+}
+
+/** `PATCH /arcs/{id}` — partial arc edit (status changes flow through here). */
+export async function updateArc(
+  id: string,
+  payload: UpdateArcPayload
+): Promise<ArcResponse> {
+  return mutate(`/arcs/${id}`, 'PATCH', payload, arcResponseSchema)
+}
+
+/** `DELETE /arcs/{id}`. */
+export async function deleteArc(id: string): Promise<void> {
+  return remove(`/arcs/${id}`)
 }

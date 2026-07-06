@@ -3,12 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { mockGetCampaignDetail } = vi.hoisted(() => ({
+const { mockGetCampaignDetail, mockUpdateCampaign } = vi.hoisted(() => ({
   mockGetCampaignDetail: vi.fn(),
+  mockUpdateCampaign: vi.fn(),
 }))
 
 vi.mock('@/lib/campaigns/api', () => ({
   getCampaignDetail: mockGetCampaignDetail,
+  updateCampaign: mockUpdateCampaign,
   CampaignApiError: class CampaignApiError extends Error {},
   CampaignNotFoundError: class CampaignNotFoundError extends Error {},
 }))
@@ -191,9 +193,18 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
   })
 
-  it('saves world-state changes and returns to display mode with updated text', async () => {
+  it('saves world-state changes via updateCampaign and returns to display mode', async () => {
     const user = userEvent.setup()
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockUpdateCampaign.mockResolvedValue({
+      id: 'camp-1',
+      title: 'Shadows over Phandalin',
+      description: null,
+      world_state: 'Updated world state text',
+      system: null,
+      tone: null,
+      updated_at: '2026-06-15T10:00:00Z',
+    })
     renderPage()
 
     await waitFor(() => {
@@ -214,7 +225,35 @@ describe('CampaignDetailPage', () => {
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     })
 
+    expect(mockUpdateCampaign).toHaveBeenCalledWith('camp-1', {
+      world_state: 'Updated world state text',
+    })
     expect(screen.getByText(/updated world state text/i)).toBeInTheDocument()
+  })
+
+  it('keeps the textarea open with an inline error when save fails', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    const { CampaignApiError } = await import('@/lib/campaigns/api')
+    mockUpdateCampaign.mockRejectedValue(new CampaignApiError('Save failed'))
+    renderPage()
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'Shadows over Phandalin' })
+      ).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /^edit$/i }))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'Draft that fails to save')
+    await user.click(screen.getByRole('button', { name: /save changes/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/save failed/i)).toBeInTheDocument()
+    })
+    // Draft is preserved in the still-open textarea.
+    expect(screen.getByRole('textbox')).toHaveValue('Draft that fails to save')
   })
 
   it('discards draft and returns to display mode on "Cancel"', async () => {

@@ -100,7 +100,10 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
             </div>
           </div>
           <div className="mt-3">
-            <WorldStateEditor initialValue={campaign.world_state} />
+            <WorldStateEditor
+              campaignId={campaign.id}
+              initialValue={campaign.world_state}
+            />
           </div>
 
           <hr className="my-7 border-t border-dotted border-[var(--dotted)]" />
