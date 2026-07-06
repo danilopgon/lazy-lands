@@ -43,3 +43,22 @@ uv run mypy app/
 ```
 
 `mypy` is currently non-blocking for Block 0; record findings and keep the scaffold runnable.
+
+## Endpoints (campaigns module)
+
+All routes require a valid Supabase JWT and are scoped to the caller by RLS.
+See `docs/06-api-contracts.md` for full request/response contracts.
+
+| Method & path                 | Purpose                                                                           |
+| ----------------------------- | --------------------------------------------------------------------------------- |
+| `POST /campaigns/extract`     | Stateless: extract a campaign scaffold from free text.                            |
+| `POST /campaigns`             | Persist a reviewed campaign (+ NPCs/factions/arcs).                               |
+| `GET /campaigns`              | List the caller's campaigns (with system/tone + child counts).                    |
+| `GET /campaigns/{id}`         | Campaign detail with NPCs, factions and arcs.                                     |
+| `PATCH /campaigns/{id}`       | Partial edit of `world_state`/`system`/`tone`.                                    |
+| `POST/PATCH/DELETE /npcs`     | Create / edit / delete an NPC (`campaign_id` in the body).                        |
+| `POST/PATCH/DELETE /factions` | Create / edit / delete a faction.                                                 |
+| `POST/PATCH/DELETE /arcs`     | Create / edit / delete an arc (status codes `active/dormant/resolved/discarded`). |
+
+Manual creates force `content_source = "manual"` and 404 on a non-owned
+`campaign_id`; PATCH returns 422 on an empty patch and 404 on an RLS miss.
