@@ -22,9 +22,16 @@ class UpdateArc:
         self._repository = repository
 
     def execute(self, arc_id: str, changes: dict) -> ArcResponse:
-        """Apply changes; empty or null-title -> 422, missing row -> 404."""
-        # `title` maps to a NOT NULL column: reject an explicit null (422).
-        if not changes or changes.get("title", "") is None:
+        """Apply changes; null title/status/priority -> 422; missing row -> 404."""
+        # `title` maps to a NOT NULL column; `status`/`priority` are semantically
+        # required (every arc has a lifecycle state). Reject an explicit null for
+        # any of them with 422 rather than persisting an invalid arc.
+        if (
+            not changes
+            or changes.get("title", "") is None
+            or changes.get("status", "x") is None
+            or changes.get("priority", "x") is None
+        ):
             raise CampaignValidationError()
         try:
             row = self._repository.update_arc(arc_id, changes)

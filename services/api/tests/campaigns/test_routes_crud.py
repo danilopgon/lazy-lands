@@ -181,6 +181,15 @@ def test_patch_entity_null_required_field_returns_422(client, prefix, field) -> 
     assert response.status_code == 422
 
 
+@pytest.mark.parametrize("field", ["status", "priority"])
+def test_patch_arc_null_status_or_priority_returns_422(client, field) -> None:
+    # An arc must keep a lifecycle state; nulling status/priority is a 422, not
+    # a silent invalid arc (the DB columns are nullable, so the use case guards).
+    _use(_mock_client())
+    response = client.patch("/arcs/some-id", json={field: None})
+    assert response.status_code == 422
+
+
 def test_create_npc_unauthenticated_returns_401() -> None:
     app.dependency_overrides.clear()
     local_client = TestClient(app)
