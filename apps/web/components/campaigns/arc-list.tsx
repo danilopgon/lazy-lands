@@ -20,7 +20,7 @@ function isTerminal(status: ArcStatus | null): boolean {
 
 /**
  * Read-only list of a campaign's arcs. Renders the empty state when there are
- * none. Resolved and dropped arcs render dimmed. Per-row Edit/Delete and the
+ * none. Resolved and discarded arcs render dimmed. Per-row Edit/Delete and the
  * header "+ New arc" are wired to modals in Work Unit 3; the handoff's inline
  * Resolve/Discard/Reopen actions and generation checkbox are also Work Unit 3.
  *

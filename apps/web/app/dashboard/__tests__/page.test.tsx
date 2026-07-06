@@ -225,7 +225,7 @@ describe('DashboardPage', () => {
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(screen.getByText('Factions')).toBeInTheDocument()
     expect(screen.getByText('1')).toBeInTheDocument()
-    expect(screen.getByText('Open arcs')).toBeInTheDocument()
+    expect(screen.getByText('Arcs')).toBeInTheDocument()
   })
 
   it('renders Sessions and Memories as "—" placeholders (Block 7 — not yet data-bound)', async () => {

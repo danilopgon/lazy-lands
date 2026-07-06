@@ -57,9 +57,10 @@ export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
 
   const mutation = useMutation({
     mutationFn: () => {
+      // Empty description sent as null so an edit can clear a set value.
       const fields = {
         title: title.trim(),
-        description: description.trim() || undefined,
+        description: description.trim() || null,
         priority,
         status,
       }

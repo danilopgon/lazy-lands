@@ -1,3 +1,5 @@
+'use client'
+
 import { useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -90,7 +92,9 @@ export function WorldStateEditor({
             size="sm"
             variant="accent"
             onClick={handleSave}
-            disabled={mutation.isPending}
+            disabled={
+              mutation.isPending || !draft.trim() || draft === displayValue
+            }
           >
             {mutation.isPending ? 'Saving…' : 'Save changes'}
           </Button>

@@ -94,6 +94,18 @@ async function extractErrorMessage(response: Response): Promise<string> {
       const { error, detail } = body as { error?: unknown; detail?: unknown }
       if (typeof error === 'string') return error
       if (typeof detail === 'string') return detail
+      // FastAPI request-validation errors: `detail` is an array of
+      // `{ msg, loc, ... }`. Surface the first message so the user sees
+      // something actionable instead of the generic fallback.
+      if (Array.isArray(detail)) {
+        const first = detail.find(
+          (d): d is { msg: string } =>
+            Boolean(d) &&
+            typeof d === 'object' &&
+            typeof (d as { msg?: unknown }).msg === 'string'
+        )
+        if (first) return first.msg
+      }
     }
   } catch {
     // Non-JSON error body — fall through to the generic message.

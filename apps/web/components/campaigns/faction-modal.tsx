@@ -54,11 +54,12 @@ export function FactionModal({
 
   const mutation = useMutation({
     mutationFn: () => {
+      // Empty optionals sent as null so an edit can clear a set value.
       const fields = {
         name: name.trim(),
-        description: description.trim() || undefined,
-        current_stance: currentStance.trim() || undefined,
-        goals: goals.trim() || undefined,
+        description: description.trim() || null,
+        current_stance: currentStance.trim() || null,
+        goals: goals.trim() || null,
       }
       return isEdit
         ? updateFaction(faction.id, fields)

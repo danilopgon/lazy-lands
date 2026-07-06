@@ -45,11 +45,13 @@ export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
 
   const mutation = useMutation({
     mutationFn: () => {
+      // Empty optional fields are sent as null so an edit can clear a
+      // previously-set value (the PATCH route keeps explicit nulls).
       const fields = {
         name: name.trim(),
-        description: description.trim() || undefined,
-        current_state: currentState.trim() || undefined,
-        motivation: motivation.trim() || undefined,
+        description: description.trim() || null,
+        current_state: currentState.trim() || null,
+        motivation: motivation.trim() || null,
       }
       return isEdit
         ? updateNpc(npc.id, fields)

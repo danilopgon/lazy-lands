@@ -182,7 +182,10 @@ async def update_campaign(
     handler: Annotated[UpdateCampaign, Depends(provide_update_campaign)],
 ) -> CampaignMutationResponse:
     """Patch world_state/system/tone on a caller-owned campaign."""
-    changes = payload.model_dump(exclude_unset=True, exclude_none=True, mode="json")
+    # exclude_unset drops fields the client did not send; an explicit `null`
+    # is kept so a PATCH can clear a nullable column. Empty patch -> the use
+    # case raises 422.
+    changes = payload.model_dump(exclude_unset=True, mode="json")
     return await run_in_threadpool(handler.execute, campaign_id, changes)
 
 
@@ -206,7 +209,10 @@ async def update_npc(
     handler: Annotated[UpdateNpc, Depends(provide_update_npc)],
 ) -> NpcResponse:
     """Patch a caller-owned NPC."""
-    changes = payload.model_dump(exclude_unset=True, exclude_none=True, mode="json")
+    # exclude_unset drops fields the client did not send; an explicit `null`
+    # is kept so a PATCH can clear a nullable column. Empty patch -> the use
+    # case raises 422.
+    changes = payload.model_dump(exclude_unset=True, mode="json")
     return await run_in_threadpool(handler.execute, npc_id, changes)
 
 
@@ -239,7 +245,10 @@ async def update_faction(
     handler: Annotated[UpdateFaction, Depends(provide_update_faction)],
 ) -> FactionResponse:
     """Patch a caller-owned faction."""
-    changes = payload.model_dump(exclude_unset=True, exclude_none=True, mode="json")
+    # exclude_unset drops fields the client did not send; an explicit `null`
+    # is kept so a PATCH can clear a nullable column. Empty patch -> the use
+    # case raises 422.
+    changes = payload.model_dump(exclude_unset=True, mode="json")
     return await run_in_threadpool(handler.execute, faction_id, changes)
 
 
@@ -272,7 +281,10 @@ async def update_arc(
     handler: Annotated[UpdateArc, Depends(provide_update_arc)],
 ) -> ArcResponse:
     """Patch a caller-owned arc (status changes flow through here)."""
-    changes = payload.model_dump(exclude_unset=True, exclude_none=True, mode="json")
+    # exclude_unset drops fields the client did not send; an explicit `null`
+    # is kept so a PATCH can clear a nullable column. Empty patch -> the use
+    # case raises 422.
+    changes = payload.model_dump(exclude_unset=True, mode="json")
     return await run_in_threadpool(handler.execute, arc_id, changes)
 
 
