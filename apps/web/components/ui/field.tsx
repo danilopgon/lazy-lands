@@ -35,19 +35,26 @@ export function Field({
   className,
 }: FieldProps) {
   const descriptionId = React.useId()
+  const generatedControlId = React.useId()
   const hasError = Boolean(error)
   const hasHelp = Boolean(help) && !hasError
   const showDescription = hasError || hasHelp
 
-  const childWithAria = showDescription
-    ? React.cloneElement(children, {
-        'aria-describedby': descriptionId,
-      } as Record<string, unknown>)
-    : children
+  // Associate the label with the control (htmlFor/id) for accessibility so the
+  // label is programmatically tied to its input; reuse any id the child already
+  // carries. aria-describedby links help/error text when present.
+  const controlId = (children.props as { id?: string }).id ?? generatedControlId
+  const childWithAria = React.cloneElement(children, {
+    id: controlId,
+    ...(showDescription ? { 'aria-describedby': descriptionId } : {}),
+  } as Record<string, unknown>)
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <label className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--ink)]">
+      <label
+        htmlFor={controlId}
+        className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--ink)]"
+      >
         {label}
         {optional && (
           <span className="ml-1 text-[var(--ink-3)]">· optional</span>

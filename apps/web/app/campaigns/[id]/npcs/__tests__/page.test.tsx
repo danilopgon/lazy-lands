@@ -1,14 +1,21 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { mockGetCampaignDetail } = vi.hoisted(() => ({
-  mockGetCampaignDetail: vi.fn(),
-}))
+const { mockGetCampaignDetail, mockCreateNpc, mockUpdateNpc, mockDeleteNpc } =
+  vi.hoisted(() => ({
+    mockGetCampaignDetail: vi.fn(),
+    mockCreateNpc: vi.fn(),
+    mockUpdateNpc: vi.fn(),
+    mockDeleteNpc: vi.fn(),
+  }))
 
 vi.mock('@/lib/campaigns/api', () => ({
   getCampaignDetail: mockGetCampaignDetail,
+  createNpc: mockCreateNpc,
+  updateNpc: mockUpdateNpc,
+  deleteNpc: mockDeleteNpc,
   CampaignApiError: class CampaignApiError extends Error {},
   CampaignNotFoundError: class CampaignNotFoundError extends Error {},
 }))
@@ -162,5 +169,97 @@ describe('NpcsPage', () => {
     expect(screen.queryByText(/relation to party/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/^faction:/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/sessions:/i)).not.toBeInTheDocument()
+  })
+
+  const ONE_NPC = {
+    id: 'npc-1',
+    name: 'Sildar Hallwinter',
+    description: 'A retired soldier',
+    current_state: 'Recovering',
+    motivation: 'Restore order',
+    content_source: 'llm' as const,
+  }
+
+  it('opens an empty create modal from "+ New NPC" and disables Save until named', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(buildDetail({ npcs: [] }))
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('No NPCs yet')).toBeInTheDocument()
+    })
+    await user.click(
+      screen.getByRole('button', { name: /add your first npc/i })
+    )
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    const save = screen.getByRole('button', { name: /add npc/i })
+    expect(save).toBeDisabled()
+
+    await user.type(screen.getByLabelText(/name/i), 'Toblen')
+    expect(save).toBeEnabled()
+  })
+
+  it('submits a new NPC via createNpc with content_source omitted', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(buildDetail({ npcs: [] }))
+    mockCreateNpc.mockResolvedValue({ ...ONE_NPC, id: 'npc-new' })
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('No NPCs yet')).toBeInTheDocument()
+    })
+    await user.click(
+      screen.getByRole('button', { name: /add your first npc/i })
+    )
+    await user.type(screen.getByLabelText(/name/i), 'Toblen')
+    await user.click(screen.getByRole('button', { name: /add npc/i }))
+
+    await waitFor(() => {
+      expect(mockCreateNpc).toHaveBeenCalledWith(
+        expect.objectContaining({ campaign_id: 'camp-1', name: 'Toblen' })
+      )
+    })
+    expect(mockCreateNpc.mock.calls[0][0]).not.toHaveProperty('content_source')
+  })
+
+  it('pre-fills the edit modal and submits via updateNpc', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(buildDetail({ npcs: [ONE_NPC] }))
+    mockUpdateNpc.mockResolvedValue(ONE_NPC)
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Sildar Hallwinter')).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: /^edit$/i }))
+
+    expect(screen.getByLabelText(/name/i)).toHaveValue('Sildar Hallwinter')
+    await user.click(screen.getByRole('button', { name: /save changes/i }))
+
+    await waitFor(() => {
+      expect(mockUpdateNpc).toHaveBeenCalledWith(
+        'npc-1',
+        expect.objectContaining({ name: 'Sildar Hallwinter' })
+      )
+    })
+  })
+
+  it('deletes an NPC through the confirm modal', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(buildDetail({ npcs: [ONE_NPC] }))
+    mockDeleteNpc.mockResolvedValue(undefined)
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Sildar Hallwinter')).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: /^delete$/i }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: /^delete$/i }))
+
+    await waitFor(() => {
+      expect(mockDeleteNpc).toHaveBeenCalledWith('npc-1')
+    })
   })
 })

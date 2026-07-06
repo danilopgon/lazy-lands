@@ -21,6 +21,8 @@ type EntityListScreenProps = {
   addLabel: string
   /** Builds the count subtitle from the loaded campaign. */
   subtitle: (campaign: CampaignDetailResponse) => string
+  /** Invoked when the primary "+ New …" action is pressed. */
+  onAdd?: () => void
   /** Renders the entity rows from the loaded campaign. */
   children: (campaign: CampaignDetailResponse) => ReactNode
 }
@@ -46,6 +48,7 @@ export function EntityListScreen({
   title,
   addLabel,
   subtitle,
+  onAdd,
   children,
 }: EntityListScreenProps) {
   const params = useParams<{ id: string }>()
@@ -120,8 +123,9 @@ export function EntityListScreen({
           </h1>
           <p className="mt-1 text-sm text-[var(--ink-2)]">{subtitle(data)}</p>
         </div>
-        {/* Wired to the create modal in Work Unit 3 (entity-management). */}
-        <Button variant="ink">{addLabel}</Button>
+        <Button variant="ink" onClick={onAdd}>
+          {addLabel}
+        </Button>
       </div>
 
       <div className="mt-6">{children(data)}</div>
