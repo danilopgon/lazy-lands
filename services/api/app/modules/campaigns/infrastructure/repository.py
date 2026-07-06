@@ -222,10 +222,7 @@ class SupabaseCampaignRepository:
         """PATCH one row by id. Empty `data` (RLS UPDATE miss) -> None."""
         try:
             response = (
-                self._client.table(table)
-                .update(changes)
-                .eq("id", row_id)
-                .execute()
+                self._client.table(table).update(changes).eq("id", row_id).execute()
             )
         except Exception as exc:
             raise RepositoryError(f"Failed to update {table}") from exc
@@ -246,9 +243,7 @@ class SupabaseCampaignRepository:
     def _delete(self, table: str, row_id: str) -> bool:
         """DELETE one row by id. Empty returned rows (RLS DELETE miss) -> False."""
         try:
-            response = (
-                self._client.table(table).delete().eq("id", row_id).execute()
-            )
+            response = self._client.table(table).delete().eq("id", row_id).execute()
         except Exception as exc:
             raise RepositoryError(f"Failed to delete from {table}") from exc
         rows = cast(list[dict[str, Any]], response.data or [])

@@ -66,9 +66,7 @@ def test_patch_campaign_returns_updated_row(client) -> None:
             write_data=[{"id": CAMPAIGN_ID, "title": "T", "world_state": "new"}]
         )
     )
-    response = client.patch(
-        f"/campaigns/{CAMPAIGN_ID}", json={"world_state": "new"}
-    )
+    response = client.patch(f"/campaigns/{CAMPAIGN_ID}", json={"world_state": "new"})
     assert response.status_code == 200
     assert response.json()["world_state"] == "new"
 
@@ -81,9 +79,7 @@ def test_patch_campaign_empty_body_returns_422(client) -> None:
 
 def test_patch_campaign_rls_miss_returns_404(client) -> None:
     _use(_mock_client(write_data=[]))
-    response = client.patch(
-        f"/campaigns/{CAMPAIGN_ID}", json={"world_state": "new"}
-    )
+    response = client.patch(f"/campaigns/{CAMPAIGN_ID}", json={"world_state": "new"})
     assert response.status_code == 404
 
 
@@ -133,9 +129,7 @@ def test_create_entity_forged_parent_returns_404_via_precheck(
 
 
 @pytest.mark.parametrize("prefix,_create,patch_body,row", ENTITIES)
-def test_patch_entity_returns_200(
-    client, prefix, _create, patch_body, row
-) -> None:
+def test_patch_entity_returns_200(client, prefix, _create, patch_body, row) -> None:
     _use(_mock_client(write_data=[row]))
     response = client.patch(f"{prefix}/{row['id']}", json=patch_body)
     assert response.status_code == 200
@@ -160,9 +154,7 @@ def test_patch_entity_rls_miss_returns_404(
 
 
 @pytest.mark.parametrize("prefix,_create,_patch,row", ENTITIES)
-def test_delete_entity_returns_204(
-    client, prefix, _create, _patch, row
-) -> None:
+def test_delete_entity_returns_204(client, prefix, _create, _patch, row) -> None:
     _use(_mock_client(write_data=[row]))
     response = client.delete(f"{prefix}/{row['id']}")
     assert response.status_code == 204

@@ -195,9 +195,7 @@ async def create_npc(
     handler: Annotated[CreateNpc, Depends(provide_create_npc)],
 ) -> NpcResponse:
     """Create a DM-authored NPC (content_source forced to `manual`)."""
-    fields = payload.model_dump(
-        exclude={"campaign_id"}, exclude_none=True, mode="json"
-    )
+    fields = payload.model_dump(exclude={"campaign_id"}, exclude_none=True, mode="json")
     return await run_in_threadpool(handler.execute, payload.campaign_id, fields)
 
 
@@ -230,9 +228,7 @@ async def create_faction(
     handler: Annotated[CreateFaction, Depends(provide_create_faction)],
 ) -> FactionResponse:
     """Create a DM-authored faction (content_source forced to `manual`)."""
-    fields = payload.model_dump(
-        exclude={"campaign_id"}, exclude_none=True, mode="json"
-    )
+    fields = payload.model_dump(exclude={"campaign_id"}, exclude_none=True, mode="json")
     return await run_in_threadpool(handler.execute, payload.campaign_id, fields)
 
 
@@ -265,9 +261,7 @@ async def create_arc(
     handler: Annotated[CreateArc, Depends(provide_create_arc)],
 ) -> ArcResponse:
     """Create a DM-authored arc (content_source forced to `manual`)."""
-    fields = payload.model_dump(
-        exclude={"campaign_id"}, exclude_none=True, mode="json"
-    )
+    fields = payload.model_dump(exclude={"campaign_id"}, exclude_none=True, mode="json")
     return await run_in_threadpool(handler.execute, payload.campaign_id, fields)
 
 

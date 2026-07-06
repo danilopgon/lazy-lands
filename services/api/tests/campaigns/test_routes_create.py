@@ -55,8 +55,8 @@ def test_happy_path_returns_id(client) -> None:
 
 
 def test_missing_system_returns_422(client) -> None:
-    app.dependency_overrides[get_user_supabase_client] = (
-        lambda: _mock_client_returning_campaign_id()
+    app.dependency_overrides[get_user_supabase_client] = lambda: (
+        _mock_client_returning_campaign_id()
     )
     app.dependency_overrides[get_auth_context] = lambda: AuthContext(
         user_id="user-1", access_token="token-1"
