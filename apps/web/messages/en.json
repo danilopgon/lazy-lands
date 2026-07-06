@@ -1,0 +1,157 @@
+{
+  "Root": {
+    "title": "Lazy Lands",
+    "description": "Campaign Companion for Dungeon Masters",
+    "skipLink": "Skip to content"
+  },
+  "Nav": {
+    "main": "Main",
+    "language": "Language",
+    "english": "English",
+    "spanish": "Español",
+    "signIn": "Sign in",
+    "register": "Start your chronicle",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mobileNavigation": "Mobile navigation",
+    "campaigns": "Campaigns",
+    "overview": "Overview",
+    "npcs": "NPCs",
+    "factions": "Factions",
+    "arcs": "Arcs",
+    "memory": "Memory",
+    "sessions": "Sessions",
+    "settings": "Settings"
+  },
+  "Landing": {
+    "metadataTitle": "Lazy Lands — Campaign Companion for Dungeon Masters",
+    "metadataDescription": "Track every NPC, faction and consequence across sessions. Lazy Lands helps Dungeon Masters capture campaign context, validate memories, and generate session briefings — so the world remembers what your players did.",
+    "heroTitle": "Your campaign, without the amnesia.",
+    "heroBody": "Persistent, reviewable memory for your NPCs, factions and consequences — so the world remembers what your players did.",
+    "primaryCta": "Start your chronicle",
+    "secondaryCta": "Sign in"
+  },
+  "Auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "login": "Sign in",
+    "register": "Create account",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
+    "backHome": "Back home",
+    "loading": "Checking the chronicle",
+    "fallbackError": "Something went wrong. Try again.",
+    "passwordPattern": "Password must include uppercase, lowercase, number, and special character",
+    "passwordMismatch": "Passwords must match",
+    "passwordMinimum": "Password must be at least 8 characters",
+    "passwordConfirmRequired": "Please confirm your password",
+    "passwordRequirementsTitle": "Password must include",
+    "passwordRequirementsProgress": "{met} of {total} requirements met",
+    "passwordRequirements": {
+      "length": "Use at least 8 characters",
+      "lowercase": "Include a lowercase letter",
+      "uppercase": "Include an uppercase letter",
+      "number": "Include a number",
+      "special": "Include a special character"
+    }
+  },
+  "Dashboard": {
+    "kicker": "Campaigns",
+    "title": "Your chronicles",
+    "empty": "No campaigns yet",
+    "count": "{count, plural, one {# campaign} other {# campaigns}}",
+    "countOne": "{count} campaign",
+    "countOther": "{count} campaigns",
+    "newCampaign": "+ New campaign",
+    "loadingTitle": "The Scribe is writing",
+    "loadingCaption": "Fetching your campaigns",
+    "errorSummary": "Something went wrong",
+    "errorBody": "Something went wrong while loading your campaigns.",
+    "retry": "Retry",
+    "searchPlaceholder": "Search campaigns",
+    "open": "Open",
+    "updated": "Updated {date}",
+    "helperCount": "{visible} of {total}",
+    "emptyTitle": "Your chronicle starts here",
+    "emptyDescription": "Paste your existing campaign notes and the Scribe will draft your NPCs, factions, world state and open arcs, for you to review before anything becomes canon.",
+    "emptyAction": "+ Create your first campaign",
+    "emptySearchTitle": "No campaigns match that search",
+    "emptySearchDescription": "Try a different name or game system.",
+    "stats": {
+      "sessions": "Sessions",
+      "npcs": "NPCs",
+      "factions": "Factions",
+      "memories": "Memories",
+      "arcs": "Arcs"
+    },
+    "openChronicle": "Open chronicle →",
+    "openChronicleLabel": "Open chronicle",
+    "updatedLabel": "Updated"
+  },
+  "Campaigns": {
+    "Create": {
+      "title": "Create campaign",
+      "analyze": "Analyze",
+      "premise": "Campaign premise",
+      "minimum": "Write at least 100 characters."
+    },
+    "Review": {
+      "title": "Review extraction",
+      "confirm": "Confirm campaign",
+      "emptySection": "Nothing proposed yet"
+    },
+    "Detail": {
+      "overview": "Overview",
+      "worldState": "World state",
+      "saveChanges": "Save changes"
+    }
+  },
+  "Entities": {
+    "optional": "optional",
+    "close": "Close",
+    "cancel": "Cancel",
+    "add": "Add",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "tryAgain": "Try again",
+    "originScribe": "✦ Scribe",
+    "originEdited": "✎ Edited by you",
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "status": {
+      "active": "Active",
+      "dormant": "Dormant",
+      "resolved": "Resolved",
+      "discarded": "Discarded"
+    }
+  },
+  "Shared": {
+    "loadingTitle": "The Scribe is writing",
+    "loadingCaption": "Working in the margins",
+    "emptyTitle": "Nothing recorded yet",
+    "errorFallback": "Something went wrong.",
+    "retry": "Try again"
+  },
+  "Legal": {
+    "privacy": "Privacy",
+    "cookies": "Cookies",
+    "acceptCookies": "Accept cookies",
+    "cookieNoticeLabel": "Cookie notice",
+    "cookieNoticeBody": "Lazy Lands uses cookies for authentication only. No tracking, no third-party data.",
+    "learnMore": "Learn more",
+    "gotIt": "Got it",
+    "localStorageNotice": "This site uses local storage to remember cookie consent"
+  },
+  "Errors": {
+    "fallback": "Something went wrong. Try again.",
+    "exceptions": "Backend API codes and composeRawText prompt headings remain untranslated by design."
+  },
+  "Dates": {
+    "locale": "en-US"
+  }
+}

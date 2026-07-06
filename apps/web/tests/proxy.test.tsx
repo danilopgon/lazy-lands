@@ -9,6 +9,10 @@ vi.mock('@/lib/supabase/middleware', () => ({
   updateSession: vi.fn(),
 }))
 
+vi.mock('next-intl/middleware', () => ({
+  default: () => () => NextResponse.next(),
+}))
+
 // Helper: build a minimal NextRequest-like object from a URL string.
 // proxy.ts uses `new URL(request.url).pathname` and `request.url`, so a plain
 // Request cast satisfies that contract without needing nextUrl.
@@ -175,7 +179,58 @@ describe('proxy — session-management (Phase 2B)', () => {
     const { config } = await import('../proxy')
 
     expect(config.matcher).toEqual([
-      '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+      '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ])
+  })
+
+  it('redirects unauthenticated Spanish dashboard requests to localized login and preserves query', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    vi.mocked(updateSession).mockResolvedValue({
+      response: mockResponse,
+      user: null,
+    })
+
+    const { proxy } = await import('../proxy')
+    const request = makeRequest('http://localhost:3000/es/dashboard?x=1')
+    const result = await proxy(request)
+
+    expect(result.status).toBe(302)
+    expect(result.headers.get('location')).toBe(
+      'http://localhost:3000/es/login?x=1'
+    )
+  })
+
+  it('redirects authenticated Spanish home requests to localized dashboard', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const mockUser: User = { id: 'user-123' } as User
+    vi.mocked(updateSession).mockResolvedValue({
+      response: mockResponse,
+      user: mockUser,
+    })
+
+    const { proxy } = await import('../proxy')
+    const request = makeRequest('http://localhost:3000/es')
+    const result = await proxy(request)
+
+    expect(result.status).toBe(302)
+    expect(result.headers.get('location')).toBe(
+      'http://localhost:3000/es/dashboard'
+    )
+  })
+
+  it('passes a shared i18n response to Supabase session refresh', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    vi.mocked(updateSession).mockResolvedValue({
+      response: mockResponse,
+      user: null,
+    })
+
+    const { proxy } = await import('../proxy')
+    const request = makeRequest('http://localhost:3000/es')
+    await proxy(request)
+
+    expect(vi.mocked(updateSession).mock.calls[0][1]).toBeInstanceOf(
+      NextResponse
+    )
   })
 })

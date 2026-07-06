@@ -1,0 +1,157 @@
+{
+  "Root": {
+    "title": "Lazy Lands",
+    "description": "Compañero de campaña para Directores de Juego",
+    "skipLink": "Saltar al contenido"
+  },
+  "Nav": {
+    "main": "Principal",
+    "language": "Idioma",
+    "english": "English",
+    "spanish": "Español",
+    "signIn": "Iniciar sesión",
+    "register": "Comenzar crónica",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "mobileNavigation": "Navegación móvil",
+    "campaigns": "Campañas",
+    "overview": "Resumen",
+    "npcs": "PNJ",
+    "factions": "Facciones",
+    "arcs": "Arcos",
+    "memory": "Memoria",
+    "sessions": "Sesiones",
+    "settings": "Ajustes"
+  },
+  "Landing": {
+    "metadataTitle": "Lazy Lands — Compañero de campaña para Directores de Juego",
+    "metadataDescription": "Sigue cada PNJ, facción y consecuencia entre sesiones. Lazy Lands ayuda a los Directores de Juego a capturar contexto, validar recuerdos y generar informes de sesión para que el mundo recuerde lo que hicieron tus jugadores.",
+    "heroTitle": "Tu campaña, sin amnesia.",
+    "heroBody": "Memoria persistente y revisable para tus PNJ, facciones y consecuencias, para que el mundo recuerde lo que hicieron tus jugadores.",
+    "primaryCta": "Comenzar crónica",
+    "secondaryCta": "Iniciar sesión"
+  },
+  "Auth": {
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "login": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer contraseña",
+    "backHome": "Volver al inicio",
+    "loading": "Consultando la crónica",
+    "fallbackError": "Algo salió mal. Inténtalo de nuevo.",
+    "passwordPattern": "La contraseña debe incluir mayúscula, minúscula, número y carácter especial",
+    "passwordMismatch": "Las contraseñas deben coincidir",
+    "passwordMinimum": "La contraseña debe tener al menos 8 caracteres",
+    "passwordConfirmRequired": "Confirma tu contraseña",
+    "passwordRequirementsTitle": "La contraseña debe incluir",
+    "passwordRequirementsProgress": "{met} de {total} requisitos cumplidos",
+    "passwordRequirements": {
+      "length": "Usa al menos 8 caracteres",
+      "lowercase": "Incluye una letra minúscula",
+      "uppercase": "Incluye una letra mayúscula",
+      "number": "Incluye un número",
+      "special": "Incluye un carácter especial"
+    }
+  },
+  "Dashboard": {
+    "kicker": "Campañas",
+    "title": "Tus crónicas",
+    "empty": "Aún no hay campañas",
+    "count": "{count, plural, one {# campaña} other {# campañas}}",
+    "countOne": "{count} campaña",
+    "countOther": "{count} campañas",
+    "newCampaign": "+ Nueva campaña",
+    "loadingTitle": "El Escriba está escribiendo",
+    "loadingCaption": "Buscando tus campañas",
+    "errorSummary": "Algo salió mal",
+    "errorBody": "Algo salió mal al cargar tus campañas.",
+    "retry": "Reintentar",
+    "searchPlaceholder": "Buscar campañas",
+    "open": "Abrir",
+    "updated": "Actualizado {date}",
+    "helperCount": "{visible} de {total}",
+    "emptyTitle": "Tu crónica empieza aquí",
+    "emptyDescription": "Pega tus notas de campaña actuales y el Escriba borrará PNJ, facciones, estado del mundo y arcos abiertos para que los revises antes de que algo sea canon.",
+    "emptyAction": "+ Crear tu primera campaña",
+    "emptySearchTitle": "Ninguna campaña coincide con esa búsqueda",
+    "emptySearchDescription": "Prueba con otro nombre o sistema de juego.",
+    "stats": {
+      "sessions": "Sesiones",
+      "npcs": "PNJ",
+      "factions": "Facciones",
+      "memories": "Memorias",
+      "arcs": "Arcos"
+    },
+    "openChronicle": "Abrir crónica →",
+    "openChronicleLabel": "Abrir crónica",
+    "updatedLabel": "Actualizado"
+  },
+  "Campaigns": {
+    "Create": {
+      "title": "Crear campaña",
+      "analyze": "Analizar",
+      "premise": "Premisa de la campaña",
+      "minimum": "Escribe al menos 100 caracteres."
+    },
+    "Review": {
+      "title": "Revisar extracción",
+      "confirm": "Confirmar campaña",
+      "emptySection": "Aún no hay propuestas"
+    },
+    "Detail": {
+      "overview": "Resumen",
+      "worldState": "Estado del mundo",
+      "saveChanges": "Guardar cambios"
+    }
+  },
+  "Entities": {
+    "optional": "opcional",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "add": "Añadir",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "tryAgain": "Intentar de nuevo",
+    "originScribe": "✦ Escriba",
+    "originEdited": "✎ Editado por ti",
+    "priority": {
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja"
+    },
+    "status": {
+      "active": "Activo",
+      "dormant": "Inactivo",
+      "resolved": "Resuelto",
+      "discarded": "Descartado"
+    }
+  },
+  "Shared": {
+    "loadingTitle": "El Escriba está escribiendo",
+    "loadingCaption": "Trabajando en los márgenes",
+    "emptyTitle": "Aún no hay registros",
+    "errorFallback": "Algo salió mal.",
+    "retry": "Intentar de nuevo"
+  },
+  "Legal": {
+    "privacy": "Privacidad",
+    "cookies": "Cookies",
+    "acceptCookies": "Aceptar cookies",
+    "cookieNoticeLabel": "Aviso de cookies",
+    "cookieNoticeBody": "Lazy Lands usa cookies solo para autenticación. Sin rastreo ni datos de terceros.",
+    "learnMore": "Más información",
+    "gotIt": "Entendido",
+    "localStorageNotice": "Este sitio usa almacenamiento local para recordar el consentimiento de cookies"
+  },
+  "Errors": {
+    "fallback": "Algo salió mal. Inténtalo de nuevo.",
+    "exceptions": "Los códigos de API backend y los encabezados de composeRawText no se traducen por diseño."
+  },
+  "Dates": {
+    "locale": "es-ES"
+  }
+}

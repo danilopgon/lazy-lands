@@ -1,11 +1,14 @@
 import { z } from 'zod'
 
+import en from '@/messages/en.json'
+
+const passwordCopy = en.Auth
+
 /** Message shown when the password fails the complexity policy. */
-export const PASSWORD_PATTERN_MESSAGE =
-  'Password must include uppercase, lowercase, number, and special character'
+export const PASSWORD_PATTERN_MESSAGE = passwordCopy.passwordPattern
 
 /** Message shown when the password and its confirmation do not match. */
-export const PASSWORD_MISMATCH_MESSAGE = 'Passwords must match'
+export const PASSWORD_MISMATCH_MESSAGE = passwordCopy.passwordMismatch
 
 /**
  * Strong-password checklist. The first entry (length) is also enforced by
@@ -14,15 +17,24 @@ export const PASSWORD_MISMATCH_MESSAGE = 'Passwords must match'
  * truth for the policy across signup and password reset.
  */
 export const PASSWORD_REQUIREMENTS = [
-  { label: 'Use at least 8 characters', test: (p: string) => p.length >= 8 },
-  { label: 'Include a lowercase letter', test: (p: string) => /[a-z]/.test(p) },
   {
-    label: 'Include an uppercase letter',
+    label: passwordCopy.passwordRequirements.length,
+    test: (p: string) => p.length >= 8,
+  },
+  {
+    label: passwordCopy.passwordRequirements.lowercase,
+    test: (p: string) => /[a-z]/.test(p),
+  },
+  {
+    label: passwordCopy.passwordRequirements.uppercase,
     test: (p: string) => /[A-Z]/.test(p),
   },
-  { label: 'Include a number', test: (p: string) => /\d/.test(p) },
   {
-    label: 'Include a special character',
+    label: passwordCopy.passwordRequirements.number,
+    test: (p: string) => /\d/.test(p),
+  },
+  {
+    label: passwordCopy.passwordRequirements.special,
     test: (p: string) => /[^A-Za-z0-9]/.test(p),
   },
 ]
@@ -30,7 +42,7 @@ export const PASSWORD_REQUIREMENTS = [
 /** Reusable strong-password field schema (min 8 chars + complexity). */
 export const passwordSchema = z
   .string()
-  .min(8, 'Password must be at least 8 characters')
+  .min(8, passwordCopy.passwordMinimum)
   .refine(
     (password) =>
       PASSWORD_REQUIREMENTS.slice(1).every((requirement) =>
@@ -46,7 +58,7 @@ export const passwordSchema = z
  */
 export const passwordConfirmationSchema = z.object({
   password: passwordSchema,
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
+  confirmPassword: z.string().min(1, passwordCopy.passwordConfirmRequired),
 })
 
 /**

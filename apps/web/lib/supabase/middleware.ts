@@ -6,12 +6,14 @@ import { type NextRequest, NextResponse } from 'next/server'
  * Refresh the Supabase auth session via middleware cookies and return the current user.
  *
  * @param {NextRequest} request - The incoming Next.js request with cookie state.
+ * @param {NextResponse} [baseResponse] - Existing middleware response that must receive Supabase cookie writes.
  * @returns {Promise<{response: NextResponse, user: User|null}>} An object containing the response with updated cookies and the authenticated user (or null).
  */
 export async function updateSession(
-  request: NextRequest
+  request: NextRequest,
+  baseResponse?: NextResponse
 ): Promise<{ response: NextResponse; user: User | null }> {
-  let response = NextResponse.next({ request })
+  const response = baseResponse ?? NextResponse.next({ request })
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabasePublishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
@@ -30,7 +32,6 @@ export async function updateSession(
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         )
-        response = NextResponse.next({ request })
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options)
         )

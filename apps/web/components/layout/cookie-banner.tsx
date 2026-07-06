@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { getConsent, setConsent } from '@/lib/consent'
+import { getClientUiMessages } from '@/lib/i18n/ui-copy'
 
 /**
  * Fixed cookie consent banner — shown until the user accepts via localStorage.
@@ -13,6 +14,7 @@ import { getConsent, setConsent } from '@/lib/consent'
  */
 export function CookieBanner() {
   const [visible, setVisible] = useState(false)
+  const copy = getClientUiMessages().Legal
 
   useEffect(() => {
     startTransition(() => {
@@ -33,7 +35,7 @@ export function CookieBanner() {
   return (
     <div
       role="region"
-      aria-label="Cookie notice"
+      aria-label={copy.cookieNoticeLabel}
       className={[
         'fixed bottom-0 left-0 right-0 z-cookie-banner',
         'border-t-2 border-[var(--border)]',
@@ -43,14 +45,13 @@ export function CookieBanner() {
     >
       <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-4">
         <p className="font-sans text-sm text-[var(--ink-2)]">
-          Lazy Lands uses cookies for authentication only. No tracking, no
-          third-party data.{' '}
+          {copy.cookieNoticeBody}{' '}
           <Link href="/cookies" className="text-[var(--accent)] underline">
-            Learn more
+            {copy.learnMore}
           </Link>
         </p>
         <Button onClick={handleAccept} size="sm">
-          Got it
+          {copy.gotIt}
         </Button>
       </div>
     </div>

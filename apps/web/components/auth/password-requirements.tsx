@@ -1,4 +1,7 @@
 import { PASSWORD_REQUIREMENTS } from '@/lib/auth/password'
+import en from '@/messages/en.json'
+
+const copy = en.Auth
 
 /**
  * Live checklist reflecting which strong-password requirements the current
@@ -9,20 +12,22 @@ import { PASSWORD_REQUIREMENTS } from '@/lib/auth/password'
  * @returns {React.ReactElement} The requirements checklist.
  */
 export function PasswordRequirements({ value }: { value: string }) {
+  const metCount = PASSWORD_REQUIREMENTS.filter((requirement) =>
+    requirement.test(value)
+  ).length
+
   return (
     <div
       id="password-requirements"
       className="border-2 border-[var(--border)] bg-[var(--paper-2)] p-4"
     >
       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
-        Password must include
+        {copy.passwordRequirementsTitle}
       </p>
       <span className="sr-only" aria-live="polite">
-        {
-          PASSWORD_REQUIREMENTS.filter((requirement) => requirement.test(value))
-            .length
-        }{' '}
-        of {PASSWORD_REQUIREMENTS.length} requirements met
+        {copy.passwordRequirementsProgress
+          .replace('{met}', String(metCount))
+          .replace('{total}', String(PASSWORD_REQUIREMENTS.length))}
       </span>
       <ul className="mt-2 space-y-1 text-sm text-[var(--ink-soft)]">
         {PASSWORD_REQUIREMENTS.map((requirement) => {

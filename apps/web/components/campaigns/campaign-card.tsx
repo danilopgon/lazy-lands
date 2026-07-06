@@ -1,6 +1,9 @@
+'use client'
+
 import Link from 'next/link'
 
 import { formatShortDate } from '@/lib/format'
+import { getClientLocale, getUiMessages } from '@/lib/i18n/ui-copy'
 
 import type { CampaignSummary } from '@/lib/campaigns/schemas'
 
@@ -16,16 +19,18 @@ type CampaignCardProps = {
  * @returns {React.ReactElement} The campaign card link element.
  */
 export function CampaignCard({ campaign }: CampaignCardProps) {
+  const locale = getClientLocale()
+  const copy = getUiMessages(locale).Dashboard
   // Handoff shows five stat columns. Sessions and Memories have no backend data
   // until Block 7, so they render as honest "—" placeholders (never fabricated
   // counts) while NPCs/Factions/Arcs are live from `GET /campaigns`. The Arcs
   // count is the total (all statuses), matching the detail stat bar.
   const stats: { value: number | string; label: string }[] = [
-    { value: '—', label: 'Sessions' },
-    { value: campaign.npc_count, label: 'NPCs' },
-    { value: campaign.faction_count, label: 'Factions' },
-    { value: '—', label: 'Memories' },
-    { value: campaign.arc_count, label: 'Arcs' },
+    { value: '—', label: copy.stats.sessions },
+    { value: campaign.npc_count, label: copy.stats.npcs },
+    { value: campaign.faction_count, label: copy.stats.factions },
+    { value: '—', label: copy.stats.memories },
+    { value: campaign.arc_count, label: copy.stats.arcs },
   ]
 
   const subtitle = [campaign.system, campaign.tone].filter(Boolean).join(' · ')
@@ -58,10 +63,13 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
       </div>
       <div className="flex items-center justify-between border-t border-[var(--line)] px-5 py-2.5">
         <span className="text-xs text-[var(--ink-3)]">
-          Updated {formatShortDate(campaign.updated_at)}
+          {copy.updated.replace(
+            '{date}',
+            formatShortDate(campaign.updated_at, locale)
+          )}
         </span>
         <span className="text-sm font-medium text-[var(--accent)]">
-          Open chronicle →
+          {copy.openChronicle}
         </span>
       </div>
     </Link>

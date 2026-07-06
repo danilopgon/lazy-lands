@@ -250,14 +250,14 @@ describe('LandingPage', () => {
 // correct title and description. Written before page.tsx is updated.
 describe('app/page.tsx metadata (LAND-012)', () => {
   it('LAND-012a: title matches "Lazy Lands — Campaign Companion for Dungeon Masters"', async () => {
-    const { metadata } = await import('@/app/page')
+    const { metadata } = await import('@/app/[locale]/page')
     expect((metadata as { title?: string }).title).toBe(
       'Lazy Lands — Campaign Companion for Dungeon Masters'
     )
   })
 
   it('LAND-012b: description contains "NPC", "faction", and "consequence"', async () => {
-    const { metadata } = await import('@/app/page')
+    const { metadata } = await import('@/app/[locale]/page')
     const description = (metadata as { description?: string }).description ?? ''
     expect(description).toMatch(/npc/i)
     expect(description).toMatch(/faction/i)

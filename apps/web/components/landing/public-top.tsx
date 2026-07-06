@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
+import { LanguageSwitcher } from '@/components/i18n/language-switcher'
+import { getClientUiMessages } from '@/lib/i18n/ui-copy'
 import { navLinks } from './data'
 
 /**
@@ -13,6 +15,7 @@ import { navLinks } from './data'
  */
 export function PublicTop() {
   const [open, setOpen] = useState(false)
+  const copy = getClientUiMessages().Nav
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -100,7 +103,7 @@ export function PublicTop() {
           Lazy <span className="text-[var(--accent)]">Lands</span>
         </Link>
 
-        <nav aria-label="Main" className="flex items-center gap-3">
+        <nav aria-label={copy.main} className="flex items-center gap-3">
           {/* Desktop links */}
           <div className="hidden items-center gap-6 llg:flex">
             {navLinks.map((l) => (
@@ -116,12 +119,17 @@ export function PublicTop() {
 
           {/* Desktop auth */}
           <div className="hidden items-center gap-2 llg:flex">
+            <LanguageSwitcher compact />
             <Button asChild variant="ghost" size="sm">
-              <Link href="/login">Sign in</Link>
+              <Link href="/login">{copy.signIn}</Link>
             </Button>
             <Button asChild variant="accent" size="sm">
               <Link href="/register">
-                Start<span className="sr-only"> your chronicle</span>
+                {copy.register.split(' ')[0]}
+                <span className="sr-only">
+                  {' '}
+                  {copy.register.split(' ').slice(1).join(' ')}
+                </span>
               </Link>
             </Button>
           </div>
@@ -129,14 +137,18 @@ export function PublicTop() {
           {/* Mobile: CTA + hamburger */}
           <Button asChild variant="accent" size="sm" className="llg:hidden">
             <Link href="/register">
-              Start<span className="sr-only"> your chronicle</span>
+              {copy.register.split(' ')[0]}
+              <span className="sr-only">
+                {' '}
+                {copy.register.split(' ').slice(1).join(' ')}
+              </span>
             </Link>
           </Button>
 
           <button
             ref={menuButtonRef}
             type="button"
-            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-label={open ? copy.closeMenu : copy.openMenu}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
             className="llg:hidden flex h-10 w-10 flex-col items-center justify-center gap-[5px] border-2 border-[var(--border)] bg-[var(--paper)] shadow-[2px_2px_0_var(--shadow)]"
@@ -159,7 +171,7 @@ export function PublicTop() {
         <div
           ref={overlayRef}
           role="dialog"
-          aria-label="Mobile navigation"
+          aria-label={copy.mobileNavigation}
           aria-modal="true"
           className="llg:hidden fixed inset-0 z-mobile-menu flex flex-col bg-[var(--paper)]"
         >
@@ -174,7 +186,7 @@ export function PublicTop() {
             <button
               ref={closeButtonRef}
               type="button"
-              aria-label="Close menu"
+              aria-label={copy.closeMenu}
               onClick={() => closeMenu()}
               className="flex h-10 w-10 items-center justify-center border-2 border-[var(--border)] shadow-[2px_2px_0_var(--shadow)]"
             >
@@ -195,12 +207,13 @@ export function PublicTop() {
             ))}
 
             <div className="mt-8 flex flex-col gap-3">
+              <LanguageSwitcher />
               <Button asChild variant="ghost">
                 <Link
                   href="/login"
                   onClick={() => closeMenu({ restoreFocus: false })}
                 >
-                  Sign in
+                  {copy.signIn}
                 </Link>
               </Button>
               <Button asChild variant="accent">
@@ -208,7 +221,7 @@ export function PublicTop() {
                   href="/register"
                   onClick={() => closeMenu({ restoreFocus: false })}
                 >
-                  Start your chronicle →
+                  {copy.register} →
                 </Link>
               </Button>
             </div>
