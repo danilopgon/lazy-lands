@@ -44,6 +44,8 @@ export const createCampaignRequestSchema = z.object({
   title: z.string().min(1).max(NAME_MAX),
   description: z.string().min(1).max(LONG_TEXT_MAX),
   world_state: z.string().min(1).max(LONG_TEXT_MAX),
+  system: z.string().min(1).max(NAME_MAX),
+  tone: z.string().max(NAME_MAX).nullish(),
   npcs: z.array(createNpcRequestSchema).max(ENTITY_LIST_MAX).default([]),
   factions: z
     .array(createFactionRequestSchema)

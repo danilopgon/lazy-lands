@@ -28,11 +28,8 @@ class SupabaseCampaignRepository:
         try:
             response = (
                 self._client.table("campaigns")
-                # system/tone are re-added in WU3 alongside the migration that
-                # creates those columns; selecting them before they exist makes
-                # PostgREST 400 ("column does not exist"), not return null.
                 .select(
-                    "id,title,description,updated_at,"
+                    "id,title,description,updated_at,system,tone,"
                     "npc_count:npcs(count),"
                     "faction_count:factions(count),"
                     "arc_count:arcs(count)"
@@ -50,8 +47,7 @@ class SupabaseCampaignRepository:
         try:
             response = (
                 self._client.table("campaigns")
-                # system/tone are re-added in WU3 with the migration that creates them.
-                .select("id,title,description,world_state,updated_at")
+                .select("id,title,description,world_state,system,tone,updated_at")
                 .eq("id", campaign_id)
                 .execute()
             )
@@ -92,7 +88,13 @@ class SupabaseCampaignRepository:
         )
 
     def insert_campaign(
-        self, user_id: str, title: str, description: str, world_state: str
+        self,
+        user_id: str,
+        title: str,
+        description: str,
+        world_state: str,
+        system: str,
+        tone: str | None,
     ) -> str:
         """Insert the campaign row; return the new campaign id."""
         try:
@@ -104,6 +106,8 @@ class SupabaseCampaignRepository:
                         "title": title,
                         "description": description,
                         "world_state": world_state,
+                        "system": system,
+                        "tone": tone,
                     }
                 )
                 .execute()

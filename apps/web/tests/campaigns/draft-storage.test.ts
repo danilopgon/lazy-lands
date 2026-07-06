@@ -21,9 +21,22 @@ describe('campaign extraction draft storage (NFR-CUI-2 — no server draft)', ()
     sessionStorage.clear()
   })
 
-  it('round-trips a saved draft through sessionStorage', () => {
-    saveExtractionDraft(sample)
-    expect(readExtractionDraft()).toEqual(sample)
+  it('round-trips a saved draft with system/tone through sessionStorage', () => {
+    saveExtractionDraft(sample, { system: 'D&D 5e', tone: 'Grim survival' })
+    expect(readExtractionDraft()).toEqual({
+      ...sample,
+      system: 'D&D 5e',
+      tone: 'Grim survival',
+    })
+  })
+
+  it('stores tone as null when the DM left it blank', () => {
+    saveExtractionDraft(sample, { system: 'D&D 5e' })
+    expect(readExtractionDraft()).toEqual({
+      ...sample,
+      system: 'D&D 5e',
+      tone: null,
+    })
   })
 
   it('returns null when no draft has been saved', () => {
@@ -35,8 +48,16 @@ describe('campaign extraction draft storage (NFR-CUI-2 — no server draft)', ()
     expect(readExtractionDraft()).toBeNull()
   })
 
+  it('returns null when a legacy draft lacks system', () => {
+    sessionStorage.setItem(
+      'lazy-lands:campaign-extraction-draft',
+      JSON.stringify(sample)
+    )
+    expect(readExtractionDraft()).toBeNull()
+  })
+
   it('clearExtractionDraft removes the stored draft', () => {
-    saveExtractionDraft(sample)
+    saveExtractionDraft(sample, { system: 'D&D 5e' })
     clearExtractionDraft()
     expect(readExtractionDraft()).toBeNull()
   })

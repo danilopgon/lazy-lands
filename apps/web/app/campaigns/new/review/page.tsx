@@ -59,6 +59,10 @@ type ReviewDraftState = {
   title: string
   description: string
   worldState: string
+  // Carried from the new-campaign form through the draft; persisted verbatim
+  // on the campaign (system required, tone optional).
+  system: string
+  tone: string | null
   // UI-only provenance flags — never sent to the backend. They flip the
   // "Scribe" badge to "Edited by you" once the DM revises a prose block.
   titleEdited: boolean
@@ -105,6 +109,8 @@ function loadInitialDraft(): ReviewDraftState | null {
     title: storedDraft.title,
     description: storedDraft.description,
     worldState: storedDraft.world_state,
+    system: storedDraft.system,
+    tone: storedDraft.tone,
     titleEdited: false,
     descriptionEdited: false,
     worldStateEdited: false,
@@ -158,6 +164,8 @@ function ReviewCampaignClient({
       title: draft.title,
       description: draft.description,
       world_state: draft.worldState,
+      system: draft.system,
+      tone: draft.tone,
       npcs: draft.npcs.map(
         ({ name, description, current_state, motivation, content_source }) => ({
           name,

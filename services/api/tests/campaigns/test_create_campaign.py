@@ -19,10 +19,13 @@ from app.modules.campaigns.infrastructure.errors import RepositoryError
 
 def _payload(with_children: bool = True) -> CreateCampaignCommand:
     if not with_children:
-        return CreateCampaignCommand(title="T", description="D", world_state="W")
+        return CreateCampaignCommand(
+            title="T", description="D", world_state="W", system="S"
+        )
     return CreateCampaignCommand(
         title="T",
         description="D",
+        system="S",
         world_state="W",
         npcs=[
             NPC(

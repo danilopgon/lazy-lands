@@ -34,7 +34,13 @@ class CampaignRepository(Protocol):
         ...
 
     def insert_campaign(
-        self, user_id: str, title: str, description: str, world_state: str
+        self,
+        user_id: str,
+        title: str,
+        description: str,
+        world_state: str,
+        system: str,
+        tone: str | None,
     ) -> str:
         """Insert the campaign row; return the new campaign id."""
         ...

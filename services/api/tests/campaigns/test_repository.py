@@ -32,10 +32,32 @@ def test_insert_campaign_returns_new_id() -> None:
     client = _mock_client_with_campaign_id("campaign-abc")
     repo = SupabaseCampaignRepository(client)
 
-    campaign_id = repo.insert_campaign("user-1", "T", "D", "W")
+    campaign_id = repo.insert_campaign("user-1", "T", "D", "W", "S", None)
 
     assert campaign_id == "campaign-abc"
     client.table.assert_any_call("campaigns")
+
+
+def test_insert_campaign_writes_system_and_tone() -> None:
+    client = _mock_client_with_campaign_id("campaign-1")
+    repo = SupabaseCampaignRepository(client)
+
+    repo.insert_campaign("user-1", "T", "D", "W", "D&D 5e", "Grim")
+
+    insert_arg = client.table.return_value.insert.call_args[0][0]
+    assert insert_arg["system"] == "D&D 5e"
+    assert insert_arg["tone"] == "Grim"
+
+
+def test_insert_campaign_writes_null_tone_when_absent() -> None:
+    client = _mock_client_with_campaign_id("campaign-1")
+    repo = SupabaseCampaignRepository(client)
+
+    repo.insert_campaign("user-1", "T", "D", "W", "D&D 5e", None)
+
+    insert_arg = client.table.return_value.insert.call_args[0][0]
+    assert insert_arg["system"] == "D&D 5e"
+    assert insert_arg["tone"] is None
 
 
 def test_insert_campaign_raises_repository_error_when_no_rows_returned() -> None:
@@ -46,7 +68,7 @@ def test_insert_campaign_raises_repository_error_when_no_rows_returned() -> None
     repo = SupabaseCampaignRepository(client)
 
     with pytest.raises(RepositoryError):
-        repo.insert_campaign("user-1", "T", "D", "W")
+        repo.insert_campaign("user-1", "T", "D", "W", "S", None)
 
 
 def test_insert_npcs_no_op_when_empty() -> None:
@@ -168,10 +190,9 @@ def test_list_campaigns_selects_summary_fields_ordered_by_updated_at_desc() -> N
     client.table.assert_any_call("campaigns")
     client.table.return_value.select.assert_called_once()
     select_arg = client.table.return_value.select.call_args[0][0]
-    # system/tone are not selected until WU3 creates those columns; selecting
-    # them before they exist would 400 on PostgREST (re-added with the migration).
-    assert "system" not in select_arg
-    assert "tone" not in select_arg
+    # system/tone columns exist after Migration A (WU3) and are selected.
+    assert "system" in select_arg
+    assert "tone" in select_arg
     client.table.return_value.select.return_value.order.assert_called_once_with(
         "updated_at", desc=True
     )
@@ -213,9 +234,9 @@ def test_get_campaign_returns_first_row_or_none_on_rls_miss() -> None:
     assert row == {"id": "campaign-1", "title": "Visible"}
     client.table.assert_any_call("campaigns")
     select_arg = client.table.return_value.select.call_args[0][0]
-    # system/tone are not selected until WU3 creates those columns (see repository).
-    assert "system" not in select_arg
-    assert "tone" not in select_arg
+    # system/tone columns exist after Migration A (WU3) and are selected.
+    assert "system" in select_arg
+    assert "tone" in select_arg
     client.table.return_value.select.return_value.eq.assert_called_once_with(
         "id", "campaign-1"
     )

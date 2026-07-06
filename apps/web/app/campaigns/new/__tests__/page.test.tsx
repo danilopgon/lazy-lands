@@ -188,7 +188,10 @@ describe('NewCampaignPage (CUI-001)', () => {
       )
     })
     await waitFor(() => {
-      expect(mockSaveExtractionDraft).toHaveBeenCalledWith(payload)
+      expect(mockSaveExtractionDraft).toHaveBeenCalledWith(
+        payload,
+        expect.objectContaining({ system: 'D&D 5e' })
+      )
       expect(mockPush).toHaveBeenCalledWith('/campaigns/new/review')
     })
   })

@@ -48,6 +48,8 @@ EXPECTED_COLUMN_TYPES: dict[str, dict[str, str]] = {
         "title": "text",
         "description": "text",
         "world_state": "text",
+        "system": "text",
+        "tone": "text",
         "accumulated_summary": "text",
         "summarized_up_to_session": "integer",
         "created_at": "timestamp with time zone",

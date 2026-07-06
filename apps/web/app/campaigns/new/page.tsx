@@ -31,7 +31,16 @@ type ComposableCampaign = {
   additional_details?: string
 }
 
-function composeRawText(data: ComposableCampaign): string {
+/**
+ * Fold the DM's name/system/tone/context/details into the single `raw_text`
+ * the extraction endpoint receives. Exported for the golden-fold regression
+ * test (Block 6 WU3 §8.2): threading system/tone onto the persisted campaign
+ * must NOT change this fold.
+ *
+ * @param {ComposableCampaign} data - The new-campaign form fields.
+ * @returns {string} The folded `raw_text`.
+ */
+export function composeRawText(data: ComposableCampaign): string {
   return [
     data.name.trim() ? `Campaign name: ${data.name}` : null,
     data.system.trim() ? `Game system: ${data.system}` : null,
@@ -85,6 +94,7 @@ export default function NewCampaignPage() {
     register,
     handleSubmit,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignFormSchema),
@@ -101,7 +111,10 @@ export default function NewCampaignPage() {
   const mutation = useMutation({
     mutationFn: (text: string) => extractCampaign(text),
     onSuccess: (payload) => {
-      saveExtractionDraft(payload)
+      saveExtractionDraft(payload, {
+        system: getValues('system'),
+        tone: getValues('tone'),
+      })
       router.push('/campaigns/new/review')
     },
     onError: (err: unknown) => {

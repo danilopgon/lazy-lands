@@ -51,6 +51,8 @@ def _to_create_campaign_command(
         title=payload.title,
         description=payload.description,
         world_state=payload.world_state,
+        system=payload.system,
+        tone=payload.tone,
         npcs=[
             NPC(
                 name=npc.name,

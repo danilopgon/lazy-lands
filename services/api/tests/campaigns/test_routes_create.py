@@ -15,6 +15,7 @@ VALID_BODY = {
     "title": "Title",
     "description": "Description",
     "world_state": "World state",
+    "system": "D&D 5e",
     "npcs": [],
     "factions": [],
     "arcs": [],
@@ -51,6 +52,20 @@ def test_happy_path_returns_id(client) -> None:
 
     assert response.status_code == 200
     assert response.json() == {"id": "campaign-abc"}
+
+
+def test_missing_system_returns_422(client) -> None:
+    app.dependency_overrides[get_user_supabase_client] = (
+        lambda: _mock_client_returning_campaign_id()
+    )
+    app.dependency_overrides[get_auth_context] = lambda: AuthContext(
+        user_id="user-1", access_token="token-1"
+    )
+    body = {k: v for k, v in VALID_BODY.items() if k != "system"}
+
+    response = client.post("/campaigns", json=body)
+
+    assert response.status_code == 422
 
 
 def test_unauthenticated_request_returns_401_no_rows_written() -> None:
