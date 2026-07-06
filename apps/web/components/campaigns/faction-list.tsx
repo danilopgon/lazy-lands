@@ -7,26 +7,41 @@ import type { FactionResponse } from '@/lib/campaigns/schemas'
 
 type FactionListProps = {
   factions: FactionResponse[]
+  onAdd?: () => void
+  onEdit?: (faction: FactionResponse) => void
+  onDelete?: (faction: FactionResponse) => void
 }
 
 /**
- * Read-only list of a campaign's factions. Renders the empty state when there
- * are none. Per-row Edit/Delete and the header "+ New faction" are wired to
- * modals in Work Unit 3 (entity-management); posture is edited through that
- * modal rather than the handoff's inline dropdown.
+ * List of a campaign's factions. Renders the empty state when there are none.
+ * The header "+ New faction", per-row Edit, and per-row Delete open the modals
+ * via callbacks; posture is edited through the edit modal rather than the
+ * handoff's inline dropdown (design deviation, flagged in 2.5.8).
  *
  * @param {object} root0 - The faction list props.
  * @param {FactionResponse[]} root0.factions - The factions to render.
+ * @param {() => void} [root0.onAdd] - Open the create modal.
+ * @param {(faction: FactionResponse) => void} [root0.onEdit] - Open the edit modal.
+ * @param {(faction: FactionResponse) => void} [root0.onDelete] - Open the delete confirm.
  * @returns {React.ReactElement} The faction list element.
  */
-export function FactionList({ factions }: FactionListProps) {
+export function FactionList({
+  factions,
+  onAdd,
+  onEdit,
+  onDelete,
+}: FactionListProps) {
   if (factions.length === 0) {
     return (
       <EmptyState
         ornament="⬡"
         title="No factions yet"
         description="Guilds, cults, courts: anything that wants something. Add them and track how they react."
-        action={<Button variant="ink">+ Add a faction</Button>}
+        action={
+          <Button variant="ink" onClick={onAdd}>
+            + Add a faction
+          </Button>
+        }
       />
     )
   }
@@ -34,7 +49,12 @@ export function FactionList({ factions }: FactionListProps) {
   return (
     <div className="border-2 border-[var(--border)] bg-[var(--paper)] px-5 shadow-[6px_6px_0_var(--shadow)]">
       {factions.map((faction) => (
-        <FactionRow key={faction.id} faction={faction} />
+        <FactionRow
+          key={faction.id}
+          faction={faction}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       ))}
     </div>
   )
@@ -48,7 +68,15 @@ export function FactionList({ factions }: FactionListProps) {
  * @param {FactionResponse} root0.faction - The faction to render.
  * @returns {React.ReactElement} The faction row element.
  */
-function FactionRow({ faction }: { faction: FactionResponse }) {
+function FactionRow({
+  faction,
+  onEdit,
+  onDelete,
+}: {
+  faction: FactionResponse
+  onEdit?: (faction: FactionResponse) => void
+  onDelete?: (faction: FactionResponse) => void
+}) {
   return (
     <div className="border-b border-dotted border-[var(--dotted)] py-5 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
@@ -61,16 +89,17 @@ function FactionRow({ faction }: { faction: FactionResponse }) {
               origin={contentSourceToBadgeOrigin(faction.content_source)}
             />
           ) : null}
-          {/* Wired to the edit/delete modals in Work Unit 3. */}
           <button
             type="button"
             className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
+            onClick={() => onEdit?.(faction)}
           >
             Edit
           </button>
           <button
             type="button"
             className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-3)] hover:underline"
+            onClick={() => onDelete?.(faction)}
           >
             Delete
           </button>

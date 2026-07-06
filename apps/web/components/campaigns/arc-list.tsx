@@ -8,6 +8,9 @@ import type { ArcResponse, ArcStatus } from '@/lib/campaigns/schemas'
 
 type ArcListProps = {
   arcs: ArcResponse[]
+  onAdd?: () => void
+  onEdit?: (arc: ArcResponse) => void
+  onDelete?: (arc: ArcResponse) => void
 }
 
 /** Terminal arcs (resolved/discarded) are dimmed; active/dormant are in play. */
@@ -25,14 +28,18 @@ function isTerminal(status: ArcStatus | null): boolean {
  * @param {ArcResponse[]} root0.arcs - The arcs to render.
  * @returns {React.ReactElement} The arc list element.
  */
-export function ArcList({ arcs }: ArcListProps) {
+export function ArcList({ arcs, onAdd, onEdit, onDelete }: ArcListProps) {
   if (arcs.length === 0) {
     return (
       <EmptyState
         ornament="↝"
         title="No arcs here"
         description="Arcs are the threads your players are pulling on. Track them so none go quiet for too long."
-        action={<Button variant="ink">+ Add an arc</Button>}
+        action={
+          <Button variant="ink" onClick={onAdd}>
+            + Add an arc
+          </Button>
+        }
       />
     )
   }
@@ -40,7 +47,7 @@ export function ArcList({ arcs }: ArcListProps) {
   return (
     <div className="border-2 border-[var(--border)] bg-[var(--paper)] px-5 shadow-[6px_6px_0_var(--shadow)]">
       {arcs.map((arc) => (
-        <ArcRow key={arc.id} arc={arc} />
+        <ArcRow key={arc.id} arc={arc} onEdit={onEdit} onDelete={onDelete} />
       ))}
     </div>
   )
@@ -54,7 +61,15 @@ export function ArcList({ arcs }: ArcListProps) {
  * @param {ArcResponse} root0.arc - The arc to render.
  * @returns {React.ReactElement} The arc row element.
  */
-function ArcRow({ arc }: { arc: ArcResponse }) {
+function ArcRow({
+  arc,
+  onEdit,
+  onDelete,
+}: {
+  arc: ArcResponse
+  onEdit?: (arc: ArcResponse) => void
+  onDelete?: (arc: ArcResponse) => void
+}) {
   const terminal = isTerminal(arc.status)
 
   return (
@@ -89,16 +104,17 @@ function ArcRow({ arc }: { arc: ArcResponse }) {
               origin={contentSourceToBadgeOrigin(arc.content_source)}
             />
           ) : null}
-          {/* Wired to the edit/delete modals in Work Unit 3. */}
           <button
             type="button"
             className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
+            onClick={() => onEdit?.(arc)}
           >
             Edit
           </button>
           <button
             type="button"
             className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-3)] hover:underline"
+            onClick={() => onDelete?.(arc)}
           >
             Delete
           </button>

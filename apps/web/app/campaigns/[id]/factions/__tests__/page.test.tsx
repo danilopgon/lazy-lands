@@ -1,14 +1,25 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { mockGetCampaignDetail } = vi.hoisted(() => ({
+const {
+  mockGetCampaignDetail,
+  mockCreateFaction,
+  mockUpdateFaction,
+  mockDeleteFaction,
+} = vi.hoisted(() => ({
   mockGetCampaignDetail: vi.fn(),
+  mockCreateFaction: vi.fn(),
+  mockUpdateFaction: vi.fn(),
+  mockDeleteFaction: vi.fn(),
 }))
 
 vi.mock('@/lib/campaigns/api', () => ({
   getCampaignDetail: mockGetCampaignDetail,
+  createFaction: mockCreateFaction,
+  updateFaction: mockUpdateFaction,
+  deleteFaction: mockDeleteFaction,
   CampaignApiError: class CampaignApiError extends Error {},
   CampaignNotFoundError: class CampaignNotFoundError extends Error {},
 }))
@@ -163,5 +174,65 @@ describe('FactionsPage', () => {
     expect(screen.queryByText(/last reaction:/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/^npcs:/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/^arcs:/i)).not.toBeInTheDocument()
+  })
+
+  const ONE_FACTION = {
+    id: 'fac-1',
+    name: "The Lord's Alliance",
+    description: 'A coalition',
+    current_stance: 'Friendly',
+    goals: 'Expand influence',
+    content_source: 'llm' as const,
+  }
+
+  it('creates a faction via createFaction from the empty state', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(buildDetail({ factions: [] }))
+    mockCreateFaction.mockResolvedValue({ ...ONE_FACTION, id: 'fac-new' })
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('No factions yet')).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: /add a faction/i }))
+    await user.type(screen.getByLabelText(/name/i), 'Redbrands')
+    await user.click(screen.getByRole('button', { name: /add faction/i }))
+
+    await waitFor(() => {
+      expect(mockCreateFaction).toHaveBeenCalledWith(
+        expect.objectContaining({ campaign_id: 'camp-1', name: 'Redbrands' })
+      )
+    })
+  })
+
+  it('edits a faction via updateFaction and deletes via the confirm modal', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(
+      buildDetail({ factions: [ONE_FACTION] })
+    )
+    mockUpdateFaction.mockResolvedValue(ONE_FACTION)
+    mockDeleteFaction.mockResolvedValue(undefined)
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText("The Lord's Alliance")).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /^edit$/i }))
+    expect(screen.getByLabelText(/name/i)).toHaveValue("The Lord's Alliance")
+    await user.click(screen.getByRole('button', { name: /save changes/i }))
+    await waitFor(() => {
+      expect(mockUpdateFaction).toHaveBeenCalledWith(
+        'fac-1',
+        expect.any(Object)
+      )
+    })
+
+    await user.click(screen.getByRole('button', { name: /^delete$/i }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: /^delete$/i }))
+    await waitFor(() => {
+      expect(mockDeleteFaction).toHaveBeenCalledWith('fac-1')
+    })
   })
 })

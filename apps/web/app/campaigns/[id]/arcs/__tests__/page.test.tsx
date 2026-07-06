@@ -1,14 +1,21 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { mockGetCampaignDetail } = vi.hoisted(() => ({
-  mockGetCampaignDetail: vi.fn(),
-}))
+const { mockGetCampaignDetail, mockCreateArc, mockUpdateArc, mockDeleteArc } =
+  vi.hoisted(() => ({
+    mockGetCampaignDetail: vi.fn(),
+    mockCreateArc: vi.fn(),
+    mockUpdateArc: vi.fn(),
+    mockDeleteArc: vi.fn(),
+  }))
 
 vi.mock('@/lib/campaigns/api', () => ({
   getCampaignDetail: mockGetCampaignDetail,
+  createArc: mockCreateArc,
+  updateArc: mockUpdateArc,
+  deleteArc: mockDeleteArc,
   CampaignApiError: class CampaignApiError extends Error {},
   CampaignNotFoundError: class CampaignNotFoundError extends Error {},
 }))
@@ -168,5 +175,56 @@ describe('ArcsPage', () => {
       screen.queryByText(/include in next session generation/i)
     ).not.toBeInTheDocument()
     expect(screen.queryByText(/^factions:/i)).not.toBeInTheDocument()
+  })
+
+  it('creates an arc via createArc with default active/medium codes', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(buildDetail({ arcs: [] }))
+    mockCreateArc.mockResolvedValue(buildArc({ id: 'arc-new' }))
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('No arcs here')).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: /add an arc/i }))
+    await user.type(screen.getByLabelText(/title/i), 'A new thread')
+    await user.click(screen.getByRole('button', { name: /add arc/i }))
+
+    await waitFor(() => {
+      expect(mockCreateArc).toHaveBeenCalledWith(
+        expect.objectContaining({
+          campaign_id: 'camp-1',
+          title: 'A new thread',
+          priority: 'medium',
+          status: 'active',
+        })
+      )
+    })
+  })
+
+  it('edits an arc via updateArc and deletes via the confirm modal', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(buildDetail({ arcs: [buildArc()] }))
+    mockUpdateArc.mockResolvedValue(buildArc())
+    mockDeleteArc.mockResolvedValue(undefined)
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('The Spider Pact')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /^edit$/i }))
+    expect(screen.getByLabelText(/title/i)).toHaveValue('The Spider Pact')
+    await user.click(screen.getByRole('button', { name: /save changes/i }))
+    await waitFor(() => {
+      expect(mockUpdateArc).toHaveBeenCalledWith('arc-1', expect.any(Object))
+    })
+
+    await user.click(screen.getByRole('button', { name: /^delete$/i }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: /^delete$/i }))
+    await waitFor(() => {
+      expect(mockDeleteArc).toHaveBeenCalledWith('arc-1')
+    })
   })
 })
