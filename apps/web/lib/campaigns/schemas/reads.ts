@@ -65,7 +65,9 @@ export const campaignMutationResponseSchema = z.object({
   world_state: z.string().nullable(),
   system: z.string().nullable(),
   tone: z.string().nullable(),
-  updated_at: z.string().nullable(),
+  // `updated_at` is `not null` in the DB and always present on the returned
+  // row; keep it non-null like the summary/detail schemas.
+  updated_at: z.string(),
 })
 export type CampaignMutationResponse = z.infer<
   typeof campaignMutationResponseSchema

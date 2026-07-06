@@ -36,7 +36,7 @@ export default function DashboardPage() {
               {error
                 ? 'Something went wrong'
                 : data && data.length > 0
-                  ? `${data.length} campaigns`
+                  ? `${data.length} campaign${data.length === 1 ? '' : 's'}`
                   : 'No campaigns yet'}
             </p>
           )}
