@@ -190,6 +190,25 @@ def test_patch_arc_null_status_or_priority_returns_422(client, field) -> None:
     assert response.status_code == 422
 
 
+@pytest.mark.parametrize(
+    "prefix,body,row",
+    [
+        ("/npcs", {"name": "New"}, {"id": "npc-1", "name": "New"}),
+        ("/factions", {"name": "New"}, {"id": "fac-1", "name": "New"}),
+        ("/arcs", {"title": "New"}, {"id": "arc-1", "title": "New"}),
+    ],
+)
+def test_patch_entity_stamps_content_source_edited(
+    client, prefix, body, row
+) -> None:
+    # A DM edit flips provenance to "edited" so the UI badge shows ✎, not ✦.
+    mock = _mock_client(write_data=[row])
+    _use(mock)
+    client.patch(f"{prefix}/{row['id']}", json=body)
+    changes = mock.table.return_value.update.call_args[0][0]
+    assert changes["content_source"] == "edited"
+
+
 def test_create_npc_unauthenticated_returns_401() -> None:
     app.dependency_overrides.clear()
     local_client = TestClient(app)

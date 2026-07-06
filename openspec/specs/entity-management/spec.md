@@ -31,6 +31,7 @@ Response: updated campaign detail fields (at minimum, the changed field(s) and
 `updated_at`).
 
 Validation:
+
 - `world_state`, when supplied, MUST be a non-empty string after trimming.
 - `system`, when supplied, MUST be a non-empty string after trimming (mirrors its
   required-on-create constraint).
@@ -80,6 +81,7 @@ Validation:
 ### Requirement: Create, edit, and delete NPCs
 
 The system MUST expose:
+
 - `POST /npcs` — create an NPC under a campaign, accepting
   `{ campaign_id, name, description?, current_state?, motivation? }` in the body (only `campaign_id`
   and `name` required; blank optional fields are treated as omitted; field names per the
@@ -87,8 +89,8 @@ The system MUST expose:
   assigns `content_source = "manual"` on the created NPC; the response is the created NPC
   representation including its new `id`.
 - `PATCH /npcs/{id}` — partial update of `{ name?, description?, current_state?, motivation? }`
-  for an NPC belonging to a campaign owned by the requesting user. Edits do not restamp
-  `content_source`; provenance history is out of Block 6 scope. Empty body → 422.
+  for an NPC belonging to a campaign owned by the requesting user. Edits stamp `content_source =
+"edited"` (✦ → ✎ per PRODUCT P1); full provenance history stays out of Block 6 scope. Empty body → 422.
 - `DELETE /npcs/{id}` — permanently removes the NPC. No confirmation step is enforced
   server-side (the handoff's delete action has no confirmation dialog); response is 204
   on success.
@@ -160,14 +162,15 @@ The system MUST expose:
 ### Requirement: Create, edit, and delete factions
 
 The system MUST expose:
+
 - `POST /factions` — create a faction under a campaign, accepting
   `{ campaign_id, name, description?, current_stance?, goals? }` in the body (only
   `campaign_id` and `name` required; blank optional fields are treated as omitted; the
   handoff's "posture" and "objective" map to `current_stance` and `goals` respectively). Server assigns
   `content_source = "manual"`; response is the created faction including its `id`.
 - `PATCH /factions/{id}` — partial update of `{ name?, description?, current_stance?, goals? }`
-  for a faction belonging to a campaign owned by the requesting user. Edits do not restamp
-  `content_source`; provenance history is out of Block 6 scope. Empty body → 422.
+  for a faction belonging to a campaign owned by the requesting user. Edits stamp `content_source =
+"edited"` (✦ → ✎ per PRODUCT P1); full provenance history stays out of Block 6 scope. Empty body → 422.
 - `DELETE /factions/{id}` — permanently removes the faction. No server-side
   confirmation step. Response is 204 on success.
 
@@ -238,6 +241,7 @@ The system MUST expose:
 ### Requirement: Create, edit, and delete arcs (NEW)
 
 The system MUST expose:
+
 - `POST /arcs` — create an arc under a campaign, accepting
   `{ campaign_id, title, description?, priority?, status? }` in the body (`campaign_id` and
   `title` required; blank optional `description` is treated as omitted; reduced-scope field set per
@@ -248,8 +252,8 @@ The system MUST expose:
   `active`. Server assigns `content_source = "manual"`; response is the created arc
   including its `id`.
 - `PATCH /arcs/{id}` — partial update of `{ title?, description?, priority?, status? }`
-  for an arc belonging to a campaign owned by the requesting user. Edits do not restamp
-  `content_source`; provenance history is out of Block 6 scope. Empty body → 422.
+  for an arc belonging to a campaign owned by the requesting user. Edits stamp `content_source =
+"edited"` (✦ → ✎ per PRODUCT P1); full provenance history stays out of Block 6 scope. Empty body → 422.
 - `DELETE /arcs/{id}` — permanently removes the arc. No server-side confirmation step.
   Response is 204 on success.
 
@@ -419,6 +423,7 @@ returns focus to the invoking trigger on close, and exposes dialog semantics wit
 ### Requirement: NPC create/edit modal UX
 
 The system MUST render an NPC modal (`NpcModal` per handoff) in two modes:
+
 - **Add** — reachable from "+ New NPC" on `/campaigns/:id/npcs`, opens empty (default
   `current_state = "Active"`), submits via `POST /npcs` with `campaign_id` in the body.
 - **Edit** — reachable from the "Edit" action per row, pre-filled with the NPC's current
@@ -481,6 +486,7 @@ on success, modal closes and the list reflects the created/updated NPC, with
 ### Requirement: Faction create/edit modal UX
 
 The system MUST render a faction modal (`FactionModal` per handoff) in two modes:
+
 - **Add** — reachable from "+ New faction" on `/campaigns/:id/factions`, opens empty
   (default `current_stance = "Neutral"`), submits via
   `POST /factions` with `campaign_id` in the body.
@@ -541,6 +547,7 @@ disabled while `name` is empty).
 ### Requirement: Arc create/edit modal UX (NEW)
 
 The system MUST render an arc modal (`ArcModal` per handoff) in two modes:
+
 - **Add** — reachable from "+ New arc" on `/campaigns/:id/arcs`, opens with defaults
   `priority = "Medium"` / `status = "Active"` (mapped to codes `medium` / `active`),
   submits via `POST /arcs` with `campaign_id` in the body.

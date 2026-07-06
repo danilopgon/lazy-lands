@@ -22,6 +22,8 @@ class UpdateFaction:
         # `name` maps to a NOT NULL column: reject an explicit null (422).
         if not changes or changes.get("name", "") is None:
             raise CampaignValidationError()
+        # A DM edit flips provenance to "edited" (PRODUCT P1 — ✦ -> ✎).
+        changes["content_source"] = "edited"
         try:
             row = self._repository.update_faction(faction_id, changes)
         except RepositoryError as exc:

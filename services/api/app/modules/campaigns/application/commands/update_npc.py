@@ -23,6 +23,9 @@ class UpdateNpc:
         # than letting it reach the DB and surface as an unhandled 500.
         if not changes or changes.get("name", "") is None:
             raise CampaignValidationError()
+        # A DM edit flips provenance to "edited" (llm -> edited) so the ✦ Scribe
+        # badge becomes ✎ Edited by you (PRODUCT P1).
+        changes["content_source"] = "edited"
         try:
             row = self._repository.update_npc(npc_id, changes)
         except RepositoryError as exc:

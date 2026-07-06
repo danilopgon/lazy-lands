@@ -33,6 +33,8 @@ class UpdateArc:
             or changes.get("priority", "x") is None
         ):
             raise CampaignValidationError()
+        # A DM edit flips provenance to "edited" (PRODUCT P1 — ✦ -> ✎).
+        changes["content_source"] = "edited"
         try:
             row = self._repository.update_arc(arc_id, changes)
         except RepositoryError as exc:
