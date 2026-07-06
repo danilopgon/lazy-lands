@@ -169,6 +169,18 @@ def test_delete_entity_rls_miss_returns_404(
     assert response.status_code == 404
 
 
+@pytest.mark.parametrize(
+    "prefix,field",
+    [("/npcs", "name"), ("/factions", "name"), ("/arcs", "title")],
+)
+def test_patch_entity_null_required_field_returns_422(client, prefix, field) -> None:
+    # name/title map to NOT NULL columns; an explicit null must be a 422, not a
+    # 500 from a DB constraint violation (design 6.4 / uniform error contract).
+    _use(_mock_client())
+    response = client.patch(f"{prefix}/some-id", json={field: None})
+    assert response.status_code == 422
+
+
 def test_create_npc_unauthenticated_returns_401() -> None:
     app.dependency_overrides.clear()
     local_client = TestClient(app)

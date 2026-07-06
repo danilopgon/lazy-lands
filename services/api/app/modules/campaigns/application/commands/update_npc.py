@@ -2,10 +2,12 @@
 
 from app.modules.campaigns.application.errors import (
     CampaignNotFoundError,
+    CampaignPersistenceError,
     CampaignValidationError,
 )
 from app.modules.campaigns.application.read_models.npc import NpcResponse
 from app.modules.campaigns.domain.ports import CampaignRepository
+from app.modules.campaigns.infrastructure.errors import RepositoryError
 
 
 class UpdateNpc:
@@ -16,10 +18,15 @@ class UpdateNpc:
         self._repository = repository
 
     def execute(self, npc_id: str, changes: dict) -> NpcResponse:
-        """Apply the pre-filtered changes; empty -> 422, missing row -> 404."""
-        if not changes:
+        """Apply changes; empty or null-name -> 422, missing row -> 404."""
+        # `name` maps to a NOT NULL column: reject an explicit null (422) rather
+        # than letting it reach the DB and surface as an unhandled 500.
+        if not changes or changes.get("name", "") is None:
             raise CampaignValidationError()
-        row = self._repository.update_npc(npc_id, changes)
+        try:
+            row = self._repository.update_npc(npc_id, changes)
+        except RepositoryError as exc:
+            raise CampaignPersistenceError(retryable=True) from exc
         if row is None:
             raise CampaignNotFoundError()
         return NpcResponse(**row)

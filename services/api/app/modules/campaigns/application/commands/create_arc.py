@@ -1,8 +1,12 @@
 """CreateArc use case — DM-authored arc with an ownership pre-check."""
 
-from app.modules.campaigns.application.errors import CampaignNotFoundError
+from app.modules.campaigns.application.errors import (
+    CampaignNotFoundError,
+    CampaignPersistenceError,
+)
 from app.modules.campaigns.application.read_models.arc import ArcResponse
 from app.modules.campaigns.domain.ports import CampaignRepository
+from app.modules.campaigns.infrastructure.errors import RepositoryError
 
 
 class CreateArc:
@@ -18,9 +22,12 @@ class CreateArc:
         Unlike extraction, a manual arc carries priority/status (defaulted by
         the request schema to medium/active) straight through.
         """
-        if self._repository.get_campaign(campaign_id) is None:
-            raise CampaignNotFoundError()
-        row = self._repository.create_arc(
-            {**fields, "campaign_id": campaign_id, "content_source": "manual"}
-        )
+        try:
+            if self._repository.get_campaign(campaign_id) is None:
+                raise CampaignNotFoundError()
+            row = self._repository.create_arc(
+                {**fields, "campaign_id": campaign_id, "content_source": "manual"}
+            )
+        except RepositoryError as exc:
+            raise CampaignPersistenceError(retryable=True) from exc
         return ArcResponse(**row)
