@@ -1,4 +1,5 @@
 export type NavLink = {
   href: string
-  label: string
+  /** Key under the `Landing.nav` message namespace for the link label. */
+  key: string
 }

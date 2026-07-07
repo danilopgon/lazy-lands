@@ -1,6 +1,7 @@
 'use client'
 
 import { useId } from 'react'
+import { useTranslations } from 'next-intl'
 
 import type { ComingSoonButtonProps } from './types'
 
@@ -17,6 +18,7 @@ export function ComingSoonButton({
   variant = 'secondary',
 }: ComingSoonButtonProps) {
   const id = useId()
+  const t = useTranslations('Landing')
 
   const variantClasses = {
     accent: 'border-[var(--border)] bg-[var(--accent)] !text-[var(--paper)]',
@@ -56,7 +58,7 @@ export function ComingSoonButton({
           'transition-opacity duration-150',
         ].join(' ')}
       >
-        Coming soon
+        {t('comingSoon')}
       </span>
     </span>
   )

@@ -16,6 +16,7 @@ import { navLinks } from './data'
 export function PublicTop() {
   const [open, setOpen] = useState(false)
   const t = useTranslations('Nav')
+  const tl = useTranslations('Landing')
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -119,7 +120,7 @@ export function PublicTop() {
                 href={l.href}
                 className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-[var(--ink-2)] hover:text-[var(--ink)]"
               >
-                {l.label}
+                {tl(`nav.${l.key}`)}
               </Link>
             ))}
           </div>
@@ -197,7 +198,7 @@ export function PublicTop() {
                 onClick={() => closeMenu({ restoreFocus: false })}
                 className="border-b border-[var(--dotted)] py-4 font-serif text-2xl text-[var(--ink)] hover:text-[var(--accent)]"
               >
-                {l.label}
+                {tl(`nav.${l.key}`)}
               </Link>
             ))}
 

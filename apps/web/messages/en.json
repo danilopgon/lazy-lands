@@ -28,10 +28,145 @@
   "Landing": {
     "metadataTitle": "Lazy Lands — Campaign Companion for Dungeon Masters",
     "metadataDescription": "Track every NPC, faction and consequence across sessions. Lazy Lands helps Dungeon Masters capture campaign context, validate memories, and generate session briefings — so the world remembers what your players did.",
-    "heroTitle": "Your campaign, without the amnesia.",
-    "heroBody": "Persistent, reviewable memory for your NPCs, factions and consequences — so the world remembers what your players did.",
-    "primaryCta": "Start your chronicle",
-    "secondaryCta": "Sign in"
+    "announcement": {
+      "body": "Under active development — features ship weekly. <signup>Sign up</signup> and you'll be the first to know.",
+      "dismiss": "Dismiss announcement"
+    },
+    "nav": {
+      "product": "Product",
+      "how": "How it works",
+      "earlyAccess": "Early access",
+      "privacy": "Privacy",
+      "cookies": "Cookies"
+    },
+    "hero": {
+      "badgeBeta": "✦ Open beta",
+      "badgeAudience": "For DMs who actually run long campaigns",
+      "title": "Your campaign,<break></break><accent>without the amnesia</accent>.",
+      "body": "The companion that remembers every NPC, every faction and every consequence, so your next session starts from accepted memory, and the world remembers what your players did.",
+      "cta": "Start your chronicle →",
+      "demoCta": "✦ See it on a real campaign",
+      "metaBeta": "Open beta",
+      "metaScribe": "The Scribe proposes, you decide",
+      "metaFree": "Free while in early access"
+    },
+    "marquee": [
+      "Session VII accepted: Halia favors two party members",
+      "Open arc: anti-dragon plans need a stable core",
+      "Faction posture changed: Black Bear Guild is watching",
+      "Scribe proposal waiting for DM review",
+      "Private notes stay out of exports",
+      "Next briefing uses accepted memories only"
+    ],
+    "pillars": {
+      "kicker": "What it does",
+      "title": "Not a one-shot generator. It is memory.",
+      "description": "Lazy Lands turns session logs into reviewable campaign continuity: what changed, who reacted, and what the Scribe may use next.",
+      "loop": [
+        {
+          "label": "Log",
+          "title": "Session VII: the warehouse fire",
+          "body": "The DM records what happened at the table, including consequences and private notes."
+        },
+        {
+          "label": "Review",
+          "title": "The Scribe proposes memories",
+          "body": "Each suggestion explains why it matters and keeps Accept, Edit and Dismiss visible."
+        },
+        {
+          "label": "Prepare",
+          "title": "Only accepted memory returns",
+          "body": "The next briefing uses confirmed context, not dismissed suggestions or private notes."
+        }
+      ],
+      "stats": [
+        { "value": "5", "label": "NPCs in play" },
+        { "value": "4", "label": "Faction threads" },
+        { "value": "3", "label": "Open arcs" }
+      ],
+      "memoryPlayTitle": "Memory in play",
+      "memoryPlayBody": "Two party members earned Halia's favor; two damaged it. The next briefing must account for the split trust at the Miner's Exchange.",
+      "tagAccepted": "accepted",
+      "tagNpc": "Halia Thornton",
+      "tagSession": "Session VII"
+    },
+    "briefing": {
+      "title": "A briefing that reads like your own prep, only faster.",
+      "body": "Not a data dump. An ordered draft you can read five minutes before the session. Always a <em>draft</em>: you edit it, you decide what happens.",
+      "specs": [
+        { "k": "Accepted", "v": "memories feed the briefing" },
+        { "k": "Dismissed", "v": "suggestions stay out" },
+        { "k": "Private", "v": "notes never export" },
+        { "k": "Editable", "v": "draft first, canon later" }
+      ]
+    },
+    "mock": {
+      "label": "Briefing · Session VIII",
+      "title": "The Quiet Ledger",
+      "draft": "draft",
+      "synopsisLabel": "01 / Synopsis",
+      "synopsis": "Halia Thornton calls the party to the Miner's Exchange. She knows they started the <u>warehouse fire</u>, and offers silence in exchange for one quiet job.",
+      "npcsLabel": "02 / Key NPCs",
+      "npcs": [
+        {
+          "name": "Halia Thornton",
+          "role": "Guildmaster · Zhentarim hand",
+          "accent": false
+        },
+        {
+          "name": "Ander Margaster",
+          "role": "Wary ally · owes a favor",
+          "accent": false
+        },
+        {
+          "name": "Robert Herman",
+          "role": "Patience finally ending",
+          "accent": true
+        }
+      ],
+      "statusActive": "active",
+      "statusInPlay": "in play",
+      "memoryLabel": "✦ Memory in play",
+      "memory": "You accepted in Session VII: <em>\"Two party members earned Halia's favor; two damaged it.\"</em> The Scribe built her offer around it."
+    },
+    "how": {
+      "title": "Three steps. Not one more.",
+      "productState": "Product state",
+      "steps": [
+        {
+          "title": "Create your campaign",
+          "body": "Name it, pick a system, paste the premise. The Scribe drafts your NPCs, factions and arcs for you to review, every one, before it's canon.",
+          "state": "Extraction review: NPCs, factions and arcs are editable before saving."
+        },
+        {
+          "title": "Log each session",
+          "body": "After the table clears, write what happened. The Scribe proposes the memories worth keeping. You accept, edit or dismiss.",
+          "state": "Memory review: suggested, accepted and dismissed states stay visible."
+        },
+        {
+          "title": "Prepare the next",
+          "body": "Hit Prepare. Get a briefing built on everything you accepted. Edit it. Print it. Run it.",
+          "state": "Session draft: every section stays editable before export."
+        }
+      ]
+    },
+    "philosophy": {
+      "quote": "The Scribe is a draft, never the author. Nothing reaches your table until you've made it canon.",
+      "caption": "The whole philosophy, in one line"
+    },
+    "cta": {
+      "cornerTitle": "Chronicle entry",
+      "cornerBeta": "Open beta",
+      "cornerReview": "DM review required",
+      "title": "Start your first chronicle.",
+      "body": "Free while in early access. Start with one campaign and keep every accepted memory reviewable from the first session.",
+      "cta": "Start your chronicle →",
+      "demoCta": "Tour a demo campaign"
+    },
+    "footer": {
+      "madeBy": "© 2026 · made by a DM tired of forgetting"
+    },
+    "comingSoon": "Coming soon"
   },
   "Auth": {
     "email": "Email",

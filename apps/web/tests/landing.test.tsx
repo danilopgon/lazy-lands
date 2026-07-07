@@ -1,7 +1,31 @@
 import { render, screen } from '@/tests/intl'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
+import en from '@/messages/en.json'
+import es from '@/messages/es.json'
 import { LandingPage } from '@/components/landing/landing-page'
+
+// `getTranslations` is a server-only API and throws under vitest's client
+// environment, so back it with the real catalogs to exercise generateMetadata.
+vi.mock('next-intl/server', () => ({
+  getTranslations: async ({
+    locale,
+    namespace,
+  }: {
+    locale: string
+    namespace: string
+  }) => {
+    const catalog = (locale === 'es' ? es : en) as Record<string, unknown>
+    const scope = catalog[namespace] as Record<string, unknown>
+    return (key: string) =>
+      key
+        .split('.')
+        .reduce<unknown>(
+          (node, part) => (node as Record<string, unknown>)?.[part],
+          scope
+        )
+  },
+}))
 
 // TDD RED phase (task 3.1) — rewritten with new copy before implementation.
 // Old assertions (Lazy Lands h1, "Remember what happened") removed.
@@ -249,18 +273,34 @@ describe('LandingPage', () => {
 // Task 4.2 — RED phase: import metadata from app/page.tsx and assert
 // correct title and description. Written before page.tsx is updated.
 describe('app/page.tsx metadata (LAND-012)', () => {
-  it('LAND-012a: title matches "Lazy Lands — Campaign Companion for Dungeon Masters"', async () => {
-    const { metadata } = await import('@/app/[locale]/page')
+  it('LAND-012a: English title matches "Lazy Lands — Campaign Companion for Dungeon Masters"', async () => {
+    const { generateMetadata } = await import('@/app/[locale]/page')
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: 'en' }),
+    })
     expect((metadata as { title?: string }).title).toBe(
       'Lazy Lands — Campaign Companion for Dungeon Masters'
     )
   })
 
-  it('LAND-012b: description contains "NPC", "faction", and "consequence"', async () => {
-    const { metadata } = await import('@/app/[locale]/page')
+  it('LAND-012b: English description contains "NPC", "faction", and "consequence"', async () => {
+    const { generateMetadata } = await import('@/app/[locale]/page')
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: 'en' }),
+    })
     const description = (metadata as { description?: string }).description ?? ''
     expect(description).toMatch(/npc/i)
     expect(description).toMatch(/faction/i)
     expect(description).toMatch(/consequence/i)
+  })
+
+  it('LAND-012c: Spanish title is localized', async () => {
+    const { generateMetadata } = await import('@/app/[locale]/page')
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ locale: 'es' }),
+    })
+    expect((metadata as { title?: string }).title).toContain(
+      'Directores de Juego'
+    )
   })
 })

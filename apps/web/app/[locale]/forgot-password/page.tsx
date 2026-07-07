@@ -5,12 +5,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
+import { useLocale } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { resolveAppOrigin } from '@/lib/auth/redirect'
+import { buildLocalizedPath } from '@/lib/format'
+import { isAppLocale, routing } from '@/i18n/routing'
 import {
   AuthCard,
   authInputClass,
@@ -37,6 +40,10 @@ const supabase = createClient()
 export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const activeLocale = useLocale()
+  const locale = isAppLocale(activeLocale)
+    ? activeLocale
+    : routing.defaultLocale
 
   const {
     register,
@@ -57,7 +64,8 @@ export default function ForgotPasswordPage() {
   async function onSubmit(data: ForgotPasswordFormData) {
     setIsSubmitting(true)
 
-    const redirectTo = `${resolveAppOrigin()}/auth/reset`
+    // Preserve the active locale on return from the reset email.
+    const redirectTo = `${resolveAppOrigin()}${buildLocalizedPath('/auth/reset', locale)}`
 
     try {
       await supabase.auth.resetPasswordForEmail(data.email, { redirectTo })

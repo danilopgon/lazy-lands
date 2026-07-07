@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,6 +14,8 @@ import { HeroGraphSlot } from './hero-graph-slot'
  * @returns {React.ReactElement} The hero landing section element.
  */
 export function LandHero() {
+  const t = useTranslations('Landing')
+
   return (
     <section className="relative flex w-full flex-col justify-center overflow-hidden py-12 llg:min-h-[calc(100dvh-150px)]">
       {/* One contained band: copy and graph share a single tight gutter and the
@@ -20,32 +25,32 @@ export function LandHero() {
         {/* ── Copy ── */}
         <div className="llg:max-w-[560px]">
           <div className="ll-enter-1 flex flex-wrap gap-2">
-            <Badge variant="accent">✦ Open beta</Badge>
-            <Badge variant="muted">
-              For DMs who actually run long campaigns
-            </Badge>
+            <Badge variant="accent">{t('hero.badgeBeta')}</Badge>
+            <Badge variant="muted">{t('hero.badgeAudience')}</Badge>
           </div>
 
           <h1
             className="ll-enter-2 mt-6 font-serif font-semibold text-[13vw] leading-[0.94] tracking-[-0.035em] text-[var(--ink)] llg:text-[82px]"
             style={{ textWrap: 'balance' }}
           >
-            Your campaign,
-            <br />
-            <span
-              style={{
-                fontStyle: 'italic',
-                color: 'var(--accent)',
-                textDecoration: 'underline',
-                textDecorationColor: 'var(--ink)',
-                textDecorationThickness: '5px',
-                textUnderlineOffset: '8px',
-                textDecorationSkipInk: 'none',
-              }}
-            >
-              without the amnesia
-            </span>
-            .
+            {t.rich('hero.title', {
+              break: () => <br />,
+              accent: (chunks) => (
+                <span
+                  style={{
+                    fontStyle: 'italic',
+                    color: 'var(--accent)',
+                    textDecoration: 'underline',
+                    textDecorationColor: 'var(--ink)',
+                    textDecorationThickness: '5px',
+                    textUnderlineOffset: '8px',
+                    textDecorationSkipInk: 'none',
+                  }}
+                >
+                  {chunks}
+                </span>
+              ),
+            })}
           </h1>
 
           <p
@@ -56,9 +61,7 @@ export function LandHero() {
               fontFamily: '"Source Serif 4", serif',
             }}
           >
-            The companion that remembers every NPC, every faction and every
-            consequence, so your next session starts from accepted memory, and
-            the world remembers what your players did.
+            {t('hero.body')}
           </p>
 
           <div className="ll-enter-4 flex flex-wrap items-center gap-3">
@@ -67,15 +70,15 @@ export function LandHero() {
               variant="accent"
               style={{ fontSize: 14.5, padding: '11px 22px' }}
             >
-              <Link href="/register">Start your chronicle →</Link>
+              <Link href="/register">{t('hero.cta')}</Link>
             </Button>
-            <ComingSoonButton>✦ See it on a real campaign</ComingSoonButton>
+            <ComingSoonButton>{t('hero.demoCta')}</ComingSoonButton>
           </div>
 
           <div className="ll-enter-5 mt-[30px] flex flex-wrap gap-[22px] font-mono text-[11px] uppercase tracking-[0.04em] text-[var(--mute)]">
-            <span>Open beta</span>
-            <span>The Scribe proposes, you decide</span>
-            <span>Free while in early access</span>
+            <span>{t('hero.metaBeta')}</span>
+            <span>{t('hero.metaScribe')}</span>
+            <span>{t('hero.metaFree')}</span>
           </div>
         </div>
 

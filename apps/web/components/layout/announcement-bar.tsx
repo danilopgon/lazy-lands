@@ -2,6 +2,7 @@
 
 import { startTransition, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +17,7 @@ import {
  */
 export function AnnouncementBar() {
   const [visible, setVisible] = useState(false)
+  const t = useTranslations('Landing')
 
   useEffect(() => {
     startTransition(() => {
@@ -38,18 +40,20 @@ export function AnnouncementBar() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
         <p className="font-sans text-sm text-[var(--bg)]">
           <span className="mr-2 text-[var(--accent)]">✦</span>
-          Under active development — features ship weekly.{' '}
-          <Link
-            href="/register"
-            className="underline hover:text-[var(--accent-wash)]"
-          >
-            Sign up
-          </Link>{' '}
-          and you&apos;ll be the first to know.
+          {t.rich('announcement.body', {
+            signup: (chunks) => (
+              <Link
+                href="/register"
+                className="underline hover:text-[var(--accent-wash)]"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
         <Button
           onClick={handleDismiss}
-          aria-label="Dismiss announcement"
+          aria-label={t('announcement.dismiss')}
           variant="ghost"
           size="sm"
           className="h-10 w-10 flex-shrink-0 border-[var(--bg)] text-[var(--bg)] hover:bg-transparent hover:text-[var(--accent-wash)]"

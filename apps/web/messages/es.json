@@ -28,10 +28,145 @@
   "Landing": {
     "metadataTitle": "Lazy Lands — Compañero de campaña para Directores de Juego",
     "metadataDescription": "Sigue cada PNJ, facción y consecuencia entre sesiones. Lazy Lands ayuda a los Directores de Juego a capturar contexto, validar recuerdos y generar informes de sesión para que el mundo recuerde lo que hicieron tus jugadores.",
-    "heroTitle": "Tu campaña, sin amnesia.",
-    "heroBody": "Memoria persistente y revisable para tus PNJ, facciones y consecuencias, para que el mundo recuerde lo que hicieron tus jugadores.",
-    "primaryCta": "Comenzar crónica",
-    "secondaryCta": "Iniciar sesión"
+    "announcement": {
+      "body": "En desarrollo activo: publicamos novedades cada semana. <signup>Regístrate</signup> y serás el primero en enterarte.",
+      "dismiss": "Descartar anuncio"
+    },
+    "nav": {
+      "product": "Producto",
+      "how": "Cómo funciona",
+      "earlyAccess": "Acceso anticipado",
+      "privacy": "Privacidad",
+      "cookies": "Cookies"
+    },
+    "hero": {
+      "badgeBeta": "✦ Beta abierta",
+      "badgeAudience": "Para DJ que de verdad llevan campañas largas",
+      "title": "Tu campaña,<break></break><accent>sin amnesia</accent>.",
+      "body": "El compañero que recuerda cada PNJ, cada facción y cada consecuencia, para que tu próxima sesión empiece desde la memoria aceptada y el mundo recuerde lo que hicieron tus jugadores.",
+      "cta": "Comenzar crónica →",
+      "demoCta": "✦ Verlo en una campaña real",
+      "metaBeta": "Beta abierta",
+      "metaScribe": "El Escriba propone, tú decides",
+      "metaFree": "Gratis durante el acceso anticipado"
+    },
+    "marquee": [
+      "Sesión VII aceptada: Halia favorece a dos miembros del grupo",
+      "Arco abierto: los planes antidragón necesitan un núcleo estable",
+      "Cambio de postura de facción: el Gremio del Oso Negro observa",
+      "Propuesta del Escriba a la espera de revisión del DJ",
+      "Las notas privadas quedan fuera de las exportaciones",
+      "El próximo informe usa solo memorias aceptadas"
+    ],
+    "pillars": {
+      "kicker": "Qué hace",
+      "title": "No es un generador de un solo uso. Es memoria.",
+      "description": "Lazy Lands convierte los registros de sesión en continuidad de campaña revisable: qué cambió, quién reaccionó y qué puede usar el Escriba a continuación.",
+      "loop": [
+        {
+          "label": "Registrar",
+          "title": "Sesión VII: el incendio del almacén",
+          "body": "El DJ anota lo que pasó en la mesa, incluidas las consecuencias y las notas privadas."
+        },
+        {
+          "label": "Revisar",
+          "title": "El Escriba propone memorias",
+          "body": "Cada sugerencia explica por qué importa y mantiene visibles Aceptar, Editar y Descartar."
+        },
+        {
+          "label": "Preparar",
+          "title": "Solo vuelve la memoria aceptada",
+          "body": "El próximo informe usa el contexto confirmado, no las sugerencias descartadas ni las notas privadas."
+        }
+      ],
+      "stats": [
+        { "value": "5", "label": "PNJ en juego" },
+        { "value": "4", "label": "Tramas de facción" },
+        { "value": "3", "label": "Arcos abiertos" }
+      ],
+      "memoryPlayTitle": "Memoria en juego",
+      "memoryPlayBody": "Dos miembros del grupo se ganaron el favor de Halia; dos lo dañaron. El próximo informe debe tener en cuenta la confianza dividida en la Lonja de los Mineros.",
+      "tagAccepted": "aceptada",
+      "tagNpc": "Halia Thornton",
+      "tagSession": "Sesión VII"
+    },
+    "briefing": {
+      "title": "Un informe que se lee como tu propia preparación, solo que más rápido.",
+      "body": "No es un volcado de datos. Un borrador ordenado que puedes leer cinco minutos antes de la sesión. Siempre un <em>borrador</em>: tú lo editas, tú decides qué pasa.",
+      "specs": [
+        { "k": "Aceptadas", "v": "las memorias alimentan el informe" },
+        { "k": "Descartadas", "v": "las sugerencias quedan fuera" },
+        { "k": "Privadas", "v": "las notas nunca se exportan" },
+        { "k": "Editable", "v": "primero borrador, luego canon" }
+      ]
+    },
+    "mock": {
+      "label": "Informe · Sesión VIII",
+      "title": "El Libro Silencioso",
+      "draft": "borrador",
+      "synopsisLabel": "01 / Sinopsis",
+      "synopsis": "Halia Thornton cita al grupo en la Lonja de los Mineros. Sabe que provocaron el <u>incendio del almacén</u> y ofrece silencio a cambio de un trabajo discreto.",
+      "npcsLabel": "02 / PNJ clave",
+      "npcs": [
+        {
+          "name": "Halia Thornton",
+          "role": "Maestra de gremio · mano del Zhentarim",
+          "accent": false
+        },
+        {
+          "name": "Ander Margaster",
+          "role": "Aliado receloso · debe un favor",
+          "accent": false
+        },
+        {
+          "name": "Robert Herman",
+          "role": "La paciencia por fin se agota",
+          "accent": true
+        }
+      ],
+      "statusActive": "activo",
+      "statusInPlay": "en juego",
+      "memoryLabel": "✦ Memoria en juego",
+      "memory": "Aceptaste en la Sesión VII: <em>«Dos miembros del grupo se ganaron el favor de Halia; dos lo dañaron.»</em> El Escriba construyó su oferta a partir de ello."
+    },
+    "how": {
+      "title": "Tres pasos. Ni uno más.",
+      "productState": "Estado del producto",
+      "steps": [
+        {
+          "title": "Crea tu campaña",
+          "body": "Ponle nombre, elige un sistema, pega la premisa. El Escriba redacta tus PNJ, facciones y arcos para que los revises, todos, antes de que sean canon.",
+          "state": "Revisión de extracción: PNJ, facciones y arcos son editables antes de guardar."
+        },
+        {
+          "title": "Registra cada sesión",
+          "body": "Cuando la mesa se despeja, escribe lo que pasó. El Escriba propone las memorias que merece la pena conservar. Tú aceptas, editas o descartas.",
+          "state": "Revisión de memoria: los estados sugerido, aceptado y descartado quedan visibles."
+        },
+        {
+          "title": "Prepara la siguiente",
+          "body": "Pulsa Preparar. Recibe un informe construido sobre todo lo que aceptaste. Edítalo. Imprímelo. Dirígelo.",
+          "state": "Borrador de sesión: cada sección sigue siendo editable antes de exportar."
+        }
+      ]
+    },
+    "philosophy": {
+      "quote": "El Escriba es un borrador, nunca el autor. Nada llega a tu mesa hasta que tú lo haces canon.",
+      "caption": "Toda la filosofía, en una línea"
+    },
+    "cta": {
+      "cornerTitle": "Entrada de crónica",
+      "cornerBeta": "Beta abierta",
+      "cornerReview": "Requiere revisión del DJ",
+      "title": "Comienza tu primera crónica.",
+      "body": "Gratis durante el acceso anticipado. Empieza con una campaña y mantén cada memoria aceptada revisable desde la primera sesión.",
+      "cta": "Comenzar crónica →",
+      "demoCta": "Recorrer una campaña de demostración"
+    },
+    "footer": {
+      "madeBy": "© 2026 · hecho por un DJ cansado de olvidar"
+    },
+    "comingSoon": "Próximamente"
   },
   "Auth": {
     "email": "Correo electrónico",

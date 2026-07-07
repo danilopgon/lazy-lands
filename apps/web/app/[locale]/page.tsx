@@ -1,16 +1,29 @@
 import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 
 import { AnnouncementBar } from '@/components/layout/announcement-bar'
 import { CookieBanner } from '@/components/layout/cookie-banner'
 import { LandingPage } from '@/components/landing/landing-page'
 
-// LAND-012: Landing page metadata (indexable — not noindex)
-export const metadata: Metadata = {
-  title: 'Lazy Lands — Campaign Companion for Dungeon Masters',
-  description:
-    'Track every NPC, faction and consequence across sessions. ' +
-    'Lazy Lands helps Dungeon Masters capture campaign context, validate memories, ' +
-    'and generate session briefings — so the world remembers what your players did.',
+/**
+ * Build locale-aware, indexable landing metadata (not noindex).
+ *
+ * @param {object} root0 - Metadata route props.
+ * @param {Promise<{locale: string}>} root0.params - App Router locale params.
+ * @returns {Promise<Metadata>} Translated title and description for the active locale.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'Landing' })
+
+  return {
+    title: t('metadataTitle'),
+    description: t('metadataDescription'),
+  }
 }
 
 /**

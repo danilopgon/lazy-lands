@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { Badge } from '@/components/ui/badge'
 
 import type { NpcRowProps, SpecProps } from './types'
@@ -12,6 +16,8 @@ import type { NpcRowProps, SpecProps } from './types'
  * @returns {React.ReactElement} The NPC row element.
  */
 function NpcRow({ name, role, accent = false }: NpcRowProps) {
+  const t = useTranslations('Landing')
+
   return (
     <div className="flex items-center justify-between border-b border-dashed border-[var(--dotted)] py-[6px] last:border-0">
       <div>
@@ -19,7 +25,7 @@ function NpcRow({ name, role, accent = false }: NpcRowProps) {
         <div className="font-mono text-[10.5px] text-[var(--mute)]">{role}</div>
       </div>
       <Badge variant={accent ? 'accent' : 'muted'}>
-        {accent ? 'active' : 'in play'}
+        {accent ? t('mock.statusActive') : t('mock.statusInPlay')}
       </Badge>
     </div>
   )
@@ -50,6 +56,9 @@ export function Spec({ k, v }: SpecProps) {
  * @returns {React.ReactElement} The briefing mock card element.
  */
 export function BriefingMock() {
+  const t = useTranslations('Landing')
+  const npcs = t.raw('mock.npcs') as NpcRowProps[]
+
   return (
     <div
       className="border-2 border-[var(--border)] bg-[var(--paper)] p-[26px] shadow-[8px_8px_0_var(--shadow)]"
@@ -58,51 +67,51 @@ export function BriefingMock() {
       <div className="mb-3 flex items-start justify-between">
         <div>
           <div className="font-mono text-[9.5px] uppercase tracking-[0.08em] text-[var(--accent)]">
-            Briefing · Session VIII
+            {t('mock.label')}
           </div>
           <h3
             className="mt-[5px] font-serif font-semibold leading-[1.0]"
             style={{ fontSize: 30 }}
           >
-            The Quiet Ledger
+            {t('mock.title')}
           </h3>
         </div>
-        <Badge variant="muted">draft</Badge>
+        <Badge variant="muted">{t('mock.draft')}</Badge>
       </div>
 
       <div className="h-[2px] bg-[var(--ink)]" />
 
       <div className="mt-[14px]">
         <div className="mb-[6px] font-mono text-[9.5px] uppercase tracking-[0.08em] text-[var(--mute)]">
-          01 / Synopsis
+          {t('mock.synopsisLabel')}
         </div>
         <p className="m-0 font-serif text-[13.5px] leading-[1.5]">
-          Halia Thornton calls the party to the Miner&apos;s Exchange. She knows
-          they started the <span className="underline">warehouse fire</span>,
-          and offers silence in exchange for one quiet job.
+          {t.rich('mock.synopsis', {
+            u: (chunks) => <span className="underline">{chunks}</span>,
+          })}
         </p>
       </div>
 
       <div className="mt-[16px]">
         <div className="mb-[8px] font-mono text-[9.5px] uppercase tracking-[0.08em] text-[var(--mute)]">
-          02 / Key NPCs
+          {t('mock.npcsLabel')}
         </div>
-        <NpcRow name="Halia Thornton" role="Guildmaster · Zhentarim hand" />
-        <NpcRow name="Ander Margaster" role="Wary ally · owes a favor" />
-        <NpcRow name="Robert Herman" role="Patience finally ending" accent />
+        {npcs.map((npc) => (
+          <NpcRow
+            key={npc.name}
+            name={npc.name}
+            role={npc.role}
+            accent={npc.accent}
+          />
+        ))}
       </div>
 
       <div className="mt-[16px] border-2 border-[var(--accent)] bg-[var(--accent-wash)] p-3">
         <div className="mb-1 flex items-center gap-[6px] font-mono text-[9.5px] uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-          ✦ Memory in play
+          {t('mock.memoryLabel')}
         </div>
         <div className="font-serif text-[12.5px] leading-[1.4]">
-          You accepted in Session VII:{' '}
-          <em>
-            &ldquo;Two party members earned Halia&apos;s favor; two damaged
-            it.&rdquo;
-          </em>{' '}
-          The Scribe built her offer around it.
+          {t.rich('mock.memory', { em: (chunks) => <em>{chunks}</em> })}
         </div>
       </div>
     </div>

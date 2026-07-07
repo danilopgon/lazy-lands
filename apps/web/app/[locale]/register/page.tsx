@@ -5,12 +5,15 @@ import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
+import { useLocale } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { resolveAppOrigin } from '@/lib/auth/redirect'
+import { buildLocalizedPath } from '@/lib/format'
+import { isAppLocale, routing } from '@/i18n/routing'
 import {
   passwordConfirmationSchema,
   withPasswordMatch,
@@ -45,6 +48,10 @@ export default function RegisterPage() {
   const [authError, setAuthError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const activeLocale = useLocale()
+  const locale = isAppLocale(activeLocale)
+    ? activeLocale
+    : routing.defaultLocale
 
   const {
     register,
@@ -70,7 +77,9 @@ export default function RegisterPage() {
     setIsSubmitting(true)
 
     try {
-      const emailRedirectTo = `${resolveAppOrigin()}/auth/confirm`
+      // Preserve the active locale on return from the confirmation email so the
+      // user lands on `/es/auth/confirm` rather than the default-locale route.
+      const emailRedirectTo = `${resolveAppOrigin()}${buildLocalizedPath('/auth/confirm', locale)}`
 
       const { error } = await supabase.auth.signUp({
         email: data.email,
