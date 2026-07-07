@@ -46,7 +46,7 @@ export default function DashboardPage() {
         </div>
         {!isLoading && (
           <div className="flex items-center gap-3">
-            <LanguageSwitcher compact />
+            <LanguageSwitcher compact persistUserLanguage />
             <Button variant="ink" onClick={() => router.push('/campaigns/new')}>
               {t('newCampaign')}
             </Button>
