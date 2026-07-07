@@ -25,9 +25,21 @@ vi.mock('@/lib/campaigns/draft-storage', () => ({
   clearExtractionDraft: mockClearExtractionDraft,
 }))
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
-}))
+vi.mock('@/i18n/navigation', async () => {
+  const { createElement } = await import('react')
+  return {
+    useRouter: () => ({ push: mockPush }),
+    usePathname: () => '/',
+    Link: ({
+      href,
+      children,
+      ...props
+    }: {
+      href: string
+      children?: import('react').ReactNode
+    }) => createElement('a', { href, ...props }, children),
+  }
+})
 
 import ReviewCampaignPage from '../page'
 

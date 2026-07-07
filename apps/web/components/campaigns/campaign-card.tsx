@@ -1,10 +1,10 @@
 'use client'
 
 import { Link } from '@/i18n/navigation'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 
+import { useAppLocale } from '@/i18n/use-app-locale'
 import { formatShortDate } from '@/lib/format'
-import { isAppLocale, routing } from '@/i18n/routing'
 
 import type { CampaignSummary } from '@/lib/campaigns/schemas'
 
@@ -21,10 +21,7 @@ type CampaignCardProps = {
  */
 export function CampaignCard({ campaign }: CampaignCardProps) {
   const t = useTranslations('Dashboard')
-  const activeLocale = useLocale()
-  const locale = isAppLocale(activeLocale)
-    ? activeLocale
-    : routing.defaultLocale
+  const locale = useAppLocale()
   // Handoff shows five stat columns. Sessions and Memories have no backend data
   // until Block 7, so they render as honest "—" placeholders (never fabricated
   // counts) while NPCs/Factions/Arcs are live from `GET /campaigns`. The Arcs

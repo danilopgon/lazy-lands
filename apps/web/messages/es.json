@@ -23,7 +23,9 @@
     "arcs": "Arcos",
     "memory": "Memoria",
     "sessions": "Sesiones",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "logout": "Cerrar sesión",
+    "loggingOut": "Cerrando sesión…"
   },
   "Landing": {
     "metadataTitle": "Lazy Lands — Compañero de campaña para Dungeon Masters",
@@ -319,7 +321,49 @@
     "cookieNoticeBody": "Lazy Lands usa cookies solo para autenticación. Sin rastreo ni datos de terceros.",
     "learnMore": "Más información",
     "gotIt": "Entendido",
-    "localStorageNotice": "Este sitio usa almacenamiento local para recordar el consentimiento de cookies"
+    "localStorageNotice": "Este sitio usa almacenamiento local para recordar el consentimiento de cookies",
+    "backHome": "← Volver al inicio",
+    "lastUpdated": "Última actualización: junio de 2026",
+    "cookiesPage": {
+      "metaTitle": "Cookies — Lazy Lands",
+      "title": "Política de cookies",
+      "intro": "Lazy Lands solo usa cookies técnicamente necesarias y claves de almacenamiento local. No usamos cookies publicitarias, píxeles de seguimiento ni scripts de analítica de terceros. La autenticación de Supabase usa su clave de almacenamiento por defecto con ámbito de proyecto, porque esta aplicación no configura un nombre de almacenamiento de auth de Supabase personalizado.",
+      "exemptionTitle": "Exención técnica — LSSI-CE Art. 22.2",
+      "exemptionBody": "Conforme a la LSSI-CE Art. 22.2 (Ley de Servicios de la Sociedad de la Información y de Comercio Electrónico, art. 22.2) y sus equivalentes europeos, las cookies técnicamente necesarias estrictamente requeridas para prestar un servicio solicitado no requieren consentimiento previo. Todos los elementos de almacenamiento que se enumeran a continuación se acogen a esta exención técnica.",
+      "itemsTitle": "Elementos de almacenamiento en uso",
+      "authTokenDesc": "Almacenamiento de la sesión de autenticación de Supabase que usan los clientes por defecto <code>@supabase/ssr</code> de esta aplicación. La referencia del proyecto proviene de la URL de Supabase configurada, por ejemplo <code>sb-abcdefghijklmnopqrst-auth-token</code>. Contiene la carga de la sesión de Supabase necesaria para la continuidad del inicio de sesión y las solicitudes autenticadas; se borra al cerrar sesión.",
+      "consentDesc": "Registra si has reconocido este aviso de cookies. Se guarda en <code>localStorage</code>. Valor: <code>\"acknowledged\"</code>. Persistente.",
+      "announcementDesc": "Registra si has descartado la barra de anuncios del sitio. Se guarda en <code>localStorage</code>. Valor: <code>\"dismissed\"</code>. Persistente.",
+      "noTrackingTitle": "Sin seguimiento de terceros",
+      "noTrackingBody": "Lazy Lands no carga redes publicitarias, píxeles de redes sociales ni plataformas de analítica que establezcan sus propias cookies. No se comparten datos con terceros con fines de marketing.",
+      "contactTitle": "Contacto",
+      "contactBody": "¿Tienes preguntas sobre esta política? Escríbenos a <mail>contacto@danilopgon.com</mail>."
+    },
+    "privacyPage": {
+      "metaTitle": "Política de privacidad — Lazy Lands",
+      "title": "Política de privacidad",
+      "controllerTitle": "Responsable del tratamiento",
+      "controllerBody": "El responsable legal del tratamiento está pendiente de la revisión legal final. Hasta que se publiquen una entidad formal y un canal de contacto, esta página es un marcador de posición de implementación no indexado y no debe tratarse como aviso legal definitivo.",
+      "collectTitle": "Datos que recopilamos",
+      "collectIntro": "Cuando usas Lazy Lands, recopilamos:",
+      "collectEmail": "<b>Dirección de correo electrónico</b> — se usa para la autenticación y las comunicaciones del producto.",
+      "collectContent": "<b>Contenido de campaña</b> — las notas, PNJ, facciones, registros de sesión y demás contenido que creas dentro de la aplicación. Estos datos son tuyos y solo tú puedes acceder a ellos.",
+      "collectTokens": "<b>Tokens de autenticación</b> — tokens técnicos (Supabase) almacenados en tu navegador para mantener tu sesión.",
+      "legalBasisTitle": "Base jurídica",
+      "legalBasisBody": "El tratamiento se basa en el <b>RGPD Art. 6.1.b</b> — el tratamiento es necesario para la ejecución de un contrato en el que eres parte (los términos del servicio de Lazy Lands), o para aplicar medidas a petición tuya antes de la celebración de un contrato.",
+      "rightsTitle": "Tus derechos",
+      "rightsIntro": "Conforme al RGPD, tienes los siguientes derechos sobre tus datos personales:",
+      "rightAccess": "<b>Derecho de acceso</b> — solicitar una copia de los datos personales que tenemos sobre ti.",
+      "rightRectify": "<b>Derecho de rectificación</b> — solicitar la corrección de datos inexactos.",
+      "rightErasure": "<b>Derecho de supresión</b> — solicitar la eliminación de tus datos personales («derecho al olvido»).",
+      "rightPortability": "<b>Derecho a la portabilidad</b> — recibir tus datos en un formato estructurado y legible por máquina.",
+      "rightObject": "<b>Derecho de oposición</b> — oponerte al tratamiento basado en intereses legítimos.",
+      "rightsContact": "Para ejercer cualquiera de estos derechos antes de que se publique nuestro canal de contacto formal, escríbenos a <b>privacy@lazylands.app</b> (buzón temporal, supervisado durante el acceso anticipado).",
+      "retentionTitle": "Conservación de los datos",
+      "retentionBody": "Conservamos tus datos mientras tu cuenta esté activa. Eliminar tu cuenta borra todos los datos de campaña. Los registros de autenticación se conservan hasta 90 días por motivos de seguridad.",
+      "noSharingTitle": "Sin compartición con terceros",
+      "noSharingBody": "No vendemos, alquilamos ni compartimos tus datos personales con terceros con fines de marketing. Usamos Supabase (un proveedor de infraestructura) para almacenar y procesar datos; actúa como encargado del tratamiento en virtud de un acuerdo de tratamiento de datos."
+    }
   },
   "Errors": {
     "fallback": "Algo salió mal. Inténtalo de nuevo.",

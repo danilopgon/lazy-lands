@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { Link } from '@/i18n/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/navigation'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'

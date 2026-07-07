@@ -2,12 +2,12 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
 import { Link } from '@/i18n/navigation'
+import { useAppLocale } from '@/i18n/use-app-locale'
 import { buildLocalizedPath } from '@/lib/format'
-import { isAppLocale, routing } from '@/i18n/routing'
 import { createClient } from '@/lib/supabase/client'
 import { AuthCard } from '@/components/auth/auth-card'
 
@@ -21,10 +21,7 @@ const supabase = createClient()
  */
 function ConfirmContent() {
   const t = useTranslations('Auth')
-  const activeLocale = useLocale()
-  const locale = isAppLocale(activeLocale)
-    ? activeLocale
-    : routing.defaultLocale
+  const locale = useAppLocale()
   const searchParams = useSearchParams()
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')

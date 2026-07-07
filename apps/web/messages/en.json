@@ -23,7 +23,9 @@
     "arcs": "Arcs",
     "memory": "Memory",
     "sessions": "Sessions",
-    "settings": "Settings"
+    "settings": "Settings",
+    "logout": "Log out",
+    "loggingOut": "Signing out…"
   },
   "Landing": {
     "metadataTitle": "Lazy Lands — Campaign Companion for Dungeon Masters",
@@ -319,7 +321,49 @@
     "cookieNoticeBody": "Lazy Lands uses cookies for authentication only. No tracking, no third-party data.",
     "learnMore": "Learn more",
     "gotIt": "Got it",
-    "localStorageNotice": "This site uses local storage to remember cookie consent"
+    "localStorageNotice": "This site uses local storage to remember cookie consent",
+    "backHome": "← Return to home",
+    "lastUpdated": "Last updated: June 2026",
+    "cookiesPage": {
+      "metaTitle": "Cookies — Lazy Lands",
+      "title": "Cookie Policy",
+      "intro": "Lazy Lands uses only technically necessary cookies and local storage keys. We do not use advertising cookies, tracking pixels, or third-party analytics scripts. Supabase authentication uses its default project-scoped storage key because this app does not configure a custom Supabase auth storage name.",
+      "exemptionTitle": "Technical Exemption — LSSI-CE Art. 22.2",
+      "exemptionBody": "Under LSSI-CE Art. 22.2 (Ley de Servicios de la Sociedad de la Información y de Comercio Electrónico, art. 22.2) and its European equivalents, technically necessary cookies that are strictly required to provide a requested service do not require prior consent. All storage items listed below fall under this technical exemption.",
+      "itemsTitle": "Storage Items in Use",
+      "authTokenDesc": "Supabase authentication session storage used by the default <code>@supabase/ssr</code> clients in this app. The project reference comes from the configured Supabase URL, for example <code>sb-abcdefghijklmnopqrst-auth-token</code>. It contains the Supabase session payload required for login continuity and authenticated requests; it is cleared on logout.",
+      "consentDesc": "Records whether you have acknowledged this cookie notice. Stored in <code>localStorage</code>. Value: <code>\"acknowledged\"</code>. Persistent.",
+      "announcementDesc": "Records whether you have dismissed the site-wide announcement bar. Stored in <code>localStorage</code>. Value: <code>\"dismissed\"</code>. Persistent.",
+      "noTrackingTitle": "No Third-Party Tracking",
+      "noTrackingBody": "Lazy Lands does not load any advertising networks, social media pixels, or analytics platforms that set their own cookies. No data is shared with third parties for marketing purposes.",
+      "contactTitle": "Contact",
+      "contactBody": "Questions about this policy? Contact us at <mail>contacto@danilopgon.com</mail>."
+    },
+    "privacyPage": {
+      "metaTitle": "Privacy Policy — Lazy Lands",
+      "title": "Privacy Policy",
+      "controllerTitle": "Data Controller",
+      "controllerBody": "The legal data controller is pending final legal review. Until a formal entity and contact channel are published, this page is a non-indexed implementation placeholder and should not be treated as final legal notice.",
+      "collectTitle": "Data We Collect",
+      "collectIntro": "When you use Lazy Lands, we collect:",
+      "collectEmail": "<b>Email address</b> — used for authentication and product communications.",
+      "collectContent": "<b>Campaign content</b> — the notes, NPCs, factions, session logs, and other content you create inside the application. This data is yours and is only accessible to you.",
+      "collectTokens": "<b>Authentication tokens</b> — technical tokens (Supabase) stored in your browser to maintain your session.",
+      "legalBasisTitle": "Legal Basis",
+      "legalBasisBody": "Processing is based on <b>GDPR Art. 6.1.b</b> — processing is necessary for the performance of a contract to which you are party (the Lazy Lands terms of service), or in order to take steps at your request prior to entering into a contract.",
+      "rightsTitle": "Your Rights",
+      "rightsIntro": "Under GDPR, you have the following rights regarding your personal data:",
+      "rightAccess": "<b>Right of access</b> — request a copy of the personal data we hold about you.",
+      "rightRectify": "<b>Right to rectification</b> — request correction of inaccurate data.",
+      "rightErasure": "<b>Right to erasure</b> — request deletion of your personal data (\"right to be forgotten\").",
+      "rightPortability": "<b>Right to portability</b> — receive your data in a structured, machine-readable format.",
+      "rightObject": "<b>Right to object</b> — object to processing based on legitimate interests.",
+      "rightsContact": "To exercise any of these rights before our formal contact channel is published, reach out via <b>privacy@lazylands.app</b> (temporary inbox, monitored during early access).",
+      "retentionTitle": "Data Retention",
+      "retentionBody": "We retain your data for as long as your account is active. Deleting your account removes all campaign data. Authentication logs are retained for up to 90 days for security purposes.",
+      "noSharingTitle": "No Third-Party Sharing",
+      "noSharingBody": "We do not sell, rent, or share your personal data with third parties for marketing purposes. We use Supabase (an infrastructure provider) to store and process data; they act as a data processor under a data processing agreement."
+    }
   },
   "Errors": {
     "fallback": "Something went wrong. Try again.",

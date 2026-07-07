@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { Link } from '@/i18n/navigation'
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/navigation'
 
 import { Button } from '@/components/ui/button'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
