@@ -1,4 +1,5 @@
 import { NextIntlClientProvider } from 'next-intl'
+import { within } from '@testing-library/react'
 import { render, screen } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -44,7 +45,10 @@ describe('LanguageSwitcher', () => {
 
     render(<PublicTop />)
 
-    expect(screen.getByRole('link', { name: 'ES' })).toHaveAttribute(
+    // The compact trigger shows the active locale code; the panel holds the
+    // real per-locale links.
+    expect(screen.getByText('EN')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /español/i })).toHaveAttribute(
       'href',
       '/es'
     )
@@ -65,9 +69,11 @@ describe('LanguageSwitcher', () => {
     render(<PublicTop />)
     await user.click(screen.getByRole('button', { name: /open menu/i }))
 
-    expect(screen.getByRole('link', { name: /español/i })).toHaveAttribute(
-      'href',
-      '/es'
-    )
+    // Both the desktop trigger's panel and the inline overlay list carry a
+    // Spanish link, so scope the assertion to the overlay dialog.
+    const overlay = screen.getByRole('dialog')
+    expect(
+      within(overlay).getByRole('link', { name: /español/i })
+    ).toHaveAttribute('href', '/es')
   })
 })

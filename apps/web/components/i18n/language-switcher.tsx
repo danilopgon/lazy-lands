@@ -1,60 +1,71 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 
 import { usePathname } from '@/i18n/navigation'
+import { routing, type AppLocale } from '@/i18n/routing'
+import { localeMeta } from '@/i18n/locales'
 import { buildLocalizedPath } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 type LanguageSwitcherProps = {
   className?: string
+  /** Collapse the trigger to the two-letter code (headers with tight chrome). */
   compact?: boolean
+  /**
+   * Render every locale as a directly-visible stacked list instead of a
+   * collapsible dropdown. Used in the mobile overlay, where vertical room is
+   * plentiful and an extra tap would be pure friction.
+   */
+  inline?: boolean
 }
 
-const linkClassName =
-  'border border-[var(--border)] px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-2)] shadow-[2px_2px_0_var(--shadow)] transition-[transform,box-shadow] hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:text-[var(--ink)] hover:shadow-[1px_1px_0_var(--shadow)] data-[active=true]:bg-[var(--accent)] data-[active=true]:text-white'
+const optionClassName =
+  'block px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--ink)] focus-visible:bg-[var(--bg)] focus-visible:text-[var(--ink)] focus-visible:outline-none data-[active=true]:bg-[var(--accent)] data-[active=true]:text-white'
 
 /**
- * Render the two locale links for a resolved path.
+ * Render one locale-switching link per supported locale.
+ *
+ * Each link is a real per-locale `<a>` with `hrefLang` and `aria-current`, so
+ * switching works without JavaScript and stays crawlable. The list is derived
+ * from `routing.locales`, never a hardcoded pair.
  *
  * @param {object} root0 - Link props.
  * @param {string} root0.currentPath - The current path, optionally with a query string.
  * @param {string} root0.locale - The active locale, used to mark the current link.
- * @param {boolean} root0.compact - Whether to render compact EN/ES labels.
- * @returns {React.ReactElement} The two locale links.
+ * @param {() => void} [root0.onNavigate] - Optional callback fired when a link is chosen.
+ * @returns {React.ReactElement} The list of locale links.
  */
 function LocaleLinks({
   currentPath,
   locale,
-  compact,
+  onNavigate,
 }: {
   currentPath: string
   locale: string
-  compact: boolean
+  onNavigate?: () => void
 }) {
   return (
     <>
-      <Link
-        href={buildLocalizedPath(currentPath, 'en')}
-        hrefLang="en"
-        data-active={locale === 'en'}
-        aria-current={locale === 'en' ? 'true' : undefined}
-        className={linkClassName}
-      >
-        {compact ? 'EN' : 'English'}
-      </Link>
-      <Link
-        href={buildLocalizedPath(currentPath, 'es')}
-        hrefLang="es"
-        data-active={locale === 'es'}
-        aria-current={locale === 'es' ? 'true' : undefined}
-        className={linkClassName}
-      >
-        {compact ? 'ES' : 'Español'}
-      </Link>
+      {routing.locales.map((code) => {
+        const active = code === locale
+        return (
+          <Link
+            key={code}
+            href={buildLocalizedPath(currentPath, code)}
+            hrefLang={code}
+            data-active={active}
+            aria-current={active ? 'true' : undefined}
+            onClick={onNavigate}
+            className={optionClassName}
+          >
+            {localeMeta[code].label}
+          </Link>
+        )
+      })}
     </>
   )
 }
@@ -67,67 +78,161 @@ function LocaleLinks({
  * @param {object} root0 - Link props.
  * @param {string} root0.pathname - The locale-free pathname from next-intl.
  * @param {string} root0.locale - The active locale.
- * @param {boolean} root0.compact - Whether to render compact labels.
+ * @param {() => void} [root0.onNavigate] - Optional callback fired when a link is chosen.
  * @returns {React.ReactElement} The query-preserving locale links.
  */
 function SearchAwareLinks({
   pathname,
   locale,
-  compact,
+  onNavigate,
 }: {
   pathname: string
   locale: string
-  compact: boolean
+  onNavigate?: () => void
 }) {
   const searchParams = useSearchParams()
   const query = searchParams.toString()
   const currentPath = query ? `${pathname}?${query}` : pathname
 
   return (
-    <LocaleLinks currentPath={currentPath} locale={locale} compact={compact} />
+    <LocaleLinks
+      currentPath={currentPath}
+      locale={locale}
+      onNavigate={onNavigate}
+    />
   )
 }
 
 /**
- * Render hard-edged links for switching between English and Spanish routes.
+ * Render the hard-edged switcher for changing the active locale.
  *
- * The current pathname and locale come from next-intl context (not
- * `window.location`) so server and client render identical hrefs, avoiding a
- * hydration mismatch on `/es/...` routes.
+ * By default this is a `<details>` disclosure: a collapsed trigger showing the
+ * current locale, opening a panel of per-locale links. The disclosure works
+ * without JavaScript (native `<details>` toggle) and scales to any number of
+ * locales. Pass `inline` to skip the disclosure and render the links directly
+ * (mobile overlay). The current pathname and locale come from next-intl context
+ * (not `window.location`) so server and client render identical hrefs.
  *
  * @param {LanguageSwitcherProps} root0 - Switcher props.
  * @param {string} [root0.className] - Optional classes for placement.
- * @param {boolean} [root0.compact] - Whether to render compact EN/ES labels.
+ * @param {boolean} [root0.compact] - Collapse the trigger to the locale code.
+ * @param {boolean} [root0.inline] - Render links directly, without a disclosure.
  * @returns {React.ReactElement} The language switcher navigation.
  */
 export function LanguageSwitcher({
   className,
   compact = false,
+  inline = false,
 }: LanguageSwitcherProps) {
   const t = useTranslations('Nav')
-  const locale = useLocale()
+  // next-intl types useLocale() as string; the active locale is always one of
+  // routing.locales (validated in the locale layout), so narrow it for the
+  // localeMeta lookups below.
+  const locale = useLocale() as AppLocale
   const pathname = usePathname()
+  const detailsRef = useRef<HTMLDetailsElement>(null)
+  const summaryRef = useRef<HTMLElement>(null)
+  const [open, setOpen] = useState(false)
+
+  // Escape and outside-click close the disclosure and restore focus to the
+  // trigger. Native <details> handles the click-toggle and no-JS case; this
+  // only layers on the dismissal affordances a bare <details> lacks.
+  useEffect(() => {
+    if (!open) return
+
+    /** Collapse the disclosure and mirror the state flag. */
+    function close() {
+      if (detailsRef.current) {
+        detailsRef.current.open = false
+      }
+      setOpen(false)
+    }
+
+    /**
+     * Close when a pointer press lands outside the disclosure.
+     *
+     * @param {MouseEvent} event - The document pointer event.
+     */
+    function handlePointerDown(event: MouseEvent) {
+      if (
+        detailsRef.current &&
+        !detailsRef.current.contains(event.target as Node)
+      ) {
+        close()
+      }
+    }
+
+    /**
+     * Close on Escape and return focus to the trigger.
+     *
+     * @param {KeyboardEvent} event - The document keyboard event.
+     */
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        close()
+        summaryRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  const links = (
+    <Suspense fallback={<LocaleLinks currentPath={pathname} locale={locale} />}>
+      <SearchAwareLinks
+        pathname={pathname}
+        locale={locale}
+        onNavigate={inline ? undefined : () => setOpen(false)}
+      />
+    </Suspense>
+  )
+
+  if (inline) {
+    return (
+      <nav
+        aria-label={t('language')}
+        className={cn(
+          'flex flex-col border border-[var(--border)] bg-[var(--paper)] shadow-[2px_2px_0_var(--shadow)]',
+          className
+        )}
+      >
+        {links}
+      </nav>
+    )
+  }
 
   return (
-    <nav
-      aria-label={t('language')}
-      className={cn('flex items-center gap-1', compact && 'gap-0.5', className)}
+    <details
+      ref={detailsRef}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+      className={cn('relative', className)}
     >
-      <Suspense
-        fallback={
-          <LocaleLinks
-            currentPath={pathname}
-            locale={locale}
-            compact={compact}
-          />
-        }
+      <summary
+        ref={summaryRef}
+        aria-label={t('language')}
+        className={cn(
+          'flex h-9 cursor-pointer list-none select-none items-center gap-1.5 whitespace-nowrap border-2 border-[var(--border)] bg-[var(--paper)] px-3 font-mono text-xs font-semibold uppercase tracking-[0.1em] text-[var(--ink-2)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:text-[var(--ink)] hover:shadow-[1.5px_1.5px_0_var(--shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none [&::-webkit-details-marker]:hidden'
+        )}
       >
-        <SearchAwareLinks
-          pathname={pathname}
-          locale={locale}
-          compact={compact}
-        />
-      </Suspense>
-    </nav>
+        <span>
+          {compact ? localeMeta[locale].short : localeMeta[locale].label}
+        </span>
+        <span aria-hidden className="text-[8px] leading-none opacity-70">
+          ▾
+        </span>
+      </summary>
+      <div
+        role="group"
+        aria-label={t('language')}
+        className="absolute right-0 z-20 mt-1 min-w-[8rem] border border-[var(--border)] bg-[var(--paper)] shadow-[4px_4px_0_var(--shadow)]"
+      >
+        {links}
+      </div>
+    </details>
   )
 }
