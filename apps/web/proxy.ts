@@ -6,6 +6,10 @@ import { decideAuth } from '@/lib/auth/decide'
 import { buildLocalizedPath, stripLocaleFromPathname } from '@/lib/format'
 import { updateSession } from '@/lib/supabase/middleware'
 
+// `routing` is static, so build the i18n middleware once at module scope
+// instead of recreating it on every request.
+const handleI18nRouting = createMiddleware(routing)
+
 type HeadersWithSetCookie = Headers & {
   getSetCookie?: () => string[]
 }
@@ -49,7 +53,6 @@ function copySetCookieHeaders(source: Headers, target: Headers) {
  * @returns {Promise<NextResponse>} The pass-through response, or a 302 redirect to /login for unauthenticated protected routes.
  */
 export async function proxy(request: NextRequest) {
-  const handleI18nRouting = createMiddleware(routing)
   const i18nResponse = handleI18nRouting(request)
   const { response, user } = await updateSession(request, i18nResponse)
 
@@ -95,6 +98,6 @@ export async function proxy(request: NextRequest) {
 // Route protection is enforced by decideAuth (PROTECTED list), not the matcher.
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

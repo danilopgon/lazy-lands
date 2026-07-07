@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -28,7 +28,7 @@ describe('ForgotPasswordPage (AU-005)', () => {
   it('offers a back-to-home link', () => {
     render(<ForgotPasswordPage />)
 
-    const link = screen.getByRole('link', { name: 'volver al inicio' })
+    const link = screen.getByRole('link', { name: 'Back home' })
     expect(link).toHaveAttribute('href', '/')
   })
 

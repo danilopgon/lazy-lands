@@ -11,6 +11,8 @@
     "spanish": "Español",
     "signIn": "Sign in",
     "register": "Start your chronicle",
+    "registerShort": "Start",
+    "registerSrOnlySuffix": "your chronicle",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "mobileNavigation": "Mobile navigation",
@@ -61,8 +63,6 @@
     "title": "Your chronicles",
     "empty": "No campaigns yet",
     "count": "{count, plural, one {# campaign} other {# campaigns}}",
-    "countOne": "{count} campaign",
-    "countOther": "{count} campaigns",
     "newCampaign": "+ New campaign",
     "loadingTitle": "The Scribe is writing",
     "loadingCaption": "Fetching your campaigns",
@@ -85,9 +85,7 @@
       "memories": "Memories",
       "arcs": "Arcs"
     },
-    "openChronicle": "Open chronicle →",
-    "openChronicleLabel": "Open chronicle",
-    "updatedLabel": "Updated"
+    "openChronicle": "Open chronicle →"
   },
   "Campaigns": {
     "Create": {

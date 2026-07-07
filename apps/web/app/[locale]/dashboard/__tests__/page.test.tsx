@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -14,8 +14,9 @@ vi.mock('@/lib/campaigns/api', () => ({
   CampaignNotFoundError: class CampaignNotFoundError extends Error {},
 }))
 
-vi.mock('next/navigation', () => ({
+vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
+  usePathname: () => '/',
 }))
 
 vi.mock('@/components/auth/logout-button', () => ({

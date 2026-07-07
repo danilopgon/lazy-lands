@@ -1,8 +1,13 @@
 import { type AppLocale, isAppLocale, routing } from '@/i18n/routing'
+import en from '@/messages/en.json'
+import es from '@/messages/es.json'
 
+// Single source of truth for the BCP-47 date tag per locale lives in the
+// message catalogs (`Dates.locale`), so the tag never drifts from the rest of
+// the i18n config when a locale is added or corrected.
 const LOCALE_DATE_TAGS: Record<AppLocale, string> = {
-  en: 'en-US',
-  es: 'es-ES',
+  en: en.Dates.locale,
+  es: es.Dates.locale,
 }
 
 /**

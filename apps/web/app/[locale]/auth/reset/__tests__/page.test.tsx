@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -42,7 +42,7 @@ describe('ResetPage (AU-006)', () => {
 
     render(<ResetPage />)
 
-    const link = await screen.findByRole('link', { name: 'volver al inicio' })
+    const link = await screen.findByRole('link', { name: 'Back home' })
     expect(link).toHaveAttribute('href', '/')
   })
 

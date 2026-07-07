@@ -4,7 +4,13 @@ import en from '@/messages/en.json'
 import es from '@/messages/es.json'
 
 function collectKeys(value: unknown, prefix = ''): string[] {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+  if (Array.isArray(value)) {
+    return value.flatMap((item, index) =>
+      collectKeys(item, `${prefix}[${index}]`)
+    )
+  }
+
+  if (!value || typeof value !== 'object') {
     return [prefix]
   }
 

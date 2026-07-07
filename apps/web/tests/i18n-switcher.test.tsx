@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from 'next-intl'
-import { render, screen } from '@testing-library/react'
+import { render, screen } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 

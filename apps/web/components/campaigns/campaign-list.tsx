@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { CampaignCard } from '@/components/campaigns/campaign-card'
-import { getClientUiMessages } from '@/lib/i18n/ui-copy'
 
 import type { CampaignSummary } from '@/lib/campaigns/schemas'
 
@@ -24,17 +24,17 @@ type CampaignListProps = {
  */
 export function CampaignList({ campaigns }: CampaignListProps) {
   const [query, setQuery] = useState('')
-  const copy = getClientUiMessages().Dashboard
+  const t = useTranslations('Dashboard')
 
   if (campaigns.length === 0) {
     return (
       <EmptyState
         className="mt-7"
-        title={copy.emptyTitle}
-        description={copy.emptyDescription}
+        title={t('emptyTitle')}
+        description={t('emptyDescription')}
         action={
           <Button asChild variant="accent">
-            <Link href="/campaigns/new">{copy.emptyAction}</Link>
+            <Link href="/campaigns/new">{t('emptyAction')}</Link>
           </Button>
         }
       />
@@ -56,14 +56,15 @@ export function CampaignList({ campaigns }: CampaignListProps) {
       <div className="mt-5 flex items-center gap-2.5">
         <Input
           className="max-w-[300px]"
-          placeholder={`${copy.searchPlaceholder}…`}
+          placeholder={`${t('searchPlaceholder')}…`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <span className="font-mono text-[11px] text-[var(--ink-3)]">
-          {copy.helperCount
-            .replace('{visible}', String(filtered.length))
-            .replace('{total}', String(campaigns.length))}
+          {t('helperCount', {
+            visible: filtered.length,
+            total: campaigns.length,
+          })}
         </span>
       </div>
       <div className="ll-camp-grid mt-3 grid grid-cols-1 gap-4 llg:grid-cols-2">
@@ -75,8 +76,8 @@ export function CampaignList({ campaigns }: CampaignListProps) {
         <div className="mt-4">
           <EmptyState
             ornament="✦"
-            title={copy.emptySearchTitle}
-            description={copy.emptySearchDescription}
+            title={t('emptySearchTitle')}
+            description={t('emptySearchDescription')}
           />
         </div>
       )}

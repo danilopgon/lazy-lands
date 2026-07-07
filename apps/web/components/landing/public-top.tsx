@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
-import { getClientUiMessages } from '@/lib/i18n/ui-copy'
 import { navLinks } from './data'
 
 /**
@@ -15,7 +15,7 @@ import { navLinks } from './data'
  */
 export function PublicTop() {
   const [open, setOpen] = useState(false)
-  const copy = getClientUiMessages().Nav
+  const t = useTranslations('Nav')
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -93,6 +93,13 @@ export function PublicTop() {
     }
   }, [open])
 
+  const registerCta = (
+    <>
+      {t('registerShort')}
+      <span className="sr-only"> {t('registerSrOnlySuffix')}</span>
+    </>
+  )
+
   return (
     <>
       <header className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4 llg:px-10">
@@ -103,7 +110,7 @@ export function PublicTop() {
           Lazy <span className="text-[var(--accent)]">Lands</span>
         </Link>
 
-        <nav aria-label={copy.main} className="flex items-center gap-3">
+        <nav aria-label={t('main')} className="flex items-center gap-3">
           {/* Desktop links */}
           <div className="hidden items-center gap-6 llg:flex">
             {navLinks.map((l) => (
@@ -121,34 +128,22 @@ export function PublicTop() {
           <div className="hidden items-center gap-2 llg:flex">
             <LanguageSwitcher compact />
             <Button asChild variant="ghost" size="sm">
-              <Link href="/login">{copy.signIn}</Link>
+              <Link href="/login">{t('signIn')}</Link>
             </Button>
             <Button asChild variant="accent" size="sm">
-              <Link href="/register">
-                {copy.register.split(' ')[0]}
-                <span className="sr-only">
-                  {' '}
-                  {copy.register.split(' ').slice(1).join(' ')}
-                </span>
-              </Link>
+              <Link href="/register">{registerCta}</Link>
             </Button>
           </div>
 
           {/* Mobile: CTA + hamburger */}
           <Button asChild variant="accent" size="sm" className="llg:hidden">
-            <Link href="/register">
-              {copy.register.split(' ')[0]}
-              <span className="sr-only">
-                {' '}
-                {copy.register.split(' ').slice(1).join(' ')}
-              </span>
-            </Link>
+            <Link href="/register">{registerCta}</Link>
           </Button>
 
           <button
             ref={menuButtonRef}
             type="button"
-            aria-label={open ? copy.closeMenu : copy.openMenu}
+            aria-label={open ? t('closeMenu') : t('openMenu')}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
             className="llg:hidden flex h-10 w-10 flex-col items-center justify-center gap-[5px] border-2 border-[var(--border)] bg-[var(--paper)] shadow-[2px_2px_0_var(--shadow)]"
@@ -171,7 +166,7 @@ export function PublicTop() {
         <div
           ref={overlayRef}
           role="dialog"
-          aria-label={copy.mobileNavigation}
+          aria-label={t('mobileNavigation')}
           aria-modal="true"
           className="llg:hidden fixed inset-0 z-mobile-menu flex flex-col bg-[var(--paper)]"
         >
@@ -186,7 +181,7 @@ export function PublicTop() {
             <button
               ref={closeButtonRef}
               type="button"
-              aria-label={copy.closeMenu}
+              aria-label={t('closeMenu')}
               onClick={() => closeMenu()}
               className="flex h-10 w-10 items-center justify-center border-2 border-[var(--border)] shadow-[2px_2px_0_var(--shadow)]"
             >
@@ -213,7 +208,7 @@ export function PublicTop() {
                   href="/login"
                   onClick={() => closeMenu({ restoreFocus: false })}
                 >
-                  {copy.signIn}
+                  {t('signIn')}
                 </Link>
               </Button>
               <Button asChild variant="accent">
@@ -221,7 +216,7 @@ export function PublicTop() {
                   href="/register"
                   onClick={() => closeMenu({ restoreFocus: false })}
                 >
-                  {copy.register} →
+                  {t('register')} →
                 </Link>
               </Button>
             </div>

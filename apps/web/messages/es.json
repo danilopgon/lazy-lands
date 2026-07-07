@@ -11,6 +11,8 @@
     "spanish": "Español",
     "signIn": "Iniciar sesión",
     "register": "Comenzar crónica",
+    "registerShort": "Comenzar",
+    "registerSrOnlySuffix": "crónica",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "mobileNavigation": "Navegación móvil",
@@ -61,8 +63,6 @@
     "title": "Tus crónicas",
     "empty": "Aún no hay campañas",
     "count": "{count, plural, one {# campaña} other {# campañas}}",
-    "countOne": "{count} campaña",
-    "countOther": "{count} campañas",
     "newCampaign": "+ Nueva campaña",
     "loadingTitle": "El Escriba está escribiendo",
     "loadingCaption": "Buscando tus campañas",
@@ -85,9 +85,7 @@
       "memories": "Memorias",
       "arcs": "Arcos"
     },
-    "openChronicle": "Abrir crónica →",
-    "openChronicleLabel": "Abrir crónica",
-    "updatedLabel": "Actualizado"
+    "openChronicle": "Abrir crónica →"
   },
   "Campaigns": {
     "Create": {

@@ -179,7 +179,7 @@ describe('proxy — session-management (Phase 2B)', () => {
     const { config } = await import('../proxy')
 
     expect(config.matcher).toEqual([
-      '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+      '/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ])
   })
 

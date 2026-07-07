@@ -15,29 +15,17 @@ export const PASSWORD_MISMATCH_MESSAGE = passwordCopy.passwordMismatch
  * `passwordSchema.min(8)`; the remaining entries drive both the live checklist
  * UI and the complexity refinement, keeping this array the single source of
  * truth for the policy across signup and password reset.
+ *
+ * `key` maps to `Auth.passwordRequirements.<key>` so the checklist UI renders
+ * each label through the active locale rather than a hardcoded string.
  */
 export const PASSWORD_REQUIREMENTS = [
-  {
-    label: passwordCopy.passwordRequirements.length,
-    test: (p: string) => p.length >= 8,
-  },
-  {
-    label: passwordCopy.passwordRequirements.lowercase,
-    test: (p: string) => /[a-z]/.test(p),
-  },
-  {
-    label: passwordCopy.passwordRequirements.uppercase,
-    test: (p: string) => /[A-Z]/.test(p),
-  },
-  {
-    label: passwordCopy.passwordRequirements.number,
-    test: (p: string) => /\d/.test(p),
-  },
-  {
-    label: passwordCopy.passwordRequirements.special,
-    test: (p: string) => /[^A-Za-z0-9]/.test(p),
-  },
-]
+  { key: 'length', test: (p: string) => p.length >= 8 },
+  { key: 'lowercase', test: (p: string) => /[a-z]/.test(p) },
+  { key: 'uppercase', test: (p: string) => /[A-Z]/.test(p) },
+  { key: 'number', test: (p: string) => /\d/.test(p) },
+  { key: 'special', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+] as const
 
 /** Reusable strong-password field schema (min 8 chars + complexity). */
 export const passwordSchema = z

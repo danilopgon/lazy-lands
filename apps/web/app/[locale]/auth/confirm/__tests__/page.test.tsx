@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@/tests/intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { mockVerifyOtp, mockSearchParamsGet, mockAssign } = vi.hoisted(() => ({
@@ -35,7 +35,7 @@ describe('ConfirmPage (AU-004)', () => {
 
     render(<ConfirmPage />)
 
-    const link = await screen.findByRole('link', { name: 'volver al inicio' })
+    const link = await screen.findByRole('link', { name: 'Back home' })
     expect(link).toHaveAttribute('href', '/')
   })
 
