@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import { useTranslations } from 'next-intl'
 
 /** Tailwind className string for the shared auth back-to-home link. */

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
+import { Link as LocaleLink } from '@/i18n/navigation'
+
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 import { navLinks } from './data'
@@ -104,12 +106,12 @@ export function PublicTop() {
   return (
     <>
       <header className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4 llg:px-10">
-        <Link
+        <LocaleLink
           href="/"
           className="font-serif text-xl font-semibold tracking-[-0.02em] text-[var(--ink)]"
         >
           Lazy <span className="text-[var(--accent)]">Lands</span>
-        </Link>
+        </LocaleLink>
 
         <nav aria-label={t('main')} className="flex items-center gap-3">
           {/* Desktop links */}
@@ -129,16 +131,16 @@ export function PublicTop() {
           <div className="hidden items-center gap-2 llg:flex">
             <LanguageSwitcher compact />
             <Button asChild variant="ghost" size="sm">
-              <Link href="/login">{t('signIn')}</Link>
+              <LocaleLink href="/login">{t('signIn')}</LocaleLink>
             </Button>
             <Button asChild variant="accent" size="sm">
-              <Link href="/register">{registerCta}</Link>
+              <LocaleLink href="/register">{registerCta}</LocaleLink>
             </Button>
           </div>
 
           {/* Mobile: CTA + hamburger */}
           <Button asChild variant="accent" size="sm" className="llg:hidden">
-            <Link href="/register">{registerCta}</Link>
+            <LocaleLink href="/register">{registerCta}</LocaleLink>
           </Button>
 
           <button
@@ -172,13 +174,13 @@ export function PublicTop() {
           className="llg:hidden fixed inset-0 z-mobile-menu flex flex-col bg-[var(--paper)]"
         >
           <div className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4">
-            <Link
+            <LocaleLink
               href="/"
               className="font-serif text-xl font-semibold text-[var(--ink)]"
               onClick={() => closeMenu({ restoreFocus: false })}
             >
               Lazy <span className="text-[var(--accent)]">Lands</span>
-            </Link>
+            </LocaleLink>
             <button
               ref={closeButtonRef}
               type="button"
@@ -205,20 +207,20 @@ export function PublicTop() {
             <div className="mt-8 flex flex-col gap-3">
               <LanguageSwitcher />
               <Button asChild variant="ghost">
-                <Link
+                <LocaleLink
                   href="/login"
                   onClick={() => closeMenu({ restoreFocus: false })}
                 >
                   {t('signIn')}
-                </Link>
+                </LocaleLink>
               </Button>
               <Button asChild variant="accent">
-                <Link
+                <LocaleLink
                   href="/register"
                   onClick={() => closeMenu({ restoreFocus: false })}
                 >
                   {t('register')} →
-                </Link>
+                </LocaleLink>
               </Button>
             </div>
           </div>

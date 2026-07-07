@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest'
+import { createElement, type ReactNode } from 'react'
 import { vi } from 'vitest'
 
 // jsdom has no App Router context, so the client navigation hooks throw when a
@@ -54,6 +55,17 @@ vi.mock('@/i18n/navigation', () => ({
     throw new Error('NEXT_REDIRECT')
   },
   getPathname: () => window.location.pathname || '/',
+  // Render a plain anchor so href assertions match. In production this is
+  // next-intl's locale-aware Link; under the default 'en' locale the two agree
+  // (unprefixed), which is what the tests render with.
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string
+    children?: ReactNode
+  }) => createElement('a', { href, ...props }, children),
 }))
 
 // IntersectionObserver is not implemented in jsdom.

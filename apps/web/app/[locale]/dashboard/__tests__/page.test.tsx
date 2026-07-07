@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { render, screen, waitFor } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -14,10 +15,21 @@ vi.mock('@/lib/campaigns/api', () => ({
   CampaignNotFoundError: class CampaignNotFoundError extends Error {},
 }))
 
-vi.mock('@/i18n/navigation', () => ({
-  useRouter: () => ({ push: mockPush }),
-  usePathname: () => '/',
-}))
+vi.mock('@/i18n/navigation', async () => {
+  const { createElement } = await import('react')
+  return {
+    useRouter: () => ({ push: mockPush }),
+    usePathname: () => '/',
+    Link: ({
+      href,
+      children,
+      ...props
+    }: {
+      href: string
+      children?: ReactNode
+    }) => createElement('a', { href, ...props }, children),
+  }
+})
 
 vi.mock('@/components/auth/logout-button', () => ({
   LogoutButton: () => <button type="button">Log out</button>,

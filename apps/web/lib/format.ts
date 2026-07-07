@@ -1,13 +1,13 @@
 import { type AppLocale, isAppLocale, routing } from '@/i18n/routing'
-import en from '@/messages/en.json'
-import es from '@/messages/es.json'
 
-// Single source of truth for the BCP-47 date tag per locale lives in the
-// message catalogs (`Dates.locale`), so the tag never drifts from the rest of
-// the i18n config when a locale is added or corrected.
+// Keep the BCP-47 date tags as a small literal map rather than importing them
+// from the message catalogs: `format.ts` is pulled into the Edge middleware
+// (`proxy.ts`) and many client chunks, and a JSON import is not tree-shaken
+// per-property, so reading `Dates.locale` would bundle the entire ~11KB catalog
+// (including the whole Landing marketing namespace) into all of them.
 const LOCALE_DATE_TAGS: Record<AppLocale, string> = {
-  en: en.Dates.locale,
-  es: es.Dates.locale,
+  en: 'en-US',
+  es: 'es-ES',
 }
 
 /**

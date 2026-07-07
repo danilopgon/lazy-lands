@@ -41,6 +41,7 @@ function LocaleLinks({
         href={buildLocalizedPath(currentPath, 'en')}
         hrefLang="en"
         data-active={locale === 'en'}
+        aria-current={locale === 'en' ? 'true' : undefined}
         className={linkClassName}
       >
         {compact ? 'EN' : 'English'}
@@ -49,6 +50,7 @@ function LocaleLinks({
         href={buildLocalizedPath(currentPath, 'es')}
         hrefLang="es"
         data-active={locale === 'es'}
+        aria-current={locale === 'es' ? 'true' : undefined}
         className={linkClassName}
       >
         {compact ? 'ES' : 'Español'}

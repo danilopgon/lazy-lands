@@ -7,7 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 

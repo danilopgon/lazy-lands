@@ -1,7 +1,7 @@
 {
   "Root": {
     "title": "Lazy Lands",
-    "description": "Compañero de campaña para Directores de Juego",
+    "description": "Compañero de campaña para Dungeon Masters",
     "skipLink": "Saltar al contenido"
   },
   "Nav": {
@@ -26,8 +26,8 @@
     "settings": "Ajustes"
   },
   "Landing": {
-    "metadataTitle": "Lazy Lands — Compañero de campaña para Directores de Juego",
-    "metadataDescription": "Sigue cada PNJ, facción y consecuencia entre sesiones. Lazy Lands ayuda a los Directores de Juego a capturar contexto, validar recuerdos y generar informes de sesión para que el mundo recuerde lo que hicieron tus jugadores.",
+    "metadataTitle": "Lazy Lands — Compañero de campaña para Dungeon Masters",
+    "metadataDescription": "Sigue cada PNJ, facción y consecuencia entre sesiones. Lazy Lands ayuda a los Dungeon Masters a capturar contexto, validar recuerdos y generar informes de sesión para que el mundo recuerde lo que hicieron tus jugadores.",
     "announcement": {
       "body": "En desarrollo activo: publicamos novedades cada semana. <signup>Regístrate</signup> y serás el primero en enterarte.",
       "dismiss": "Descartar anuncio"
@@ -37,11 +37,12 @@
       "how": "Cómo funciona",
       "earlyAccess": "Acceso anticipado",
       "privacy": "Privacidad",
-      "cookies": "Cookies"
+      "cookies": "Cookies",
+      "footerLabel": "Pie de página"
     },
     "hero": {
       "badgeBeta": "✦ Beta abierta",
-      "badgeAudience": "Para DJ que de verdad llevan campañas largas",
+      "badgeAudience": "Para Dungeon Masters que de verdad llevan campañas largas",
       "title": "Tu campaña,<break></break><accent>sin amnesia</accent>.",
       "body": "El compañero que recuerda cada PNJ, cada facción y cada consecuencia, para que tu próxima sesión empiece desde la memoria aceptada y el mundo recuerde lo que hicieron tus jugadores.",
       "cta": "Comenzar crónica →",
@@ -54,7 +55,7 @@
       "Sesión VII aceptada: Halia favorece a dos miembros del grupo",
       "Arco abierto: los planes antidragón necesitan un núcleo estable",
       "Cambio de postura de facción: el Gremio del Oso Negro observa",
-      "Propuesta del Escriba a la espera de revisión del DJ",
+      "Propuesta del Escriba a la espera de revisión del DM",
       "Las notas privadas quedan fuera de las exportaciones",
       "El próximo informe usa solo memorias aceptadas"
     ],
@@ -66,7 +67,7 @@
         {
           "label": "Registrar",
           "title": "Sesión VII: el incendio del almacén",
-          "body": "El DJ anota lo que pasó en la mesa, incluidas las consecuencias y las notas privadas."
+          "body": "El DM anota lo que pasó en la mesa, incluidas las consecuencias y las notas privadas."
         },
         {
           "label": "Revisar",
@@ -157,14 +158,14 @@
     "cta": {
       "cornerTitle": "Entrada de crónica",
       "cornerBeta": "Beta abierta",
-      "cornerReview": "Requiere revisión del DJ",
+      "cornerReview": "Requiere revisión del DM",
       "title": "Comienza tu primera crónica.",
       "body": "Gratis durante el acceso anticipado. Empieza con una campaña y mantén cada memoria aceptada revisable desde la primera sesión.",
       "cta": "Comenzar crónica →",
       "demoCta": "Recorrer una campaña de demostración"
     },
     "footer": {
-      "madeBy": "© 2026 · hecho por un DJ cansado de olvidar"
+      "madeBy": "© 2026 · hecho por un DM cansado de olvidar"
     },
     "comingSoon": "Próximamente"
   },

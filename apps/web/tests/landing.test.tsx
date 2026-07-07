@@ -299,8 +299,6 @@ describe('app/page.tsx metadata (LAND-012)', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ locale: 'es' }),
     })
-    expect((metadata as { title?: string }).title).toContain(
-      'Directores de Juego'
-    )
+    expect((metadata as { title?: string }).title).toContain('Dungeon Masters')
   })
 })

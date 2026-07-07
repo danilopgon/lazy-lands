@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
+import { Link as LocaleLink } from '@/i18n/navigation'
+
 /**
  * Site footer — brand mark, copyright, and navigation links.
  *
@@ -27,7 +29,7 @@ export function LandFooter() {
         </div>
 
         <nav
-          aria-label="Footer"
+          aria-label={t('nav.footerLabel')}
           className="flex flex-wrap gap-4 font-mono uppercase tracking-[0.06em] text-[var(--ink-2)] llg:gap-[18px]"
           style={{ fontSize: 10.5 }}
         >
@@ -40,12 +42,12 @@ export function LandFooter() {
           <Link href="#early-access" className="hover:text-[var(--ink)]">
             {t('nav.earlyAccess')}
           </Link>
-          <Link href="/privacy" className="hover:text-[var(--ink)]">
+          <LocaleLink href="/privacy" className="hover:text-[var(--ink)]">
             {t('nav.privacy')}
-          </Link>
-          <Link href="/cookies" className="hover:text-[var(--ink)]">
+          </LocaleLink>
+          <LocaleLink href="/cookies" className="hover:text-[var(--ink)]">
             {t('nav.cookies')}
-          </Link>
+          </LocaleLink>
         </nav>
       </div>
     </footer>

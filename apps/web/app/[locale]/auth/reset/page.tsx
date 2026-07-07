@@ -5,7 +5,7 @@ import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
 import { Button } from '@/components/ui/button'

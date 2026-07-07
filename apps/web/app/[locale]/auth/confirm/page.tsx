@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
 import { createClient } from '@/lib/supabase/client'

@@ -46,7 +46,7 @@ export function LandMarquee() {
           animationPlayState: paused ? 'paused' : 'running',
         }}
       >
-        {all.map((t, i) => (
+        {all.map((item, i) => (
           <span
             key={i}
             style={{
@@ -57,7 +57,7 @@ export function LandMarquee() {
               color: 'var(--bg)',
             }}
           >
-            {t}
+            {item}
             <span style={{ color: 'var(--accent)' }}>✦</span>
           </span>
         ))}

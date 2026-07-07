@@ -22,19 +22,26 @@ type IntlRenderOptions = RenderOptions & {
  * @returns {ReturnType<typeof rtlRender>} The Testing Library render result.
  */
 export function render(ui: ReactElement, options: IntlRenderOptions = {}) {
-  const { locale = 'en', ...renderOptions } = options
+  const { locale = 'en', wrapper: InnerWrapper, ...renderOptions } = options
 
   /**
-   * Provider wrapper injected around the element under test.
+   * Provider wrapper injected around the element under test. Composes any
+   * caller-provided `wrapper` inside the provider instead of letting the spread
+   * overwrite it, so the intl context is never silently dropped.
    *
    * @param {{ children: ReactNode }} root0 - Wrapper props.
    * @param {ReactNode} root0.children - The tree to wrap.
    * @returns {React.ReactElement} The wrapped tree.
    */
   function Wrapper({ children }: { children: ReactNode }) {
+    const inner = InnerWrapper ? (
+      <InnerWrapper>{children}</InnerWrapper>
+    ) : (
+      children
+    )
     return (
       <NextIntlClientProvider locale={locale} messages={catalogs[locale]}>
-        {children}
+        {inner}
       </NextIntlClientProvider>
     )
   }
