@@ -279,7 +279,7 @@ describe('app/page.tsx metadata (LAND-012)', () => {
       params: Promise.resolve({ locale: 'en' }),
     })
     expect((metadata as { title?: string }).title).toBe(
-      'Lazy Lands — Campaign Companion for Dungeon Masters'
+      'Lazy Lands · Campaign Companion for Dungeon Masters'
     )
   })
 

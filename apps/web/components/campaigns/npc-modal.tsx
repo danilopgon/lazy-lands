@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
@@ -36,6 +37,8 @@ type NpcModalProps = {
  */
 export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
   const isEdit = npc !== null
+  const t = useTranslations('Campaigns')
+  const te = useTranslations('Entities')
   const queryClient = useQueryClient()
   const [name, setName] = useState(npc?.name ?? '')
   const [description, setDescription] = useState(npc?.description ?? '')
@@ -63,21 +66,19 @@ export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
     },
     onError: (err: unknown) => {
       setError(
-        err instanceof CampaignApiError
-          ? err.message
-          : 'Could not save this NPC. Please try again.'
+        err instanceof CampaignApiError ? err.message : t('npcs.saveError')
       )
     },
   })
 
   return (
     <Modal
-      title={isEdit ? 'Edit NPC' : 'New NPC'}
+      title={isEdit ? t('npcs.editTitle') : t('npcs.newTitle')}
       onClose={onClose}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {te('cancel')}
           </Button>
           <Button
             variant="ink"
@@ -88,10 +89,10 @@ export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
             }}
           >
             {mutation.isPending
-              ? 'Saving…'
+              ? te('saving')
               : isEdit
-                ? 'Save changes'
-                : 'Add NPC'}
+                ? te('saveChanges')
+                : t('npcs.addAction')}
           </Button>
         </>
       }
@@ -101,24 +102,24 @@ export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
           <p>{error}</p>
         </Notice>
       ) : null}
-      <Field label="Name">
+      <Field label={te('fields.name')}>
         <Input value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
-      <Field label="Description">
+      <Field label={te('fields.description')}>
         <Textarea
           rows={2}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </Field>
-      <Field label="Current state">
+      <Field label={te('fields.currentState')}>
         <Textarea
           rows={2}
           value={currentState}
           onChange={(e) => setCurrentState(e.target.value)}
         />
       </Field>
-      <Field label="Motivation">
+      <Field label={te('fields.motivation')}>
         <Textarea
           rows={2}
           value={motivation}

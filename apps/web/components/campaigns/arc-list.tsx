@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -36,15 +40,16 @@ function isTerminal(status: ArcStatus | null): boolean {
  * @returns {React.ReactElement} The arc list element.
  */
 export function ArcList({ arcs, onAdd, onEdit, onDelete }: ArcListProps) {
+  const t = useTranslations('Campaigns')
   if (arcs.length === 0) {
     return (
       <EmptyState
         ornament="↝"
-        title="No arcs here"
-        description="Arcs are the threads your players are pulling on. Track them so none go quiet for too long."
+        title={t('arcs.emptyTitle')}
+        description={t('arcs.emptyDescription')}
         action={
           <Button variant="ink" onClick={onAdd}>
-            + Add an arc
+            {t('arcs.emptyAction')}
           </Button>
         }
       />
@@ -79,6 +84,7 @@ function ArcRow({
   onEdit?: (arc: ArcResponse) => void
   onDelete?: (arc: ArcResponse) => void
 }) {
+  const t = useTranslations('Entities')
   const terminal = isTerminal(arc.status)
 
   return (
@@ -93,7 +99,9 @@ function ArcRow({
             {arc.title}
           </span>
           {arc.status ? (
-            <Badge variant={terminal ? 'muted' : 'accent'}>{arc.status}</Badge>
+            <Badge variant={terminal ? 'muted' : 'accent'}>
+              {t(`status.${arc.status}`)}
+            </Badge>
           ) : null}
           {arc.priority ? (
             <span
@@ -103,7 +111,7 @@ function ArcRow({
                   : 'text-[var(--ink-3)]'
               }`}
             >
-              {arc.priority} priority
+              {t('priorityFlag', { priority: arc.priority })}
             </span>
           ) : null}
         </div>

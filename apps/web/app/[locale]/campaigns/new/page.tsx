@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from '@/i18n/navigation'
 import { z } from 'zod'
+
+import { Link, useRouter } from '@/i18n/navigation'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -54,27 +55,13 @@ export function composeRawText(data: ComposableCampaign): string {
     .join('\n\n')
 }
 
-const campaignFormSchema = extractRequestSchema
-  .extend({
-    name: z.string().trim().min(1, 'Give your campaign a name.'),
-    system: z.string().trim().min(1, "Name the game system you're running."),
-    tone: z.string().optional(),
-    additional_details: z.string().optional(),
-  })
-  // The composed payload — not raw_text alone — is what the backend receives
-  // and bounds at MAX_CAMPAIGN_PREMISE_LENGTH. Validate the total so a long
-  // name/tone/details field can't slip past the per-field checks.
-  .superRefine((data, ctx) => {
-    const composedLength = composeRawText(data).length
-    if (composedLength > MAX_CAMPAIGN_PREMISE_LENGTH) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['raw_text'],
-        message: `Your notes total ${composedLength} characters — trim them under ${MAX_CAMPAIGN_PREMISE_LENGTH} so the Scribe can hold them.`,
-      })
-    }
-  })
-type CampaignFormValues = z.infer<typeof campaignFormSchema>
+type CampaignFormValues = {
+  name: string
+  system: string
+  tone?: string
+  raw_text: string
+  additional_details?: string
+}
 
 /**
  * `/campaigns/new` — the DM's free-text premise form (CUI-001).
@@ -87,8 +74,38 @@ type CampaignFormValues = z.infer<typeof campaignFormSchema>
  */
 export default function NewCampaignPage() {
   const router = useRouter()
+  const t = useTranslations('Campaigns')
+  const te = useTranslations('Entities')
   const [extractError, setExtractError] = useState<string | null>(null)
   const [isExtracting, setIsExtracting] = useState(false)
+
+  const campaignFormSchema = useMemo(
+    () =>
+      extractRequestSchema
+        .extend({
+          name: z.string().trim().min(1, t('create.nameRequired')),
+          system: z.string().trim().min(1, t('create.systemRequired')),
+          tone: z.string().optional(),
+          additional_details: z.string().optional(),
+        })
+        // The composed payload — not raw_text alone — is what the backend
+        // receives and bounds at MAX_CAMPAIGN_PREMISE_LENGTH. Validate the total
+        // so a long name/tone/details field can't slip past the per-field checks.
+        .superRefine((data, ctx) => {
+          const composedLength = composeRawText(data).length
+          if (composedLength > MAX_CAMPAIGN_PREMISE_LENGTH) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['raw_text'],
+              message: t('create.tooLong', {
+                count: composedLength,
+                max: MAX_CAMPAIGN_PREMISE_LENGTH,
+              }),
+            })
+          }
+        }),
+    [t]
+  )
 
   const {
     register,
@@ -120,9 +137,7 @@ export default function NewCampaignPage() {
     onError: (err: unknown) => {
       setIsExtracting(false)
       setExtractError(
-        err instanceof CampaignApiError
-          ? err.message
-          : 'Unable to analyze that premise right now. Please try again.'
+        err instanceof CampaignApiError ? err.message : t('create.extractError')
       )
     },
   })
@@ -145,8 +160,8 @@ export default function NewCampaignPage() {
     return (
       <main id="main-content" className="mx-auto max-w-[720px] px-6 py-16">
         <LoadingScribe
-          title="Reading your world"
-          caption="The Scribe is drafting NPCs, factions, world state and open arcs from your notes"
+          title={t('create.loadingTitle')}
+          caption={t('create.loadingCaption')}
         />
       </main>
     )
@@ -158,20 +173,18 @@ export default function NewCampaignPage() {
     <main id="main-content" className="mx-auto max-w-[720px] px-6 py-16">
       <nav className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-2)]">
         <Link className="hover:text-[var(--accent-deep)]" href="/dashboard">
-          Campaigns
+          {t('breadcrumbRoot')}
         </Link>{' '}
-        / <span className="text-[var(--ink)]">New campaign</span>
+        / <span className="text-[var(--ink)]">{t('create.breadcrumbNew')}</span>
       </nav>
       <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
-        Step 1 of 2 · Pour your world in
+        {t('create.step')}
       </p>
       <h1 className="mt-3 font-serif text-[38px] font-semibold leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
-        Start a new chronicle
+        {t('create.title')}
       </h1>
       <p className="mt-4 max-w-[560px] text-base leading-relaxed text-[var(--ink-2)]">
-        Paste your campaign notes however they exist today. The Scribe will
-        draft the pieces; you&apos;ll review and edit everything before anything
-        is saved.
+        {t('create.subtitle')}
       </p>
 
       {extractError && (
@@ -191,11 +204,11 @@ export default function NewCampaignPage() {
               className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em]"
               htmlFor="name"
             >
-              Campaign name
+              {t('create.nameLabel')}
             </Label>
             <Input
               id="name"
-              placeholder="The Salt Road"
+              placeholder={t('create.namePlaceholder')}
               disabled={isSubmitting}
               {...register('name')}
             />
@@ -213,11 +226,11 @@ export default function NewCampaignPage() {
               className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em]"
               htmlFor="system"
             >
-              Game system
+              {t('create.systemLabel')}
             </Label>
             <Input
               id="system"
-              placeholder="D&D 5e, Pathfinder, …"
+              placeholder={t('create.systemPlaceholder')}
               disabled={isSubmitting}
               {...register('system')}
             />
@@ -237,12 +250,12 @@ export default function NewCampaignPage() {
             className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em]"
             htmlFor="tone"
           >
-            Tone or style{' '}
-            <span className="text-[var(--ink-3)]">· optional</span>
+            {t('create.toneLabel')}{' '}
+            <span className="text-[var(--ink-3)]">· {te('optional')}</span>
           </Label>
           <Input
             id="tone"
-            placeholder="Grim survival, high adventure, political intrigue…"
+            placeholder={t('create.tonePlaceholder')}
             disabled={isSubmitting}
             {...register('tone')}
           />
@@ -254,7 +267,7 @@ export default function NewCampaignPage() {
               className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em]"
               htmlFor="raw_text"
             >
-              Starting context / Premise
+              {t('create.premiseLabel')}
             </Label>
             <span
               className={`font-mono text-xs ${
@@ -266,14 +279,18 @@ export default function NewCampaignPage() {
               }`}
               aria-live="polite"
             >
-              {rawText.trim().length} / {MIN_CAMPAIGN_PREMISE_LENGTH} characters
-              minimum · {rawText.length} / {MAX_CAMPAIGN_PREMISE_LENGTH}
+              {t('create.charCounter', {
+                count: rawText.trim().length,
+                min: MIN_CAMPAIGN_PREMISE_LENGTH,
+                total: rawText.length,
+                max: MAX_CAMPAIGN_PREMISE_LENGTH,
+              })}
             </span>
           </div>
           <Textarea
             id="raw_text"
             rows={9}
-            placeholder="Phandalin is a frontier mining town. A young white dragon named Cryovain hunts the Sword Mountains. The Black Bear Guild smuggles through the warehouse district, and plans for an anti-dragon weapon have just been stolen…"
+            placeholder={t('create.premisePlaceholder')}
             {...register('raw_text')}
             disabled={isSubmitting}
           />
@@ -289,27 +306,26 @@ export default function NewCampaignPage() {
             className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em]"
             htmlFor="additional_details"
           >
-            Additional details for the Scribe{' '}
-            <span className="text-[var(--ink-3)]">· optional</span>
+            {t('create.detailsLabel')}{' '}
+            <span className="text-[var(--ink-3)]">· {te('optional')}</span>
           </Label>
           <Textarea
             id="additional_details"
             rows={3}
-            placeholder="The party is four PCs: a paladin, two rogues and a wizard. Keep magic rare."
+            placeholder={t('create.detailsPlaceholder')}
             disabled={isSubmitting}
             {...register('additional_details')}
           />
           <p className="text-xs text-[var(--ink-3)]">
-            House rules, things to ignore, party names: anything that shapes the
-            extraction.
+            {t('create.detailsHint')}
           </p>
         </div>
         <div className="mt-6 flex items-center justify-between gap-4">
           <span className="font-mono text-[11px] text-[var(--ink-3)]">
-            Your text stays here if the Scribe cannot parse it.
+            {t('create.footerNote')}
           </span>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Analyzing...' : 'Analyze campaign →'}
+            {isSubmitting ? t('create.analyzing') : t('create.submit')}
           </Button>
         </div>
       </form>

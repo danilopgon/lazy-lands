@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,7 +13,10 @@ export type { EntityField, ReviewItem } from './types'
 
 type EntitySectionProps<T extends ReviewItem> = {
   title: string
-  singular: string
+  /** Pre-formed "+ Add …" label (localized by the caller). */
+  addLabel: string
+  /** Pre-formed empty-state hint (localized by the caller). */
+  emptyHint: string
   items: T[]
   fields: EntityField<T>[]
   /** Values applied to newly added items beyond the shared field/content_source shape (e.g. arc priority). */
@@ -31,13 +35,15 @@ type EntitySectionProps<T extends ReviewItem> = {
  */
 export function EntitySection<T extends ReviewItem>({
   title,
-  singular,
+  addLabel,
+  emptyHint,
   items,
   fields,
   extraDefaults,
   onChange,
   testId,
 }: EntitySectionProps<T>) {
+  const t = useTranslations('Entities')
   const [adding, setAdding] = useState(false)
   const [draft, setDraft] = useState<Partial<T>>({})
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
@@ -123,16 +129,13 @@ export function EntitySection<T extends ReviewItem>({
             setDraft({})
           }}
         >
-          + Add {singular}
+          {addLabel}
         </Button>
       </div>
 
       <div className="border-2 border-[var(--border)] bg-[var(--paper)] px-4 shadow-[6px_6px_0_var(--shadow)]">
         {items.length === 0 && !adding && (
-          <p className="py-3 text-sm text-[var(--ink-3)]">
-            Nothing here yet. Add a {singular} manually if the Scribe missed
-            one.
-          </p>
+          <p className="py-3 text-sm text-[var(--ink-3)]">{emptyHint}</p>
         )}
 
         <ul className="divide-y divide-dotted divide-[var(--border)]">
@@ -163,7 +166,7 @@ export function EntitySection<T extends ReviewItem>({
                       size="sm"
                       onClick={() => saveEdit(index)}
                     >
-                      Save changes
+                      {t('saveChanges')}
                     </Button>
                     <Button
                       type="button"
@@ -171,7 +174,7 @@ export function EntitySection<T extends ReviewItem>({
                       size="sm"
                       onClick={() => setEditingIndex(null)}
                     >
-                      Cancel
+                      {t('cancel')}
                     </Button>
                   </div>
                 </div>
@@ -197,7 +200,7 @@ export function EntitySection<T extends ReviewItem>({
                       size="sm"
                       onClick={() => startEdit(index)}
                     >
-                      Edit
+                      {t('edit')}
                     </Button>
                     <Button
                       type="button"
@@ -205,7 +208,7 @@ export function EntitySection<T extends ReviewItem>({
                       size="sm"
                       onClick={() => removeItem(index)}
                     >
-                      Remove
+                      {t('remove')}
                     </Button>
                   </div>
                 </div>
@@ -228,7 +231,7 @@ export function EntitySection<T extends ReviewItem>({
                 ))}
                 <div className="flex gap-2">
                   <Button type="button" size="sm" onClick={addItem}>
-                    Add
+                    {t('add')}
                   </Button>
                   <Button
                     type="button"
@@ -236,7 +239,7 @@ export function EntitySection<T extends ReviewItem>({
                     size="sm"
                     onClick={() => setAdding(false)}
                   >
-                    Cancel
+                    {t('cancel')}
                   </Button>
                 </div>
               </div>

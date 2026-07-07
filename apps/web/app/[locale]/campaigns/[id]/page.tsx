@@ -1,6 +1,7 @@
 'use client'
 
 import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 
 import { LoadingScribe } from '@/components/ui/loading-scribe'
@@ -15,6 +16,7 @@ import { getCampaignDetail, CampaignNotFoundError } from '@/lib/campaigns/api'
  */
 export default function CampaignDetailPage() {
   const params = useParams<{ id: string }>()
+  const t = useTranslations('Campaigns')
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['campaign', params.id],
     queryFn: () => getCampaignDetail(params.id),
@@ -24,8 +26,8 @@ export default function CampaignDetailPage() {
     return (
       <main id="main-content" className="mx-auto max-w-[1100px] px-6 py-16">
         <LoadingScribe
-          title="The Scribe is writing"
-          caption="Opening the chronicle"
+          title={t('screen.loadingTitle')}
+          caption={t('screen.openingChronicle')}
         />
       </main>
     )
@@ -37,17 +39,13 @@ export default function CampaignDetailPage() {
     return (
       <main id="main-content" className="mx-auto max-w-[1100px] px-6 py-16">
         <Notice variant="error">
-          <p>
-            {isNotFound
-              ? 'Campaign not found. It may have been deleted or you do not have access.'
-              : 'Something went wrong while loading this campaign.'}
-          </p>
+          <p>{isNotFound ? t('screen.notFound') : t('screen.loadError')}</p>
           <button
             type="button"
             className="mt-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
             onClick={() => refetch()}
           >
-            Retry
+            {t('screen.retry')}
           </button>
         </Notice>
       </main>

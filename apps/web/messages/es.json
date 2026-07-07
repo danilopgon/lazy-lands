@@ -28,7 +28,7 @@
     "loggingOut": "Cerrando sesión…"
   },
   "Landing": {
-    "metadataTitle": "Lazy Lands — Compañero de campaña para Dungeon Masters",
+    "metadataTitle": "Lazy Lands · Compañero de campaña para Dungeon Masters",
     "metadataDescription": "Sigue cada PNJ, facción y consecuencia entre sesiones. Lazy Lands ayuda a los Dungeon Masters a capturar contexto, validar recuerdos y generar informes de sesión para que el mundo recuerde lo que hicieron tus jugadores.",
     "announcement": {
       "body": "En desarrollo activo: publicamos novedades cada semana. <signup>Regístrate</signup> y serás el primero en enterarte.",
@@ -266,21 +266,132 @@
     "openChronicle": "Abrir crónica →"
   },
   "Campaigns": {
-    "Create": {
-      "title": "Crear campaña",
-      "analyze": "Analizar",
-      "premise": "Premisa de la campaña",
-      "minimum": "Escribe al menos 100 caracteres."
+    "breadcrumbRoot": "Campañas",
+    "screen": {
+      "loadingTitle": "El Escriba está escribiendo",
+      "opening": "Abriendo {title}",
+      "openingChronicle": "Abriendo la crónica",
+      "notFound": "Campaña no encontrada. Puede que se haya eliminado o que no tengas acceso.",
+      "loadError": "Algo salió mal al cargar esta campaña.",
+      "retry": "Reintentar"
     },
-    "Review": {
-      "title": "Revisar extracción",
-      "confirm": "Confirmar campaña",
-      "emptySection": "Aún no hay propuestas"
+    "detail": {
+      "kicker": "Campaña · {kicker}",
+      "updated": "Actualizado {date}",
+      "statNpcs": "PNJ",
+      "statFactions": "Facciones",
+      "statArcs": "Arcos",
+      "worldStateHeading": "El estado del mundo",
+      "recentSessions": "Sesiones recientes",
+      "comingSoon": "Llegará en un capítulo posterior",
+      "arcsNeedingAttention": "Arcos que necesitan atención",
+      "allArcs": "Todos los arcos →",
+      "activeMemories": "Memorias activas"
     },
-    "Detail": {
-      "overview": "Resumen",
-      "worldState": "Estado del mundo",
-      "saveChanges": "Guardar cambios"
+    "worldState": {
+      "empty": "Aún no hay estado del mundo registrado.",
+      "saveError": "No se pudo guardar el estado del mundo. Inténtalo de nuevo."
+    },
+    "npcs": {
+      "kicker": "Campaña · PNJ",
+      "title": "PNJ",
+      "add": "+ Nuevo PNJ",
+      "subtitle": "{count, plural, one {# personaje registrado en la crónica} other {# personajes registrados en la crónica}}",
+      "emptyTitle": "Aún no hay PNJ",
+      "emptyDescription": "El Escriba extrae PNJ de tus notas, o añádelos a mano según el grupo los va conociendo.",
+      "emptyAction": "+ Añade tu primer PNJ",
+      "newTitle": "Nuevo PNJ",
+      "editTitle": "Editar PNJ",
+      "addAction": "Añadir PNJ",
+      "saveError": "No se pudo guardar este PNJ. Inténtalo de nuevo.",
+      "deleteTitle": "Eliminar PNJ",
+      "deleteError": "No se pudo eliminar este PNJ. Inténtalo de nuevo."
+    },
+    "factions": {
+      "kicker": "Campaña · Facciones",
+      "title": "Facciones",
+      "add": "+ Nueva facción",
+      "subtitle": "{count, plural, one {# poder reaccionando al grupo} other {# poderes reaccionando al grupo}}",
+      "emptyTitle": "Aún no hay facciones",
+      "emptyDescription": "Gremios, cultos, cortes: cualquier cosa que quiera algo. Añádelos y sigue cómo reaccionan.",
+      "emptyAction": "+ Añadir una facción",
+      "newTitle": "Nueva facción",
+      "editTitle": "Editar facción",
+      "addAction": "Añadir facción",
+      "saveError": "No se pudo guardar esta facción. Inténtalo de nuevo.",
+      "deleteTitle": "Eliminar facción",
+      "deleteError": "No se pudo eliminar esta facción. Inténtalo de nuevo."
+    },
+    "arcs": {
+      "kicker": "Campaña · Arcos abiertos",
+      "title": "Arcos abiertos",
+      "add": "+ Nuevo arco",
+      "subtitle": "{count, plural, one {# hilo aún en juego} other {# hilos aún en juego}}",
+      "emptyTitle": "Aquí no hay arcos",
+      "emptyDescription": "Los arcos son los hilos de los que tiran tus jugadores. Síguelos para que ninguno se apague demasiado tiempo.",
+      "emptyAction": "+ Añadir un arco",
+      "newTitle": "Nuevo arco",
+      "editTitle": "Editar arco",
+      "addAction": "Añadir arco",
+      "saveError": "No se pudo guardar este arco. Inténtalo de nuevo.",
+      "deleteTitle": "Eliminar arco",
+      "deleteError": "No se pudo eliminar este arco. Inténtalo de nuevo."
+    },
+    "confirmDelete": {
+      "prompt": "¿Eliminar <b>{name}</b>? Esto no se puede deshacer."
+    },
+    "create": {
+      "breadcrumbNew": "Nueva campaña",
+      "step": "Paso 1 de 2 · Vuelca tu mundo",
+      "title": "Empieza una nueva crónica",
+      "subtitle": "Pega tus notas de campaña tal y como están hoy. El Escriba redactará las piezas; revisarás y editarás todo antes de que se guarde nada.",
+      "nameLabel": "Nombre de la campaña",
+      "namePlaceholder": "La Ruta de la Sal",
+      "systemLabel": "Sistema de juego",
+      "systemPlaceholder": "D&D 5e, Pathfinder, …",
+      "toneLabel": "Tono o estilo",
+      "tonePlaceholder": "Supervivencia sombría, alta aventura, intriga política…",
+      "premiseLabel": "Contexto inicial / Premisa",
+      "charCounter": "{count} / {min} caracteres mínimo · {total} / {max}",
+      "premisePlaceholder": "Phandalin es un pueblo minero fronterizo. Un joven dragón blanco llamado Cryovain caza en las Montañas de la Espada. El Gremio del Oso Negro contrabandea por el distrito de almacenes, y los planes de un arma antidragón acaban de ser robados…",
+      "detailsLabel": "Detalles adicionales para el Escriba",
+      "detailsPlaceholder": "El grupo son cuatro PJ: un paladín, dos pícaros y un mago. Mantén la magia poco frecuente.",
+      "detailsHint": "Reglas de la casa, cosas que ignorar, nombres del grupo: cualquier cosa que dé forma a la extracción.",
+      "footerNote": "Tu texto se queda aquí si el Escriba no puede interpretarlo.",
+      "submit": "Analizar campaña →",
+      "analyzing": "Analizando...",
+      "loadingTitle": "Leyendo tu mundo",
+      "loadingCaption": "El Escriba está redactando PNJ, facciones, estado del mundo y arcos abiertos a partir de tus notas",
+      "extractError": "No se pudo analizar esa premisa ahora mismo. Inténtalo de nuevo.",
+      "nameRequired": "Ponle un nombre a tu campaña.",
+      "systemRequired": "Indica el sistema de juego que usas.",
+      "tooLong": "Tus notas suman {count} caracteres. Recórtalas por debajo de {max} para que el Escriba pueda con ellas."
+    },
+    "review": {
+      "breadcrumbNew": "Nueva campaña",
+      "breadcrumbReview": "Revisión",
+      "step": "Paso 2 de 2 · Revisa antes de que sea real",
+      "title": "Lo que encontró el Escriba",
+      "subtitle": "Cada elemento de abajo es una propuesta, no canon. Edita lo que quieras, elimina lo que esté mal, añade lo que falte y luego confirma para crear tu campaña.",
+      "scribeNotice": "El Escriba redactó <b>{count, plural, one {# elemento} other {# elementos}}</b> a partir de tus notas. Se quedan marcados como del Escriba hasta que los edites.",
+      "titleLabel": "Título de la campaña",
+      "descriptionLabel": "Descripción de la campaña",
+      "worldStateLabel": "Estado del mundo",
+      "npcsSection": "PNJ detectados",
+      "factionsSection": "Facciones detectadas",
+      "arcsSection": "Arcos abiertos detectados",
+      "npcAdd": "+ Añadir PNJ",
+      "factionAdd": "+ Añadir facción",
+      "arcAdd": "+ Añadir arco",
+      "npcEmpty": "Aún no hay nada. Añade un PNJ manualmente si el Escriba se dejó alguno.",
+      "factionEmpty": "Aún no hay nada. Añade una facción manualmente si el Escriba se dejó alguna.",
+      "arcEmpty": "Aún no hay nada. Añade un arco manualmente si el Escriba se dejó alguno.",
+      "back": "Atrás",
+      "confirm": "Confirmar y crear campaña",
+      "creating": "Creando...",
+      "saveError": "No se pudo guardar esta campaña ahora mismo. Inténtalo de nuevo.",
+      "loadingTitle": "Encuadernando tu crónica",
+      "loadingCaption": "Guardando el estado del mundo, PNJ, facciones y arcos que confirmaste"
     }
   },
   "Entities": {
@@ -289,11 +400,33 @@
     "cancel": "Cancelar",
     "add": "Añadir",
     "save": "Guardar",
+    "saveChanges": "Guardar cambios",
+    "saving": "Guardando…",
     "delete": "Eliminar",
+    "deleting": "Eliminando…",
+    "remove": "Quitar",
     "edit": "Editar",
-    "tryAgain": "Intentar de nuevo",
+    "retry": "Reintentar",
     "originScribe": "✦ Escriba",
     "originEdited": "✎ Editado por ti",
+    "fields": {
+      "name": "Nombre",
+      "title": "Título",
+      "description": "Descripción",
+      "currentState": "Estado actual",
+      "motivation": "Motivación",
+      "currentStance": "Postura actual",
+      "objective": "Objetivo",
+      "goals": "Objetivos",
+      "priority": "Prioridad",
+      "status": "Estado"
+    },
+    "rowLabel": {
+      "currentState": "Estado actual:",
+      "motivation": "Motivación:",
+      "stance": "Postura:",
+      "objective": "Objetivo:"
+    },
     "priority": {
       "high": "Alta",
       "medium": "Media",
@@ -304,7 +437,8 @@
       "dormant": "Inactivo",
       "resolved": "Resuelto",
       "discarded": "Descartado"
-    }
+    },
+    "priorityFlag": "{priority, select, high {prioridad alta} medium {prioridad media} low {prioridad baja} other {priority}}"
   },
   "Shared": {
     "loadingTitle": "El Escriba está escribiendo",
@@ -325,10 +459,10 @@
     "backHome": "← Volver al inicio",
     "lastUpdated": "Última actualización: junio de 2026",
     "cookiesPage": {
-      "metaTitle": "Cookies — Lazy Lands",
+      "metaTitle": "Cookies · Lazy Lands",
       "title": "Política de cookies",
       "intro": "Lazy Lands solo usa cookies técnicamente necesarias y claves de almacenamiento local. No usamos cookies publicitarias, píxeles de seguimiento ni scripts de analítica de terceros. La autenticación de Supabase usa su clave de almacenamiento por defecto con ámbito de proyecto, porque esta aplicación no configura un nombre de almacenamiento de auth de Supabase personalizado.",
-      "exemptionTitle": "Exención técnica — LSSI-CE Art. 22.2",
+      "exemptionTitle": "Exención técnica: LSSI-CE Art. 22.2",
       "exemptionBody": "Conforme a la LSSI-CE Art. 22.2 (Ley de Servicios de la Sociedad de la Información y de Comercio Electrónico, art. 22.2) y sus equivalentes europeos, las cookies técnicamente necesarias estrictamente requeridas para prestar un servicio solicitado no requieren consentimiento previo. Todos los elementos de almacenamiento que se enumeran a continuación se acogen a esta exención técnica.",
       "itemsTitle": "Elementos de almacenamiento en uso",
       "authTokenDesc": "Almacenamiento de la sesión de autenticación de Supabase que usan los clientes por defecto <code>@supabase/ssr</code> de esta aplicación. La referencia del proyecto proviene de la URL de Supabase configurada, por ejemplo <code>sb-abcdefghijklmnopqrst-auth-token</code>. Contiene la carga de la sesión de Supabase necesaria para la continuidad del inicio de sesión y las solicitudes autenticadas; se borra al cerrar sesión.",
@@ -340,24 +474,24 @@
       "contactBody": "¿Tienes preguntas sobre esta política? Escríbenos a <mail>contacto@danilopgon.com</mail>."
     },
     "privacyPage": {
-      "metaTitle": "Política de privacidad — Lazy Lands",
+      "metaTitle": "Política de privacidad · Lazy Lands",
       "title": "Política de privacidad",
       "controllerTitle": "Responsable del tratamiento",
       "controllerBody": "El responsable legal del tratamiento está pendiente de la revisión legal final. Hasta que se publiquen una entidad formal y un canal de contacto, esta página es un marcador de posición de implementación no indexado y no debe tratarse como aviso legal definitivo.",
       "collectTitle": "Datos que recopilamos",
       "collectIntro": "Cuando usas Lazy Lands, recopilamos:",
-      "collectEmail": "<b>Dirección de correo electrónico</b> — se usa para la autenticación y las comunicaciones del producto.",
-      "collectContent": "<b>Contenido de campaña</b> — las notas, PNJ, facciones, registros de sesión y demás contenido que creas dentro de la aplicación. Estos datos son tuyos y solo tú puedes acceder a ellos.",
-      "collectTokens": "<b>Tokens de autenticación</b> — tokens técnicos (Supabase) almacenados en tu navegador para mantener tu sesión.",
+      "collectEmail": "<b>Dirección de correo electrónico</b>: se usa para la autenticación y las comunicaciones del producto.",
+      "collectContent": "<b>Contenido de campaña</b>: las notas, PNJ, facciones, registros de sesión y demás contenido que creas dentro de la aplicación. Estos datos son tuyos y solo tú puedes acceder a ellos.",
+      "collectTokens": "<b>Tokens de autenticación</b>: tokens técnicos (Supabase) almacenados en tu navegador para mantener tu sesión.",
       "legalBasisTitle": "Base jurídica",
-      "legalBasisBody": "El tratamiento se basa en el <b>RGPD Art. 6.1.b</b> — el tratamiento es necesario para la ejecución de un contrato en el que eres parte (los términos del servicio de Lazy Lands), o para aplicar medidas a petición tuya antes de la celebración de un contrato.",
+      "legalBasisBody": "El tratamiento se basa en el <b>RGPD Art. 6.1.b</b>: el tratamiento es necesario para la ejecución de un contrato en el que eres parte (los términos del servicio de Lazy Lands), o para aplicar medidas a petición tuya antes de la celebración de un contrato.",
       "rightsTitle": "Tus derechos",
       "rightsIntro": "Conforme al RGPD, tienes los siguientes derechos sobre tus datos personales:",
-      "rightAccess": "<b>Derecho de acceso</b> — solicitar una copia de los datos personales que tenemos sobre ti.",
-      "rightRectify": "<b>Derecho de rectificación</b> — solicitar la corrección de datos inexactos.",
-      "rightErasure": "<b>Derecho de supresión</b> — solicitar la eliminación de tus datos personales («derecho al olvido»).",
-      "rightPortability": "<b>Derecho a la portabilidad</b> — recibir tus datos en un formato estructurado y legible por máquina.",
-      "rightObject": "<b>Derecho de oposición</b> — oponerte al tratamiento basado en intereses legítimos.",
+      "rightAccess": "<b>Derecho de acceso</b>: solicitar una copia de los datos personales que tenemos sobre ti.",
+      "rightRectify": "<b>Derecho de rectificación</b>: solicitar la corrección de datos inexactos.",
+      "rightErasure": "<b>Derecho de supresión</b>: solicitar la eliminación de tus datos personales («derecho al olvido»).",
+      "rightPortability": "<b>Derecho a la portabilidad</b>: recibir tus datos en un formato estructurado y legible por máquina.",
+      "rightObject": "<b>Derecho de oposición</b>: oponerte al tratamiento basado en intereses legítimos.",
       "rightsContact": "Para ejercer cualquiera de estos derechos antes de que se publique nuestro canal de contacto formal, escríbenos a <b>privacy@lazylands.app</b> (buzón temporal, supervisado durante el acceso anticipado).",
       "retentionTitle": "Conservación de los datos",
       "retentionBody": "Conservamos tus datos mientras tu cuenta esté activa. Eliminar tu cuenta borra todos los datos de campaña. Los registros de autenticación se conservan hasta 90 días por motivos de seguridad.",

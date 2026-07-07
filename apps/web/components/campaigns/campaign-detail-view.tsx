@@ -1,9 +1,11 @@
 'use client'
 
 import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 
 import { WorldStateEditor } from './world-state-editor'
 
+import { useAppLocale } from '@/i18n/use-app-locale'
 import { formatShortDate } from '@/lib/format'
 
 import type { CampaignDetailResponse } from '@/lib/campaigns/schemas'
@@ -20,6 +22,9 @@ type CampaignDetailViewProps = {
  * @returns {React.ReactElement} The campaign detail view element.
  */
 export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
+  const t = useTranslations('Campaigns')
+  const te = useTranslations('Entities')
+  const locale = useAppLocale()
   const kicker = [campaign.system, campaign.tone].filter(Boolean).join(' · ')
   // `active`/`dormant` arcs are the unresolved threads that need attention;
   // `resolved`/`discarded` are terminal (design Decision 9).
@@ -32,7 +37,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
     <div className="ll-view-enter">
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
         <Link href="/dashboard" className="hover:text-[var(--ink)]">
-          Campaigns
+          {t('breadcrumbRoot')}
         </Link>{' '}
         / <b className="text-[var(--ink)]">{campaign.title}</b>
       </nav>
@@ -41,14 +46,16 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
         <div>
           {kicker && (
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
-              Campaign · {kicker}
+              {t('detail.kicker', { kicker })}
             </p>
           )}
           <h1 className="mt-2 font-serif text-[38px] font-semibold tracking-[-0.03em] text-[var(--ink)]">
             {campaign.title}
           </h1>
           <p className="mt-1 text-sm text-[var(--ink-2)]">
-            Updated {formatShortDate(campaign.updated_at)}
+            {t('detail.updated', {
+              date: formatShortDate(campaign.updated_at, locale),
+            })}
           </p>
         </div>
       </div>
@@ -59,7 +66,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
-            NPCs
+            {t('detail.statNpcs')}
           </dt>
           <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.npcs.length}
@@ -70,7 +77,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
-            Factions
+            {t('detail.statFactions')}
           </dt>
           <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.factions.length}
@@ -81,7 +88,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           className="border-b-2 border-[var(--border)] p-4 last:border-b-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
-            Arcs
+            {t('detail.statArcs')}
           </dt>
           <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.arcs.length}
@@ -97,7 +104,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                 /01
               </span>
               <h3 className="font-serif text-[16px] font-semibold text-[var(--ink)]">
-                The state of the world
+                {t('detail.worldStateHeading')}
               </h3>
             </div>
           </div>
@@ -116,13 +123,13 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                 /02
               </span>
               <h3 className="font-serif text-[16px] font-semibold text-[var(--ink)]">
-                Recent sessions
+                {t('detail.recentSessions')}
               </h3>
             </div>
           </div>
           <div className="mt-3 rounded border-2 border-dashed border-[var(--dotted)] bg-[var(--paper)] p-5 opacity-60">
             <p className="text-sm italic text-[var(--ink-3)]">
-              Coming in a later chapter
+              {t('detail.comingSoon')}
             </p>
           </div>
         </div>
@@ -135,14 +142,14 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                   /03
                 </span>
                 <h3 className="font-serif text-[16px] font-semibold text-[var(--ink)]">
-                  Arcs needing attention
+                  {t('detail.arcsNeedingAttention')}
                 </h3>
               </div>
               <Link
                 href={`/campaigns/${campaign.id}/arcs`}
                 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
-                All arcs →
+                {t('detail.allArcs')}
               </Link>
             </div>
           </div>
@@ -161,7 +168,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                   </div>
                 )}
                 <span className="mt-1 inline-block font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
-                  {arc.status}
+                  {te(`status.${arc.status}`)}
                 </span>
               </div>
             ))}
@@ -175,13 +182,13 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                 /04
               </span>
               <h3 className="font-serif text-[16px] font-semibold text-[var(--ink)]">
-                Active memories
+                {t('detail.activeMemories')}
               </h3>
             </div>
           </div>
           <div className="mt-3 rounded border-2 border-dashed border-[var(--dotted)] bg-[var(--paper)] p-5 opacity-60">
             <p className="text-sm italic text-[var(--ink-3)]">
-              Coming in a later chapter
+              {t('detail.comingSoon')}
             </p>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -130,7 +130,7 @@ describe('ArcsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('The Spider Pact')).toBeInTheDocument()
     })
-    expect(screen.getByText('active')).toBeInTheDocument()
+    expect(screen.getByText('Active')).toBeInTheDocument()
     expect(screen.getByText(/high priority/i)).toBeInTheDocument()
     expect(screen.getByText(/a deal in the shadows/i)).toBeInTheDocument()
     expect(screen.getByText(/scribe/i)).toBeInTheDocument()

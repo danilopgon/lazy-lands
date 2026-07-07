@@ -87,7 +87,7 @@ describe('/cookies page (LEGAL-001)', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ locale: 'es' }),
     })
-    expect((metadata as { title?: string }).title).toBe('Cookies — Lazy Lands')
+    expect((metadata as { title?: string }).title).toBe('Cookies · Lazy Lands')
   })
 })
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
@@ -23,15 +24,6 @@ type ArcModalProps = {
 const PRIORITIES: Priority[] = ['high', 'medium', 'low']
 const STATUSES: ArcStatus[] = ['active', 'dormant', 'resolved', 'discarded']
 
-/**
- * Present a stable lowercase code as a capitalized label (design Decision 9).
- * @param {string} code - The lowercase enum code (e.g. "active").
- * @returns {string} The capitalized label (e.g. "Active").
- */
-function label(code: string): string {
-  return code.charAt(0).toUpperCase() + code.slice(1)
-}
-
 const selectClass =
   'w-full border-[1.5px] border-dashed border-[var(--dotted)] bg-[var(--paper)] px-3 py-2 font-sans text-sm text-[var(--ink)] focus:border-[var(--accent)] focus:outline-none'
 
@@ -52,6 +44,8 @@ const selectClass =
  */
 export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
   const isEdit = arc !== null
+  const t = useTranslations('Campaigns')
+  const te = useTranslations('Entities')
   const queryClient = useQueryClient()
   const [title, setTitle] = useState(arc?.title ?? '')
   const [description, setDescription] = useState(arc?.description ?? '')
@@ -78,21 +72,19 @@ export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
     },
     onError: (err: unknown) => {
       setError(
-        err instanceof CampaignApiError
-          ? err.message
-          : 'Could not save this arc. Please try again.'
+        err instanceof CampaignApiError ? err.message : t('arcs.saveError')
       )
     },
   })
 
   return (
     <Modal
-      title={isEdit ? 'Edit arc' : 'New arc'}
+      title={isEdit ? t('arcs.editTitle') : t('arcs.newTitle')}
       onClose={onClose}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {te('cancel')}
           </Button>
           <Button
             variant="ink"
@@ -103,10 +95,10 @@ export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
             }}
           >
             {mutation.isPending
-              ? 'Saving…'
+              ? te('saving')
               : isEdit
-                ? 'Save changes'
-                : 'Add arc'}
+                ? te('saveChanges')
+                : t('arcs.addAction')}
           </Button>
         </>
       }
@@ -116,10 +108,10 @@ export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
           <p>{error}</p>
         </Notice>
       ) : null}
-      <Field label="Title">
+      <Field label={te('fields.title')}>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} />
       </Field>
-      <Field label="Description">
+      <Field label={te('fields.description')}>
         <Textarea
           rows={2}
           value={description}
@@ -127,7 +119,7 @@ export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
         />
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Priority">
+        <Field label={te('fields.priority')}>
           <select
             className={selectClass}
             value={priority}
@@ -135,12 +127,12 @@ export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
           >
             {PRIORITIES.map((p) => (
               <option key={p} value={p}>
-                {label(p)}
+                {te(`priority.${p}`)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Status">
+        <Field label={te('fields.status')}>
           <select
             className={selectClass}
             value={status}
@@ -148,7 +140,7 @@ export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                {label(s)}
+                {te(`status.${s}`)}
               </option>
             ))}
           </select>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,8 @@ export function WorldStateEditor({
   campaignId,
   initialValue,
 }: WorldStateEditorProps) {
+  const t = useTranslations('Campaigns')
+  const te = useTranslations('Entities')
   const queryClient = useQueryClient()
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState(initialValue ?? '')
@@ -49,7 +52,7 @@ export function WorldStateEditor({
       setError(
         err instanceof CampaignApiError
           ? err.message
-          : 'Could not save the world state. Please try again.'
+          : t('worldState.saveError')
       )
     },
   })
@@ -96,7 +99,7 @@ export function WorldStateEditor({
               mutation.isPending || !draft.trim() || draft === displayValue
             }
           >
-            {mutation.isPending ? 'Saving…' : 'Save changes'}
+            {mutation.isPending ? te('saving') : te('saveChanges')}
           </Button>
           <Button
             size="sm"
@@ -104,7 +107,7 @@ export function WorldStateEditor({
             onClick={handleCancel}
             disabled={mutation.isPending}
           >
-            Cancel
+            {te('cancel')}
           </Button>
         </div>
       </div>
@@ -116,7 +119,7 @@ export function WorldStateEditor({
       <p className="ll-dropcap font-serif text-[16.5px] leading-[1.65] text-[var(--ink)]">
         {displayValue || (
           <span className="italic text-[var(--ink-3)]">
-            No world state recorded yet.
+            {t('worldState.empty')}
           </span>
         )}
       </p>
@@ -125,7 +128,7 @@ export function WorldStateEditor({
         className="mt-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
         onClick={handleEdit}
       >
-        Edit
+        {te('edit')}
       </button>
     </div>
   )

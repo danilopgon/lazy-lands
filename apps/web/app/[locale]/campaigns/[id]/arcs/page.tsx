@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { EntityListScreen } from '@/components/campaigns/entity-list-screen'
@@ -20,6 +21,7 @@ import type { ArcResponse } from '@/lib/campaigns/schemas'
 export default function ArcsPage() {
   const params = useParams<{ id: string }>()
   const campaignId = params.id
+  const t = useTranslations('Campaigns')
   const queryClient = useQueryClient()
   const [modal, setModal] = useState<'add' | ArcResponse | null>(null)
   const [deleting, setDeleting] = useState<ArcResponse | null>(null)
@@ -27,14 +29,14 @@ export default function ArcsPage() {
   return (
     <>
       <EntityListScreen
-        kicker="Campaign · Open arcs"
-        title="Open arcs"
-        addLabel="+ New arc"
+        kicker={t('arcs.kicker')}
+        title={t('arcs.title')}
+        addLabel={t('arcs.add')}
         subtitle={(campaign) => {
           const inPlay = campaign.arcs.filter(
             (arc) => arc.status === 'active' || arc.status === 'dormant'
           ).length
-          return `${inPlay} threads still in play`
+          return t('arcs.subtitle', { count: inPlay })
         }}
         onAdd={() => setModal('add')}
       >
@@ -58,7 +60,8 @@ export default function ArcsPage() {
 
       {deleting ? (
         <ConfirmDeleteModal
-          entityLabel="arc"
+          title={t('arcs.deleteTitle')}
+          deleteError={t('arcs.deleteError')}
           itemName={deleting.title}
           onConfirm={async () => {
             await deleteArc(deleting.id)

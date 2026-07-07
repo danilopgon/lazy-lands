@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { OriginBadge } from '@/components/ui/origin-badge'
@@ -31,15 +35,16 @@ export function FactionList({
   onEdit,
   onDelete,
 }: FactionListProps) {
+  const t = useTranslations('Campaigns')
   if (factions.length === 0) {
     return (
       <EmptyState
         ornament="⬡"
-        title="No factions yet"
-        description="Guilds, cults, courts: anything that wants something. Add them and track how they react."
+        title={t('factions.emptyTitle')}
+        description={t('factions.emptyDescription')}
         action={
           <Button variant="ink" onClick={onAdd}>
-            + Add a faction
+            {t('factions.emptyAction')}
           </Button>
         }
       />
@@ -79,6 +84,7 @@ function FactionRow({
   onEdit?: (faction: FactionResponse) => void
   onDelete?: (faction: FactionResponse) => void
 }) {
+  const t = useTranslations('Entities')
   return (
     <div className="border-b border-dotted border-[var(--dotted)] py-5 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
@@ -96,20 +102,22 @@ function FactionRow({
             className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
             onClick={() => onEdit?.(faction)}
           >
-            Edit
+            {t('edit')}
           </button>
           <button
             type="button"
             className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-3)] hover:underline"
             onClick={() => onDelete?.(faction)}
           >
-            Delete
+            {t('delete')}
           </button>
         </div>
       </div>
       {faction.current_stance ? (
         <p className="mt-2 text-sm text-[var(--ink-2)]">
-          <b className="font-semibold text-[var(--ink)]">Stance:</b>{' '}
+          <b className="font-semibold text-[var(--ink)]">
+            {t('rowLabel.stance')}
+          </b>{' '}
           {faction.current_stance}
         </p>
       ) : null}
@@ -120,7 +128,9 @@ function FactionRow({
       ) : null}
       {faction.goals ? (
         <p className="mt-2 text-sm text-[var(--ink-2)]">
-          <b className="font-semibold text-[var(--ink)]">Objective:</b>{' '}
+          <b className="font-semibold text-[var(--ink)]">
+            {t('rowLabel.objective')}
+          </b>{' '}
           {faction.goals}
         </p>
       ) : null}

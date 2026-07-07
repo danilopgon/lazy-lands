@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { EntityListScreen } from '@/components/campaigns/entity-list-screen'
@@ -20,6 +21,7 @@ import type { FactionResponse } from '@/lib/campaigns/schemas'
 export default function FactionsPage() {
   const params = useParams<{ id: string }>()
   const campaignId = params.id
+  const t = useTranslations('Campaigns')
   const queryClient = useQueryClient()
   const [modal, setModal] = useState<'add' | FactionResponse | null>(null)
   const [deleting, setDeleting] = useState<FactionResponse | null>(null)
@@ -27,11 +29,11 @@ export default function FactionsPage() {
   return (
     <>
       <EntityListScreen
-        kicker="Campaign · Factions"
-        title="Factions"
-        addLabel="+ New faction"
+        kicker={t('factions.kicker')}
+        title={t('factions.title')}
+        addLabel={t('factions.add')}
         subtitle={(campaign) =>
-          `${campaign.factions.length} powers reacting to the party`
+          t('factions.subtitle', { count: campaign.factions.length })
         }
         onAdd={() => setModal('add')}
       >
@@ -55,7 +57,8 @@ export default function FactionsPage() {
 
       {deleting ? (
         <ConfirmDeleteModal
-          entityLabel="faction"
+          title={t('factions.deleteTitle')}
+          deleteError={t('factions.deleteError')}
           itemName={deleting.name}
           onConfirm={async () => {
             await deleteFaction(deleting.id)

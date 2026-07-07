@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,6 +37,7 @@ export function EditableProse({
   rows = 3,
   testId,
 }: EditableProseProps) {
+  const t = useTranslations('Entities')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
 
@@ -81,7 +83,7 @@ export function EditableProse({
           )}
           <div className="flex gap-2">
             <Button type="button" size="sm" onClick={save}>
-              Save changes
+              {t('saveChanges')}
             </Button>
             <Button
               type="button"
@@ -89,7 +91,7 @@ export function EditableProse({
               size="sm"
               onClick={() => setEditing(false)}
             >
-              Cancel
+              {t('cancel')}
             </Button>
           </div>
         </div>
@@ -111,7 +113,7 @@ export function EditableProse({
             className="mt-2"
             onClick={startEdit}
           >
-            Edit
+            {t('edit')}
           </Button>
         </div>
       )}

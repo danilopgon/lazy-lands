@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { Link } from '@/i18n/navigation'
 import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
@@ -53,6 +54,7 @@ export function EntityListScreen({
   children,
 }: EntityListScreenProps) {
   const params = useParams<{ id: string }>()
+  const t = useTranslations('Campaigns')
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['campaign', params.id],
     queryFn: () => getCampaignDetail(params.id),
@@ -62,8 +64,8 @@ export function EntityListScreen({
     return (
       <main id="main-content" className="mx-auto max-w-[1100px] px-6 py-16">
         <LoadingScribe
-          title="The Scribe is writing"
-          caption={`Opening ${title}`}
+          title={t('screen.loadingTitle')}
+          caption={t('screen.opening', { title })}
         />
       </main>
     )
@@ -74,17 +76,13 @@ export function EntityListScreen({
     return (
       <main id="main-content" className="mx-auto max-w-[1100px] px-6 py-16">
         <Notice variant="error">
-          <p>
-            {isNotFound
-              ? 'Campaign not found. It may have been deleted or you do not have access.'
-              : 'Something went wrong while loading this campaign.'}
-          </p>
+          <p>{isNotFound ? t('screen.notFound') : t('screen.loadError')}</p>
           <button
             type="button"
             className="mt-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
             onClick={() => refetch()}
           >
-            Retry
+            {t('screen.retry')}
           </button>
         </Notice>
       </main>
@@ -102,7 +100,7 @@ export function EntityListScreen({
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
         <Link href="/dashboard" className="hover:text-[var(--ink)]">
-          Campaigns
+          {t('breadcrumbRoot')}
         </Link>{' '}
         /{' '}
         <Link

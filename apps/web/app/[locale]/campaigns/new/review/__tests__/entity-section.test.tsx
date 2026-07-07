@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
@@ -25,7 +25,8 @@ function Harness({ initial }: { initial: Row[] }) {
   return (
     <EntitySection<Row>
       title="NPCs"
-      singular="NPC"
+      addLabel="+ Add NPC"
+      emptyHint="Nothing here yet."
       items={items}
       fields={FIELDS}
       onChange={setItems}

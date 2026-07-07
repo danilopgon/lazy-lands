@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { EntityListScreen } from '@/components/campaigns/entity-list-screen'
@@ -20,6 +21,7 @@ import type { NpcResponse } from '@/lib/campaigns/schemas'
 export default function NpcsPage() {
   const params = useParams<{ id: string }>()
   const campaignId = params.id
+  const t = useTranslations('Campaigns')
   const queryClient = useQueryClient()
   // null = closed, 'add' = create, NpcResponse = edit that NPC.
   const [modal, setModal] = useState<'add' | NpcResponse | null>(null)
@@ -28,11 +30,11 @@ export default function NpcsPage() {
   return (
     <>
       <EntityListScreen
-        kicker="Campaign · NPCs"
-        title="NPCs"
-        addLabel="+ New NPC"
+        kicker={t('npcs.kicker')}
+        title={t('npcs.title')}
+        addLabel={t('npcs.add')}
         subtitle={(campaign) =>
-          `${campaign.npcs.length} characters tracked across the chronicle`
+          t('npcs.subtitle', { count: campaign.npcs.length })
         }
         onAdd={() => setModal('add')}
       >
@@ -56,7 +58,8 @@ export default function NpcsPage() {
 
       {deleting ? (
         <ConfirmDeleteModal
-          entityLabel="NPC"
+          title={t('npcs.deleteTitle')}
+          deleteError={t('npcs.deleteError')}
           itemName={deleting.name}
           onConfirm={async () => {
             await deleteNpc(deleting.id)

@@ -7,9 +7,10 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
-import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from '@/i18n/navigation'
+
+import { Link, useRouter } from '@/i18n/navigation'
 
 import { Button } from '@/components/ui/button'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
@@ -73,33 +74,6 @@ type ReviewDraftState = {
   arcs: ArcItem[]
 }
 
-const NPC_FIELDS: EntityField<NpcItem>[] = [
-  { key: 'name', label: 'Name', placeholder: 'Name' },
-  { key: 'description', label: 'Description', placeholder: 'Description' },
-  {
-    key: 'current_state',
-    label: 'Current state',
-    placeholder: 'Current state',
-  },
-  { key: 'motivation', label: 'Motivation', placeholder: 'Motivation' },
-]
-
-const FACTION_FIELDS: EntityField<FactionItem>[] = [
-  { key: 'name', label: 'Name', placeholder: 'Name' },
-  { key: 'description', label: 'Description', placeholder: 'Description' },
-  {
-    key: 'current_stance',
-    label: 'Current stance',
-    placeholder: 'Current stance',
-  },
-  { key: 'goals', label: 'Goals', placeholder: 'Goals' },
-]
-
-const ARC_FIELDS: EntityField<ArcItem>[] = [
-  { key: 'title', label: 'Title', placeholder: 'Title' },
-  { key: 'description', label: 'Description', placeholder: 'Description' },
-]
-
 /**
  * Read the stored extraction draft (client-only) and shape it into the review
  * screen's state, assigning stable reviewIds. Returns null on the server or
@@ -147,9 +121,60 @@ function ReviewCampaignClient({
   initialDraft: ReviewDraftState
 }) {
   const router = useRouter()
+  const t = useTranslations('Campaigns')
+  const te = useTranslations('Entities')
   const [draft, setDraft] = useState(initialDraft)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+
+  const npcFields: EntityField<NpcItem>[] = [
+    { key: 'name', label: te('fields.name'), placeholder: te('fields.name') },
+    {
+      key: 'description',
+      label: te('fields.description'),
+      placeholder: te('fields.description'),
+    },
+    {
+      key: 'current_state',
+      label: te('fields.currentState'),
+      placeholder: te('fields.currentState'),
+    },
+    {
+      key: 'motivation',
+      label: te('fields.motivation'),
+      placeholder: te('fields.motivation'),
+    },
+  ]
+  const factionFields: EntityField<FactionItem>[] = [
+    { key: 'name', label: te('fields.name'), placeholder: te('fields.name') },
+    {
+      key: 'description',
+      label: te('fields.description'),
+      placeholder: te('fields.description'),
+    },
+    {
+      key: 'current_stance',
+      label: te('fields.currentStance'),
+      placeholder: te('fields.currentStance'),
+    },
+    {
+      key: 'goals',
+      label: te('fields.goals'),
+      placeholder: te('fields.goals'),
+    },
+  ]
+  const arcFields: EntityField<ArcItem>[] = [
+    {
+      key: 'title',
+      label: te('fields.title'),
+      placeholder: te('fields.title'),
+    },
+    {
+      key: 'description',
+      label: te('fields.description'),
+      placeholder: te('fields.description'),
+    },
+  ]
 
   const mutation = useMutation({
     mutationFn: (payload: CreateCampaignRequest) => createCampaign(payload),
@@ -160,9 +185,7 @@ function ReviewCampaignClient({
     onError: (err: unknown) => {
       setIsCreating(false)
       setSaveError(
-        err instanceof CampaignApiError
-          ? err.message
-          : 'Unable to save this campaign right now. Please try again.'
+        err instanceof CampaignApiError ? err.message : t('review.saveError')
       )
     },
   })
@@ -214,8 +237,8 @@ function ReviewCampaignClient({
     return (
       <main id="main-content" className="mx-auto max-w-[820px] px-6 py-16">
         <LoadingScribe
-          title="Binding your chronicle"
-          caption="Saving the world state, NPCs, factions and arcs you confirmed"
+          title={t('review.loadingTitle')}
+          caption={t('review.loadingCaption')}
         />
       </main>
     )
@@ -228,30 +251,32 @@ function ReviewCampaignClient({
     <main id="main-content" className="mx-auto max-w-[820px] px-6 py-16">
       <nav className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-2)]">
         <Link className="hover:text-[var(--accent-deep)]" href="/dashboard">
-          Campaigns
+          {t('breadcrumbRoot')}
         </Link>{' '}
-        / <Link href="/campaigns/new">New campaign</Link> /{' '}
-        <span className="text-[var(--ink)]">Review</span>
+        / <Link href="/campaigns/new">{t('review.breadcrumbNew')}</Link> /{' '}
+        <span className="text-[var(--ink)]">
+          {t('review.breadcrumbReview')}
+        </span>
       </nav>
       <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
-        Step 2 of 2 · Review before it&apos;s real
+        {t('review.step')}
       </p>
       <h1 className="mt-3 font-serif text-[38px] font-semibold leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
-        What the Scribe found
+        {t('review.title')}
       </h1>
       <p className="mt-4 max-w-[65ch] text-base leading-relaxed text-[var(--ink-2)]">
-        Every item below is a proposal, not canon. Edit anything, remove
-        what&apos;s wrong, add what&apos;s missing, then confirm to create your
-        campaign.
+        {t('review.subtitle')}
       </p>
 
       <Notice className="mt-8" variant="scribe" ornament="✦">
-        The Scribe drafted <strong>{scribeItemCount} items</strong> from your
-        notes. They stay marked as the Scribe&apos;s until you edit them.
+        {t.rich('review.scribeNotice', {
+          count: scribeItemCount,
+          b: (chunks) => <strong>{chunks}</strong>,
+        })}
       </Notice>
 
       <EditableProse
-        label="Campaign title"
+        label={t('review.titleLabel')}
         value={draft.title}
         edited={draft.titleEdited}
         onSave={(title) =>
@@ -260,7 +285,7 @@ function ReviewCampaignClient({
         testId="prose-title"
       />
       <EditableProse
-        label="Campaign description"
+        label={t('review.descriptionLabel')}
         value={draft.description}
         edited={draft.descriptionEdited}
         onSave={(description) =>
@@ -275,7 +300,7 @@ function ReviewCampaignClient({
         testId="prose-description"
       />
       <EditableProse
-        label="World state"
+        label={t('review.worldStateLabel')}
         value={draft.worldState}
         edited={draft.worldStateEdited}
         onSave={(worldState) =>
@@ -291,20 +316,22 @@ function ReviewCampaignClient({
       />
 
       <EntitySection<NpcItem>
-        title="NPCs detected"
-        singular="NPC"
+        title={t('review.npcsSection')}
+        addLabel={t('review.npcAdd')}
+        emptyHint={t('review.npcEmpty')}
         items={draft.npcs}
-        fields={NPC_FIELDS}
+        fields={npcFields}
         onChange={(npcs) => setDraft((current) => ({ ...current, npcs }))}
         testId="npc"
         extraDefaults={{ current_state: '', motivation: '' }}
       />
 
       <EntitySection<FactionItem>
-        title="Factions detected"
-        singular="faction"
+        title={t('review.factionsSection')}
+        addLabel={t('review.factionAdd')}
+        emptyHint={t('review.factionEmpty')}
         items={draft.factions}
-        fields={FACTION_FIELDS}
+        fields={factionFields}
         onChange={(factions) =>
           setDraft((current) => ({ ...current, factions }))
         }
@@ -313,10 +340,11 @@ function ReviewCampaignClient({
       />
 
       <EntitySection<ArcItem>
-        title="Open arcs detected"
-        singular="arc"
+        title={t('review.arcsSection')}
+        addLabel={t('review.arcAdd')}
+        emptyHint={t('review.arcEmpty')}
         items={draft.arcs}
-        fields={ARC_FIELDS}
+        fields={arcFields}
         onChange={(arcs) => setDraft((current) => ({ ...current, arcs }))}
         testId="arc"
         extraDefaults={{ priority: 'medium' }}
@@ -337,7 +365,7 @@ function ReviewCampaignClient({
           variant="secondary"
           onClick={() => router.push('/campaigns/new')}
         >
-          Back
+          {t('review.back')}
         </Button>
         <Button
           type="button"
@@ -345,8 +373,8 @@ function ReviewCampaignClient({
           disabled={isCreating || mutation.isPending}
         >
           {isCreating || mutation.isPending
-            ? 'Creating...'
-            : 'Confirm & create campaign'}
+            ? t('review.creating')
+            : t('review.confirm')}
         </Button>
       </div>
     </main>
