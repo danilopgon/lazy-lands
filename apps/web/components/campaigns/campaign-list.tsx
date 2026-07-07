@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -23,16 +24,17 @@ type CampaignListProps = {
  */
 export function CampaignList({ campaigns }: CampaignListProps) {
   const [query, setQuery] = useState('')
+  const t = useTranslations('Dashboard')
 
   if (campaigns.length === 0) {
     return (
       <EmptyState
         className="mt-7"
-        title="Your chronicle starts here"
-        description="Paste your existing campaign notes and the Scribe will draft your NPCs, factions, world state and open arcs, for you to review before anything becomes canon."
+        title={t('emptyTitle')}
+        description={t('emptyDescription')}
         action={
           <Button asChild variant="accent">
-            <Link href="/campaigns/new">+ Create your first campaign</Link>
+            <Link href="/campaigns/new">{t('emptyAction')}</Link>
           </Button>
         }
       />
@@ -54,12 +56,15 @@ export function CampaignList({ campaigns }: CampaignListProps) {
       <div className="mt-5 flex items-center gap-2.5">
         <Input
           className="max-w-[300px]"
-          placeholder="Search campaigns…"
+          placeholder={`${t('searchPlaceholder')}…`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <span className="font-mono text-[11px] text-[var(--ink-3)]">
-          {filtered.length} of {campaigns.length}
+          {t('helperCount', {
+            visible: filtered.length,
+            total: campaigns.length,
+          })}
         </span>
       </div>
       <div className="ll-camp-grid mt-3 grid grid-cols-1 gap-4 llg:grid-cols-2">
@@ -71,8 +76,8 @@ export function CampaignList({ campaigns }: CampaignListProps) {
         <div className="mt-4">
           <EmptyState
             ornament="✦"
-            title="No campaigns match that search"
-            description="Try a different name or game system."
+            title={t('emptySearchTitle')}
+            description={t('emptySearchDescription')}
           />
         </div>
       )}

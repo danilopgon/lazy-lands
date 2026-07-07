@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
+import { useRouter } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 
@@ -14,6 +15,7 @@ import { createClient } from '@/lib/supabase/client'
  */
 export function LogoutButton() {
   const router = useRouter()
+  const t = useTranslations('Nav')
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   /**
@@ -41,7 +43,7 @@ export function LogoutButton() {
       onClick={handleLogout}
       disabled={isSigningOut}
     >
-      {isSigningOut ? 'Signing out…' : 'Log out'}
+      {isSigningOut ? t('loggingOut') : t('logout')}
     </Button>
   )
 }

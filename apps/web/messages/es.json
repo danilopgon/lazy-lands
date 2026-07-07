@@ -1,0 +1,509 @@
+{
+  "Root": {
+    "title": "Lazy Lands",
+    "description": "Compañero de campaña para Dungeon Masters",
+    "skipLink": "Saltar al contenido"
+  },
+  "Nav": {
+    "main": "Principal",
+    "language": "Idioma",
+    "english": "English",
+    "spanish": "Español",
+    "signIn": "Iniciar sesión",
+    "register": "Comenzar crónica",
+    "registerShort": "Comenzar",
+    "registerSrOnlySuffix": "crónica",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "mobileNavigation": "Navegación móvil",
+    "campaigns": "Campañas",
+    "overview": "Resumen",
+    "npcs": "PNJ",
+    "factions": "Facciones",
+    "arcs": "Arcos",
+    "memory": "Memoria",
+    "sessions": "Sesiones",
+    "settings": "Ajustes",
+    "logout": "Cerrar sesión",
+    "loggingOut": "Cerrando sesión…"
+  },
+  "Landing": {
+    "metadataTitle": "Lazy Lands · Compañero de campaña para Dungeon Masters",
+    "metadataDescription": "Sigue cada PNJ, facción y consecuencia entre sesiones. Lazy Lands ayuda a los Dungeon Masters a capturar contexto, validar recuerdos y generar informes de sesión para que el mundo recuerde lo que hicieron tus jugadores.",
+    "announcement": {
+      "body": "En desarrollo activo: publicamos novedades cada semana. <signup>Regístrate</signup> y serás el primero en enterarte.",
+      "dismiss": "Descartar anuncio"
+    },
+    "nav": {
+      "product": "Producto",
+      "how": "Cómo funciona",
+      "earlyAccess": "Acceso anticipado",
+      "privacy": "Privacidad",
+      "cookies": "Cookies",
+      "footerLabel": "Pie de página"
+    },
+    "hero": {
+      "badgeBeta": "✦ Beta abierta",
+      "badgeAudience": "Para Dungeon Masters que de verdad llevan campañas largas",
+      "title": "Tu campaña,<break></break><accent>sin amnesia</accent>.",
+      "body": "El compañero que recuerda cada PNJ, cada facción y cada consecuencia, para que tu próxima sesión empiece desde la memoria aceptada y el mundo recuerde lo que hicieron tus jugadores.",
+      "cta": "Comenzar crónica →",
+      "demoCta": "✦ Verlo en una campaña real",
+      "metaBeta": "Beta abierta",
+      "metaScribe": "El Escriba propone, tú decides",
+      "metaFree": "Gratis durante el acceso anticipado"
+    },
+    "marquee": [
+      "Sesión VII aceptada: Halia favorece a dos miembros del grupo",
+      "Arco abierto: los planes antidragón necesitan un núcleo estable",
+      "Cambio de postura de facción: el Gremio del Oso Negro observa",
+      "Propuesta del Escriba a la espera de revisión del DM",
+      "Las notas privadas quedan fuera de las exportaciones",
+      "El próximo informe usa solo memorias aceptadas"
+    ],
+    "pillars": {
+      "kicker": "Qué hace",
+      "title": "No es un generador de un solo uso. Es memoria.",
+      "description": "Lazy Lands convierte los registros de sesión en continuidad de campaña revisable: qué cambió, quién reaccionó y qué puede usar el Escriba a continuación.",
+      "loop": [
+        {
+          "label": "Registrar",
+          "title": "Sesión VII: el incendio del almacén",
+          "body": "El DM anota lo que pasó en la mesa, incluidas las consecuencias y las notas privadas."
+        },
+        {
+          "label": "Revisar",
+          "title": "El Escriba propone memorias",
+          "body": "Cada sugerencia explica por qué importa y mantiene visibles Aceptar, Editar y Descartar."
+        },
+        {
+          "label": "Preparar",
+          "title": "Solo vuelve la memoria aceptada",
+          "body": "El próximo informe usa el contexto confirmado, no las sugerencias descartadas ni las notas privadas."
+        }
+      ],
+      "stats": [
+        { "value": "5", "label": "PNJ en juego" },
+        { "value": "4", "label": "Tramas de facción" },
+        { "value": "3", "label": "Arcos abiertos" }
+      ],
+      "memoryPlayTitle": "Memoria en juego",
+      "memoryPlayBody": "Dos miembros del grupo se ganaron el favor de Halia; dos lo dañaron. El próximo informe debe tener en cuenta la confianza dividida en la Lonja de los Mineros.",
+      "tagAccepted": "aceptada",
+      "tagNpc": "Halia Thornton",
+      "tagSession": "Sesión VII"
+    },
+    "briefing": {
+      "title": "Un informe que se lee como tu propia preparación, solo que más rápido.",
+      "body": "No es un volcado de datos. Un borrador ordenado que puedes leer cinco minutos antes de la sesión. Siempre un <em>borrador</em>: tú lo editas, tú decides qué pasa.",
+      "specs": [
+        { "k": "Aceptadas", "v": "las memorias alimentan el informe" },
+        { "k": "Descartadas", "v": "las sugerencias quedan fuera" },
+        { "k": "Privadas", "v": "las notas nunca se exportan" },
+        { "k": "Editable", "v": "primero borrador, luego canon" }
+      ]
+    },
+    "mock": {
+      "label": "Informe · Sesión VIII",
+      "title": "El Libro Silencioso",
+      "draft": "borrador",
+      "synopsisLabel": "01 / Sinopsis",
+      "synopsis": "Halia Thornton cita al grupo en la Lonja de los Mineros. Sabe que provocaron el <u>incendio del almacén</u> y ofrece silencio a cambio de un trabajo discreto.",
+      "npcsLabel": "02 / PNJ clave",
+      "npcs": [
+        {
+          "name": "Halia Thornton",
+          "role": "Maestra de gremio · mano del Zhentarim",
+          "accent": false
+        },
+        {
+          "name": "Ander Margaster",
+          "role": "Aliado receloso · debe un favor",
+          "accent": false
+        },
+        {
+          "name": "Robert Herman",
+          "role": "La paciencia por fin se agota",
+          "accent": true
+        }
+      ],
+      "statusActive": "activo",
+      "statusInPlay": "en juego",
+      "memoryLabel": "✦ Memoria en juego",
+      "memory": "Aceptaste en la Sesión VII: <em>«Dos miembros del grupo se ganaron el favor de Halia; dos lo dañaron.»</em> El Escriba construyó su oferta a partir de ello."
+    },
+    "how": {
+      "title": "Tres pasos. Ni uno más.",
+      "productState": "Estado del producto",
+      "steps": [
+        {
+          "title": "Crea tu campaña",
+          "body": "Ponle nombre, elige un sistema, pega la premisa. El Escriba redacta tus PNJ, facciones y arcos para que los revises, todos, antes de que sean canon.",
+          "state": "Revisión de extracción: PNJ, facciones y arcos son editables antes de guardar."
+        },
+        {
+          "title": "Registra cada sesión",
+          "body": "Cuando la mesa se despeja, escribe lo que pasó. El Escriba propone las memorias que merece la pena conservar. Tú aceptas, editas o descartas.",
+          "state": "Revisión de memoria: los estados sugerido, aceptado y descartado quedan visibles."
+        },
+        {
+          "title": "Prepara la siguiente",
+          "body": "Pulsa Preparar. Recibe un informe construido sobre todo lo que aceptaste. Edítalo. Imprímelo. Dirígelo.",
+          "state": "Borrador de sesión: cada sección sigue siendo editable antes de exportar."
+        }
+      ]
+    },
+    "philosophy": {
+      "quote": "El Escriba es un borrador, nunca el autor. Nada llega a tu mesa hasta que tú lo haces canon.",
+      "caption": "Toda la filosofía, en una línea"
+    },
+    "cta": {
+      "cornerTitle": "Entrada de crónica",
+      "cornerBeta": "Beta abierta",
+      "cornerReview": "Requiere revisión del DM",
+      "title": "Comienza tu primera crónica.",
+      "body": "Gratis durante el acceso anticipado. Empieza con una campaña y mantén cada memoria aceptada revisable desde la primera sesión.",
+      "cta": "Comenzar crónica →",
+      "demoCta": "Recorrer una campaña de demostración"
+    },
+    "footer": {
+      "madeBy": "© 2026 · hecho por un DM cansado de olvidar"
+    },
+    "comingSoon": "Próximamente"
+  },
+  "Auth": {
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "login": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer contraseña",
+    "backHome": "Volver al inicio",
+    "loading": "Consultando la crónica",
+    "fallbackError": "Algo salió mal. Inténtalo de nuevo.",
+    "passwordPattern": "La contraseña debe incluir mayúscula, minúscula, número y carácter especial",
+    "passwordMismatch": "Las contraseñas deben coincidir",
+    "passwordMinimum": "La contraseña debe tener al menos 8 caracteres",
+    "passwordConfirmRequired": "Confirma tu contraseña",
+    "passwordRequirementsTitle": "La contraseña debe incluir",
+    "passwordRequirementsProgress": "{met} de {total} requisitos cumplidos",
+    "passwordRequirements": {
+      "length": "Usa al menos 8 caracteres",
+      "lowercase": "Incluye una letra minúscula",
+      "uppercase": "Incluye una letra mayúscula",
+      "number": "Incluye un número",
+      "special": "Incluye un carácter especial"
+    },
+    "emailInvalid": "Formato de correo no válido",
+    "passwordRequired": "La contraseña es obligatoria",
+    "backToSignIn": "Volver a iniciar sesión",
+    "loginTitle": "Iniciar sesión",
+    "loginSubtitle": "Introduce tus credenciales para acceder a tus campañas.",
+    "loginSubmit": "Iniciar sesión",
+    "loginSubmitting": "Iniciando sesión...",
+    "loginNoAccount": "¿No tienes cuenta?",
+    "loginCreateAccount": "Crear una cuenta",
+    "loginError": "No se pudo iniciar sesión ahora mismo. Inténtalo de nuevo.",
+    "registerTitle": "Crear una cuenta",
+    "registerSubtitle": "Empieza tu estantería de campañas. Te enviaremos un enlace de confirmación a tu bandeja de entrada.",
+    "registerSubmit": "Registrarse",
+    "registerSubmitting": "Creando cuenta...",
+    "registerHaveAccount": "¿Ya tienes cuenta?",
+    "registerError": "No se pudo completar el registro ahora mismo. Inténtalo de nuevo.",
+    "registerSuccessTitle": "Revisa tu correo",
+    "registerSuccessBody": "Hemos enviado un enlace de confirmación a tu bandeja de entrada. Haz clic en él para activar tu cuenta y empezar tu primera campaña.",
+    "forgotTitle": "Restablecer contraseña",
+    "forgotSubtitle": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+    "forgotSubmit": "Enviar correo de restablecimiento",
+    "forgotSubmitting": "Enviando...",
+    "forgotRemembered": "¿Recordaste tu contraseña?",
+    "forgotSentTitle": "Revisa tu correo",
+    "forgotSentBody": "Si existe una cuenta con esa dirección, se ha enviado un correo para restablecer la contraseña.",
+    "resetTitle": "Establece una nueva contraseña",
+    "resetSubtitle": "Elige una nueva contraseña para tu cuenta.",
+    "resetNewPasswordLabel": "Nueva contraseña",
+    "resetSubmit": "Actualizar contraseña",
+    "resetSubmitting": "Actualizando...",
+    "resetVerifying": "Verificando tu enlace de restablecimiento…",
+    "resetInvalidLink": "Enlace de restablecimiento no válido o ausente.",
+    "resetVerifyError": "No se pudo verificar tu enlace de restablecimiento. Inténtalo de nuevo.",
+    "resetUpdateError": "No se pudo actualizar la contraseña ahora mismo. Inténtalo de nuevo.",
+    "resetRequestNew": "Solicitar un nuevo enlace",
+    "resetSuccessTitle": "Contraseña actualizada",
+    "resetSuccessBody": "Tu contraseña se ha actualizado correctamente.",
+    "confirmVerifying": "Verificando tu correo…",
+    "confirmInvalidLink": "Enlace de confirmación no válido. Solicita uno nuevo.",
+    "confirmRegisterAgain": "Registrarse de nuevo"
+  },
+  "Dashboard": {
+    "kicker": "Campañas",
+    "title": "Tus crónicas",
+    "empty": "Aún no hay campañas",
+    "count": "{count, plural, one {# campaña} other {# campañas}}",
+    "newCampaign": "+ Nueva campaña",
+    "loadingTitle": "El Escriba está escribiendo",
+    "loadingCaption": "Buscando tus campañas",
+    "errorSummary": "Algo salió mal",
+    "errorBody": "Algo salió mal al cargar tus campañas.",
+    "retry": "Reintentar",
+    "searchPlaceholder": "Buscar campañas",
+    "open": "Abrir",
+    "updated": "Actualizado {date}",
+    "helperCount": "{visible} de {total}",
+    "emptyTitle": "Tu crónica empieza aquí",
+    "emptyDescription": "Pega tus notas de campaña actuales y el Escriba generará un borrador de PNJ, facciones, estado del mundo y arcos abiertos para que los revises antes de que algo sea canon.",
+    "emptyAction": "+ Crear tu primera campaña",
+    "emptySearchTitle": "Ninguna campaña coincide con esa búsqueda",
+    "emptySearchDescription": "Prueba con otro nombre o sistema de juego.",
+    "stats": {
+      "sessions": "Sesiones",
+      "npcs": "PNJ",
+      "factions": "Facciones",
+      "memories": "Memorias",
+      "arcs": "Arcos"
+    },
+    "openChronicle": "Abrir crónica →"
+  },
+  "Campaigns": {
+    "breadcrumbRoot": "Campañas",
+    "screen": {
+      "loadingTitle": "El Escriba está escribiendo",
+      "opening": "Abriendo {title}",
+      "openingChronicle": "Abriendo la crónica",
+      "notFound": "Campaña no encontrada. Puede que se haya eliminado o que no tengas acceso.",
+      "loadError": "Algo salió mal al cargar esta campaña.",
+      "retry": "Reintentar"
+    },
+    "detail": {
+      "kicker": "Campaña · {kicker}",
+      "updated": "Actualizado {date}",
+      "statNpcs": "PNJ",
+      "statFactions": "Facciones",
+      "statArcs": "Arcos",
+      "worldStateHeading": "El estado del mundo",
+      "recentSessions": "Sesiones recientes",
+      "comingSoon": "Llegará en un capítulo posterior",
+      "arcsNeedingAttention": "Arcos que necesitan atención",
+      "allArcs": "Todos los arcos →",
+      "activeMemories": "Memorias activas"
+    },
+    "worldState": {
+      "empty": "Aún no hay estado del mundo registrado.",
+      "saveError": "No se pudo guardar el estado del mundo. Inténtalo de nuevo."
+    },
+    "npcs": {
+      "kicker": "Campaña · PNJ",
+      "title": "PNJ",
+      "add": "+ Nuevo PNJ",
+      "subtitle": "{count, plural, one {# personaje registrado en la crónica} other {# personajes registrados en la crónica}}",
+      "emptyTitle": "Aún no hay PNJ",
+      "emptyDescription": "El Escriba extrae PNJ de tus notas, o añádelos a mano según el grupo los va conociendo.",
+      "emptyAction": "+ Añade tu primer PNJ",
+      "newTitle": "Nuevo PNJ",
+      "editTitle": "Editar PNJ",
+      "addAction": "Añadir PNJ",
+      "saveError": "No se pudo guardar este PNJ. Inténtalo de nuevo.",
+      "deleteTitle": "Eliminar PNJ",
+      "deleteError": "No se pudo eliminar este PNJ. Inténtalo de nuevo."
+    },
+    "factions": {
+      "kicker": "Campaña · Facciones",
+      "title": "Facciones",
+      "add": "+ Nueva facción",
+      "subtitle": "{count, plural, one {# poder reaccionando al grupo} other {# poderes reaccionando al grupo}}",
+      "emptyTitle": "Aún no hay facciones",
+      "emptyDescription": "Gremios, cultos, cortes: cualquier cosa que quiera algo. Añádelos y sigue cómo reaccionan.",
+      "emptyAction": "+ Añadir una facción",
+      "newTitle": "Nueva facción",
+      "editTitle": "Editar facción",
+      "addAction": "Añadir facción",
+      "saveError": "No se pudo guardar esta facción. Inténtalo de nuevo.",
+      "deleteTitle": "Eliminar facción",
+      "deleteError": "No se pudo eliminar esta facción. Inténtalo de nuevo."
+    },
+    "arcs": {
+      "kicker": "Campaña · Arcos abiertos",
+      "title": "Arcos abiertos",
+      "add": "+ Nuevo arco",
+      "subtitle": "{count, plural, one {# hilo aún en juego} other {# hilos aún en juego}}",
+      "emptyTitle": "Aquí no hay arcos",
+      "emptyDescription": "Los arcos son los hilos de los que tiran tus jugadores. Síguelos para que ninguno se apague demasiado tiempo.",
+      "emptyAction": "+ Añadir un arco",
+      "newTitle": "Nuevo arco",
+      "editTitle": "Editar arco",
+      "addAction": "Añadir arco",
+      "saveError": "No se pudo guardar este arco. Inténtalo de nuevo.",
+      "deleteTitle": "Eliminar arco",
+      "deleteError": "No se pudo eliminar este arco. Inténtalo de nuevo."
+    },
+    "confirmDelete": {
+      "prompt": "¿Eliminar <b>{name}</b>? Esto no se puede deshacer."
+    },
+    "create": {
+      "breadcrumbNew": "Nueva campaña",
+      "step": "Paso 1 de 2 · Vuelca tu mundo",
+      "title": "Empieza una nueva crónica",
+      "subtitle": "Pega tus notas de campaña tal y como están hoy. El Escriba redactará las piezas; revisarás y editarás todo antes de que se guarde nada.",
+      "nameLabel": "Nombre de la campaña",
+      "namePlaceholder": "La Ruta de la Sal",
+      "systemLabel": "Sistema de juego",
+      "systemPlaceholder": "D&D 5e, Pathfinder, …",
+      "toneLabel": "Tono o estilo",
+      "tonePlaceholder": "Supervivencia sombría, alta aventura, intriga política…",
+      "premiseLabel": "Contexto inicial / Premisa",
+      "charCounter": "{count} / {min} caracteres mínimo · {total} / {max}",
+      "premisePlaceholder": "Phandalin es un pueblo minero fronterizo. Un joven dragón blanco llamado Cryovain caza en las Montañas de la Espada. El Gremio del Oso Negro contrabandea por el distrito de almacenes, y los planes de un arma antidragón acaban de ser robados…",
+      "detailsLabel": "Detalles adicionales para el Escriba",
+      "detailsPlaceholder": "El grupo son cuatro PJ: un paladín, dos pícaros y un mago. Mantén la magia poco frecuente.",
+      "detailsHint": "Reglas de la casa, cosas que ignorar, nombres del grupo: cualquier cosa que dé forma a la extracción.",
+      "footerNote": "Tu texto se queda aquí si el Escriba no puede interpretarlo.",
+      "submit": "Analizar campaña →",
+      "analyzing": "Analizando...",
+      "loadingTitle": "Leyendo tu mundo",
+      "loadingCaption": "El Escriba está redactando PNJ, facciones, estado del mundo y arcos abiertos a partir de tus notas",
+      "extractError": "No se pudo analizar esa premisa ahora mismo. Inténtalo de nuevo.",
+      "nameRequired": "Ponle un nombre a tu campaña.",
+      "systemRequired": "Indica el sistema de juego que usas.",
+      "tooLong": "Tus notas suman {count} caracteres. Recórtalas por debajo de {max} para que el Escriba pueda con ellas."
+    },
+    "review": {
+      "breadcrumbNew": "Nueva campaña",
+      "breadcrumbReview": "Revisión",
+      "step": "Paso 2 de 2 · Revisa antes de que sea real",
+      "title": "Lo que encontró el Escriba",
+      "subtitle": "Cada elemento de abajo es una propuesta, no canon. Edita lo que quieras, elimina lo que esté mal, añade lo que falte y luego confirma para crear tu campaña.",
+      "scribeNotice": "El Escriba redactó <b>{count, plural, one {# elemento} other {# elementos}}</b> a partir de tus notas. Se quedan marcados como del Escriba hasta que los edites.",
+      "titleLabel": "Título de la campaña",
+      "descriptionLabel": "Descripción de la campaña",
+      "worldStateLabel": "Estado del mundo",
+      "npcsSection": "PNJ detectados",
+      "factionsSection": "Facciones detectadas",
+      "arcsSection": "Arcos abiertos detectados",
+      "npcAdd": "+ Añadir PNJ",
+      "factionAdd": "+ Añadir facción",
+      "arcAdd": "+ Añadir arco",
+      "npcEmpty": "Aún no hay nada. Añade un PNJ manualmente si el Escriba se dejó alguno.",
+      "factionEmpty": "Aún no hay nada. Añade una facción manualmente si el Escriba se dejó alguna.",
+      "arcEmpty": "Aún no hay nada. Añade un arco manualmente si el Escriba se dejó alguno.",
+      "back": "Atrás",
+      "confirm": "Confirmar y crear campaña",
+      "creating": "Creando...",
+      "saveError": "No se pudo guardar esta campaña ahora mismo. Inténtalo de nuevo.",
+      "loadingTitle": "Encuadernando tu crónica",
+      "loadingCaption": "Guardando el estado del mundo, PNJ, facciones y arcos que confirmaste"
+    }
+  },
+  "Entities": {
+    "optional": "opcional",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "add": "Añadir",
+    "save": "Guardar",
+    "saveChanges": "Guardar cambios",
+    "saving": "Guardando…",
+    "delete": "Eliminar",
+    "deleting": "Eliminando…",
+    "remove": "Quitar",
+    "edit": "Editar",
+    "retry": "Reintentar",
+    "originScribe": "✦ Escriba",
+    "originEdited": "✎ Editado por ti",
+    "fields": {
+      "name": "Nombre",
+      "title": "Título",
+      "description": "Descripción",
+      "currentState": "Estado actual",
+      "motivation": "Motivación",
+      "currentStance": "Postura actual",
+      "objective": "Objetivo",
+      "goals": "Objetivos",
+      "priority": "Prioridad",
+      "status": "Estado"
+    },
+    "rowLabel": {
+      "currentState": "Estado actual:",
+      "motivation": "Motivación:",
+      "stance": "Postura:",
+      "objective": "Objetivo:"
+    },
+    "priority": {
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja"
+    },
+    "status": {
+      "active": "Activo",
+      "dormant": "Inactivo",
+      "resolved": "Resuelto",
+      "discarded": "Descartado"
+    },
+    "priorityFlag": "{priority, select, high {prioridad alta} medium {prioridad media} low {prioridad baja} other {priority}}"
+  },
+  "Shared": {
+    "loadingTitle": "El Escriba está escribiendo",
+    "loadingCaption": "Trabajando en los márgenes",
+    "emptyTitle": "Aún no hay registros",
+    "errorFallback": "Algo salió mal.",
+    "retry": "Intentar de nuevo"
+  },
+  "Legal": {
+    "privacy": "Privacidad",
+    "cookies": "Cookies",
+    "acceptCookies": "Aceptar cookies",
+    "cookieNoticeLabel": "Aviso de cookies",
+    "cookieNoticeBody": "Lazy Lands usa cookies solo para autenticación. Sin rastreo ni datos de terceros.",
+    "learnMore": "Más información",
+    "gotIt": "Entendido",
+    "localStorageNotice": "Este sitio usa almacenamiento local para recordar el consentimiento de cookies",
+    "backHome": "← Volver al inicio",
+    "lastUpdated": "Última actualización: junio de 2026",
+    "cookiesPage": {
+      "metaTitle": "Cookies · Lazy Lands",
+      "title": "Política de cookies",
+      "intro": "Lazy Lands solo usa cookies técnicamente necesarias y claves de almacenamiento local. No usamos cookies publicitarias, píxeles de seguimiento ni scripts de analítica de terceros. La autenticación de Supabase usa su clave de almacenamiento por defecto con ámbito de proyecto, porque esta aplicación no configura un nombre de almacenamiento de auth de Supabase personalizado.",
+      "exemptionTitle": "Exención técnica: LSSI-CE Art. 22.2",
+      "exemptionBody": "Conforme a la LSSI-CE Art. 22.2 (Ley de Servicios de la Sociedad de la Información y de Comercio Electrónico, art. 22.2) y sus equivalentes europeos, las cookies técnicamente necesarias estrictamente requeridas para prestar un servicio solicitado no requieren consentimiento previo. Todos los elementos de almacenamiento que se enumeran a continuación se acogen a esta exención técnica.",
+      "itemsTitle": "Elementos de almacenamiento en uso",
+      "authTokenDesc": "Almacenamiento de la sesión de autenticación de Supabase que usan los clientes por defecto <code>@supabase/ssr</code> de esta aplicación. La referencia del proyecto proviene de la URL de Supabase configurada, por ejemplo <code>sb-abcdefghijklmnopqrst-auth-token</code>. Contiene la carga de la sesión de Supabase necesaria para la continuidad del inicio de sesión y las solicitudes autenticadas; se borra al cerrar sesión.",
+      "consentDesc": "Registra si has reconocido este aviso de cookies. Se guarda en <code>localStorage</code>. Valor: <code>\"acknowledged\"</code>. Persistente.",
+      "announcementDesc": "Registra si has descartado la barra de anuncios del sitio. Se guarda en <code>localStorage</code>. Valor: <code>\"dismissed\"</code>. Persistente.",
+      "noTrackingTitle": "Sin seguimiento de terceros",
+      "noTrackingBody": "Lazy Lands no carga redes publicitarias, píxeles de redes sociales ni plataformas de analítica que establezcan sus propias cookies. No se comparten datos con terceros con fines de marketing.",
+      "contactTitle": "Contacto",
+      "contactBody": "¿Tienes preguntas sobre esta política? Escríbenos a <mail>contacto@danilopgon.com</mail>."
+    },
+    "privacyPage": {
+      "metaTitle": "Política de privacidad · Lazy Lands",
+      "title": "Política de privacidad",
+      "controllerTitle": "Responsable del tratamiento",
+      "controllerBody": "El responsable legal del tratamiento está pendiente de la revisión legal final. Hasta que se publiquen una entidad formal y un canal de contacto, esta página es un marcador de posición de implementación no indexado y no debe tratarse como aviso legal definitivo.",
+      "collectTitle": "Datos que recopilamos",
+      "collectIntro": "Cuando usas Lazy Lands, recopilamos:",
+      "collectEmail": "<b>Dirección de correo electrónico</b>: se usa para la autenticación y las comunicaciones del producto.",
+      "collectContent": "<b>Contenido de campaña</b>: las notas, PNJ, facciones, registros de sesión y demás contenido que creas dentro de la aplicación. Estos datos son tuyos y solo tú puedes acceder a ellos.",
+      "collectTokens": "<b>Tokens de autenticación</b>: tokens técnicos (Supabase) almacenados en tu navegador para mantener tu sesión.",
+      "legalBasisTitle": "Base jurídica",
+      "legalBasisBody": "El tratamiento se basa en el <b>RGPD Art. 6.1.b</b>: el tratamiento es necesario para la ejecución de un contrato en el que eres parte (los términos del servicio de Lazy Lands), o para aplicar medidas a petición tuya antes de la celebración de un contrato.",
+      "rightsTitle": "Tus derechos",
+      "rightsIntro": "Conforme al RGPD, tienes los siguientes derechos sobre tus datos personales:",
+      "rightAccess": "<b>Derecho de acceso</b>: solicitar una copia de los datos personales que tenemos sobre ti.",
+      "rightRectify": "<b>Derecho de rectificación</b>: solicitar la corrección de datos inexactos.",
+      "rightErasure": "<b>Derecho de supresión</b>: solicitar la eliminación de tus datos personales («derecho al olvido»).",
+      "rightPortability": "<b>Derecho a la portabilidad</b>: recibir tus datos en un formato estructurado y legible por máquina.",
+      "rightObject": "<b>Derecho de oposición</b>: oponerte al tratamiento basado en intereses legítimos.",
+      "rightsContact": "Para ejercer cualquiera de estos derechos antes de que se publique nuestro canal de contacto formal, escríbenos a <b>privacy@lazylands.app</b> (buzón temporal, supervisado durante el acceso anticipado).",
+      "retentionTitle": "Conservación de los datos",
+      "retentionBody": "Conservamos tus datos mientras tu cuenta esté activa. Eliminar tu cuenta borra todos los datos de campaña. Los registros de autenticación se conservan hasta 90 días por motivos de seguridad.",
+      "noSharingTitle": "Sin compartición con terceros",
+      "noSharingBody": "No vendemos, alquilamos ni compartimos tus datos personales con terceros con fines de marketing. Usamos Supabase (un proveedor de infraestructura) para almacenar y procesar datos; actúa como encargado del tratamiento en virtud de un acuerdo de tratamiento de datos."
+    }
+  },
+  "Errors": {
+    "fallback": "Algo salió mal. Inténtalo de nuevo.",
+    "exceptions": "Los códigos de API backend y los encabezados de composeRawText no se traducen por diseño."
+  },
+  "Dates": {
+    "locale": "es-ES"
+  }
+}

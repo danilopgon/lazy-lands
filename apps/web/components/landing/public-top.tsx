@@ -2,8 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+
+import { Link as LocaleLink } from '@/i18n/navigation'
 
 import { Button } from '@/components/ui/button'
+import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 import { navLinks } from './data'
 
 /**
@@ -13,6 +17,8 @@ import { navLinks } from './data'
  */
 export function PublicTop() {
   const [open, setOpen] = useState(false)
+  const t = useTranslations('Nav')
+  const tl = useTranslations('Landing')
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -90,17 +96,24 @@ export function PublicTop() {
     }
   }, [open])
 
+  const registerCta = (
+    <>
+      {t('registerShort')}
+      <span className="sr-only"> {t('registerSrOnlySuffix')}</span>
+    </>
+  )
+
   return (
     <>
       <header className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4 llg:px-10">
-        <Link
+        <LocaleLink
           href="/"
           className="font-serif text-xl font-semibold tracking-[-0.02em] text-[var(--ink)]"
         >
           Lazy <span className="text-[var(--accent)]">Lands</span>
-        </Link>
+        </LocaleLink>
 
-        <nav aria-label="Main" className="flex items-center gap-3">
+        <nav aria-label={t('main')} className="flex items-center gap-3">
           {/* Desktop links */}
           <div className="hidden items-center gap-6 llg:flex">
             {navLinks.map((l) => (
@@ -109,34 +122,31 @@ export function PublicTop() {
                 href={l.href}
                 className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-[var(--ink-2)] hover:text-[var(--ink)]"
               >
-                {l.label}
+                {tl(`nav.${l.key}`)}
               </Link>
             ))}
           </div>
 
           {/* Desktop auth */}
           <div className="hidden items-center gap-2 llg:flex">
+            <LanguageSwitcher compact />
             <Button asChild variant="ghost" size="sm">
-              <Link href="/login">Sign in</Link>
+              <LocaleLink href="/login">{t('signIn')}</LocaleLink>
             </Button>
             <Button asChild variant="accent" size="sm">
-              <Link href="/register">
-                Start<span className="sr-only"> your chronicle</span>
-              </Link>
+              <LocaleLink href="/register">{registerCta}</LocaleLink>
             </Button>
           </div>
 
           {/* Mobile: CTA + hamburger */}
           <Button asChild variant="accent" size="sm" className="llg:hidden">
-            <Link href="/register">
-              Start<span className="sr-only"> your chronicle</span>
-            </Link>
+            <LocaleLink href="/register">{registerCta}</LocaleLink>
           </Button>
 
           <button
             ref={menuButtonRef}
             type="button"
-            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-label={open ? t('closeMenu') : t('openMenu')}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
             className="llg:hidden flex h-10 w-10 flex-col items-center justify-center gap-[5px] border-2 border-[var(--border)] bg-[var(--paper)] shadow-[2px_2px_0_var(--shadow)]"
@@ -159,22 +169,22 @@ export function PublicTop() {
         <div
           ref={overlayRef}
           role="dialog"
-          aria-label="Mobile navigation"
+          aria-label={t('mobileNavigation')}
           aria-modal="true"
           className="llg:hidden fixed inset-0 z-mobile-menu flex flex-col bg-[var(--paper)]"
         >
           <div className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4">
-            <Link
+            <LocaleLink
               href="/"
               className="font-serif text-xl font-semibold text-[var(--ink)]"
               onClick={() => closeMenu({ restoreFocus: false })}
             >
               Lazy <span className="text-[var(--accent)]">Lands</span>
-            </Link>
+            </LocaleLink>
             <button
               ref={closeButtonRef}
               type="button"
-              aria-label="Close menu"
+              aria-label={t('closeMenu')}
               onClick={() => closeMenu()}
               className="flex h-10 w-10 items-center justify-center border-2 border-[var(--border)] shadow-[2px_2px_0_var(--shadow)]"
             >
@@ -190,26 +200,27 @@ export function PublicTop() {
                 onClick={() => closeMenu({ restoreFocus: false })}
                 className="border-b border-[var(--dotted)] py-4 font-serif text-2xl text-[var(--ink)] hover:text-[var(--accent)]"
               >
-                {l.label}
+                {tl(`nav.${l.key}`)}
               </Link>
             ))}
 
             <div className="mt-8 flex flex-col gap-3">
+              <LanguageSwitcher />
               <Button asChild variant="ghost">
-                <Link
+                <LocaleLink
                   href="/login"
                   onClick={() => closeMenu({ restoreFocus: false })}
                 >
-                  Sign in
-                </Link>
+                  {t('signIn')}
+                </LocaleLink>
               </Button>
               <Button asChild variant="accent">
-                <Link
+                <LocaleLink
                   href="/register"
                   onClick={() => closeMenu({ restoreFocus: false })}
                 >
-                  Start your chronicle →
-                </Link>
+                  {t('register')} →
+                </LocaleLink>
               </Button>
             </div>
           </div>

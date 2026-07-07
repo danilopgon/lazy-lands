@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
@@ -8,8 +9,10 @@ import { Notice } from '@/components/ui/notice'
 import { CampaignApiError } from '@/lib/campaigns/api'
 
 type ConfirmDeleteModalProps = {
-  /** What is being deleted, e.g. "NPC" — used in the title. */
-  entityLabel: string
+  /** Pre-formed modal title, e.g. "Delete NPC" (localized by the caller). */
+  title: string
+  /** Pre-formed fallback error, e.g. "Could not delete this NPC. …". */
+  deleteError: string
   /** The name/title of the specific item, shown in the prompt. */
   itemName: string
   /** Performs the delete; rejects to keep the modal open with an error. */
@@ -22,18 +25,22 @@ type ConfirmDeleteModalProps = {
  * modal stays open and shows the error. Shared by NPC/faction/arc lists.
  *
  * @param {object} root0 - The confirm-delete props.
- * @param {string} root0.entityLabel - The entity kind (e.g. "NPC").
+ * @param {string} root0.title - The localized modal title (e.g. "Delete NPC").
+ * @param {string} root0.deleteError - The localized fallback delete-error message.
  * @param {string} root0.itemName - The specific item's name/title.
  * @param {() => Promise<void>} root0.onConfirm - The delete action.
  * @param {() => void} root0.onClose - Close the modal.
  * @returns {React.ReactElement} The confirm-delete modal element.
  */
 export function ConfirmDeleteModal({
-  entityLabel,
+  title,
+  deleteError,
   itemName,
   onConfirm,
   onClose,
 }: ConfirmDeleteModalProps) {
+  const t = useTranslations('Entities')
+  const tc = useTranslations('Campaigns')
   const [error, setError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -44,29 +51,25 @@ export function ConfirmDeleteModal({
       await onConfirm()
     } catch (err: unknown) {
       setIsDeleting(false)
-      setError(
-        err instanceof CampaignApiError
-          ? err.message
-          : `Could not delete this ${entityLabel.toLowerCase()}. Please try again.`
-      )
+      setError(err instanceof CampaignApiError ? err.message : deleteError)
     }
   }
 
   return (
     <Modal
-      title={`Delete ${entityLabel}`}
+      title={title}
       onClose={onClose}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             variant="ink-inverted"
             disabled={isDeleting}
             onClick={handleConfirm}
           >
-            {isDeleting ? 'Deleting…' : 'Delete'}
+            {isDeleting ? t('deleting') : t('delete')}
           </Button>
         </>
       }
@@ -77,8 +80,10 @@ export function ConfirmDeleteModal({
         </Notice>
       ) : null}
       <p className="text-sm leading-relaxed text-[var(--ink-2)]">
-        Delete <b className="text-[var(--ink)]">{itemName}</b>? This cannot be
-        undone.
+        {tc.rich('confirmDelete.prompt', {
+          name: itemName,
+          b: (chunks) => <b className="text-[var(--ink)]">{chunks}</b>,
+        })}
       </p>
     </Modal>
   )

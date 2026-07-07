@@ -1,5 +1,12 @@
-import { howItWorksSteps } from './data'
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { ViewEnter } from './motion'
+
+type HowStep = { title: string; body: string; state: string }
+
+const STEP_GLYPHS = ['◆', '✒', '↝']
 
 /**
  * "Three steps" section — dark background with numbered step cards.
@@ -7,6 +14,9 @@ import { ViewEnter } from './motion'
  * @returns {React.ReactElement} The how-it-works landing section element.
  */
 export function LandHowItWorks() {
+  const t = useTranslations('Landing')
+  const steps = t.raw('how.steps') as HowStep[]
+
   return (
     <section
       id="how"
@@ -25,13 +35,13 @@ export function LandHowItWorks() {
               color: 'var(--bg)',
             }}
           >
-            Three steps. Not one more.
+            {t('how.title')}
           </h2>
 
           <div className="mt-[56px] grid grid-cols-1 llg:grid-cols-3">
-            {howItWorksSteps.map((s, i) => (
+            {steps.map((s, i) => (
               <div
-                key={s.n}
+                key={i}
                 className={[
                   i === 0 ? 'llg:pr-8' : i === 2 ? 'llg:pl-8' : 'llg:px-8',
                   i > 0
@@ -49,7 +59,7 @@ export function LandHowItWorks() {
                       letterSpacing: '-0.04em',
                     }}
                   >
-                    {s.n}
+                    {String(i + 1).padStart(2, '0')}
                   </div>
                   <div
                     style={{
@@ -59,7 +69,7 @@ export function LandHowItWorks() {
                       opacity: 0.35,
                     }}
                   />
-                  <span style={{ fontSize: 24 }}>{s.glyph}</span>
+                  <span style={{ fontSize: 24 }}>{STEP_GLYPHS[i]}</span>
                 </div>
                 <h3
                   className="font-serif"
@@ -84,7 +94,7 @@ export function LandHowItWorks() {
                 </p>
                 <div className="mt-auto bg-[var(--bg)] p-3 text-[var(--ink)]">
                   <div className="font-mono text-[9.5px] uppercase tracking-[0.08em] text-[var(--mute)] ">
-                    Product state
+                    {t('how.productState')}
                   </div>
                   <div className="mt-2 font-serif text-[15px] leading-snug">
                     {s.state}

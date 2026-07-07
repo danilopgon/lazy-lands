@@ -1,5 +1,8 @@
+'use client'
+
 import type { ReactNode } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 
 /** Tailwind className string for the shared auth back-to-home link. */
 export const authBackHomeClass =
@@ -14,6 +17,8 @@ export const authBackHomeClass =
  * @returns {React.ReactElement} The auth page shell with centered card.
  */
 export function AuthCard({ children }: { children: ReactNode }) {
+  const t = useTranslations('Auth')
+
   return (
     <main
       id="main-content"
@@ -21,7 +26,7 @@ export function AuthCard({ children }: { children: ReactNode }) {
     >
       <div className="w-full max-w-[440px] rounded-none border-2 border-[var(--border)] bg-[var(--paper)] p-8 shadow-[6px_6px_0_var(--shadow)]">
         <Link href="/" className={authBackHomeClass}>
-          volver al inicio
+          {t('backHome')}
         </Link>
         {children}
       </div>

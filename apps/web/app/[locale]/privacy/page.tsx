@@ -1,0 +1,122 @@
+import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
+
+import { Link } from '@/i18n/navigation'
+
+type LegalPageProps = { params: Promise<{ locale: string }> }
+
+/**
+ * Build locale-aware, non-indexed metadata for the privacy policy.
+ *
+ * @param {LegalPageProps} root0 - Route props.
+ * @param {Promise<{locale: string}>} root0.params - App Router locale params.
+ * @returns {Promise<Metadata>} Translated title with robots noindex.
+ */
+export async function generateMetadata({
+  params,
+}: LegalPageProps): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'Legal' })
+
+  return {
+    title: t('privacyPage.metaTitle'),
+    robots: { index: false, follow: false },
+  }
+}
+
+/**
+ * Privacy policy page — non-indexed placeholder until legal review is finalised.
+ *
+ * @param {LegalPageProps} root0 - Route props.
+ * @param {Promise<{locale: string}>} root0.params - App Router locale params.
+ * @returns {Promise<React.ReactElement>} The privacy policy page element.
+ */
+export default async function PrivacyPage({ params }: LegalPageProps) {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'Legal' })
+  const b = (chunks: React.ReactNode) => <strong>{chunks}</strong>
+
+  return (
+    <main id="main-content" className="mx-auto max-w-2xl px-6 py-16 font-serif">
+      <Link
+        href="/"
+        className="font-mono text-xs uppercase tracking-widest text-[var(--ink-2)] hover:text-[var(--accent)]"
+      >
+        {t('backHome')}
+      </Link>
+
+      <h1 className="mt-8 font-serif text-4xl font-semibold leading-tight text-[var(--ink)]">
+        {t('privacyPage.title')}
+      </h1>
+
+      <p className="mt-2 font-mono text-xs text-[var(--mute)]">
+        {t('lastUpdated')}
+      </p>
+
+      <section className="mt-10 space-y-8 text-[var(--ink-2)]">
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
+            {t('privacyPage.controllerTitle')}
+          </h2>
+          <p className="mt-2">{t('privacyPage.controllerBody')}</p>
+        </div>
+
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
+            {t('privacyPage.collectTitle')}
+          </h2>
+          <p className="mt-2">{t('privacyPage.collectIntro')}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>{t.rich('privacyPage.collectEmail', { b })}</li>
+            <li>{t.rich('privacyPage.collectContent', { b })}</li>
+            <li>{t.rich('privacyPage.collectTokens', { b })}</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
+            {t('privacyPage.legalBasisTitle')}
+          </h2>
+          <p className="mt-2">{t.rich('privacyPage.legalBasisBody', { b })}</p>
+        </div>
+
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
+            {t('privacyPage.rightsTitle')}
+          </h2>
+          <p className="mt-2">{t('privacyPage.rightsIntro')}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>{t.rich('privacyPage.rightAccess', { b })}</li>
+            <li>{t.rich('privacyPage.rightRectify', { b })}</li>
+            <li>{t.rich('privacyPage.rightErasure', { b })}</li>
+            <li>{t.rich('privacyPage.rightPortability', { b })}</li>
+            <li>{t.rich('privacyPage.rightObject', { b })}</li>
+          </ul>
+          <p className="mt-3">
+            {t.rich('privacyPage.rightsContact', {
+              b: (chunks) => (
+                <strong className="font-mono text-sm text-[var(--ink)]">
+                  {chunks}
+                </strong>
+              ),
+            })}
+          </p>
+        </div>
+
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
+            {t('privacyPage.retentionTitle')}
+          </h2>
+          <p className="mt-2">{t('privacyPage.retentionBody')}</p>
+        </div>
+
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
+            {t('privacyPage.noSharingTitle')}
+          </h2>
+          <p className="mt-2">{t('privacyPage.noSharingBody')}</p>
+        </div>
+      </section>
+    </main>
+  )
+}

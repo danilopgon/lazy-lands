@@ -1,9 +1,15 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { OriginBadge } from '@/components/ui/origin-badge'
 import { SectionHeader } from '@/components/ui/section-header'
 import { StatLedger } from '@/components/ui/stat-ledger'
 
-import { continuityStats, memoryLoop } from './data'
 import { ViewEnter } from './motion'
+
+type MemoryLoopItem = { label: string; title: string; body: string }
+type ContinuityStat = { value: string; label: string }
 
 /**
  * Product pillars section — memory loop steps and continuity stats with a "memory in play" callout.
@@ -11,6 +17,10 @@ import { ViewEnter } from './motion'
  * @returns {React.ReactElement} The pillars landing section element.
  */
 export function LandPillars() {
+  const t = useTranslations('Landing')
+  const memoryLoop = t.raw('pillars.loop') as MemoryLoopItem[]
+  const continuityStats = t.raw('pillars.stats') as ContinuityStat[]
+
   return (
     <section
       id="product"
@@ -18,9 +28,9 @@ export function LandPillars() {
     >
       <div className="mb-10 max-w-[700px]">
         <SectionHeader
-          kicker="What it does"
-          title="Not a one-shot generator. It is memory."
-          description="Lazy Lands turns session logs into reviewable campaign continuity: what changed, who reacted, and what the Scribe may use next."
+          kicker={t('pillars.kicker')}
+          title={t('pillars.title')}
+          description={t('pillars.description')}
         />
       </div>
 
@@ -59,24 +69,22 @@ export function LandPillars() {
             <div className="border-2 border-[var(--accent)] bg-[var(--accent-wash)] p-5">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="font-serif text-2xl font-semibold text-[var(--ink)]">
-                  Memory in play
+                  {t('pillars.memoryPlayTitle')}
                 </h3>
                 <OriginBadge origin="scribe" />
               </div>
               <p className="mt-3 font-serif text-[15px] leading-relaxed text-[var(--ink)]">
-                Two party members earned Halia&apos;s favor; two damaged it. The
-                next briefing must account for the split trust at the
-                Miner&apos;s Exchange.
+                {t('pillars.memoryPlayBody')}
               </p>
               <div className="mt-4 flex flex-wrap gap-2 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--accent-deep)]">
                 <span className="border border-[var(--accent)] bg-[var(--paper)] px-2 py-1">
-                  accepted
+                  {t('pillars.tagAccepted')}
                 </span>
                 <span className="border border-[var(--accent)] bg-[var(--paper)] px-2 py-1">
-                  Halia Thornton
+                  {t('pillars.tagNpc')}
                 </span>
                 <span className="border border-[var(--accent)] bg-[var(--paper)] px-2 py-1">
-                  Session VII
+                  {t('pillars.tagSession')}
                 </span>
               </div>
             </div>

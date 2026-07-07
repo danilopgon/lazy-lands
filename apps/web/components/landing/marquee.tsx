@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-
-import { marqueeItems } from './data'
+import { useTranslations } from 'next-intl'
 
 /**
  * Infinite CSS-animation marquee — pauses on hover/focus for accessibility.
@@ -11,6 +10,8 @@ import { marqueeItems } from './data'
  */
 export function LandMarquee() {
   const [paused, setPaused] = useState(false)
+  const t = useTranslations('Landing')
+  const marqueeItems = t.raw('marquee') as string[]
   const all = [...marqueeItems, ...marqueeItems]
   return (
     <div
@@ -45,7 +46,7 @@ export function LandMarquee() {
           animationPlayState: paused ? 'paused' : 'running',
         }}
       >
-        {all.map((t, i) => (
+        {all.map((item, i) => (
           <span
             key={i}
             style={{
@@ -56,7 +57,7 @@ export function LandMarquee() {
               color: 'var(--bg)',
             }}
           >
-            {t}
+            {item}
             <span style={{ color: 'var(--accent)' }}>✦</span>
           </span>
         ))}

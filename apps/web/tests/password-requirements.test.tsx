@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen } from '@/tests/intl'
 import { describe, expect, it } from 'vitest'
 
 import { PasswordRequirements } from '@/components/auth/password-requirements'

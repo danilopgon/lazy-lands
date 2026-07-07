@@ -1,4 +1,7 @@
-import Link from 'next/link'
+'use client'
+
+import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { ComingSoonButton } from './coming-soon-button'
@@ -10,6 +13,8 @@ import { ViewEnter } from './motion'
  * @returns {React.ReactElement} The CTA landing section element.
  */
 export function LandCTA() {
+  const t = useTranslations('Landing')
+
   return (
     <section
       id="early-access"
@@ -30,13 +35,13 @@ export function LandCTA() {
           style={{ top: 28, right: 28, width: 220, transform: 'rotate(2deg)' }}
         >
           <div className="border-b border-[var(--bg-contrast)] pb-2">
-            Chronicle entry
+            {t('cta.cornerTitle')}
           </div>
           <div className="mt-3 font-serif text-2xl normal-case tracking-normal">
-            Open beta
+            {t('cta.cornerBeta')}
           </div>
           <div className="mt-3 border-t border-dashed border-[var(--bg-contrast)] pt-2">
-            DM review required
+            {t('cta.cornerReview')}
           </div>
         </div>
 
@@ -50,7 +55,7 @@ export function LandCTA() {
               maxWidth: 820,
             }}
           >
-            Start your first chronicle.
+            {t('cta.title')}
           </h2>
           <p
             style={{
@@ -61,8 +66,7 @@ export function LandCTA() {
               fontFamily: '"Source Serif 4", serif',
             }}
           >
-            Free while in early access. Start with one campaign and keep every
-            accepted memory reviewable from the first session.
+            {t('cta.body')}
           </p>
           <div className="mt-[30px] flex flex-wrap gap-3">
             <Button
@@ -70,10 +74,10 @@ export function LandCTA() {
               variant="ink-inverted"
               style={{ fontSize: 14.5, padding: '11px 22px' }}
             >
-              <Link href="/register">Start your chronicle →</Link>
+              <Link href="/register">{t('cta.cta')}</Link>
             </Button>
             <ComingSoonButton variant="secondary">
-              Tour a demo campaign
+              {t('cta.demoCta')}
             </ComingSoonButton>
           </div>
         </ViewEnter>

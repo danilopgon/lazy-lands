@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
@@ -43,6 +44,8 @@ export function FactionModal({
   onClose,
 }: FactionModalProps) {
   const isEdit = faction !== null
+  const t = useTranslations('Campaigns')
+  const te = useTranslations('Entities')
   const queryClient = useQueryClient()
   const [name, setName] = useState(faction?.name ?? '')
   const [description, setDescription] = useState(faction?.description ?? '')
@@ -71,21 +74,19 @@ export function FactionModal({
     },
     onError: (err: unknown) => {
       setError(
-        err instanceof CampaignApiError
-          ? err.message
-          : 'Could not save this faction. Please try again.'
+        err instanceof CampaignApiError ? err.message : t('factions.saveError')
       )
     },
   })
 
   return (
     <Modal
-      title={isEdit ? 'Edit faction' : 'New faction'}
+      title={isEdit ? t('factions.editTitle') : t('factions.newTitle')}
       onClose={onClose}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {te('cancel')}
           </Button>
           <Button
             variant="ink"
@@ -96,10 +97,10 @@ export function FactionModal({
             }}
           >
             {mutation.isPending
-              ? 'Saving…'
+              ? te('saving')
               : isEdit
-                ? 'Save changes'
-                : 'Add faction'}
+                ? te('saveChanges')
+                : t('factions.addAction')}
           </Button>
         </>
       }
@@ -109,24 +110,24 @@ export function FactionModal({
           <p>{error}</p>
         </Notice>
       ) : null}
-      <Field label="Name">
+      <Field label={te('fields.name')}>
         <Input value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
-      <Field label="Description">
+      <Field label={te('fields.description')}>
         <Textarea
           rows={2}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </Field>
-      <Field label="Current stance">
+      <Field label={te('fields.currentStance')}>
         <Textarea
           rows={2}
           value={currentStance}
           onChange={(e) => setCurrentStance(e.target.value)}
         />
       </Field>
-      <Field label="Objective">
+      <Field label={te('fields.objective')}>
         <Textarea
           rows={2}
           value={goals}

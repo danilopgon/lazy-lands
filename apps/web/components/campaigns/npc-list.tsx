@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { OriginBadge } from '@/components/ui/origin-badge'
@@ -25,15 +29,16 @@ type NpcListProps = {
  * @returns {React.ReactElement} The NPC list element.
  */
 export function NpcList({ npcs, onAdd, onEdit, onDelete }: NpcListProps) {
+  const t = useTranslations('Campaigns')
   if (npcs.length === 0) {
     return (
       <EmptyState
         ornament="◈"
-        title="No NPCs yet"
-        description="The Scribe extracts NPCs from your notes, or add them by hand as the party meets them."
+        title={t('npcs.emptyTitle')}
+        description={t('npcs.emptyDescription')}
         action={
           <Button variant="ink" onClick={onAdd}>
-            + Add your first NPC
+            {t('npcs.emptyAction')}
           </Button>
         }
       />
@@ -68,6 +73,7 @@ function NpcRow({
   onEdit?: (npc: NpcResponse) => void
   onDelete?: (npc: NpcResponse) => void
 }) {
+  const t = useTranslations('Entities')
   return (
     <div className="border-b border-dotted border-[var(--dotted)] py-5 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
@@ -85,20 +91,22 @@ function NpcRow({
             className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
             onClick={() => onEdit?.(npc)}
           >
-            Edit
+            {t('edit')}
           </button>
           <button
             type="button"
             className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-3)] hover:underline"
             onClick={() => onDelete?.(npc)}
           >
-            Delete
+            {t('delete')}
           </button>
         </div>
       </div>
       {npc.current_state ? (
         <p className="mt-2 text-sm text-[var(--ink-2)]">
-          <b className="font-semibold text-[var(--ink)]">Current state:</b>{' '}
+          <b className="font-semibold text-[var(--ink)]">
+            {t('rowLabel.currentState')}
+          </b>{' '}
           {npc.current_state}
         </p>
       ) : null}
@@ -109,7 +117,9 @@ function NpcRow({
       ) : null}
       {npc.motivation ? (
         <p className="mt-2 text-sm text-[var(--ink-2)]">
-          <b className="font-semibold text-[var(--ink)]">Motivation:</b>{' '}
+          <b className="font-semibold text-[var(--ink)]">
+            {t('rowLabel.motivation')}
+          </b>{' '}
           {npc.motivation}
         </p>
       ) : null}

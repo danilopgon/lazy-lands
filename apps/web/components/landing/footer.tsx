@@ -1,4 +1,9 @@
+'use client'
+
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+
+import { Link as LocaleLink } from '@/i18n/navigation'
 
 /**
  * Site footer — brand mark, copyright, and navigation links.
@@ -6,6 +11,8 @@ import Link from 'next/link'
  * @returns {React.ReactElement} The footer element.
  */
 export function LandFooter() {
+  const t = useTranslations('Landing')
+
   return (
     <footer
       className="border-t-2 border-[var(--border)] px-5 py-[30px] llg:px-10"
@@ -17,30 +24,30 @@ export function LandFooter() {
             Lazy <span style={{ color: 'var(--accent-deep)' }}>Lands</span>
           </span>
           <span className="font-mono text-[10.5px] text-[var(--ink-2)]">
-            © 2026 · made by a DM tired of forgetting
+            {t('footer.madeBy')}
           </span>
         </div>
 
         <nav
-          aria-label="Footer"
+          aria-label={t('nav.footerLabel')}
           className="flex flex-wrap gap-4 font-mono uppercase tracking-[0.06em] text-[var(--ink-2)] llg:gap-[18px]"
           style={{ fontSize: 10.5 }}
         >
           <Link href="#product" className="hover:text-[var(--ink)]">
-            Product
+            {t('nav.product')}
           </Link>
           <Link href="#how" className="hover:text-[var(--ink)]">
-            How it works
+            {t('nav.how')}
           </Link>
           <Link href="#early-access" className="hover:text-[var(--ink)]">
-            Early access
+            {t('nav.earlyAccess')}
           </Link>
-          <Link href="/privacy" className="hover:text-[var(--ink)]">
-            Privacy
-          </Link>
-          <Link href="/cookies" className="hover:text-[var(--ink)]">
-            Cookies
-          </Link>
+          <LocaleLink href="/privacy" className="hover:text-[var(--ink)]">
+            {t('nav.privacy')}
+          </LocaleLink>
+          <LocaleLink href="/cookies" className="hover:text-[var(--ink)]">
+            {t('nav.cookies')}
+          </LocaleLink>
         </nav>
       </div>
     </footer>

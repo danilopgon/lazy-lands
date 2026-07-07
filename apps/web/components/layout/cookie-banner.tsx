@@ -1,7 +1,9 @@
 'use client'
 
 import { startTransition, useEffect, useState } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
+
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { getConsent, setConsent } from '@/lib/consent'
@@ -13,6 +15,7 @@ import { getConsent, setConsent } from '@/lib/consent'
  */
 export function CookieBanner() {
   const [visible, setVisible] = useState(false)
+  const t = useTranslations('Legal')
 
   useEffect(() => {
     startTransition(() => {
@@ -33,7 +36,7 @@ export function CookieBanner() {
   return (
     <div
       role="region"
-      aria-label="Cookie notice"
+      aria-label={t('cookieNoticeLabel')}
       className={[
         'fixed bottom-0 left-0 right-0 z-cookie-banner',
         'border-t-2 border-[var(--border)]',
@@ -43,14 +46,13 @@ export function CookieBanner() {
     >
       <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-4">
         <p className="font-sans text-sm text-[var(--ink-2)]">
-          Lazy Lands uses cookies for authentication only. No tracking, no
-          third-party data.{' '}
+          {t('cookieNoticeBody')}{' '}
           <Link href="/cookies" className="text-[var(--accent)] underline">
-            Learn more
+            {t('learnMore')}
           </Link>
         </p>
         <Button onClick={handleAccept} size="sm">
-          Got it
+          {t('gotIt')}
         </Button>
       </div>
     </div>

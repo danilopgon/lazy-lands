@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { cn } from '@/lib/utils'
 
 type OriginBadgeProps = {
@@ -14,6 +18,7 @@ type OriginBadgeProps = {
  * @returns {React.ReactElement} The origin badge element.
  */
 export function OriginBadge({ origin, className }: OriginBadgeProps) {
+  const t = useTranslations('Entities')
   return (
     <span
       className={cn(
@@ -22,7 +27,7 @@ export function OriginBadge({ origin, className }: OriginBadgeProps) {
         className
       )}
     >
-      {origin === 'scribe' ? '✦ Scribe' : '✎ Edited by you'}
+      {origin === 'scribe' ? t('originScribe') : t('originEdited')}
     </span>
   )
 }

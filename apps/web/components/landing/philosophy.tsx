@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { ViewEnter } from './motion'
 
 /**
@@ -6,6 +10,8 @@ import { ViewEnter } from './motion'
  * @returns {React.ReactElement} The philosophy landing section element.
  */
 export function LandPhilosophy() {
+  const t = useTranslations('Landing')
+
   return (
     <section className="mx-auto w-full max-w-[1420px] px-5 py-[56px] llg:px-10">
       <div className="mb-[40px] h-[1px] bg-[var(--border)]" />
@@ -22,15 +28,14 @@ export function LandPhilosophy() {
           }
         >
           <span style={{ color: 'var(--accent)' }}>&ldquo;</span>
-          The Scribe is a draft, never the author. Nothing reaches your table
-          until you&apos;ve made it canon.
+          {t('philosophy.quote')}
           <span style={{ color: 'var(--accent)' }}>&rdquo;</span>
         </div>
         <div
           className="mt-[18px] font-mono uppercase tracking-[0.08em]"
           style={{ fontSize: 11, color: 'var(--accent-deep)' }}
         >
-          The whole philosophy, in one line
+          {t('philosophy.caption')}
         </div>
       </ViewEnter>
     </section>

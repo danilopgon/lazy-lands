@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { PASSWORD_REQUIREMENTS } from '@/lib/auth/password'
 
 /**
@@ -9,27 +13,31 @@ import { PASSWORD_REQUIREMENTS } from '@/lib/auth/password'
  * @returns {React.ReactElement} The requirements checklist.
  */
 export function PasswordRequirements({ value }: { value: string }) {
+  const t = useTranslations('Auth')
+  const metCount = PASSWORD_REQUIREMENTS.filter((requirement) =>
+    requirement.test(value)
+  ).length
+
   return (
     <div
       id="password-requirements"
       className="border-2 border-[var(--border)] bg-[var(--paper-2)] p-4"
     >
       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
-        Password must include
+        {t('passwordRequirementsTitle')}
       </p>
       <span className="sr-only" aria-live="polite">
-        {
-          PASSWORD_REQUIREMENTS.filter((requirement) => requirement.test(value))
-            .length
-        }{' '}
-        of {PASSWORD_REQUIREMENTS.length} requirements met
+        {t('passwordRequirementsProgress', {
+          met: metCount,
+          total: PASSWORD_REQUIREMENTS.length,
+        })}
       </span>
       <ul className="mt-2 space-y-1 text-sm text-[var(--ink-soft)]">
         {PASSWORD_REQUIREMENTS.map((requirement) => {
           const isMet = requirement.test(value)
 
           return (
-            <li key={requirement.label} className="flex items-start gap-2">
+            <li key={requirement.key} className="flex items-start gap-2">
               <span
                 aria-hidden="true"
                 className={
@@ -40,7 +48,7 @@ export function PasswordRequirements({ value }: { value: string }) {
               >
                 {isMet ? '✓' : '—'}
               </span>
-              <span>{requirement.label}</span>
+              <span>{t(`passwordRequirements.${requirement.key}`)}</span>
             </li>
           )
         })}

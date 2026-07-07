@@ -4,6 +4,10 @@ Maps app routes to the handoff prototype file containing the screen implementati
 
 ## Route → File → Component
 
+Prototype copy in `handoff/app/*.jsx` is authored in English. Production UI tasks must preserve the
+handoff meaning and layout while localizing all user-facing production copy through the English and
+Spanish message catalogs; do not leave prototype English literals hard-coded in shipped UI.
+
 | Route                                 | Handoff File          | Component(s)                |
 | ------------------------------------- | --------------------- | --------------------------- |
 | `/`                                   | `views-landing.jsx`   | `Landing`                   |
