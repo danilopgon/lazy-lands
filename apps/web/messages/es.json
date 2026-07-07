@@ -252,7 +252,7 @@
     "updated": "Actualizado {date}",
     "helperCount": "{visible} de {total}",
     "emptyTitle": "Tu crónica empieza aquí",
-    "emptyDescription": "Pega tus notas de campaña actuales y el Escriba borrará PNJ, facciones, estado del mundo y arcos abiertos para que los revises antes de que algo sea canon.",
+    "emptyDescription": "Pega tus notas de campaña actuales y el Escriba generará un borrador de PNJ, facciones, estado del mundo y arcos abiertos para que los revises antes de que algo sea canon.",
     "emptyAction": "+ Crear tu primera campaña",
     "emptySearchTitle": "Ninguna campaña coincide con esa búsqueda",
     "emptySearchDescription": "Prueba con otro nombre o sistema de juego.",
