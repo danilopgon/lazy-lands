@@ -94,7 +94,10 @@ export default function RegisterPage() {
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        options: { emailRedirectTo },
+        options: {
+          emailRedirectTo,
+          data: { language: locale },
+        },
       })
 
       if (error) {
