@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link } from '@/i18n/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
+import { Link } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,7 +15,7 @@ import { resolveAppOrigin } from '@/lib/auth/redirect'
 import { buildLocalizedPath } from '@/lib/format'
 import { isAppLocale, routing } from '@/i18n/routing'
 import {
-  passwordConfirmationSchema,
+  createPasswordConfirmationSchema,
   withPasswordMatch,
 } from '@/lib/auth/password'
 import { PasswordRequirements } from '@/components/auth/password-requirements'
@@ -25,13 +25,11 @@ import {
   authButtonClass,
 } from '@/components/auth/auth-card'
 
-const registerSchema = withPasswordMatch(
-  passwordConfirmationSchema.extend({
-    email: z.email('Invalid email format'),
-  })
-)
-
-type RegisterFormData = z.infer<typeof registerSchema>
+type RegisterFormData = {
+  email: string
+  password: string
+  confirmPassword: string
+}
 
 const supabase = createClient()
 
@@ -48,10 +46,25 @@ export default function RegisterPage() {
   const [authError, setAuthError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const t = useTranslations('Auth')
   const activeLocale = useLocale()
   const locale = isAppLocale(activeLocale)
     ? activeLocale
     : routing.defaultLocale
+
+  const registerSchema = useMemo(
+    () =>
+      withPasswordMatch(
+        createPasswordConfirmationSchema({
+          minimum: t('passwordMinimum'),
+          pattern: t('passwordPattern'),
+          confirmRequired: t('passwordConfirmRequired'),
+          mismatch: t('passwordMismatch'),
+        }).extend({ email: z.email(t('emailInvalid')) }),
+        t('passwordMismatch')
+      ),
+    [t]
+  )
 
   const {
     register,
@@ -94,7 +107,7 @@ export default function RegisterPage() {
 
       setIsSuccess(true)
     } catch {
-      setAuthError('Unable to register right now. Please try again.')
+      setAuthError(t('registerError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -104,11 +117,10 @@ export default function RegisterPage() {
     return (
       <AuthCard>
         <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
-          Check your email
+          {t('registerSuccessTitle')}
         </h1>
         <p className="mt-4 max-w-[60ch] text-base leading-relaxed text-[var(--ink-2)]">
-          We sent a confirmation link to your inbox. Click it to activate your
-          account and start your first campaign.
+          {t('registerSuccessBody')}
         </p>
       </AuthCard>
     )
@@ -117,11 +129,10 @@ export default function RegisterPage() {
   return (
     <AuthCard>
       <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
-        Create an account
+        {t('registerTitle')}
       </h1>
       <p className="mt-4 max-w-[60ch] text-base leading-relaxed text-[var(--ink-2)]">
-        Start your campaign shelf. We will send a confirmation link to your
-        inbox.
+        {t('registerSubtitle')}
       </p>
 
       <form
@@ -130,7 +141,7 @@ export default function RegisterPage() {
         noValidate
       >
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t('email')}</Label>
           <Input
             id="email"
             type="email"
@@ -146,7 +157,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-3">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t('password')}</Label>
           <Input
             id="password"
             type="password"
@@ -164,7 +175,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm password</Label>
+          <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -190,14 +201,14 @@ export default function RegisterPage() {
           disabled={isSubmitting}
           className={authButtonClass}
         >
-          {isSubmitting ? 'Creating account...' : 'Sign up'}
+          {isSubmitting ? t('registerSubmitting') : t('registerSubmit')}
         </Button>
       </form>
 
       <p className="mt-6 text-sm text-[var(--ink-2)]">
-        Already have an account?{' '}
+        {t('registerHaveAccount')}{' '}
         <Link href="/login" className="underline">
-          Sign in
+          {t('loginTitle')}
         </Link>
       </p>
     </AuthCard>

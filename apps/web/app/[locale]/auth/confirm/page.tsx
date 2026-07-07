@@ -2,9 +2,12 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Link } from '@/i18n/navigation'
+import { useLocale, useTranslations } from 'next-intl'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
+import { Link } from '@/i18n/navigation'
+import { buildLocalizedPath } from '@/lib/format'
+import { isAppLocale, routing } from '@/i18n/routing'
 import { createClient } from '@/lib/supabase/client'
 import { AuthCard } from '@/components/auth/auth-card'
 
@@ -17,6 +20,11 @@ const supabase = createClient()
  * @returns {React.ReactElement} Loading indicator, error state, or empty (on redirect).
  */
 function ConfirmContent() {
+  const t = useTranslations('Auth')
+  const activeLocale = useLocale()
+  const locale = isAppLocale(activeLocale)
+    ? activeLocale
+    : routing.defaultLocale
   const searchParams = useSearchParams()
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
@@ -26,9 +34,7 @@ function ConfirmContent() {
     tokenHash && type ? 'loading' : 'error'
   )
   const [errorMessage, setErrorMessage] = useState<string | null>(
-    tokenHash && type
-      ? null
-      : 'Invalid confirmation link. Please request a new one.'
+    tokenHash && type ? null : t('confirmInvalidLink')
   )
 
   useEffect(() => {
@@ -42,17 +48,18 @@ function ConfirmContent() {
           setErrorMessage(error.message)
         } else {
           // Hard navigation so the SSR proxy sees the freshly-written session
-          // cookie before rendering /dashboard (design Decision 2).
-          window.location.assign('/dashboard')
+          // cookie before rendering the dashboard (design Decision 2). Keep the
+          // active locale so a Spanish confirmation lands on /es/dashboard.
+          window.location.assign(buildLocalizedPath('/dashboard', locale))
         }
       })
-  }, [tokenHash, type])
+  }, [tokenHash, type, locale])
 
   if (status === 'loading') {
     return (
       <AuthCard>
         <p className="text-base leading-relaxed text-[var(--ink-2)]">
-          Verifying your email&hellip;
+          {t('confirmVerifying')}
         </p>
       </AuthCard>
     )
@@ -64,7 +71,7 @@ function ConfirmContent() {
         {errorMessage}
       </p>
       <Link href="/register" className="mt-4 underline">
-        Register again
+        {t('confirmRegisterAgain')}
       </Link>
     </AuthCard>
   )
@@ -80,12 +87,14 @@ function ConfirmContent() {
  * @returns {React.ReactElement} The email confirmation page wrapped in Suspense.
  */
 export default function ConfirmPage() {
+  const t = useTranslations('Auth')
+
   return (
     <Suspense
       fallback={
         <AuthCard>
           <p className="text-base leading-relaxed text-[var(--ink-2)]">
-            Verifying your email&hellip;
+            {t('confirmVerifying')}
           </p>
         </AuthCard>
       }

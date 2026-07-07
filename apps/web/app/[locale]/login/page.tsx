@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useRouter } from 'next/navigation'
-import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 
+import { Link, useRouter } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,13 +17,7 @@ import {
   authButtonClass,
 } from '@/components/auth/auth-card'
 
-/** Login form schema — email + password validation. */
-const loginSchema = z.object({
-  email: z.email('Invalid email format'),
-  password: z.string().min(1, 'Password is required'),
-})
-
-type LoginFormData = z.infer<typeof loginSchema>
+type LoginFormData = { email: string; password: string }
 
 const supabase = createClient()
 
@@ -34,8 +28,18 @@ const supabase = createClient()
  */
 export default function LoginPage() {
   const router = useRouter()
+  const t = useTranslations('Auth')
   const [authError, setAuthError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const loginSchema = useMemo(
+    () =>
+      z.object({
+        email: z.email(t('emailInvalid')),
+        password: z.string().min(1, t('passwordRequired')),
+      }),
+    [t]
+  )
 
   const {
     register,
@@ -67,7 +71,7 @@ export default function LoginPage() {
 
       router.push('/dashboard')
     } catch {
-      setAuthError('Unable to sign in right now. Please try again.')
+      setAuthError(t('loginError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -76,10 +80,10 @@ export default function LoginPage() {
   return (
     <AuthCard>
       <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
-        Sign in
+        {t('loginTitle')}
       </h1>
       <p className="mt-4 max-w-[60ch] text-base leading-relaxed text-[var(--ink-2)]">
-        Enter your credentials to access your campaigns.
+        {t('loginSubtitle')}
       </p>
 
       <form
@@ -88,7 +92,7 @@ export default function LoginPage() {
         noValidate
       >
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t('email')}</Label>
           <Input
             id="email"
             type="email"
@@ -104,7 +108,7 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t('password')}</Label>
           <Input
             id="password"
             type="password"
@@ -130,20 +134,20 @@ export default function LoginPage() {
           disabled={isSubmitting}
           className={authButtonClass}
         >
-          {isSubmitting ? 'Signing in...' : 'Sign in'}
+          {isSubmitting ? t('loginSubmitting') : t('loginSubmit')}
         </Button>
       </form>
 
       <p className="mt-4 text-sm text-[var(--ink-2)]">
         <Link href="/forgot-password" className="underline">
-          Forgot password?
+          {t('forgotPassword')}
         </Link>
       </p>
 
       <p className="mt-6 text-sm text-[var(--ink-2)]">
-        Don&apos;t have an account?{' '}
+        {t('loginNoAccount')}{' '}
         <Link href="/register" className="underline">
-          Create an account
+          {t('loginCreateAccount')}
         </Link>
       </p>
     </AuthCard>

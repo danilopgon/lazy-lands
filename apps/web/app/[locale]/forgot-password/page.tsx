@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link } from '@/i18n/navigation'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
+import { Link } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,12 +20,7 @@ import {
   authButtonClass,
 } from '@/components/auth/auth-card'
 
-/** Forgot-password form schema — email validation only. */
-const forgotPasswordSchema = z.object({
-  email: z.email('Invalid email format'),
-})
-
-type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
+type ForgotPasswordFormData = { email: string }
 
 const supabase = createClient()
 
@@ -40,10 +35,16 @@ const supabase = createClient()
 export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const t = useTranslations('Auth')
   const activeLocale = useLocale()
   const locale = isAppLocale(activeLocale)
     ? activeLocale
     : routing.defaultLocale
+
+  const forgotPasswordSchema = useMemo(
+    () => z.object({ email: z.email(t('emailInvalid')) }),
+    [t]
+  )
 
   const {
     register,
@@ -85,15 +86,14 @@ export default function ForgotPasswordPage() {
     return (
       <AuthCard>
         <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
-          Check your email
+          {t('forgotSentTitle')}
         </h1>
         <p className="mt-4 max-w-[60ch] text-base leading-relaxed text-[var(--ink-2)]">
-          If an account exists for that address, a password reset email has been
-          sent.
+          {t('forgotSentBody')}
         </p>
         <p className="mt-6 text-sm text-[var(--ink-2)]">
           <Link href="/login" className="underline">
-            Back to sign in
+            {t('backToSignIn')}
           </Link>
         </p>
       </AuthCard>
@@ -103,11 +103,10 @@ export default function ForgotPasswordPage() {
   return (
     <AuthCard>
       <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
-        Reset password
+        {t('forgotTitle')}
       </h1>
       <p className="mt-4 max-w-[60ch] text-base leading-relaxed text-[var(--ink-2)]">
-        Enter your email address and we&apos;ll send you a link to reset your
-        password.
+        {t('forgotSubtitle')}
       </p>
 
       <form
@@ -116,7 +115,7 @@ export default function ForgotPasswordPage() {
         noValidate
       >
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t('email')}</Label>
           <Input
             id="email"
             type="email"
@@ -136,14 +135,14 @@ export default function ForgotPasswordPage() {
           disabled={isSubmitting}
           className={authButtonClass}
         >
-          {isSubmitting ? 'Sending...' : 'Send reset email'}
+          {isSubmitting ? t('forgotSubmitting') : t('forgotSubmit')}
         </Button>
       </form>
 
       <p className="mt-6 text-sm text-[var(--ink-2)]">
-        Remembered your password?{' '}
+        {t('forgotRemembered')}{' '}
         <Link href="/login" className="underline">
-          Sign in
+          {t('loginTitle')}
         </Link>
       </p>
     </AuthCard>

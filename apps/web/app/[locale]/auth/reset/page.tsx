@@ -1,19 +1,19 @@
 'use client'
 
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { useSearchParams } from 'next/navigation'
-import { Link } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
+import { Link } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import {
-  passwordConfirmationSchema,
+  createPasswordConfirmationSchema,
   withPasswordMatch,
 } from '@/lib/auth/password'
 import { PasswordRequirements } from '@/components/auth/password-requirements'
@@ -25,10 +25,7 @@ import {
 
 const supabase = createClient()
 
-/** New-password form schema — shares the signup strong-password policy. */
-const resetPasswordSchema = withPasswordMatch(passwordConfirmationSchema)
-
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
+type ResetPasswordFormData = { password: string; confirmPassword: string }
 
 type ResetState = 'loading' | 'error' | 'form' | 'success'
 
@@ -39,6 +36,7 @@ type ResetState = 'loading' | 'error' | 'form' | 'success'
  * @returns {React.ReactElement} Loading indicator, error state, password form, or success.
  */
 function ResetContent() {
+  const t = useTranslations('Auth')
   const searchParams = useSearchParams()
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
@@ -50,10 +48,24 @@ function ResetContent() {
     tokenHash && type === 'recovery' ? 'loading' : 'error'
   )
   const [errorMessage, setErrorMessage] = useState<string | null>(
-    tokenHash && type === 'recovery' ? null : 'Invalid or missing reset link.'
+    tokenHash && type === 'recovery' ? null : t('resetInvalidLink')
   )
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const resetPasswordSchema = useMemo(
+    () =>
+      withPasswordMatch(
+        createPasswordConfirmationSchema({
+          minimum: t('passwordMinimum'),
+          pattern: t('passwordPattern'),
+          confirmRequired: t('passwordConfirmRequired'),
+          mismatch: t('passwordMismatch'),
+        }),
+        t('passwordMismatch')
+      ),
+    [t]
+  )
 
   const {
     register,
@@ -95,10 +107,10 @@ function ResetContent() {
       .catch(() => {
         // A rejected promise (transient/network failure) must not strand the
         // user on the "Verifying…" loading state (AU-T-25).
-        setErrorMessage('Unable to verify your reset link. Please try again.')
+        setErrorMessage(t('resetVerifyError'))
         setState('error')
       })
-  }, [tokenHash, type])
+  }, [tokenHash, type, t])
 
   /**
    * Handle password update form submission.
@@ -121,7 +133,7 @@ function ResetContent() {
 
       setState('success')
     } catch {
-      setUpdateError('Unable to update password right now. Please try again.')
+      setUpdateError(t('resetUpdateError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -131,7 +143,7 @@ function ResetContent() {
     return (
       <AuthCard>
         <p className="text-base leading-relaxed text-[var(--ink-2)]">
-          Verifying your reset link&hellip;
+          {t('resetVerifying')}
         </p>
       </AuthCard>
     )
@@ -144,7 +156,7 @@ function ResetContent() {
           {errorMessage}
         </p>
         <Link href="/forgot-password" className="mt-4 underline">
-          Request a new reset link
+          {t('resetRequestNew')}
         </Link>
       </AuthCard>
     )
@@ -154,14 +166,14 @@ function ResetContent() {
     return (
       <AuthCard>
         <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
-          Password updated
+          {t('resetSuccessTitle')}
         </h1>
         <p className="mt-4 max-w-[60ch] text-base leading-relaxed text-[var(--ink-2)]">
-          Your password has been updated successfully.
+          {t('resetSuccessBody')}
         </p>
         <p className="mt-6 text-sm text-[var(--ink-2)]">
           <Link href="/login" className="underline">
-            Sign in
+            {t('loginTitle')}
           </Link>
         </p>
       </AuthCard>
@@ -172,10 +184,10 @@ function ResetContent() {
   return (
     <AuthCard>
       <h1 className="font-serif text-4xl font-semibold leading-none tracking-[-0.025em] text-[var(--ink)] llg:text-[52px]">
-        Set a new password
+        {t('resetTitle')}
       </h1>
       <p className="mt-4 max-w-[60ch] text-base leading-relaxed text-[var(--ink-2)]">
-        Choose a new password for your account.
+        {t('resetSubtitle')}
       </p>
 
       <form
@@ -184,7 +196,7 @@ function ResetContent() {
         noValidate
       >
         <div className="space-y-3">
-          <Label htmlFor="password">New password</Label>
+          <Label htmlFor="password">{t('resetNewPasswordLabel')}</Label>
           <Input
             id="password"
             type="password"
@@ -202,7 +214,7 @@ function ResetContent() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm password</Label>
+          <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -228,7 +240,7 @@ function ResetContent() {
           disabled={isSubmitting}
           className={authButtonClass}
         >
-          {isSubmitting ? 'Updating...' : 'Update password'}
+          {isSubmitting ? t('resetSubmitting') : t('resetSubmit')}
         </Button>
       </form>
     </AuthCard>
@@ -245,12 +257,14 @@ function ResetContent() {
  * @returns {React.ReactElement} The reset page wrapped in Suspense.
  */
 export default function ResetPage() {
+  const t = useTranslations('Auth')
+
   return (
     <Suspense
       fallback={
         <AuthCard>
           <p className="text-base leading-relaxed text-[var(--ink-2)]">
-            Verifying your reset link&hellip;
+            {t('resetVerifying')}
           </p>
         </AuthCard>
       }
