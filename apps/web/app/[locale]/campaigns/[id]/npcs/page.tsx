@@ -6,12 +6,26 @@ import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { EntityListScreen } from '@/components/campaigns/entity-list-screen'
+import { EntitySearch } from '@/components/campaigns/entity-search'
 import { NpcList } from '@/components/campaigns/npc-list'
 import { NpcModal } from '@/components/campaigns/npc-modal'
 import { ConfirmDeleteModal } from '@/components/campaigns/confirm-delete-modal'
 import { deleteNpc } from '@/lib/campaigns/api'
 
 import type { NpcResponse } from '@/lib/campaigns/schemas'
+
+/**
+ * Case-insensitive match of an NPC against a query across its text fields.
+ *
+ * @param {NpcResponse} npc - The NPC to test.
+ * @param {string} query - The lowercased query.
+ * @returns {boolean} Whether any of the NPC's text fields contain the query.
+ */
+function npcMatches(npc: NpcResponse, query: string): boolean {
+  return [npc.name, npc.description, npc.current_state, npc.motivation].some(
+    (field) => (field ?? '').toLowerCase().includes(query)
+  )
+}
 
 /**
  * `/campaigns/:id/npcs` — a campaign's NPCs with create/edit/delete.
@@ -22,10 +36,12 @@ export default function NpcsPage() {
   const params = useParams<{ id: string }>()
   const campaignId = params.id
   const t = useTranslations('Campaigns')
+  const te = useTranslations('Entities')
   const queryClient = useQueryClient()
   // null = closed, 'add' = create, NpcResponse = edit that NPC.
   const [modal, setModal] = useState<'add' | NpcResponse | null>(null)
   const [deleting, setDeleting] = useState<NpcResponse | null>(null)
+  const [query, setQuery] = useState('')
 
   return (
     <>
@@ -38,14 +54,42 @@ export default function NpcsPage() {
         }
         onAdd={() => setModal('add')}
       >
-        {(campaign) => (
-          <NpcList
-            npcs={campaign.npcs}
-            onAdd={() => setModal('add')}
-            onEdit={(npc) => setModal(npc)}
-            onDelete={(npc) => setDeleting(npc)}
-          />
-        )}
+        {(campaign) => {
+          const q = query.trim().toLowerCase()
+          const shown = q
+            ? campaign.npcs.filter((npc) => npcMatches(npc, q))
+            : campaign.npcs
+
+          return (
+            <>
+              {campaign.npcs.length > 0 ? (
+                <EntitySearch
+                  className="mb-4"
+                  value={query}
+                  onChange={setQuery}
+                  placeholder={te('searchNpcs')}
+                  countLabel={te('searchCount', {
+                    visible: shown.length,
+                    total: campaign.npcs.length,
+                  })}
+                />
+              ) : null}
+
+              {campaign.npcs.length > 0 && shown.length === 0 ? (
+                <p className="border-2 border-dotted border-[var(--dotted)] px-5 py-8 text-center text-sm text-[var(--ink-2)]">
+                  {te('noSearchMatch')}
+                </p>
+              ) : (
+                <NpcList
+                  npcs={shown}
+                  onAdd={() => setModal('add')}
+                  onEdit={(npc) => setModal(npc)}
+                  onDelete={(npc) => setDeleting(npc)}
+                />
+              )}
+            </>
+          )
+        }}
       </EntityListScreen>
 
       {modal !== null ? (

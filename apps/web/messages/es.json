@@ -443,6 +443,10 @@
     },
     "filterAll": "Todos",
     "filterByStatus": "Filtrar por estado",
+    "searchNpcs": "Buscar PNJ",
+    "searchFactions": "Buscar facciones",
+    "searchCount": "{visible} de {total}",
+    "noSearchMatch": "Sin resultados para esta búsqueda.",
     "priorityFlag": "{priority, select, high {prioridad alta} medium {prioridad media} low {prioridad baja} other {priority}}"
   },
   "Shared": {

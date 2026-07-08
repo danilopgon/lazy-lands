@@ -443,6 +443,10 @@
     },
     "filterAll": "All",
     "filterByStatus": "Filter by status",
+    "searchNpcs": "Search NPCs",
+    "searchFactions": "Search factions",
+    "searchCount": "{visible} of {total}",
+    "noSearchMatch": "No matches for this search.",
     "priorityFlag": "{priority, select, high {high priority} medium {medium priority} low {low priority} other {priority}}"
   },
   "Shared": {
