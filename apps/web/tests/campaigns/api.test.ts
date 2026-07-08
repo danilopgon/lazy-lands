@@ -48,7 +48,7 @@ describe('campaigns api client (CUI-001.3, CUI-002.5)', () => {
     expect(result.title).toBe('Shadows over Phandalin')
   })
 
-  it('extractCampaign throws CampaignApiError with the backend error message on failure', async () => {
+  it('extractCampaign throws a structured CampaignApiError without raw backend UI copy on failure', async () => {
     mockApiFetch.mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -66,7 +66,13 @@ describe('campaigns api client (CUI-001.3, CUI-002.5)', () => {
       caught = err
     }
     expect(caught).toBeInstanceOf(CampaignApiError)
-    expect((caught as Error).message).toMatch(/could not be parsed/i)
+    expect(caught).toMatchObject({
+      code: 'validation',
+      status: 422,
+      source: 'backend',
+      messageKey: 'validation',
+    })
+    expect((caught as Error).message).not.toMatch(/could not be parsed/i)
   })
 
   it('createCampaign posts the reviewed payload to POST /campaigns', async () => {
@@ -116,6 +122,11 @@ describe('campaigns api client (CUI-001.3, CUI-002.5)', () => {
       arcs: [],
     }
 
-    await expect(createCampaign(payload)).rejects.toThrow(CampaignApiError)
+    await expect(createCampaign(payload)).rejects.toMatchObject({
+      code: 'backend.generic',
+      status: 409,
+      source: 'backend',
+      messageKey: 'backend.generic',
+    })
   })
 })

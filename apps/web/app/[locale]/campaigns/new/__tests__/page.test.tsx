@@ -13,7 +13,14 @@ const { mockExtractCampaign, mockPush, mockSaveExtractionDraft } = vi.hoisted(
 
 vi.mock('@/lib/campaigns/api', () => ({
   extractCampaign: mockExtractCampaign,
-  CampaignApiError: class CampaignApiError extends Error {},
+  CampaignApiError: class CampaignApiError extends Error {
+    readonly messageKey: string
+
+    constructor(messageKey = 'backend.generic') {
+      super(`Errors.${messageKey}`)
+      this.messageKey = messageKey
+    }
+  },
 }))
 
 vi.mock('@/lib/campaigns/draft-storage', () => ({
@@ -208,12 +215,10 @@ describe('NewCampaignPage (CUI-001)', () => {
     })
   })
 
-  it('backend error preserves typed text and shows a message; form stays interactive', async () => {
+  it('backend error preserves typed text and shows a localized message; form stays interactive', async () => {
     const user = userEvent.setup()
     const { CampaignApiError } = await import('@/lib/campaigns/api')
-    mockExtractCampaign.mockRejectedValue(
-      new CampaignApiError('The Scribe could not parse that.')
-    )
+    mockExtractCampaign.mockRejectedValue(new CampaignApiError('validation'))
     renderPage()
 
     await fillRequiredMeta(user)
@@ -223,8 +228,11 @@ describe('NewCampaignPage (CUI-001)', () => {
     await user.click(screen.getByRole('button', { name: /analyze/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/could not parse that/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/some details need attention/i)
+      ).toBeInTheDocument()
     })
+    expect(screen.queryByText('Errors.validation')).not.toBeInTheDocument()
     expect(textarea).toHaveValue(VALID_PREMISE)
     expect(mockPush).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: /analyze/i })).toBeEnabled()

@@ -534,6 +534,19 @@
   },
   "Errors": {
     "fallback": "Algo salió mal. Inténtalo de nuevo.",
+    "notFound": "No se encontró ese registro, o no tienes acceso.",
+    "validation": "Algunos datos necesitan revisión. Comprueba el formulario e inténtalo de nuevo.",
+    "backend": {
+      "generic": "Algo salió mal al comunicarse con el servidor. Inténtalo de nuevo."
+    },
+    "auth": {
+      "invalidCredentials": "Correo electrónico o contraseña incorrectos. Comprueba tus credenciales e inténtalo de nuevo.",
+      "emailNotConfirmed": "Confirma tu correo antes de iniciar sesión.",
+      "generic": "No se pudo iniciar sesión ahora mismo. Inténtalo de nuevo.",
+      "registerGeneric": "No se pudo completar el registro ahora mismo. Inténtalo de nuevo.",
+      "confirmGeneric": "No se pudo verificar el enlace de confirmación. Solicita uno nuevo.",
+      "resetGeneric": "No se pudo actualizar la contraseña ahora mismo. Inténtalo de nuevo."
+    },
     "exceptions": "Los códigos de API backend y los encabezados de composeRawText no se traducen por diseño."
   },
   "Dates": {

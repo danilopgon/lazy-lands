@@ -9,6 +9,7 @@ import { Link } from '@/i18n/navigation'
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { buildLocalizedPath } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { normalizeSupabaseAuthError } from '@/lib/errors/app-error'
 import { AuthCard } from '@/components/auth/auth-card'
 
 const supabase = createClient()
@@ -21,6 +22,7 @@ const supabase = createClient()
  */
 function ConfirmContent() {
   const t = useTranslations('Auth')
+  const errorT = useTranslations('Errors')
   const locale = useAppLocale()
   const searchParams = useSearchParams()
   const tokenHash = searchParams.get('token_hash')
@@ -42,7 +44,14 @@ function ConfirmContent() {
       .then(({ error }) => {
         if (error) {
           setStatus('error')
-          setErrorMessage(error.message)
+          setErrorMessage(
+            errorT(
+              normalizeSupabaseAuthError(error, {
+                code: 'auth.confirmGeneric',
+                messageKey: 'auth.confirmGeneric',
+              }).messageKey
+            )
+          )
         } else {
           // Hard navigation so the SSR proxy sees the freshly-written session
           // cookie before rendering the dashboard (design Decision 2). Keep the
@@ -50,7 +59,7 @@ function ConfirmContent() {
           window.location.assign(buildLocalizedPath('/dashboard', locale))
         }
       })
-  }, [tokenHash, type, locale])
+  }, [tokenHash, type, locale, errorT])
 
   if (status === 'loading') {
     return (

@@ -45,6 +45,7 @@ export function FactionModal({
 }: FactionModalProps) {
   const isEdit = faction !== null
   const t = useTranslations('Campaigns')
+  const errorT = useTranslations('Errors')
   const te = useTranslations('Entities')
   const queryClient = useQueryClient()
   const [name, setName] = useState(faction?.name ?? '')
@@ -74,7 +75,9 @@ export function FactionModal({
     },
     onError: (err: unknown) => {
       setError(
-        err instanceof CampaignApiError ? err.message : t('factions.saveError')
+        err instanceof CampaignApiError
+          ? errorT(err.messageKey)
+          : t('factions.saveError')
       )
     },
   })

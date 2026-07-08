@@ -13,6 +13,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import {
+  normalizeSupabaseAuthError,
+  normalizeUnknownError,
+} from '@/lib/errors/app-error'
+import {
   createPasswordConfirmationSchema,
   withPasswordMatch,
 } from '@/lib/auth/password'
@@ -37,6 +41,7 @@ type ResetState = 'loading' | 'error' | 'form' | 'success'
  */
 function ResetContent() {
   const t = useTranslations('Auth')
+  const errorT = useTranslations('Errors')
   const searchParams = useSearchParams()
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
@@ -98,7 +103,14 @@ function ResetContent() {
       .verifyOtp({ token_hash: tokenHash, type: type as EmailOtpType })
       .then(({ error }) => {
         if (error) {
-          setErrorMessage(error.message)
+          setErrorMessage(
+            errorT(
+              normalizeSupabaseAuthError(error, {
+                code: 'auth.resetGeneric',
+                messageKey: 'auth.resetGeneric',
+              }).messageKey
+            )
+          )
           setState('error')
         } else {
           setState('form')
@@ -110,7 +122,7 @@ function ResetContent() {
         setErrorMessage(t('resetVerifyError'))
         setState('error')
       })
-  }, [tokenHash, type, t])
+  }, [tokenHash, type, t, errorT])
 
   /**
    * Handle password update form submission.
@@ -127,13 +139,27 @@ function ResetContent() {
       })
 
       if (error) {
-        setUpdateError(error.message)
+        setUpdateError(
+          errorT(
+            normalizeSupabaseAuthError(error, {
+              code: 'auth.resetGeneric',
+              messageKey: 'auth.resetGeneric',
+            }).messageKey
+          )
+        )
         return
       }
 
       setState('success')
-    } catch {
-      setUpdateError(t('resetUpdateError'))
+    } catch (error) {
+      setUpdateError(
+        errorT(
+          normalizeUnknownError(error, {
+            code: 'auth.resetGeneric',
+            messageKey: 'auth.resetGeneric',
+          }).messageKey
+        )
+      )
     } finally {
       setIsSubmitting(false)
     }

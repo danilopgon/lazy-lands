@@ -41,6 +41,7 @@ export function ConfirmDeleteModal({
 }: ConfirmDeleteModalProps) {
   const t = useTranslations('Entities')
   const tc = useTranslations('Campaigns')
+  const errorT = useTranslations('Errors')
   const [error, setError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -51,7 +52,9 @@ export function ConfirmDeleteModal({
       await onConfirm()
     } catch (err: unknown) {
       setIsDeleting(false)
-      setError(err instanceof CampaignApiError ? err.message : deleteError)
+      setError(
+        err instanceof CampaignApiError ? errorT(err.messageKey) : deleteError
+      )
     }
   }
 

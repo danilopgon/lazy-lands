@@ -1,4 +1,9 @@
 import { apiFetch } from '@/lib/api'
+import {
+  AppError,
+  normalizeBackendResponseError,
+  type AppErrorOptions,
+} from '@/lib/errors/app-error'
 
 import { z } from 'zod'
 
@@ -66,52 +71,32 @@ export type CreateArcPayload = {
 /** Partial arc edit for `PATCH /arcs/{id}`. */
 export type UpdateArcPayload = Partial<Omit<CreateArcPayload, 'campaign_id'>>
 
-/** Generic fallback shown when the backend error body has no recognizable message. */
-const FALLBACK_ERROR_MESSAGE = 'Something went wrong. Please try again.'
-
 /**
  * Error thrown by the campaigns API client when a request fails.
- * Carries the backend-provided message (or a generic fallback) for display.
+ * Carries a stable localization key instead of raw backend display copy.
  */
-export class CampaignApiError extends Error {}
-
-export class CampaignNotFoundError extends CampaignApiError {}
-
-/**
- * Extract a message from a non-2xx JSON error body.
- *
- * Backend error handlers use `{ error: string, retryable: boolean }`
- * (see `services/api/app/shared/errors.py`); FastAPI's own validation
- * errors use `{ detail: ... }`. Falls back to a generic message otherwise.
- *
- * @param {Response} response - The non-ok fetch Response.
- * @returns {Promise<string>} The extracted or fallback error message.
- */
-async function extractErrorMessage(response: Response): Promise<string> {
-  try {
-    const body: unknown = await response.json()
-    if (body && typeof body === 'object') {
-      const { error, detail } = body as { error?: unknown; detail?: unknown }
-      if (typeof error === 'string') return error
-      if (typeof detail === 'string') return detail
-      // FastAPI request-validation errors: `detail` is an array of
-      // `{ msg, loc, ... }`. Surface the first message so the user sees
-      // something actionable instead of the generic fallback.
-      if (Array.isArray(detail)) {
-        const first = detail.find(
-          (d): d is { msg: string } =>
-            Boolean(d) &&
-            typeof d === 'object' &&
-            typeof (d as { msg?: unknown }).msg === 'string'
-        )
-        if (first) return first.msg
-      }
-    }
-  } catch {
-    // Non-JSON error body — fall through to the generic message.
+export class CampaignApiError extends AppError {
+  /**
+   * Create a campaign API error from normalized metadata.
+   * @param {AppError | AppErrorOptions | string} error - Normalized error or legacy test string.
+   */
+  constructor(error: AppError | AppErrorOptions | string) {
+    super(
+      typeof error === 'string'
+        ? {
+            code: 'backend.generic',
+            source: 'backend',
+            retryable: true,
+            messageKey: 'backend.generic',
+          }
+        : error
+    )
+    this.name = 'CampaignApiError'
   }
-  return FALLBACK_ERROR_MESSAGE
 }
+
+/** Error thrown when a campaign lookup resolves to a 404/not-owned response. */
+export class CampaignNotFoundError extends CampaignApiError {}
 
 /**
  * Call `POST /campaigns/extract` with the DM's free-text premise.
@@ -132,7 +117,7 @@ export async function extractCampaign(
   })
 
   if (!response.ok) {
-    throw new CampaignApiError(await extractErrorMessage(response))
+    throw new CampaignApiError(await normalizeBackendResponseError(response))
   }
 
   return extractCampaignOutputSchema.parse(await response.json())
@@ -155,7 +140,7 @@ export async function createCampaign(
   })
 
   if (!response.ok) {
-    throw new CampaignApiError(await extractErrorMessage(response))
+    throw new CampaignApiError(await normalizeBackendResponseError(response))
   }
 
   return createCampaignResponseSchema.parse(await response.json())
@@ -171,7 +156,7 @@ export async function getCampaigns(): Promise<CampaignSummary[]> {
   const response = await apiFetch('/campaigns')
 
   if (!response.ok) {
-    throw new CampaignApiError(await extractErrorMessage(response))
+    throw new CampaignApiError(await normalizeBackendResponseError(response))
   }
 
   return z.array(campaignSummarySchema).parse(await response.json())
@@ -192,9 +177,11 @@ export async function getCampaignDetail(
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new CampaignNotFoundError(`Campaign ${id} not found`)
+      throw new CampaignNotFoundError(
+        await normalizeBackendResponseError(response)
+      )
     }
-    throw new CampaignApiError(await extractErrorMessage(response))
+    throw new CampaignApiError(await normalizeBackendResponseError(response))
   }
 
   return campaignDetailResponseSchema.parse(await response.json())
@@ -220,7 +207,7 @@ async function mutate<T>(
     body: JSON.stringify(body),
   })
   if (!response.ok) {
-    throw new CampaignApiError(await extractErrorMessage(response))
+    throw new CampaignApiError(await normalizeBackendResponseError(response))
   }
   return schema.parse(await response.json())
 }
@@ -233,7 +220,7 @@ async function mutate<T>(
 async function remove(path: string): Promise<void> {
   const response = await apiFetch(path, { method: 'DELETE' })
   if (!response.ok) {
-    throw new CampaignApiError(await extractErrorMessage(response))
+    throw new CampaignApiError(await normalizeBackendResponseError(response))
   }
 }
 

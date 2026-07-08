@@ -534,6 +534,19 @@
   },
   "Errors": {
     "fallback": "Something went wrong. Try again.",
+    "notFound": "That record was not found, or you do not have access to it.",
+    "validation": "Some details need attention. Check the form and try again.",
+    "backend": {
+      "generic": "Something went wrong while talking to the server. Please try again."
+    },
+    "auth": {
+      "invalidCredentials": "Invalid email or password. Check your credentials and try again.",
+      "emailNotConfirmed": "Confirm your email before signing in.",
+      "generic": "Unable to sign in right now. Please try again.",
+      "registerGeneric": "Unable to register right now. Please try again.",
+      "confirmGeneric": "Unable to verify your confirmation link. Please request a new one.",
+      "resetGeneric": "Unable to update password right now. Please try again."
+    },
     "exceptions": "Backend API codes and composeRawText prompt headings remain untranslated by design."
   },
   "Dates": {

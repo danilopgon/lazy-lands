@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
@@ -75,6 +75,7 @@ type CampaignFormValues = {
 export default function NewCampaignPage() {
   const router = useRouter()
   const t = useTranslations('Campaigns')
+  const errorT = useTranslations('Errors')
   const te = useTranslations('Entities')
   const [extractError, setExtractError] = useState<string | null>(null)
   const [isExtracting, setIsExtracting] = useState(false)
@@ -110,7 +111,7 @@ export default function NewCampaignPage() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     getValues,
     formState: { errors },
   } = useForm<CampaignFormValues>({
@@ -123,7 +124,7 @@ export default function NewCampaignPage() {
       additional_details: '',
     },
   })
-  const rawText = watch('raw_text') ?? ''
+  const rawText = useWatch({ control, name: 'raw_text' }) ?? ''
 
   const mutation = useMutation({
     mutationFn: (text: string) => extractCampaign(text),
@@ -137,7 +138,9 @@ export default function NewCampaignPage() {
     onError: (err: unknown) => {
       setIsExtracting(false)
       setExtractError(
-        err instanceof CampaignApiError ? err.message : t('create.extractError')
+        err instanceof CampaignApiError
+          ? errorT(err.messageKey)
+          : t('create.extractError')
       )
     },
   })

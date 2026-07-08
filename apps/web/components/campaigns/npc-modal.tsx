@@ -38,6 +38,7 @@ type NpcModalProps = {
 export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
   const isEdit = npc !== null
   const t = useTranslations('Campaigns')
+  const errorT = useTranslations('Errors')
   const te = useTranslations('Entities')
   const queryClient = useQueryClient()
   const [name, setName] = useState(npc?.name ?? '')
@@ -66,7 +67,9 @@ export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
     },
     onError: (err: unknown) => {
       setError(
-        err instanceof CampaignApiError ? err.message : t('npcs.saveError')
+        err instanceof CampaignApiError
+          ? errorT(err.messageKey)
+          : t('npcs.saveError')
       )
     },
   })

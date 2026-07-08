@@ -122,6 +122,7 @@ function ReviewCampaignClient({
 }) {
   const router = useRouter()
   const t = useTranslations('Campaigns')
+  const errorT = useTranslations('Errors')
   const te = useTranslations('Entities')
   const [draft, setDraft] = useState(initialDraft)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -192,7 +193,9 @@ function ReviewCampaignClient({
     onError: (err: unknown) => {
       setIsCreating(false)
       setSaveError(
-        err instanceof CampaignApiError ? err.message : t('review.saveError')
+        err instanceof CampaignApiError
+          ? errorT(err.messageKey)
+          : t('review.saveError')
       )
     },
   })

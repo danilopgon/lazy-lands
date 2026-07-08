@@ -13,7 +13,14 @@ const { mockGetCampaignDetail, mockUpdateCampaign, mockGetSessions } =
 vi.mock('@/lib/campaigns/api', () => ({
   getCampaignDetail: mockGetCampaignDetail,
   updateCampaign: mockUpdateCampaign,
-  CampaignApiError: class CampaignApiError extends Error {},
+  CampaignApiError: class CampaignApiError extends Error {
+    readonly messageKey: string
+
+    constructor(messageKey = 'backend.generic') {
+      super(`Errors.${messageKey}`)
+      this.messageKey = messageKey
+    }
+  },
   CampaignNotFoundError: class CampaignNotFoundError extends Error {},
 }))
 
@@ -296,11 +303,11 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByText(/updated world state text/i)).toBeInTheDocument()
   })
 
-  it('keeps the textarea open with an inline error when save fails', async () => {
+  it('keeps the textarea open with a localized inline error when save fails', async () => {
     const user = userEvent.setup()
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
     const { CampaignApiError } = await import('@/lib/campaigns/api')
-    mockUpdateCampaign.mockRejectedValue(new CampaignApiError('Save failed'))
+    mockUpdateCampaign.mockRejectedValue(new CampaignApiError('validation'))
     renderPage()
 
     await waitFor(() => {
@@ -315,8 +322,11 @@ describe('CampaignDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /save changes/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/save failed/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/some details need attention/i)
+      ).toBeInTheDocument()
     })
+    expect(screen.queryByText('Errors.validation')).not.toBeInTheDocument()
     // Draft is preserved in the still-open textarea.
     expect(screen.getByRole('textbox')).toHaveValue('Draft that fails to save')
   })
