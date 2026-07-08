@@ -18,6 +18,15 @@ from app.modules.campaigns.application.errors import (
     CampaignValidationError,
 )
 from app.modules.health import routes as health
+from app.modules.sessions.api import routes as sessions
+from app.modules.sessions.api.exception_handlers import (
+    session_not_found_error_handler,
+    session_persistence_error_handler,
+)
+from app.modules.sessions.application.errors import (
+    SessionNotFoundError,
+    SessionPersistenceError,
+)
 from app.shared.config import settings
 from app.shared.errors import (
     AppError,
@@ -57,6 +66,14 @@ app.add_exception_handler(
     CampaignValidationError,
     campaign_validation_error_handler,  # type: ignore[arg-type]
 )
+app.add_exception_handler(
+    SessionNotFoundError,
+    session_not_found_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    SessionPersistenceError,
+    session_persistence_error_handler,  # type: ignore[arg-type]
+)
 
 
 def _error_cors_headers(request: Request) -> dict[str, str]:
@@ -93,3 +110,4 @@ app.include_router(campaigns.router)
 app.include_router(campaigns.npcs_router)
 app.include_router(campaigns.factions_router)
 app.include_router(campaigns.arcs_router)
+app.include_router(sessions.router)

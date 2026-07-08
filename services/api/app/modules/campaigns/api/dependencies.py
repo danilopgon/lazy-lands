@@ -5,7 +5,6 @@ repository (or LLM provider) so route bodies never wire infrastructure
 directly.
 """
 
-from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
@@ -29,19 +28,10 @@ from app.modules.campaigns.application.queries.get_campaign_detail import (
 from app.modules.campaigns.application.queries.get_campaigns import GetCampaigns
 from app.modules.campaigns.infrastructure.repository import SupabaseCampaignRepository
 from app.shared.database import get_user_supabase_client
+from app.shared.llm.dependencies import get_llm_provider
 from app.shared.llm.port import LlmProvider
-from app.shared.llm.providers.registry import build_provider
 
-
-@lru_cache
-def get_llm_provider() -> LlmProvider:
-    """FastAPI dependency wrapping ``build_provider``.
-
-    Cached for the process lifetime so the extract path does not rebuild
-    ``Settings`` (re-reading env/.env) on every request. Tests override this
-    via ``dependency_overrides``, which bypasses the cache entirely.
-    """
-    return build_provider()
+__all__ = ["get_llm_provider"]
 
 
 def provide_get_campaigns(

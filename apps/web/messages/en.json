@@ -286,6 +286,8 @@
       "worldStateHeading": "The state of the world",
       "recentSessions": "Recent sessions",
       "comingSoon": "Coming in a later chapter",
+      "logSession": "Log session →",
+      "sessionsLoadError": "Could not load recent sessions.",
       "arcsNeedingAttention": "Active arcs",
       "allArcs": "All arcs →",
       "activeMemories": "Active memories"
@@ -395,6 +397,28 @@
       "saveError": "Unable to save this campaign right now. Please try again.",
       "loadingTitle": "Binding your chronicle",
       "loadingCaption": "Saving the world state, NPCs, factions and arcs you confirmed"
+    }
+  },
+  "Sessions": {
+    "breadcrumb": "Log session",
+    "kicker": "After the table clears",
+    "title": "Log what happened",
+    "subtitle": "Write it the way you'd tell a friend. The Scribe will read your record and propose memories; you decide what the campaign keeps.",
+    "summaryLabel": "What happened",
+    "summaryPlaceholder": "The party tracked the smugglers to the warehouse district. Things escalated; by midnight the warehouse was burning and Halia's men were asking questions.",
+    "summaryRequired": "The summary is the one thing the Scribe can't work without.",
+    "consequencesLabel": "Consequences",
+    "consequencesPlaceholder": "The Black Bear Guild lost their main cache. The militia suspects arson.",
+    "submit": "Save session & review memories →",
+    "saving": "Saving...",
+    "savingTitle": "Chronicling the session",
+    "savingCaption": "Saving your record and asking the Scribe what's worth remembering",
+    "errorMessage": "Something went wrong while processing the session. Your text is safe; nothing you wrote was lost. Try again.",
+    "history": {
+      "emptyTitle": "No sessions logged yet",
+      "emptyDescription": "Log your first session and the Scribe will start keeping the chronicle.",
+      "logSession": "Log session",
+      "sessionLabel": "Session {number}"
     }
   },
   "Entities": {
