@@ -286,6 +286,8 @@
       "worldStateHeading": "El estado del mundo",
       "recentSessions": "Sesiones recientes",
       "comingSoon": "Llegará en un capítulo posterior",
+      "logSession": "Registrar sesión →",
+      "sessionsLoadError": "No se pudieron cargar las sesiones recientes.",
       "arcsNeedingAttention": "Arcos activos",
       "allArcs": "Todos los arcos →",
       "activeMemories": "Memorias activas"
@@ -395,6 +397,28 @@
       "saveError": "No se pudo guardar esta campaña ahora mismo. Inténtalo de nuevo.",
       "loadingTitle": "Encuadernando tu crónica",
       "loadingCaption": "Guardando el estado del mundo, PNJ, facciones y arcos que confirmaste"
+    }
+  },
+  "Sessions": {
+    "breadcrumb": "Registrar sesión",
+    "kicker": "Cuando la mesa se levanta",
+    "title": "Registra lo que pasó",
+    "subtitle": "Escríbelo como se lo contarías a un amigo. El Escriba leerá tu registro y propondrá memorias; tú decides qué conserva la campaña.",
+    "summaryLabel": "Qué pasó",
+    "summaryPlaceholder": "El grupo siguió a los contrabandistas hasta el distrito de almacenes. Las cosas se salieron de control; a medianoche el almacén ardía y los hombres de Halia hacían preguntas.",
+    "summaryRequired": "Sin un resumen, el Escriba no tiene con qué trabajar.",
+    "consequencesLabel": "Consecuencias",
+    "consequencesPlaceholder": "El gremio del Oso Negro perdió su alijo principal. La milicia sospecha de un incendio provocado.",
+    "submit": "Guardar sesión y revisar memorias →",
+    "saving": "Guardando...",
+    "savingTitle": "Registrando la sesión",
+    "savingCaption": "Guardando tu registro y preguntándole al Escriba qué vale la pena recordar",
+    "errorMessage": "Algo salió mal al procesar la sesión. Tu texto está a salvo, no se perdió nada de lo que escribiste. Inténtalo de nuevo.",
+    "history": {
+      "emptyTitle": "Aún no hay sesiones registradas",
+      "emptyDescription": "Registra tu primera sesión y el Escriba empezará a llevar la crónica.",
+      "logSession": "Registrar sesión",
+      "sessionLabel": "Sesión {number}"
     }
   },
   "Entities": {

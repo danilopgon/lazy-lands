@@ -2,11 +2,14 @@
 
 import { Link } from '@/i18n/navigation'
 import { useTranslations } from 'next-intl'
+import { useQuery } from '@tanstack/react-query'
 
 import { WorldStateEditor } from './world-state-editor'
+import { RecentSessions } from './recent-sessions'
 
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { formatShortDate } from '@/lib/format'
+import { getSessions } from '@/lib/sessions/api'
 
 import type { CampaignDetailResponse } from '@/lib/campaigns/schemas'
 
@@ -32,6 +35,10 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
     (arc) => arc.status === 'active' || arc.status === 'dormant'
   )
   const visibleArcs = openArcs.slice(0, 3)
+  const sessionsQuery = useQuery({
+    queryKey: ['campaign', campaign.id, 'sessions'],
+    queryFn: () => getSessions(campaign.id),
+  })
 
   return (
     <div className="ll-view-enter">
@@ -118,19 +125,30 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           <hr className="my-7 border-t border-dotted border-[var(--dotted)]" />
 
           <div className="ll-rule-anim">
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono text-[11px] text-[var(--ink-3)]">
-                /02
-              </span>
-              <h3 className="font-serif text-[16px] font-semibold text-[var(--ink)]">
-                {t('detail.recentSessions')}
-              </h3>
+            <div className="flex items-baseline justify-between gap-2">
+              <div className="flex items-baseline gap-2">
+                <span className="font-mono text-[11px] text-[var(--ink-3)]">
+                  /02
+                </span>
+                <h3 className="font-serif text-[16px] font-semibold text-[var(--ink)]">
+                  {t('detail.recentSessions')}
+                </h3>
+              </div>
+              <Link
+                href={`/campaigns/${campaign.id}/sessions/new`}
+                className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
+              >
+                {t('detail.logSession')}
+              </Link>
             </div>
           </div>
-          <div className="mt-3 rounded border-2 border-dashed border-[var(--dotted)] bg-[var(--paper)] p-5 opacity-60">
-            <p className="text-sm italic text-[var(--ink-3)]">
-              {t('detail.comingSoon')}
-            </p>
+          <div className="mt-3">
+            <RecentSessions
+              campaignId={campaign.id}
+              sessions={sessionsQuery.data}
+              isLoading={sessionsQuery.isLoading}
+              isError={sessionsQuery.isError}
+            />
           </div>
         </div>
 

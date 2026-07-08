@@ -3,16 +3,24 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { mockGetCampaignDetail, mockUpdateCampaign } = vi.hoisted(() => ({
-  mockGetCampaignDetail: vi.fn(),
-  mockUpdateCampaign: vi.fn(),
-}))
+const { mockGetCampaignDetail, mockUpdateCampaign, mockGetSessions } =
+  vi.hoisted(() => ({
+    mockGetCampaignDetail: vi.fn(),
+    mockUpdateCampaign: vi.fn(),
+    mockGetSessions: vi.fn(),
+  }))
 
 vi.mock('@/lib/campaigns/api', () => ({
   getCampaignDetail: mockGetCampaignDetail,
   updateCampaign: mockUpdateCampaign,
   CampaignApiError: class CampaignApiError extends Error {},
   CampaignNotFoundError: class CampaignNotFoundError extends Error {},
+}))
+
+vi.mock('@/lib/sessions/api', () => ({
+  getSessions: mockGetSessions,
+  SessionApiError: class SessionApiError extends Error {},
+  SessionCampaignNotFoundError: class SessionCampaignNotFoundError extends Error {},
 }))
 
 vi.mock('next/navigation', () => ({
@@ -101,6 +109,7 @@ function renderPage() {
 describe('CampaignDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGetSessions.mockResolvedValue([])
   })
 
   afterEach(() => {
@@ -157,7 +166,7 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByText('Arcs')).toBeInTheDocument()
   })
 
-  it('renders dimmed placeholders for sessions and memories sections', async () => {
+  it('renders a dimmed placeholder for the memories section', async () => {
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
     renderPage()
 
@@ -168,7 +177,56 @@ describe('CampaignDetailPage', () => {
     })
 
     const placeholders = screen.getAllByText(/coming in a later chapter/i)
-    expect(placeholders).toHaveLength(2)
+    expect(placeholders).toHaveLength(1)
+  })
+
+  it('renders an empty state with a "Log session" CTA when there are no sessions', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([])
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText(/no sessions logged yet/i)).toBeInTheDocument()
+    })
+
+    const logSessionLinks = screen.getAllByRole('link', {
+      name: /log session/i,
+    })
+    expect(logSessionLinks.length).toBeGreaterThan(0)
+    expect(logSessionLinks[0]).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/new'
+    )
+  })
+
+  it('renders the recent sessions list, most recent first, replacing the placeholder', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'sess-1',
+        session_number: 1,
+        summary: 'The party arrived in town.',
+        consequences: null,
+        created_at: '2026-06-01T10:00:00Z',
+      },
+      {
+        id: 'sess-2',
+        session_number: 2,
+        summary: 'The warehouse burned down.',
+        consequences: 'The guild lost its cache.',
+        created_at: '2026-06-08T10:00:00Z',
+      },
+    ])
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText(/warehouse burned down/i)).toBeInTheDocument()
+    })
+
+    expect(screen.getByText(/party arrived in town/i)).toBeInTheDocument()
+    expect(
+      screen.queryByText(/no sessions logged yet/i)
+    ).not.toBeInTheDocument()
   })
 
   it('toggles world-state into edit mode with autofocus on "Edit" click', async () => {
