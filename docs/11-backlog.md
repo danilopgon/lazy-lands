@@ -25,6 +25,7 @@ Use this backlog to avoid losing decisions while protecting the TFM MVP from sco
 | Better generated-session layout | Valuable polish for session prep and table use, but not a blocker for structured generation. | `docs/01-mvp-scope.md` | Consider together with print/PDF improvements so screen and export layouts stay coherent. |
 | More detailed faction reasoning | Could improve continuity explanations, but it expands prompt and UI complexity. | `docs/01-mvp-scope.md` | Keep tied to accepted memories and visible reasoning so the DM can review it. |
 | Dark theme and theme settings | The MVP ships light-only Print Chronicle. Theme toggles would add surface area without helping the sacred demo path. | `DESIGN.md` sections 2, 3, and 9 | Do not scaffold until a dedicated post-MVP theme task exists. |
+| Interactive campaign generation demo | A standalone interactive demo of the AI campaign extraction flow would help showcase the product, but it is not part of the MVP sacred demo path. | User backlog request | Would need a sandboxed environment with no auth and a fake or rate-limited LLM provider to avoid abuse. |
 
 ## Post-MVP Technical and Product Opportunities
 

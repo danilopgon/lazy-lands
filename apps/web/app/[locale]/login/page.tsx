@@ -10,7 +10,12 @@ import { Link, useRouter } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Notice } from '@/components/ui/notice'
 import { createClient } from '@/lib/supabase/client'
+import {
+  normalizeSupabaseAuthError,
+  normalizeUnknownError,
+} from '@/lib/errors/app-error'
 import {
   AuthCard,
   authInputClass,
@@ -29,7 +34,8 @@ const supabase = createClient()
 export default function LoginPage() {
   const router = useRouter()
   const t = useTranslations('Auth')
-  const [authError, setAuthError] = useState<string | null>(null)
+  const errorT = useTranslations('Errors')
+  const [authErrorKey, setAuthErrorKey] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const loginSchema = useMemo(
@@ -55,7 +61,7 @@ export default function LoginPage() {
    * @param {LoginFormData} data - Validated form data.
    */
   async function onSubmit(data: LoginFormData) {
-    setAuthError(null)
+    setAuthErrorKey(null)
     setIsSubmitting(true)
 
     try {
@@ -65,13 +71,18 @@ export default function LoginPage() {
       })
 
       if (error) {
-        setAuthError(error.message)
+        setAuthErrorKey(normalizeSupabaseAuthError(error).messageKey)
         return
       }
 
       router.push('/dashboard')
-    } catch {
-      setAuthError(t('loginError'))
+    } catch (error) {
+      setAuthErrorKey(
+        normalizeUnknownError(error, {
+          code: 'auth.generic',
+          messageKey: 'auth.generic',
+        }).messageKey
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -123,10 +134,10 @@ export default function LoginPage() {
           )}
         </div>
 
-        {authError && (
-          <p role="alert" className="text-sm text-[var(--danger)]">
-            {authError}
-          </p>
+        {authErrorKey && (
+          <Notice variant="error" ornament="⚠" role="alert">
+            {errorT(authErrorKey)}
+          </Notice>
         )}
 
         <Button

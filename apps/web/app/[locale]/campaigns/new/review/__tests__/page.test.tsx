@@ -17,7 +17,28 @@ const {
 
 vi.mock('@/lib/campaigns/api', () => ({
   createCampaign: mockCreateCampaign,
-  CampaignApiError: class CampaignApiError extends Error {},
+  // Mirror the real CampaignApiError: string input maps to backend.generic
+  // (it never forwards a raw string as the messageKey), options pass through.
+  CampaignApiError: class CampaignApiError extends Error {
+    readonly messageKey: string
+
+    constructor(
+      error:
+        | {
+            messageKey: string
+            code?: unknown
+            source?: unknown
+            retryable?: unknown
+            status?: unknown
+          }
+        | string = 'backend.generic'
+    ) {
+      const messageKey =
+        typeof error === 'string' ? 'backend.generic' : error.messageKey
+      super(`Errors.${messageKey}`)
+      this.messageKey = messageKey
+    }
+  },
 }))
 
 vi.mock('@/lib/campaigns/draft-storage', () => ({
@@ -296,11 +317,16 @@ describe('ReviewCampaignPage (CUI-002)', () => {
     })
   })
 
-  it('a failed save preserves DM edits and shows an error, without resetting state', async () => {
+  it('a failed save preserves DM edits and shows a localized error, without resetting state', async () => {
     const user = userEvent.setup()
     const { CampaignApiError } = await import('@/lib/campaigns/api')
     mockCreateCampaign.mockRejectedValue(
-      new CampaignApiError('Could not save the campaign. Please retry.')
+      new CampaignApiError({
+        code: 'backend.generic',
+        source: 'backend',
+        retryable: true,
+        messageKey: 'backend.generic',
+      })
     )
     renderPage()
 
@@ -314,9 +340,10 @@ describe('ReviewCampaignPage (CUI-002)', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/could not save the campaign/i)
+        screen.getByText(/something went wrong while talking to the server/i)
       ).toBeInTheDocument()
     })
+    expect(screen.queryByText('Errors.backend.generic')).not.toBeInTheDocument()
     // The removal must still be reflected — nothing resets on failure.
     expect(screen.queryByText('Elandra')).not.toBeInTheDocument()
     expect(mockPush).not.toHaveBeenCalled()

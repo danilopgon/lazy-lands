@@ -143,7 +143,7 @@ describe('LoginPage (AU-001)', () => {
     })
   })
 
-  it('AU-T-06: error response → error message in DOM; no navigation', async () => {
+  it('AU-T-06: unknown auth error response → localized fallback in DOM; no navigation', async () => {
     const user = userEvent.setup()
     mockSignInWithPassword.mockResolvedValue({
       data: { user: null },
@@ -156,8 +156,42 @@ describe('LoginPage (AU-001)', () => {
     await user.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/unable to sign in right now/i)
+      ).toBeInTheDocument()
     })
+    expect(mockPush).not.toHaveBeenCalled()
+  })
+
+  it('localizes Supabase invalid_credentials under the Spanish locale without rendering the raw backend message', async () => {
+    const user = userEvent.setup()
+    mockSignInWithPassword.mockResolvedValue({
+      data: { user: null },
+      error: {
+        code: 'invalid_credentials',
+        message: 'Invalid login credentials',
+      },
+    })
+    render(<LoginPage />, { locale: 'es' })
+
+    await user.type(
+      screen.getByLabelText(/correo electrónico/i),
+      'test@example.com'
+    )
+    await user.type(screen.getByLabelText(/contraseña/i), 'wrongpass')
+    await user.click(screen.getByRole('button', { name: /iniciar sesión/i }))
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('⚠')
+    expect(alert).toHaveTextContent(
+      /correo electrónico o contraseña incorrectos/i
+    )
+    expect(
+      screen.queryByText('Invalid login credentials')
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/no se pudo iniciar sesión ahora mismo/i)
+    ).not.toBeInTheDocument()
     expect(mockPush).not.toHaveBeenCalled()
   })
 

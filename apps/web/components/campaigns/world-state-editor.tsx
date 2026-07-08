@@ -31,6 +31,7 @@ export function WorldStateEditor({
   initialValue,
 }: WorldStateEditorProps) {
   const t = useTranslations('Campaigns')
+  const errorT = useTranslations('Errors')
   const te = useTranslations('Entities')
   const queryClient = useQueryClient()
   const [isEditing, setIsEditing] = useState(false)
@@ -51,7 +52,7 @@ export function WorldStateEditor({
     onError: (err: unknown) => {
       setError(
         err instanceof CampaignApiError
-          ? err.message
+          ? errorT(err.messageKey)
           : t('worldState.saveError')
       )
     },

@@ -45,6 +45,7 @@ const selectClass =
 export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
   const isEdit = arc !== null
   const t = useTranslations('Campaigns')
+  const errorT = useTranslations('Errors')
   const te = useTranslations('Entities')
   const queryClient = useQueryClient()
   const [title, setTitle] = useState(arc?.title ?? '')
@@ -72,7 +73,9 @@ export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
     },
     onError: (err: unknown) => {
       setError(
-        err instanceof CampaignApiError ? err.message : t('arcs.saveError')
+        err instanceof CampaignApiError
+          ? errorT(err.messageKey)
+          : t('arcs.saveError')
       )
     },
   })

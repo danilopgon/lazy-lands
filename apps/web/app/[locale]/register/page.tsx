@@ -12,6 +12,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
+import {
+  normalizeSupabaseAuthError,
+  normalizeUnknownError,
+} from '@/lib/errors/app-error'
 import { resolveAppOrigin } from '@/lib/auth/redirect'
 import { buildLocalizedPath } from '@/lib/format'
 import {
@@ -47,6 +51,7 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const t = useTranslations('Auth')
+  const errorT = useTranslations('Errors')
   const locale = useAppLocale()
 
   const registerSchema = useMemo(
@@ -101,13 +106,27 @@ export default function RegisterPage() {
       })
 
       if (error) {
-        setAuthError(error.message)
+        setAuthError(
+          errorT(
+            normalizeSupabaseAuthError(error, {
+              code: 'auth.registerGeneric',
+              messageKey: 'auth.registerGeneric',
+            }).messageKey
+          )
+        )
         return
       }
 
       setIsSuccess(true)
-    } catch {
-      setAuthError(t('registerError'))
+    } catch (error) {
+      setAuthError(
+        errorT(
+          normalizeUnknownError(error, {
+            code: 'auth.registerGeneric',
+            messageKey: 'auth.registerGeneric',
+          }).messageKey
+        )
+      )
     } finally {
       setIsSubmitting(false)
     }

@@ -10,12 +10,40 @@ const { mockGetCampaignDetail, mockUpdateCampaign, mockGetSessions } =
     mockGetSessions: vi.fn(),
   }))
 
-vi.mock('@/lib/campaigns/api', () => ({
-  getCampaignDetail: mockGetCampaignDetail,
-  updateCampaign: mockUpdateCampaign,
-  CampaignApiError: class CampaignApiError extends Error {},
-  CampaignNotFoundError: class CampaignNotFoundError extends Error {},
-}))
+vi.mock('@/lib/campaigns/api', () => {
+  // Mirror the real CampaignApiError: string input maps to backend.generic
+  // (it never forwards a raw string as the messageKey), options pass through.
+  // CampaignNotFoundError extends CampaignApiError so `instanceof` checks and
+  // the inheritance chain mirror the production classes.
+  class CampaignApiError extends Error {
+    readonly messageKey: string
+
+    constructor(
+      error:
+        | {
+            messageKey: string
+            code?: unknown
+            source?: unknown
+            retryable?: unknown
+            status?: unknown
+          }
+        | string = 'backend.generic'
+    ) {
+      const messageKey =
+        typeof error === 'string' ? 'backend.generic' : error.messageKey
+      super(`Errors.${messageKey}`)
+      this.messageKey = messageKey
+    }
+  }
+  class CampaignNotFoundError extends CampaignApiError {}
+
+  return {
+    getCampaignDetail: mockGetCampaignDetail,
+    updateCampaign: mockUpdateCampaign,
+    CampaignApiError,
+    CampaignNotFoundError,
+  }
+})
 
 vi.mock('@/lib/sessions/api', () => ({
   getSessions: mockGetSessions,
@@ -296,11 +324,18 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByText(/updated world state text/i)).toBeInTheDocument()
   })
 
-  it('keeps the textarea open with an inline error when save fails', async () => {
+  it('keeps the textarea open with a localized inline error when save fails', async () => {
     const user = userEvent.setup()
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
     const { CampaignApiError } = await import('@/lib/campaigns/api')
-    mockUpdateCampaign.mockRejectedValue(new CampaignApiError('Save failed'))
+    mockUpdateCampaign.mockRejectedValue(
+      new CampaignApiError({
+        code: 'validation',
+        source: 'backend',
+        retryable: false,
+        messageKey: 'validation',
+      })
+    )
     renderPage()
 
     await waitFor(() => {
@@ -315,8 +350,11 @@ describe('CampaignDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /save changes/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/save failed/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/some details need attention/i)
+      ).toBeInTheDocument()
     })
+    expect(screen.queryByText('Errors.validation')).not.toBeInTheDocument()
     // Draft is preserved in the still-open textarea.
     expect(screen.getByRole('textbox')).toHaveValue('Draft that fails to save')
   })
