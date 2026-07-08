@@ -209,7 +209,7 @@ describe('RegisterPage (AU-002)', () => {
     expect(mockPush).not.toHaveBeenCalled()
   })
 
-  it('AU-T-11: error signUp → error message visible in DOM', async () => {
+  it('AU-T-11: error signUp → localized error message, no raw Supabase text in DOM', async () => {
     const user = userEvent.setup()
     mockSignUp.mockResolvedValue({
       data: { user: null, session: null },
@@ -223,7 +223,12 @@ describe('RegisterPage (AU-002)', () => {
     await user.click(screen.getByRole('button', { name: /sign up/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/email already registered/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/unable to register right now/i)
+      ).toBeInTheDocument()
     })
+    expect(
+      screen.queryByText('Email already registered')
+    ).not.toBeInTheDocument()
   })
 })
