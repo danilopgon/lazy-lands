@@ -26,7 +26,8 @@
     "settings": "Settings",
     "logout": "Log out",
     "loggingOut": "Signing out…",
-    "signedInAs": "Signed in as {email}"
+    "signedInAs": "Signed in as {email}",
+    "campaignSections": "Campaign sections"
   },
   "Landing": {
     "metadataTitle": "Lazy Lands · Campaign Companion for Dungeon Masters",

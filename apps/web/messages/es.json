@@ -26,7 +26,8 @@
     "settings": "Ajustes",
     "logout": "Cerrar sesión",
     "loggingOut": "Cerrando sesión…",
-    "signedInAs": "Sesión iniciada como {email}"
+    "signedInAs": "Sesión iniciada como {email}",
+    "campaignSections": "Secciones de la campaña"
   },
   "Landing": {
     "metadataTitle": "Lazy Lands · Compañero de campaña para Dungeon Masters",
