@@ -20,7 +20,8 @@ const MAX_VISIBLE_SESSIONS = 3
 
 /**
  * Campaign detail "/02 Recent sessions" panel — live `GET /campaigns/{id}/sessions`
- * list (most recent first, capped), an empty state with a "Log session" CTA,
+ * list (the most recent sessions, capped and shown in chronological order),
+ * an empty state with a "Log session" CTA,
  * or a load-error fallback. Loading renders nothing extra; the surrounding
  * page already shows its own top-level loading state while the campaign
  * itself is fetched, and a silent loading gap here is preferable to a second
@@ -70,9 +71,13 @@ export function RecentSessions({
     )
   }
 
+  // Take the most recent sessions, then restore chronological (ascending)
+  // order for display so the panel matches the backend contract and the
+  // session-log-ui spec (GET returns sessions chronologically).
   const recent = [...sessions]
     .sort((a, b) => b.session_number - a.session_number)
     .slice(0, MAX_VISIBLE_SESSIONS)
+    .sort((a, b) => a.session_number - b.session_number)
 
   return (
     <div className="space-y-3">

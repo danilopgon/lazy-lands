@@ -199,22 +199,24 @@ describe('CampaignDetailPage', () => {
     )
   })
 
-  it('renders the recent sessions list, most recent first, replacing the placeholder', async () => {
+  it('renders recent sessions in chronological order, replacing the placeholder', async () => {
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    // Deliberately unsorted (2 before 1) so the assertion proves the panel
+    // renders chronologically regardless of the incoming array order.
     mockGetSessions.mockResolvedValue([
-      {
-        id: 'sess-1',
-        session_number: 1,
-        summary: 'The party arrived in town.',
-        consequences: null,
-        created_at: '2026-06-01T10:00:00Z',
-      },
       {
         id: 'sess-2',
         session_number: 2,
         summary: 'The warehouse burned down.',
         consequences: 'The guild lost its cache.',
         created_at: '2026-06-08T10:00:00Z',
+      },
+      {
+        id: 'sess-1',
+        session_number: 1,
+        summary: 'The party arrived in town.',
+        consequences: null,
+        created_at: '2026-06-01T10:00:00Z',
       },
     ])
     renderPage()
@@ -223,7 +225,12 @@ describe('CampaignDetailPage', () => {
       expect(screen.getByText(/warehouse burned down/i)).toBeInTheDocument()
     })
 
-    expect(screen.getByText(/party arrived in town/i)).toBeInTheDocument()
+    const earlier = screen.getByText(/party arrived in town/i)
+    const later = screen.getByText(/warehouse burned down/i)
+    // Session 1 (chronologically first) must render before session 2.
+    expect(
+      earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
     expect(
       screen.queryByText(/no sessions logged yet/i)
     ).not.toBeInTheDocument()
