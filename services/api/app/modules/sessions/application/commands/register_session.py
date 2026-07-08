@@ -86,14 +86,14 @@ class RegisterSession:
         if campaign is None:
             raise SessionNotFoundError()
 
-        session_number = await run_in_threadpool(
-            self._repository.get_next_session_number, campaign_id
-        )
+        # session_number is recomputed and retried internally on a
+        # (campaign_id, session_number) conflict (hardening item — concurrent
+        # or retried registrations for the same campaign can otherwise race
+        # the read-then-insert numbering).
         try:
             session = await run_in_threadpool(
-                self._repository.insert_session,
+                self._repository.insert_session_with_next_number,
                 campaign_id,
-                session_number,
                 command.summary,
                 command.consequences,
             )

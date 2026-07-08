@@ -9,9 +9,22 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
+from postgrest import APIError
 
 from app.modules.sessions.infrastructure.errors import RepositoryError
 from app.modules.sessions.infrastructure.repository import SupabaseSessionRepository
+
+_UNIQUE_VIOLATION = APIError(
+    {
+        "message": (
+            "duplicate key value violates unique constraint "
+            '"sessions_campaign_id_session_number_key"'
+        ),
+        "code": "23505",
+        "hint": None,
+        "details": None,
+    }
+)
 
 
 def test_get_next_session_number_returns_one_when_no_sessions_exist() -> None:
@@ -131,6 +144,67 @@ def test_get_campaign_returns_first_row_or_none_on_rls_miss() -> None:
 
     execute_result.data = []
     assert repo.get_campaign("missing") is None
+
+
+def test_insert_session_with_next_number_retries_after_unique_violation() -> None:
+    """Concurrent/retried POSTs can race MAX(session_number)+1; the repository
+    must recompute the number and retry rather than surface a raw conflict.
+    """
+    client = MagicMock()
+    number_query = (
+        client.table.return_value.select.return_value.eq.return_value.order.return_value
+    )
+    # First MAX read -> 1 (so attempt 1 tries session_number=2); second MAX
+    # read (after the conflict) -> 2 (so attempt 2 tries session_number=3).
+    number_query.limit.return_value.execute.side_effect = [
+        MagicMock(data=[{"session_number": 1}]),
+        MagicMock(data=[{"session_number": 2}]),
+    ]
+    inserted_row = {
+        "id": "session-2",
+        "campaign_id": "campaign-1",
+        "session_number": 3,
+        "summary": "The party regrouped.",
+        "consequences": None,
+        "created_at": "2026-07-08T00:00:00Z",
+    }
+    client.table.return_value.insert.return_value.execute.side_effect = [
+        _UNIQUE_VIOLATION,
+        MagicMock(data=[inserted_row]),
+    ]
+    repo = SupabaseSessionRepository(client)
+
+    row = repo.insert_session_with_next_number(
+        "campaign-1", "The party regrouped.", None
+    )
+
+    assert row["session_number"] == 3
+    assert row["id"] == "session-2"
+    assert number_query.limit.return_value.execute.call_count == 2
+    assert client.table.return_value.insert.return_value.execute.call_count == 2
+
+
+def test_insert_session_with_next_number_raises_after_exhausting_attempts() -> None:
+    client = MagicMock()
+    number_query = (
+        client.table.return_value.select.return_value.eq.return_value.order.return_value
+    )
+    number_query.limit.return_value.execute.return_value = MagicMock(
+        data=[{"session_number": 1}]
+    )
+    # Every insert attempt hits the same unique-violation shape.
+    client.table.return_value.insert.return_value.execute.side_effect = (
+        _UNIQUE_VIOLATION
+    )
+    repo = SupabaseSessionRepository(client)
+
+    with pytest.raises(RepositoryError):
+        repo.insert_session_with_next_number(
+            "campaign-1", "The party regrouped.", None, max_attempts=3
+        )
+
+    assert client.table.return_value.insert.return_value.execute.call_count == 3
+    assert number_query.limit.return_value.execute.call_count == 3
 
 
 def test_update_campaign_summary_patches_expected_columns() -> None:

@@ -25,8 +25,7 @@ VALID_SESSION_ROW = {
 def _repo_with_campaign(campaign: dict | None) -> MagicMock:
     repo = MagicMock()
     repo.get_campaign.return_value = campaign
-    repo.get_next_session_number.return_value = 1
-    repo.insert_session.return_value = VALID_SESSION_ROW
+    repo.insert_session_with_next_number.return_value = VALID_SESSION_ROW
     return repo
 
 
@@ -42,7 +41,7 @@ async def test_forged_campaign_id_raises_session_not_found_before_any_insert() -
             "forged-campaign", RegisterSessionCommand(summary="s", consequences=None)
         )
 
-    repo.insert_session.assert_not_called()
+    repo.insert_session_with_next_number.assert_not_called()
     summarize.execute.assert_not_called()
     suggest.execute.assert_not_called()
 
@@ -69,8 +68,8 @@ async def test_happy_path_persists_then_summarizes_then_suggests() -> None:
     assert result.session_id == "session-1"
     assert result.session_number == 1
     assert result.memory_suggestions == [suggestion]
-    repo.insert_session.assert_called_once_with(
-        "campaign-1", 1, "The party arrived.", None
+    repo.insert_session_with_next_number.assert_called_once_with(
+        "campaign-1", "The party arrived.", None
     )
     summarize.execute.assert_awaited_once()
     suggest.execute.assert_awaited_once()
@@ -118,7 +117,7 @@ async def test_session_insert_failure_surfaces_as_session_persistence_error() ->
     from app.modules.sessions.infrastructure.errors import RepositoryError
 
     repo = _repo_with_campaign({"id": "campaign-1", "accumulated_summary": None})
-    repo.insert_session.side_effect = RepositoryError("insert failed")
+    repo.insert_session_with_next_number.side_effect = RepositoryError("insert failed")
     summarize = AsyncMock()
     suggest = AsyncMock()
     use_case = RegisterSession(repo, summarize, suggest)

@@ -34,6 +34,22 @@ class SessionRepository(Protocol):
         """Insert the session row; return the inserted row."""
         ...
 
+    def insert_session_with_next_number(
+        self,
+        campaign_id: str,
+        summary: str,
+        consequences: str | None,
+        max_attempts: int = 5,
+    ) -> dict:
+        """Insert a session, recomputing ``MAX(session_number) + 1`` on conflict.
+
+        Hardens the read-then-insert race between concurrent/retried
+        registrations for the same campaign: a genuine ``(campaign_id,
+        session_number)`` unique-constraint conflict recomputes the number
+        and retries, bounded by ``max_attempts``.
+        """
+        ...
+
     def list_sessions(self, campaign_id: str) -> list[dict]:
         """List a campaign's sessions, ascending by ``session_number``."""
         ...

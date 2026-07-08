@@ -7,9 +7,22 @@ time (PU-003, NFR-CP-1), matching the campaigns module's repository.
 
 from typing import Any, cast
 
+from postgrest import APIError
 from supabase import Client
 
-from app.modules.sessions.infrastructure.errors import RepositoryError
+from app.modules.sessions.infrastructure.errors import (
+    RepositoryError,
+    SessionNumberConflictError,
+)
+
+# Postgres SQLSTATE for a unique-constraint violation (23505). PostgREST
+# surfaces the DB error code verbatim on ``APIError.code`` — matching on this
+# exact code (never a loose string match on the message) is what lets the
+# retry loop below distinguish a genuine session_number race from any other
+# insert failure.
+_UNIQUE_VIOLATION_CODE = "23505"
+
+_DEFAULT_MAX_ATTEMPTS = 5
 
 
 class SupabaseSessionRepository:
@@ -61,7 +74,16 @@ class SupabaseSessionRepository:
         summary: str,
         consequences: str | None,
     ) -> dict:
-        """Insert the session row; return the inserted row."""
+        """Insert the session row; return the inserted row.
+
+        Raises:
+            SessionNumberConflictError: The ``(campaign_id, session_number)``
+                unique constraint fired (a race with a concurrent/retried
+                insert for the same campaign). A ``RepositoryError``
+                subclass, so any caller only ever catching the base class
+                still works unchanged.
+            RepositoryError: Any other insert failure.
+        """
         try:
             response = (
                 self._client.table("sessions")
@@ -75,12 +97,53 @@ class SupabaseSessionRepository:
                 )
                 .execute()
             )
+        except APIError as exc:
+            if exc.code == _UNIQUE_VIOLATION_CODE:
+                raise SessionNumberConflictError(
+                    "Duplicate (campaign_id, session_number)"
+                ) from exc
+            raise RepositoryError("Failed to insert session") from exc
         except Exception as exc:
             raise RepositoryError("Failed to insert session") from exc
         rows = cast(list[dict[str, Any]], response.data or [])
         if not rows:
             raise RepositoryError("Session insert returned no rows")
         return rows[0]
+
+    def insert_session_with_next_number(
+        self,
+        campaign_id: str,
+        summary: str,
+        consequences: str | None,
+        max_attempts: int = _DEFAULT_MAX_ATTEMPTS,
+    ) -> dict:
+        """Insert a session, recomputing ``MAX(session_number) + 1`` on conflict.
+
+        Hardens the read-then-insert race (design hardening item, Block 7a):
+        two concurrent/retried registrations for the same campaign can read
+        the same ``MAX(session_number)`` before either insert commits. On a
+        genuine unique-constraint conflict this recomputes the next number
+        and retries, up to ``max_attempts``, instead of trusting the first
+        read alone.
+
+        Raises:
+            RepositoryError: Every attempt hit a session_number conflict (or
+                any other insert failure occurred).
+        """
+        last_conflict: SessionNumberConflictError | None = None
+        for _attempt in range(max_attempts):
+            session_number = self.get_next_session_number(campaign_id)
+            try:
+                return self.insert_session(
+                    campaign_id, session_number, summary, consequences
+                )
+            except SessionNumberConflictError as exc:
+                last_conflict = exc
+                continue
+        raise RepositoryError(
+            f"Failed to insert session after {max_attempts} attempts "
+            "due to session_number conflicts"
+        ) from last_conflict
 
     def list_sessions(self, campaign_id: str) -> list[dict]:
         """List a campaign's sessions, ascending by ``session_number``."""
