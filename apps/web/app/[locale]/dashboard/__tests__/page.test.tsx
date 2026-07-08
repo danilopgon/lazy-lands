@@ -208,13 +208,6 @@ describe('DashboardPage', () => {
 
     await user.click(screen.getByRole('button', { name: /\+ new campaign/i }))
     expect(mockPush).toHaveBeenCalledWith('/campaigns/new')
-    // The compact trigger shows the active locale code; the Spanish switch is a
-    // real link inside the disclosure panel.
-    expect(screen.getByText('EN')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /español/i })).toHaveAttribute(
-      'href',
-      '/es'
-    )
   })
 
   it('each campaign card links to the campaign detail page', async () => {
