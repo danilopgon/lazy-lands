@@ -25,7 +25,9 @@
     "sessions": "Sessions",
     "settings": "Settings",
     "logout": "Log out",
-    "loggingOut": "Signing out…"
+    "loggingOut": "Signing out…",
+    "signedInAs": "Signed in as {email}",
+    "campaignSections": "Campaign sections"
   },
   "Landing": {
     "metadataTitle": "Lazy Lands · Campaign Companion for Dungeon Masters",
@@ -284,7 +286,7 @@
       "worldStateHeading": "The state of the world",
       "recentSessions": "Recent sessions",
       "comingSoon": "Coming in a later chapter",
-      "arcsNeedingAttention": "Arcs needing attention",
+      "arcsNeedingAttention": "Active arcs",
       "allArcs": "All arcs →",
       "activeMemories": "Active memories"
     },
@@ -335,7 +337,8 @@
       "addAction": "Add arc",
       "saveError": "Could not save this arc. Please try again.",
       "deleteTitle": "Delete arc",
-      "deleteError": "Could not delete this arc. Please try again."
+      "deleteError": "Could not delete this arc. Please try again.",
+      "noMatch": "No arcs match this filter."
     },
     "confirmDelete": {
       "prompt": "Delete <b>{name}</b>? This cannot be undone."
@@ -438,6 +441,12 @@
       "resolved": "Resolved",
       "discarded": "Discarded"
     },
+    "filterAll": "All",
+    "filterByStatus": "Filter by status",
+    "searchNpcs": "Search NPCs",
+    "searchFactions": "Search factions",
+    "searchCount": "{visible} of {total}",
+    "noSearchMatch": "No matches for this search.",
     "priorityFlag": "{priority, select, high {high priority} medium {medium priority} low {low priority} other {priority}}"
   },
   "Shared": {

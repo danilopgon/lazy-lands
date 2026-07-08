@@ -25,7 +25,9 @@
     "sessions": "Sesiones",
     "settings": "Ajustes",
     "logout": "Cerrar sesión",
-    "loggingOut": "Cerrando sesión…"
+    "loggingOut": "Cerrando sesión…",
+    "signedInAs": "Sesión iniciada como {email}",
+    "campaignSections": "Secciones de la campaña"
   },
   "Landing": {
     "metadataTitle": "Lazy Lands · Compañero de campaña para Dungeon Masters",
@@ -284,7 +286,7 @@
       "worldStateHeading": "El estado del mundo",
       "recentSessions": "Sesiones recientes",
       "comingSoon": "Llegará en un capítulo posterior",
-      "arcsNeedingAttention": "Arcos que necesitan atención",
+      "arcsNeedingAttention": "Arcos activos",
       "allArcs": "Todos los arcos →",
       "activeMemories": "Memorias activas"
     },
@@ -335,7 +337,8 @@
       "addAction": "Añadir arco",
       "saveError": "No se pudo guardar este arco. Inténtalo de nuevo.",
       "deleteTitle": "Eliminar arco",
-      "deleteError": "No se pudo eliminar este arco. Inténtalo de nuevo."
+      "deleteError": "No se pudo eliminar este arco. Inténtalo de nuevo.",
+      "noMatch": "Ningún arco coincide con este filtro."
     },
     "confirmDelete": {
       "prompt": "¿Eliminar <b>{name}</b>? Esto no se puede deshacer."
@@ -438,6 +441,12 @@
       "resolved": "Resuelto",
       "discarded": "Descartado"
     },
+    "filterAll": "Todos",
+    "filterByStatus": "Filtrar por estado",
+    "searchNpcs": "Buscar PNJ",
+    "searchFactions": "Buscar facciones",
+    "searchCount": "{visible} de {total}",
+    "noSearchMatch": "Sin resultados para esta búsqueda.",
     "priorityFlag": "{priority, select, high {prioridad alta} medium {prioridad media} low {prioridad baja} other {priority}}"
   },
   "Shared": {

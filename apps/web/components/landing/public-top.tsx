@@ -205,7 +205,7 @@ export function PublicTop() {
             ))}
 
             <div className="mt-8 flex flex-col gap-3">
-              <LanguageSwitcher />
+              <LanguageSwitcher inline />
               <Button asChild variant="ghost">
                 <LocaleLink
                   href="/login"

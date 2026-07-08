@@ -208,10 +208,6 @@ describe('DashboardPage', () => {
 
     await user.click(screen.getByRole('button', { name: /\+ new campaign/i }))
     expect(mockPush).toHaveBeenCalledWith('/campaigns/new')
-    expect(screen.getByRole('link', { name: 'ES' })).toHaveAttribute(
-      'href',
-      '/es'
-    )
   })
 
   it('each campaign card links to the campaign detail page', async () => {

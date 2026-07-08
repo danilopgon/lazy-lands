@@ -262,4 +262,39 @@ describe('NpcsPage', () => {
       expect(mockDeleteNpc).toHaveBeenCalledWith('npc-1')
     })
   })
+
+  it('searches NPCs by text and shows a no-match notice when none match', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(
+      buildDetail({
+        npcs: [
+          ONE_NPC,
+          {
+            id: 'npc-2',
+            name: 'Toblen Stonehill',
+            description: 'The innkeeper',
+            current_state: 'Anxious',
+            motivation: 'Keep the peace',
+            content_source: 'llm' as const,
+          },
+        ],
+      })
+    )
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Sildar Hallwinter')).toBeInTheDocument()
+    })
+
+    const search = screen.getByLabelText(/search npcs/i)
+    // Matches the innkeeper's description, not Sildar.
+    await user.type(search, 'innkeeper')
+    expect(screen.getByText('Toblen Stonehill')).toBeInTheDocument()
+    expect(screen.queryByText('Sildar Hallwinter')).not.toBeInTheDocument()
+    expect(screen.getByText('1 of 2')).toBeInTheDocument()
+
+    await user.clear(search)
+    await user.type(search, 'zzzznope')
+    expect(screen.getByText(/no matches for this search/i)).toBeInTheDocument()
+  })
 })

@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query'
 
 import { useRouter } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
-import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
 import { Notice } from '@/components/ui/notice'
 import { CampaignList } from '@/components/campaigns/campaign-list'
@@ -45,12 +44,9 @@ export default function DashboardPage() {
           )}
         </div>
         {!isLoading && (
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher compact persistUserLanguage />
-            <Button variant="ink" onClick={() => router.push('/campaigns/new')}>
-              {t('newCampaign')}
-            </Button>
-          </div>
+          <Button variant="ink" onClick={() => router.push('/campaigns/new')}>
+            {t('newCampaign')}
+          </Button>
         )}
       </div>
 

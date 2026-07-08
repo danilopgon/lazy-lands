@@ -5,11 +5,56 @@ import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { OriginBadge } from '@/components/ui/origin-badge'
 import { contentSourceToBadgeOrigin } from '@/lib/campaigns/provenance'
 import type { EntityField, ReviewItem } from './types'
 
 export type { EntityField, ReviewItem } from './types'
+
+/**
+ * Render a single entity field control: a multi-line textarea when the field is
+ * marked `multiline` (long prose such as descriptions, motivations, goals), a
+ * single-line input otherwise (short identifiers). Shared by the add and edit
+ * forms so both honor the same field descriptor.
+ *
+ * @param {object} root0 - Control props.
+ * @param {boolean} [root0.multiline] - Whether to render a textarea.
+ * @param {string} root0.placeholder - The field placeholder.
+ * @param {string} root0.value - The current field value.
+ * @param {(next: string) => void} root0.onValueChange - Called with the next value.
+ * @returns {React.ReactElement} The input or textarea control.
+ */
+function FieldControl({
+  multiline,
+  placeholder,
+  value,
+  onValueChange,
+}: {
+  multiline?: boolean
+  placeholder: string
+  value: string
+  onValueChange: (next: string) => void
+}) {
+  if (multiline) {
+    return (
+      <Textarea
+        placeholder={placeholder}
+        value={value}
+        rows={3}
+        onChange={(event) => onValueChange(event.target.value)}
+      />
+    )
+  }
+
+  return (
+    <Input
+      placeholder={placeholder}
+      value={value}
+      onChange={(event) => onValueChange(event.target.value)}
+    />
+  )
+}
 
 type EntitySectionProps<T extends ReviewItem> = {
   title: string
@@ -148,14 +193,15 @@ export function EntitySection<T extends ReviewItem>({
               {editingIndex === index ? (
                 <div className="space-y-2">
                   {fields.map((field) => (
-                    <Input
+                    <FieldControl
                       key={field.key}
-                      placeholder={field.label}
+                      multiline={field.multiline}
+                      placeholder={field.placeholder}
                       value={(editDraft[field.key] as string) ?? ''}
-                      onChange={(e) =>
+                      onValueChange={(next) =>
                         setEditDraft({
                           ...editDraft,
-                          [field.key]: e.target.value,
+                          [field.key]: next,
                         })
                       }
                     />
@@ -220,12 +266,13 @@ export function EntitySection<T extends ReviewItem>({
             <li className="border-t border-dotted border-[var(--border)] py-3">
               <div className="space-y-2">
                 {fields.map((field) => (
-                  <Input
+                  <FieldControl
                     key={field.key}
+                    multiline={field.multiline}
                     placeholder={field.placeholder}
                     value={(draft[field.key] as string) ?? ''}
-                    onChange={(e) =>
-                      setDraft({ ...draft, [field.key]: e.target.value })
+                    onValueChange={(next) =>
+                      setDraft({ ...draft, [field.key]: next })
                     }
                   />
                 ))}
