@@ -11,6 +11,7 @@ import { FactionList } from '@/components/campaigns/faction-list'
 import { FactionModal } from '@/components/campaigns/faction-modal'
 import { ConfirmDeleteModal } from '@/components/campaigns/confirm-delete-modal'
 import { deleteFaction } from '@/lib/campaigns/api'
+import { matchesQuery } from '@/lib/campaigns/text-match'
 
 import type { FactionResponse } from '@/lib/campaigns/schemas'
 
@@ -22,12 +23,10 @@ import type { FactionResponse } from '@/lib/campaigns/schemas'
  * @returns {boolean} Whether any of the faction's text fields contain the query.
  */
 function factionMatches(faction: FactionResponse, query: string): boolean {
-  return [
-    faction.name,
-    faction.description,
-    faction.current_stance,
-    faction.goals,
-  ].some((field) => (field ?? '').toLowerCase().includes(query))
+  return matchesQuery(
+    [faction.name, faction.description, faction.current_stance, faction.goals],
+    query
+  )
 }
 
 /**

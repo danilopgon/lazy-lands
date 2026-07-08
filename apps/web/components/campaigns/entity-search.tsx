@@ -45,7 +45,10 @@ export function EntitySearch({
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
-      <span className="font-mono text-[11px] text-[var(--ink-3)]">
+      <span
+        aria-live="polite"
+        className="font-mono text-[11px] text-[var(--ink-3)]"
+      >
         {countLabel}
       </span>
     </div>

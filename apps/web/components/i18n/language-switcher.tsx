@@ -1,6 +1,13 @@
 'use client'
 
-import { Suspense, useEffect, useRef, useState, type MouseEvent } from 'react'
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+} from 'react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -188,19 +195,21 @@ export function LanguageSwitcher({
   const summaryRef = useRef<HTMLElement>(null)
   const [open, setOpen] = useState(false)
 
+  // Collapse the native <details> and mirror the state flag. Used both by the
+  // dismissal listeners below and by onNavigate, so a locale click closes the
+  // disclosure immediately even while persistUserLanguage awaits Supabase.
+  const closeDisclosure = useCallback(() => {
+    if (detailsRef.current) {
+      detailsRef.current.open = false
+    }
+    setOpen(false)
+  }, [])
+
   // Escape and outside-click close the disclosure and restore focus to the
   // trigger. Native <details> handles the click-toggle and no-JS case; this
   // only layers on the dismissal affordances a bare <details> lacks.
   useEffect(() => {
     if (!open) return
-
-    /** Collapse the disclosure and mirror the state flag. */
-    function close() {
-      if (detailsRef.current) {
-        detailsRef.current.open = false
-      }
-      setOpen(false)
-    }
 
     /**
      * Close when a pointer press lands outside the disclosure.
@@ -212,7 +221,7 @@ export function LanguageSwitcher({
         detailsRef.current &&
         !detailsRef.current.contains(event.target as Node)
       ) {
-        close()
+        closeDisclosure()
       }
     }
 
@@ -223,7 +232,7 @@ export function LanguageSwitcher({
      */
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        close()
+        closeDisclosure()
         summaryRef.current?.focus()
       }
     }
@@ -234,7 +243,7 @@ export function LanguageSwitcher({
       document.removeEventListener('mousedown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [open])
+  }, [open, closeDisclosure])
 
   const links = (
     <Suspense
@@ -250,7 +259,7 @@ export function LanguageSwitcher({
         pathname={pathname}
         locale={locale}
         persistUserLanguage={persistUserLanguage}
-        onNavigate={inline ? undefined : () => setOpen(false)}
+        onNavigate={inline ? undefined : closeDisclosure}
       />
     </Suspense>
   )

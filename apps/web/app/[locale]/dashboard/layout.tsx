@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSignedInEmail } from '@/lib/auth/signed-in-email'
 import { AppHeader } from '@/components/layout/app-header'
 
 /**
@@ -15,10 +15,5 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  return <AppHeader email={user?.email ?? null}>{children}</AppHeader>
+  return <AppHeader email={await getSignedInEmail()}>{children}</AppHeader>
 }

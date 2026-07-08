@@ -11,6 +11,7 @@ import { NpcList } from '@/components/campaigns/npc-list'
 import { NpcModal } from '@/components/campaigns/npc-modal'
 import { ConfirmDeleteModal } from '@/components/campaigns/confirm-delete-modal'
 import { deleteNpc } from '@/lib/campaigns/api'
+import { matchesQuery } from '@/lib/campaigns/text-match'
 
 import type { NpcResponse } from '@/lib/campaigns/schemas'
 
@@ -22,8 +23,9 @@ import type { NpcResponse } from '@/lib/campaigns/schemas'
  * @returns {boolean} Whether any of the NPC's text fields contain the query.
  */
 function npcMatches(npc: NpcResponse, query: string): boolean {
-  return [npc.name, npc.description, npc.current_state, npc.motivation].some(
-    (field) => (field ?? '').toLowerCase().includes(query)
+  return matchesQuery(
+    [npc.name, npc.description, npc.current_state, npc.motivation],
+    query
   )
 }
 

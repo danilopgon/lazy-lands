@@ -196,7 +196,7 @@ export function EntitySection<T extends ReviewItem>({
                     <FieldControl
                       key={field.key}
                       multiline={field.multiline}
-                      placeholder={field.label}
+                      placeholder={field.placeholder}
                       value={(editDraft[field.key] as string) ?? ''}
                       onValueChange={(next) =>
                         setEditDraft({
