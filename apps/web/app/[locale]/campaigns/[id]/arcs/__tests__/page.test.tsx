@@ -130,7 +130,9 @@ describe('ArcsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('The Spider Pact')).toBeInTheDocument()
     })
-    expect(screen.getByText('Active')).toBeInTheDocument()
+    // The status badge is a span; the filter bar also has an "Active" pill
+    // (a button), so scope this to the badge.
+    expect(screen.getByText('Active', { selector: 'span' })).toBeInTheDocument()
     expect(screen.getByText(/high priority/i)).toBeInTheDocument()
     expect(screen.getByText(/a deal in the shadows/i)).toBeInTheDocument()
     expect(screen.getByText(/scribe/i)).toBeInTheDocument()
@@ -226,5 +228,33 @@ describe('ArcsPage', () => {
     await waitFor(() => {
       expect(mockDeleteArc).toHaveBeenCalledWith('arc-1')
     })
+  })
+
+  it('filters arcs by status and shows a no-match message when none match', async () => {
+    const user = userEvent.setup()
+    mockGetCampaignDetail.mockResolvedValue(
+      buildDetail({
+        arcs: [
+          buildArc({ id: 'a1', title: 'Active Thread', status: 'active' }),
+          buildArc({ id: 'a2', title: 'Resolved Thread', status: 'resolved' }),
+        ],
+      })
+    )
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Active Thread')).toBeInTheDocument()
+    })
+
+    // Filter to Resolved: only the resolved arc remains visible.
+    await user.click(screen.getByRole('button', { name: 'Resolved' }))
+    expect(screen.queryByText('Active Thread')).not.toBeInTheDocument()
+    expect(screen.getByText('Resolved Thread')).toBeInTheDocument()
+
+    // Filter to Discarded: nothing matches → the no-match notice, not the
+    // "no arcs yet" empty state.
+    await user.click(screen.getByRole('button', { name: 'Discarded' }))
+    expect(screen.getByText(/no arcs match this filter/i)).toBeInTheDocument()
+    expect(screen.queryByText('No arcs here')).not.toBeInTheDocument()
   })
 })
