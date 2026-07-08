@@ -10,19 +10,40 @@ const { mockGetCampaignDetail, mockUpdateCampaign, mockGetSessions } =
     mockGetSessions: vi.fn(),
   }))
 
-vi.mock('@/lib/campaigns/api', () => ({
-  getCampaignDetail: mockGetCampaignDetail,
-  updateCampaign: mockUpdateCampaign,
-  CampaignApiError: class CampaignApiError extends Error {
+vi.mock('@/lib/campaigns/api', () => {
+  // Mirror the real CampaignApiError: string input maps to backend.generic
+  // (it never forwards a raw string as the messageKey), options pass through.
+  // CampaignNotFoundError extends CampaignApiError so `instanceof` checks and
+  // the inheritance chain mirror the production classes.
+  class CampaignApiError extends Error {
     readonly messageKey: string
 
-    constructor(messageKey = 'backend.generic') {
+    constructor(
+      error:
+        | {
+            messageKey: string
+            code?: unknown
+            source?: unknown
+            retryable?: unknown
+            status?: unknown
+          }
+        | string = 'backend.generic'
+    ) {
+      const messageKey =
+        typeof error === 'string' ? 'backend.generic' : error.messageKey
       super(`Errors.${messageKey}`)
       this.messageKey = messageKey
     }
-  },
-  CampaignNotFoundError: class CampaignNotFoundError extends Error {},
-}))
+  }
+  class CampaignNotFoundError extends CampaignApiError {}
+
+  return {
+    getCampaignDetail: mockGetCampaignDetail,
+    updateCampaign: mockUpdateCampaign,
+    CampaignApiError,
+    CampaignNotFoundError,
+  }
+})
 
 vi.mock('@/lib/sessions/api', () => ({
   getSessions: mockGetSessions,
@@ -307,7 +328,14 @@ describe('CampaignDetailPage', () => {
     const user = userEvent.setup()
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
     const { CampaignApiError } = await import('@/lib/campaigns/api')
-    mockUpdateCampaign.mockRejectedValue(new CampaignApiError('validation'))
+    mockUpdateCampaign.mockRejectedValue(
+      new CampaignApiError({
+        code: 'validation',
+        source: 'backend',
+        retryable: false,
+        messageKey: 'validation',
+      })
+    )
     renderPage()
 
     await waitFor(() => {

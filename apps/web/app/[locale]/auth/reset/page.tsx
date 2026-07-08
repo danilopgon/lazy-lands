@@ -116,13 +116,22 @@ function ResetContent() {
           setState('form')
         }
       })
-      .catch(() => {
+      .catch((reason: unknown) => {
         // A rejected promise (transient/network failure) must not strand the
-        // user on the "Verifying…" loading state (AU-T-25).
-        setErrorMessage(t('resetVerifyError'))
+        // user on the "Verifying…" loading state (AU-T-25). Render the failure
+        // through `normalizeUnknownError` + `errorT`, matching the
+        // `updateUser` catch pattern.
+        setErrorMessage(
+          errorT(
+            normalizeUnknownError(reason, {
+              code: 'auth.resetGeneric',
+              messageKey: 'auth.resetGeneric',
+            }).messageKey
+          )
+        )
         setState('error')
       })
-  }, [tokenHash, type, t, errorT])
+  }, [tokenHash, type, errorT])
 
   /**
    * Handle password update form submission.

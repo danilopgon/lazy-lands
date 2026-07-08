@@ -96,7 +96,17 @@ export class CampaignApiError extends AppError {
 }
 
 /** Error thrown when a campaign lookup resolves to a 404/not-owned response. */
-export class CampaignNotFoundError extends CampaignApiError {}
+export class CampaignNotFoundError extends CampaignApiError {
+  /**
+   * Create a not-found campaign error. Overrides `name` so log/error trackers
+   * distinguish it from a generic `CampaignApiError`.
+   * @param {AppError | AppErrorOptions | string} error - Normalized error or legacy test string.
+   */
+  constructor(error: AppError | AppErrorOptions | string) {
+    super(error)
+    this.name = 'CampaignNotFoundError'
+  }
+}
 
 /**
  * Call `POST /campaigns/extract` with the DM's free-text premise.

@@ -103,4 +103,98 @@ describe('app error normalization', () => {
     })
     expect(error.message).not.toContain('Failed to fetch')
   })
+
+  it('maps Supabase email_not_confirmed by code to the email-not-confirmed translation key', () => {
+    const error = normalizeSupabaseAuthError({
+      code: 'email_not_confirmed',
+      message: 'Email not confirmed',
+      status: 400,
+    })
+
+    expect(error).toMatchObject({
+      code: 'auth.emailNotConfirmed',
+      status: 400,
+      source: 'supabase-auth',
+      retryable: false,
+      messageKey: 'auth.emailNotConfirmed',
+    })
+    expect(error.message).toBe('Errors.auth.emailNotConfirmed')
+  })
+
+  it('maps backend 429 responses to the generic backend key with retryable=true', async () => {
+    const error = await normalizeBackendResponseError(
+      new Response(JSON.stringify({ error: 'Too many requests.' }), {
+        status: 429,
+      })
+    )
+
+    expect(error).toMatchObject({
+      code: 'backend.generic',
+      status: 429,
+      source: 'backend',
+      retryable: true,
+      messageKey: 'backend.generic',
+    })
+  })
+
+  it('maps backend 5xx responses to the generic backend key with retryable=true', async () => {
+    const error = await normalizeBackendResponseError(
+      new Response(JSON.stringify({ error: 'Internal server error.' }), {
+        status: 500,
+      })
+    )
+
+    expect(error).toMatchObject({
+      code: 'backend.generic',
+      status: 500,
+      source: 'backend',
+      retryable: true,
+      messageKey: 'backend.generic',
+    })
+  })
+
+  it('honors an explicit body.retryable=true override even when the status is normally non-retryable', async () => {
+    const error = await normalizeBackendResponseError(
+      new Response(JSON.stringify({ error: 'Conflict.', retryable: true }), {
+        status: 409,
+      })
+    )
+
+    expect(error).toMatchObject({
+      code: 'backend.generic',
+      status: 409,
+      source: 'backend',
+      retryable: true,
+      messageKey: 'backend.generic',
+    })
+  })
+
+  it('falls back to status-based retryable when the backend body is not valid JSON', async () => {
+    const error = await normalizeBackendResponseError(
+      new Response('<html><body>Bad Gateway</body></html>', {
+        status: 502,
+        headers: { 'Content-Type': 'text/html' },
+      })
+    )
+
+    expect(error).toMatchObject({
+      code: 'backend.generic',
+      status: 502,
+      source: 'backend',
+      retryable: true,
+      messageKey: 'backend.generic',
+    })
+    expect(error.message).not.toContain('Bad Gateway')
+  })
+
+  it('classifies a non-Error thrown value as source=unknown', () => {
+    const error = normalizeUnknownError('a thrown string is not an Error')
+
+    expect(error).toMatchObject({
+      code: 'unknown',
+      source: 'unknown',
+      retryable: true,
+      messageKey: 'fallback',
+    })
+  })
 })

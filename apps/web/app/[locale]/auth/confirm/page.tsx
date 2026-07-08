@@ -9,7 +9,10 @@ import { Link } from '@/i18n/navigation'
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { buildLocalizedPath } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
-import { normalizeSupabaseAuthError } from '@/lib/errors/app-error'
+import {
+  normalizeSupabaseAuthError,
+  normalizeUnknownError,
+} from '@/lib/errors/app-error'
 import { AuthCard } from '@/components/auth/auth-card'
 
 const supabase = createClient()
@@ -58,6 +61,19 @@ function ConfirmContent() {
           // active locale so a Spanish confirmation lands on /es/dashboard.
           window.location.assign(buildLocalizedPath('/dashboard', locale))
         }
+      })
+      .catch((reason: unknown) => {
+        // A rejected promise (transient/network failure) must not strand the
+        // user on the "Verifying…" loading state.
+        setStatus('error')
+        setErrorMessage(
+          errorT(
+            normalizeUnknownError(reason, {
+              code: 'auth.confirmGeneric',
+              messageKey: 'auth.confirmGeneric',
+            }).messageKey
+          )
+        )
       })
   }, [tokenHash, type, locale, errorT])
 

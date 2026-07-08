@@ -12,12 +12,29 @@ export type AppErrorCode =
   | 'backend.generic'
   | 'unknown'
 
+/**
+ * Known messageKeys backed by the `Errors` catalog in `messages/*.json`.
+ * Kept separate from `AppErrorCode` because some keys (`fallback`) have no
+ * matching code and some codes (`unknown`) have no dedicated message key.
+ */
+export type AppMessageKey =
+  | 'fallback'
+  | 'notFound'
+  | 'validation'
+  | 'backend.generic'
+  | 'auth.invalidCredentials'
+  | 'auth.emailNotConfirmed'
+  | 'auth.generic'
+  | 'auth.registerGeneric'
+  | 'auth.confirmGeneric'
+  | 'auth.resetGeneric'
+
 export type AppErrorOptions = {
   code: AppErrorCode
   status?: number
   source: AppErrorSource
   retryable: boolean
-  messageKey: string
+  messageKey: AppMessageKey
 }
 
 type SupabaseAuthLikeError = {
@@ -63,7 +80,7 @@ export class AppError extends Error {
   readonly status?: number
   readonly source: AppErrorSource
   readonly retryable: boolean
-  readonly messageKey: string
+  readonly messageKey: AppMessageKey
 
   /**
    * Create an application error from stable UI-safe error metadata.
@@ -119,7 +136,6 @@ export async function normalizeBackendResponseError(
   response: Response
 ): Promise<AppError> {
   const body = await readBackendErrorBody(response)
-  const retryable = resolveRetryable(body, response.status)
 
   if (response.status === 404) {
     return new AppError({
@@ -145,7 +161,7 @@ export async function normalizeBackendResponseError(
     code: 'backend.generic',
     status: response.status,
     source: 'backend',
-    retryable,
+    retryable: resolveRetryable(body, response.status),
     messageKey: 'backend.generic',
   })
 }

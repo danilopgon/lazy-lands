@@ -17,10 +17,24 @@ const {
 
 vi.mock('@/lib/campaigns/api', () => ({
   createCampaign: mockCreateCampaign,
+  // Mirror the real CampaignApiError: string input maps to backend.generic
+  // (it never forwards a raw string as the messageKey), options pass through.
   CampaignApiError: class CampaignApiError extends Error {
     readonly messageKey: string
 
-    constructor(messageKey = 'backend.generic') {
+    constructor(
+      error:
+        | {
+            messageKey: string
+            code?: unknown
+            source?: unknown
+            retryable?: unknown
+            status?: unknown
+          }
+        | string = 'backend.generic'
+    ) {
+      const messageKey =
+        typeof error === 'string' ? 'backend.generic' : error.messageKey
       super(`Errors.${messageKey}`)
       this.messageKey = messageKey
     }
@@ -307,7 +321,12 @@ describe('ReviewCampaignPage (CUI-002)', () => {
     const user = userEvent.setup()
     const { CampaignApiError } = await import('@/lib/campaigns/api')
     mockCreateCampaign.mockRejectedValue(
-      new CampaignApiError('backend.generic')
+      new CampaignApiError({
+        code: 'backend.generic',
+        source: 'backend',
+        retryable: true,
+        messageKey: 'backend.generic',
+      })
     )
     renderPage()
 
