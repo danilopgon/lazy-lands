@@ -59,15 +59,34 @@ app.add_exception_handler(
 )
 
 
+def _error_cors_headers(request: Request) -> dict[str, str]:
+    """Build CORS headers for an error response by reflecting an allowed Origin.
+
+    Starlette runs the catch-all handler below in ServerErrorMiddleware, the
+    outermost layer, so its response never passes back through CORSMiddleware.
+    Without these headers a browser reports an opaque CORS failure that hides the
+    real 500 and its body. Mirrors CORSMiddleware's own allow-list + credentials.
+    """
+    origin = request.headers.get("origin")
+    if origin and origin in settings.api_cors_origins:
+        return {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true",
+            "Vary": "Origin",
+        }
+    return {}
+
+
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(
-    _request: Request, exc: Exception
+    request: Request, exc: Exception
 ) -> JSONResponse:
     """Catch-all handler that logs the traceback so silent 500s never happen again."""
     logger.exception("Unhandled exception in request: %s", exc)
     return JSONResponse(
         status_code=500,
         content={"error": "Internal server error — check server logs for details."},
+        headers=_error_cors_headers(request),
     )
 
 
