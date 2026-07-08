@@ -133,16 +133,19 @@ function ReviewCampaignClient({
       key: 'description',
       label: te('fields.description'),
       placeholder: te('fields.description'),
+      multiline: true,
     },
     {
       key: 'current_state',
       label: te('fields.currentState'),
       placeholder: te('fields.currentState'),
+      multiline: true,
     },
     {
       key: 'motivation',
       label: te('fields.motivation'),
       placeholder: te('fields.motivation'),
+      multiline: true,
     },
   ]
   const factionFields: EntityField<FactionItem>[] = [
@@ -151,16 +154,19 @@ function ReviewCampaignClient({
       key: 'description',
       label: te('fields.description'),
       placeholder: te('fields.description'),
+      multiline: true,
     },
     {
       key: 'current_stance',
       label: te('fields.currentStance'),
       placeholder: te('fields.currentStance'),
+      multiline: true,
     },
     {
       key: 'goals',
       label: te('fields.goals'),
       placeholder: te('fields.goals'),
+      multiline: true,
     },
   ]
   const arcFields: EntityField<ArcItem>[] = [
@@ -173,6 +179,7 @@ function ReviewCampaignClient({
       key: 'description',
       label: te('fields.description'),
       placeholder: te('fields.description'),
+      multiline: true,
     },
   ]
 

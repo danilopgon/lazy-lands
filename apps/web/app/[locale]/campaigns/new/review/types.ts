@@ -11,4 +11,6 @@ export type EntityField<T extends ReviewItem> = {
   key: keyof T & string
   label: string
   placeholder: string
+  /** Render a multi-line textarea instead of a single-line input (long prose). */
+  multiline?: boolean
 }

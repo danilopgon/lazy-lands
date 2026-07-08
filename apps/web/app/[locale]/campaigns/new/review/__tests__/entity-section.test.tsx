@@ -18,9 +18,16 @@ const FIELDS: EntityField<Row>[] = [
  *
  * @param {object} root0 - Harness props.
  * @param {Row[]} root0.initial - The seed items.
+ * @param {EntityField<Row>[]} [root0.fields] - Field descriptors (defaults to FIELDS).
  * @returns {React.ReactElement} The wrapped section.
  */
-function Harness({ initial }: { initial: Row[] }) {
+function Harness({
+  initial,
+  fields = FIELDS,
+}: {
+  initial: Row[]
+  fields?: EntityField<Row>[]
+}) {
   const [items, setItems] = useState<Row[]>(initial)
   return (
     <EntitySection<Row>
@@ -28,12 +35,17 @@ function Harness({ initial }: { initial: Row[] }) {
       addLabel="+ Add NPC"
       emptyHint="Nothing here yet."
       items={items}
-      fields={FIELDS}
+      fields={fields}
       onChange={setItems}
       testId="npc"
     />
   )
 }
+
+const MULTILINE_FIELDS: EntityField<Row>[] = [
+  { key: 'name', label: 'Name', placeholder: 'Name' },
+  { key: 'note', label: 'Note', placeholder: 'Note', multiline: true },
+]
 
 describe('EntitySection', () => {
   it('keeps the edit form on the same item when an earlier item is removed', async () => {
@@ -69,5 +81,32 @@ describe('EntitySection', () => {
       expect(screen.getByText('Beta the Bold')).toBeInTheDocument()
     })
     expect(screen.queryByText('Alpha')).not.toBeInTheDocument()
+  })
+
+  it('renders a multiline field as a textarea in the add form', async () => {
+    const user = userEvent.setup()
+    render(<Harness initial={[]} fields={MULTILINE_FIELDS} />)
+
+    await user.click(screen.getByRole('button', { name: /add npc/i }))
+
+    expect(screen.getByPlaceholderText('Name').tagName).toBe('INPUT')
+    expect(screen.getByPlaceholderText('Note').tagName).toBe('TEXTAREA')
+  })
+
+  it('renders a multiline field as a textarea in the edit form', async () => {
+    const user = userEvent.setup()
+    render(
+      <Harness
+        initial={[
+          { reviewId: 'a', name: 'Alpha', note: 'long', content_source: 'llm' },
+        ]}
+        fields={MULTILINE_FIELDS}
+      />
+    )
+
+    await user.click(screen.getByRole('button', { name: /edit/i }))
+
+    expect(screen.getByDisplayValue('Alpha').tagName).toBe('INPUT')
+    expect(screen.getByDisplayValue('long').tagName).toBe('TEXTAREA')
   })
 })
