@@ -62,21 +62,22 @@ async def test_happy_path_persists_then_summarizes_then_suggests() -> None:
     use_case = RegisterSession(repo, summarize, suggest)
 
     result = await use_case.execute(
-        "campaign-1", RegisterSessionCommand(summary="The party arrived.", consequences=None)
+        "campaign-1",
+        RegisterSessionCommand(summary="The party arrived.", consequences=None),
     )
 
     assert result.session_id == "session-1"
     assert result.session_number == 1
     assert result.memory_suggestions == [suggestion]
-    repo.insert_session.assert_called_once_with("campaign-1", 1, "The party arrived.", None)
+    repo.insert_session.assert_called_once_with(
+        "campaign-1", 1, "The party arrived.", None
+    )
     summarize.execute.assert_awaited_once()
     suggest.execute.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_summarize_failure_after_insert_degrades_to_empty_suggestions_still_run() -> (
-    None
-):
+async def test_summarize_failure_after_insert_degrades_to_empty() -> None:
     repo = _repo_with_campaign({"id": "campaign-1", "accumulated_summary": None})
     summarize = AsyncMock()
     summarize.execute.side_effect = RuntimeError("LLM exploded")
@@ -85,7 +86,8 @@ async def test_summarize_failure_after_insert_degrades_to_empty_suggestions_stil
     use_case = RegisterSession(repo, summarize, suggest)
 
     result = await use_case.execute(
-        "campaign-1", RegisterSessionCommand(summary="The party arrived.", consequences=None)
+        "campaign-1",
+        RegisterSessionCommand(summary="The party arrived.", consequences=None),
     )
 
     assert result.session_id == "session-1"
@@ -101,7 +103,8 @@ async def test_suggest_failure_after_insert_degrades_to_empty_suggestions() -> N
     use_case = RegisterSession(repo, summarize, suggest)
 
     result = await use_case.execute(
-        "campaign-1", RegisterSessionCommand(summary="The party arrived.", consequences=None)
+        "campaign-1",
+        RegisterSessionCommand(summary="The party arrived.", consequences=None),
     )
 
     assert result.session_id == "session-1"

@@ -31,20 +31,21 @@ class _FakeSupabaseClient:
 def _client_with_campaign(campaign_row: dict | None) -> _FakeSupabaseClient:
     client = _FakeSupabaseClient()
     campaigns_table = client.table("campaigns")
-    campaigns_table.select.return_value.eq.return_value.execute.return_value = MagicMock(
-        data=[campaign_row] if campaign_row is not None else []
+    campaigns_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[campaign_row] if campaign_row is not None else [])
     )
     # Every child table used by get_suggestion_context defaults to empty.
     for name in ("npcs", "factions", "arcs", "memory_facts"):
         table = client.table(name)
-        table.select.return_value.eq.return_value.execute.return_value = MagicMock(data=[])
-        table.select.return_value.eq.return_value.eq.return_value.execute.return_value = (
-            MagicMock(data=[])
-        )
+        select_eq = table.select.return_value.eq.return_value
+        select_eq.execute.return_value = MagicMock(data=[])
+        select_eq.eq.return_value.execute.return_value = MagicMock(data=[])
     return client
 
 
-def _configure_next_session_number(client: _FakeSupabaseClient, rows: list[dict]) -> None:
+def _configure_next_session_number(
+    client: _FakeSupabaseClient, rows: list[dict]
+) -> None:
     sessions_table = client.table("sessions")
     order_query = sessions_table.select.return_value.eq.return_value.order.return_value
     order_query.limit.return_value.execute.return_value = MagicMock(data=rows)
@@ -87,7 +88,11 @@ def _authenticate() -> None:
 
 def test_register_session_happy_path_returns_expected_shape(client) -> None:
     fake_client = _client_with_campaign(
-        {"id": "campaign-1", "accumulated_summary": None, "summarized_up_to_session": None}
+        {
+            "id": "campaign-1",
+            "accumulated_summary": None,
+            "summarized_up_to_session": None,
+        }
     )
     _configure_next_session_number(fake_client, [])
     inserted_session = {
@@ -147,7 +152,9 @@ def test_register_session_happy_path_returns_expected_shape(client) -> None:
     assert update_arg["summarized_up_to_session"] == 1
 
 
-def test_register_session_llm_failure_degrades_but_session_still_persists(client) -> None:
+def test_register_session_llm_failure_degrades_but_session_still_persists(
+    client,
+) -> None:
     """HTTP-boundary proof of persistence-first degrade (design Decision 4).
 
     An LLM provider with no registered fixtures raises on every
@@ -164,7 +171,11 @@ def test_register_session_llm_failure_degrades_but_session_still_persists(client
         "created_at": "2026-07-08T00:00:00Z",
     }
     fake_client = _client_with_campaign(
-        {"id": "campaign-1", "accumulated_summary": None, "summarized_up_to_session": None}
+        {
+            "id": "campaign-1",
+            "accumulated_summary": None,
+            "summarized_up_to_session": None,
+        }
     )
     _configure_next_session_number(fake_client, [])
     _configure_session_insert(fake_client, inserted_session)
@@ -223,9 +234,7 @@ def test_register_session_missing_summary_returns_422(client) -> None:
     app.dependency_overrides[get_llm_provider] = lambda: FakeLlmProvider()
     _authenticate()
 
-    response = client.post(
-        "/campaigns/campaign-1/sessions", json={"consequences": "c"}
-    )
+    response = client.post("/campaigns/campaign-1/sessions", json={"consequences": "c"})
 
     assert response.status_code == 422
 

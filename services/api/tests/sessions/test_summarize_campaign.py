@@ -24,7 +24,11 @@ async def test_first_session_establishes_summary() -> None:
         {"session_number": 1, "summary": "The party arrived.", "consequences": None}
     ]
     use_case = SummarizeCampaign(llm_provider=provider, repository=repo)
-    campaign = {"id": "campaign-1", "accumulated_summary": None, "summarized_up_to_session": None}
+    campaign = {
+        "id": "campaign-1",
+        "accumulated_summary": None,
+        "summarized_up_to_session": None,
+    }
 
     await use_case.execute(campaign, {"id": "session-1", "session_number": 1})
 
@@ -42,7 +46,11 @@ async def test_later_session_folds_only_delta_since_summarized_up_to() -> None:
     )
     repo = MagicMock()
     repo.get_sessions_since.return_value = [
-        {"session_number": 3, "summary": "A third session happened.", "consequences": None}
+        {
+            "session_number": 3,
+            "summary": "A third session happened.",
+            "consequences": None,
+        }
     ]
     use_case = SummarizeCampaign(llm_provider=provider, repository=repo)
     campaign = {
@@ -60,7 +68,9 @@ async def test_later_session_folds_only_delta_since_summarized_up_to() -> None:
 
 
 @pytest.mark.asyncio
-async def test_previously_skipped_sessions_self_heal_together_with_the_new_one() -> None:
+async def test_previously_skipped_sessions_self_heal_together_with_the_new_one() -> (
+    None
+):
     provider = FakeLlmProvider()
     provider.register(CampaignSummaryOutput, {"accumulated_summary": "Healed summary."})
     repo = MagicMock()

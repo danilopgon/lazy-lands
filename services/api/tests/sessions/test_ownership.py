@@ -25,10 +25,10 @@ from app.modules.sessions.application.commands.register_session import (
     RegisterSession,
     RegisterSessionCommand,
 )
+from app.modules.sessions.application.commands.suggest_memories import SuggestMemories
 from app.modules.sessions.application.commands.summarize_campaign import (
     SummarizeCampaign,
 )
-from app.modules.sessions.application.commands.suggest_memories import SuggestMemories
 from app.modules.sessions.infrastructure.repository import SupabaseSessionRepository
 from app.shared.config import settings
 from app.shared.database import create_user_supabase_client, get_supabase_client
