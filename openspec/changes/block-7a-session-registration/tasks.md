@@ -70,18 +70,18 @@ Chain strategy: pending
 
 ## Phase 6: Frontend Log Session Screen (TDD)
 
-- [ ] 6.1-6.11 Deferred to PR2 (frontend slice). This apply batch (PR1) is backend-only per the chained-PR delivery strategy; no files under `apps/web/` were touched.
+- [x] 6.1-6.11 Implemented in PR2. `lib/sessions/{schemas.ts,api.ts}` mirror the backend contract (`RegisterSessionRequest`, `RegisterSessionResponse`, `SessionResponse`, `MemorySuggestion`/`Importance`). `components/sessions/log-session-form.tsx` + `app/[locale]/campaigns/[id]/sessions/new/page.tsx` implement the two in-scope fields (summary required, consequences optional), the `summary-required`/`saving`/`error`/`success` states (react-hook-form + zodResolver + TanStack `useMutation`), the full `LoadingScribe` takeover while saving, and navigation to `/campaigns/:id` on success. Copy localized in `Sessions` namespace (en/es), no em dashes. Tests: `tests/sessions/{schemas,api}.test.ts` + `app/[locale]/campaigns/[id]/sessions/new/__tests__/page.test.tsx` (RED before each component/page existed, GREEN after).
 
 ## Phase 7: Campaign Detail Session History Wiring (TDD)
 
-- [ ] 7.1-7.3 Deferred to PR2 (frontend slice), same reason as Phase 6.
+- [x] 7.1-7.3 Implemented in PR2. `components/campaigns/recent-sessions.tsx` wired into `campaign-detail-view.tsx`'s "/02 Recent sessions" section via `useQuery(['campaign', id, 'sessions'], () => getSessions(id))`: empty state (`EmptyState` + "Log session" CTA) when no sessions exist, live list (most recent first, capped at 3) otherwise, replacing the static "Coming in a later chapter" placeholder. A header-level "Log session →" link was added alongside the section heading. Test: `app/[locale]/campaigns/[id]/__tests__/page.test.tsx` updated (existing "2 placeholders" assertion changed to 1 — memories only — plus new empty/list-state tests; RED before the wiring existed, GREEN after).
 
 ## Phase 8: Verification & Docs
 
 - [x] 8.1 Verify (do not build) RLS policy exists on `sessions` table in `supabase/migrations/`; document confirmation in the module's test suite or a short comment referencing the migration file. Confirmed 4 policies (`sessions_select/insert/update/delete`) in `supabase/migrations/20260628101707_initial_schema.sql`; added `tests/sessions/test_ownership.py` (mirrors campaigns' `test_ownership.py`) which ran live against the local Supabase stack and passed — a foreign user cannot read another user's session nor insert one under a campaign they don't own.
 - [x] 8.2 Add the 7 deferred handoff fields (title, editable session #, world-state/NPC/faction change fields, arcs-touched, private DM notes) to `docs/conventions/handoff-deviations.md`, each with its schema/MVP-scope reason from `design.md`.
-- [ ] 8.3 Deferred to PR2 — `pnpm --filter web typecheck`/`lint`/`test`/`format:check` apply once the frontend slice lands; this batch ran the backend gate only (`uv run pytest`/`ruff check`/`ruff format --check`/`mypy` — see apply-progress).
-- [ ] 8.4 Deferred to PR2 — full-stack manual smoke requires the Log Session form (frontend slice).
+- [x] 8.3 Frontend gate run for PR2: `pnpm --filter web test` (343 passed), `pnpm --filter web typecheck` (clean), `pnpm --filter web lint` (0 errors, 1 pre-existing unrelated warning), `pnpm format` applied.
+- [x] 8.4 Manual smoke deferred to the user (dev server not started per this batch's instructions); automated coverage (RTL) exercises form/saving/error/summary-required/success-navigation end to end against a mocked API client.
 
 ## Design Open Question — Resolved
 
