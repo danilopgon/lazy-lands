@@ -78,9 +78,7 @@ def _error_cors_headers(request: Request) -> dict[str, str]:
 
 
 @app.exception_handler(Exception)
-async def unhandled_exception_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Catch-all handler that logs the traceback so silent 500s never happen again."""
     logger.exception("Unhandled exception in request: %s", exc)
     return JSONResponse(
