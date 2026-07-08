@@ -46,9 +46,10 @@ export function AppHeader({ email, children }: AppHeaderProps) {
         <div className="flex items-center gap-3">
           <LanguageSwitcher compact persistUserLanguage />
           <span
+            role="img"
             aria-label={identityLabel}
             title={email ?? undefined}
-            className="flex h-9 w-9 items-center justify-center border-2 border-[var(--border)] bg-[var(--paper)] font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--ink-2)] shadow-[3px_3px_0_var(--shadow)]"
+            className="flex h-9 w-9 items-center justify-center bg-[var(--ink)] font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--bg-contrast)]"
           >
             {initials}
           </span>
