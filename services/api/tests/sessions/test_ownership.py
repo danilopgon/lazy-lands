@@ -56,15 +56,19 @@ def two_test_users(stack_guard):
     admin = get_supabase_client()
     password = "Ownership-Test-Pass-1!"
     users: list[tuple[str, str]] = []
-    for _ in range(2):
-        email = f"session-ownership-test-{uuid.uuid4().hex}@lazylands.test"
-        created = admin.auth.admin.create_user(
-            {"email": email, "password": password, "email_confirm": True}
-        )
-        users.append((created.user.id, email))
-    yield users, password
-    for user_id, _email in users:
-        admin.auth.admin.delete_user(user_id)
+    try:
+        for _ in range(2):
+            email = f"session-ownership-test-{uuid.uuid4().hex}@lazylands.test"
+            created = admin.auth.admin.create_user(
+                {"email": email, "password": password, "email_confirm": True}
+            )
+            users.append((created.user.id, email))
+        yield users, password
+    finally:
+        # Guarantee cleanup even if the second create_user raises mid-setup,
+        # so a partially-created fixture never orphans users in the auth system.
+        for user_id, _email in users:
+            admin.auth.admin.delete_user(user_id)
 
 
 def _sign_in(email: str, password: str) -> str:

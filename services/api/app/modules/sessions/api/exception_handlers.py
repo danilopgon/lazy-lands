@@ -29,10 +29,12 @@ async def session_persistence_error_handler(
     Only reached when the insert itself fails (persistence-first ordering) —
     no row was written, so the client may safely retry the same payload.
     """
+    message = (
+        "Could not save the session. Please retry."
+        if exc.retryable
+        else "Could not save the session."
+    )
     return JSONResponse(
         status_code=409,
-        content={
-            "error": "Could not save the session. Please retry.",
-            "retryable": exc.retryable,
-        },
+        content={"error": message, "retryable": exc.retryable},
     )

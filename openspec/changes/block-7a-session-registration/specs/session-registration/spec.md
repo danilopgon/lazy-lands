@@ -12,13 +12,14 @@ suggestion — specified separately).
 ### Requirement: Register a session
 
 The system MUST expose `POST /campaigns/{campaign_id}/sessions` accepting
-`{ summary: string (required), consequences: string (optional) }`. No other fields are
-accepted; there is no client-side concatenation of additional free-text fields into
-`summary`/`consequences`.
+`{ summary: string (required), consequences: string (optional) }`. Unknown fields (including
+a client-supplied `session_number`) MUST be ignored — stripped by the request model rather
+than rejected with 422 — and there is no client-side concatenation of additional free-text
+fields into `summary`/`consequences`.
 
 The system MUST assign `session_number` server-side as `MAX(session_number) + 1` scoped to
-`campaign_id` (1 if no prior sessions exist). `session_number` MUST NOT be accepted as
-client input.
+`campaign_id` (1 if no prior sessions exist). A client-supplied `session_number` MUST be
+ignored; the server-computed value always wins.
 
 The system MUST persist the session row BEFORE running summarization or suggestion
 (persistence-first). If the insert itself fails, the request MUST fail and no session is

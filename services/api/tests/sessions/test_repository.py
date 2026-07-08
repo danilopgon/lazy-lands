@@ -221,3 +221,6 @@ def test_update_campaign_summary_patches_expected_columns() -> None:
     client.table.return_value.update.return_value.eq.assert_called_once_with(
         "id", "campaign-1"
     )
+    # Guard against building the query chain but forgetting to run it, which
+    # would silently drop the summary update while this test still passed.
+    client.table.return_value.update.return_value.eq.return_value.execute.assert_called_once()

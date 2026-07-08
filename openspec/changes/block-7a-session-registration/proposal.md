@@ -64,5 +64,5 @@ Unmount sessions router in `main.py` and remove `modules/sessions/**` + frontend
 ## Success Criteria
 - [ ] `POST` persists a session, updates `accumulated_summary` + `summarized_up_to_session`, returns 0–5 suggestions; no `memory_facts` row created.
 - [ ] `GET` returns chronological sessions for owner only; forged `campaign_id` → 404.
-- [ ] All LLM outputs Pydantic-validated; invalid output → retryable error, raw output not leaked.
+- [ ] All LLM outputs Pydantic-validated; raw output never leaked. A summarize/suggest failure after the session is persisted degrades to `memory_suggestions = []` (the session is kept), it does not surface as a request error; only a session insert failure surfaces a retryable 409.
 - [ ] Log Session screen matches handoff; history slot renders live.
