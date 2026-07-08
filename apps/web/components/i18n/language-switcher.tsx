@@ -1,9 +1,9 @@
 'use client'
 
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState, type MouseEvent } from 'react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { usePathname } from '@/i18n/navigation'
 import { routing, type AppLocale } from '@/i18n/routing'
@@ -21,6 +21,12 @@ type LanguageSwitcherProps = {
    * plentiful and an extra tap would be pure friction.
    */
   inline?: boolean
+  /**
+   * Persist the chosen locale to the authenticated user's metadata before
+   * navigating. Enabled inside the authenticated area so the Scribe's emails
+   * follow the DM's language; left off for the public switcher.
+   */
+  persistUserLanguage?: boolean
 }
 
 const optionClassName =
@@ -31,35 +37,77 @@ const optionClassName =
  *
  * Each link is a real per-locale `<a>` with `hrefLang` and `aria-current`, so
  * switching works without JavaScript and stays crawlable. The list is derived
- * from `routing.locales`, never a hardcoded pair.
+ * from `routing.locales`, never a hardcoded pair. When `persistUserLanguage` is
+ * set, choosing a new locale writes it to the user's metadata before
+ * navigating; a persistence failure never blocks the navigation.
  *
  * @param {object} root0 - Link props.
  * @param {string} root0.currentPath - The current path, optionally with a query string.
  * @param {string} root0.locale - The active locale, used to mark the current link.
+ * @param {boolean} root0.persistUserLanguage - Whether to persist the locale to user metadata.
  * @param {() => void} [root0.onNavigate] - Optional callback fired when a link is chosen.
  * @returns {React.ReactElement} The list of locale links.
  */
 function LocaleLinks({
   currentPath,
   locale,
+  persistUserLanguage,
   onNavigate,
 }: {
   currentPath: string
   locale: string
+  persistUserLanguage: boolean
   onNavigate?: () => void
 }) {
+  const router = useRouter()
+
+  /**
+   * Handle a locale choice: dismiss any disclosure, then (when persistence is
+   * enabled and the locale actually changes) write the preference to user
+   * metadata before navigating. Navigation always proceeds even if the write
+   * fails, so a Supabase hiccup never traps the DM on the current locale.
+   *
+   * @param {MouseEvent<HTMLAnchorElement>} event - The link click event.
+   * @param {AppLocale} nextLocale - The locale the link switches to.
+   * @param {string} href - The resolved destination path.
+   */
+  async function handleClick(
+    event: MouseEvent<HTMLAnchorElement>,
+    nextLocale: AppLocale,
+    href: string
+  ) {
+    onNavigate?.()
+
+    if (!persistUserLanguage || nextLocale === locale) {
+      return
+    }
+
+    event.preventDefault()
+
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      await supabase.auth.updateUser({ data: { language: nextLocale } })
+    } catch {
+      // Locale navigation must not be blocked by auth metadata persistence.
+    } finally {
+      router.push(href)
+    }
+  }
+
   return (
     <>
       {routing.locales.map((code) => {
         const active = code === locale
+        const href = buildLocalizedPath(currentPath, code)
         return (
           <Link
             key={code}
-            href={buildLocalizedPath(currentPath, code)}
+            href={href}
             hrefLang={code}
             data-active={active}
             aria-current={active ? 'true' : undefined}
-            onClick={onNavigate}
+            onClick={(event) => handleClick(event, code, href)}
             className={optionClassName}
           >
             {localeMeta[code].label}
@@ -78,16 +126,19 @@ function LocaleLinks({
  * @param {object} root0 - Link props.
  * @param {string} root0.pathname - The locale-free pathname from next-intl.
  * @param {string} root0.locale - The active locale.
+ * @param {boolean} root0.persistUserLanguage - Whether to persist the locale to user metadata.
  * @param {() => void} [root0.onNavigate] - Optional callback fired when a link is chosen.
  * @returns {React.ReactElement} The query-preserving locale links.
  */
 function SearchAwareLinks({
   pathname,
   locale,
+  persistUserLanguage,
   onNavigate,
 }: {
   pathname: string
   locale: string
+  persistUserLanguage: boolean
   onNavigate?: () => void
 }) {
   const searchParams = useSearchParams()
@@ -98,6 +149,7 @@ function SearchAwareLinks({
     <LocaleLinks
       currentPath={currentPath}
       locale={locale}
+      persistUserLanguage={persistUserLanguage}
       onNavigate={onNavigate}
     />
   )
@@ -117,12 +169,14 @@ function SearchAwareLinks({
  * @param {string} [root0.className] - Optional classes for placement.
  * @param {boolean} [root0.compact] - Collapse the trigger to the locale code.
  * @param {boolean} [root0.inline] - Render links directly, without a disclosure.
+ * @param {boolean} [root0.persistUserLanguage] - Persist the locale to user metadata before navigating.
  * @returns {React.ReactElement} The language switcher navigation.
  */
 export function LanguageSwitcher({
   className,
   compact = false,
   inline = false,
+  persistUserLanguage = false,
 }: LanguageSwitcherProps) {
   const t = useTranslations('Nav')
   // next-intl types useLocale() as string; the active locale is always one of
@@ -151,9 +205,9 @@ export function LanguageSwitcher({
     /**
      * Close when a pointer press lands outside the disclosure.
      *
-     * @param {MouseEvent} event - The document pointer event.
+     * @param {globalThis.MouseEvent} event - The document pointer event.
      */
-    function handlePointerDown(event: MouseEvent) {
+    function handlePointerDown(event: globalThis.MouseEvent) {
       if (
         detailsRef.current &&
         !detailsRef.current.contains(event.target as Node)
@@ -183,10 +237,19 @@ export function LanguageSwitcher({
   }, [open])
 
   const links = (
-    <Suspense fallback={<LocaleLinks currentPath={pathname} locale={locale} />}>
+    <Suspense
+      fallback={
+        <LocaleLinks
+          currentPath={pathname}
+          locale={locale}
+          persistUserLanguage={persistUserLanguage}
+        />
+      }
+    >
       <SearchAwareLinks
         pathname={pathname}
         locale={locale}
+        persistUserLanguage={persistUserLanguage}
         onNavigate={inline ? undefined : () => setOpen(false)}
       />
     </Suspense>

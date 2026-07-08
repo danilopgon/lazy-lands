@@ -130,9 +130,36 @@ describe('RegisterPage (AU-002)', () => {
       password: 'Password123!',
       options: {
         emailRedirectTo: expect.stringContaining('/auth/confirm'),
+        data: { language: 'en' },
       },
     })
     expect(signUpPayload).not.toHaveProperty('confirmPassword')
+  })
+
+  it('sends Spanish locale metadata and localized confirmation redirect during signup', async () => {
+    const user = userEvent.setup()
+    mockSignUp.mockResolvedValue({
+      data: { user: {}, session: null },
+      error: null,
+    })
+    render(<RegisterPage />, { locale: 'es' })
+
+    await user.type(screen.getByLabelText(/correo/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/^contraseña$/i), 'Password123!')
+    await user.type(
+      screen.getByLabelText(/confirmar contraseña/i),
+      'Password123!'
+    )
+    await user.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    await waitFor(() => {
+      expect(mockSignUp).toHaveBeenCalled()
+    })
+    const signUpPayload = mockSignUp.mock.calls[0][0]
+    expect(signUpPayload.options.emailRedirectTo).toBe(
+      'http://localhost:3000/es/auth/confirm'
+    )
+    expect(signUpPayload.options.data.language).toBe('es')
   })
 
   it('falls back to an absolute browser-origin emailRedirectTo when NEXT_PUBLIC_APP_URL is unset', async () => {

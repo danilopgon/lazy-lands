@@ -44,7 +44,7 @@ export function AppHeader({ email, children }: AppHeaderProps) {
         </Link>
 
         <div className="flex items-center gap-3">
-          <LanguageSwitcher compact />
+          <LanguageSwitcher compact persistUserLanguage />
           <span
             aria-label={identityLabel}
             title={email ?? undefined}
