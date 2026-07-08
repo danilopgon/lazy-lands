@@ -25,75 +25,63 @@ Chain strategy: pending
 
 ## Phase 1: Backend Foundation
 
-- [ ] 1.1 Scaffold `services/api/app/modules/sessions/` package mirroring campaigns (`domain/`, `application/{commands,queries,read_models}`, `infrastructure/`, `api/schemas/session/`, `prompts/`).
-- [ ] 1.2 Write `sessions/application/contracts.py`: `MemorySuggestion`, `MemorySuggestionsOutput` (max 5), `CampaignSummaryOutput` (1-6000 chars), `SessionResponse`, `RegisterSessionResponse`.
-- [ ] 1.3 Write `sessions/domain/ports.py` (repository protocol: `get_next_session_number`, `insert_session`, `list_sessions`, `update_campaign_summary`).
-- [ ] 1.4 RED: write failing unit test for `infrastructure/repository.py` `MAX(session_number)+1` numbering (first session=1, sequential=2).
-- [ ] 1.5 GREEN: implement `sessions/infrastructure/repository.py` (Supabase repo: numbering, insert, list, campaign-summary update at repo boundary).
+- [x] 1.1 Scaffold `services/api/app/modules/sessions/` package mirroring campaigns (`domain/`, `application/{commands,queries,read_models}`, `infrastructure/`, `api/schemas/session/`, `prompts/`).
+- [x] 1.2 Write `sessions/application/contracts.py`: `MemorySuggestion`, `MemorySuggestionsOutput` (max 5), `CampaignSummaryOutput` (1-6000 chars), `SessionResponse`, `RegisterSessionResponse`.
+- [x] 1.3 Write `sessions/domain/ports.py` (repository protocol: `get_next_session_number`, `insert_session`, `list_sessions`, `update_campaign_summary`).
+- [x] 1.4 RED: write failing unit test for `infrastructure/repository.py` `MAX(session_number)+1` numbering (first session=1, sequential=2).
+- [x] 1.5 GREEN: implement `sessions/infrastructure/repository.py` (Supabase repo: numbering, insert, list, campaign-summary update at repo boundary).
 
 ## Phase 2: Register Session Use Case (TDD)
 
-- [ ] 2.1 RED: failing unit test — ownership pre-check via `get_campaign`, forged `campaign_id` -> `SessionNotFoundError`/404.
-- [ ] 2.2 GREEN: implement `sessions/application/commands/register_session.py` persistence-first flow (pre-check -> MAX+1 -> insert -> summarize -> suggest -> return), define `sessions/application/errors.py`.
-- [ ] 2.3 RED: failing unit test — empty/missing `summary` rejected before persistence (422, no row).
-- [ ] 2.4 GREEN: enforce required `summary` in `api/schemas/session/requests.py` (`RegisterSessionRequest`).
-- [ ] 2.5 RED: failing unit test — LLM failure (summarize or suggest) after successful insert still returns persisted session with `memory_suggestions=[]`, no rollback.
-- [ ] 2.6 GREEN: wrap summarize/suggest calls in `register_session.py` with degrade-to-empty on `LlmOutputValidationError`/provider error; session insert result never rolled back. **Acceptance: LLM-step failure after a successful insert always returns 2xx with the persisted session and `memory_suggestions=[]`; only insert failure surfaces an error response.**
+- [x] 2.1 RED: failing unit test — ownership pre-check via `get_campaign`, forged `campaign_id` -> `SessionNotFoundError`/404.
+- [x] 2.2 GREEN: implement `sessions/application/commands/register_session.py` persistence-first flow (pre-check -> MAX+1 -> insert -> summarize -> suggest -> return), define `sessions/application/errors.py`.
+- [x] 2.3 RED: failing unit test — empty/missing `summary` rejected before persistence (422, no row).
+- [x] 2.4 GREEN: enforce required `summary` in `api/schemas/session/requests.py` (`RegisterSessionRequest`).
+- [x] 2.5 RED: failing unit test — LLM failure (summarize or suggest) after successful insert still returns persisted session with `memory_suggestions=[]`, no rollback.
+- [x] 2.6 GREEN: wrap summarize/suggest calls in `register_session.py` with degrade-to-empty on `LlmOutputValidationError`/provider error; session insert result never rolled back. **Acceptance: LLM-step failure after a successful insert always returns 2xx with the persisted session and `memory_suggestions=[]`; only insert failure surfaces an error response.**
 
 ## Phase 3: Summarize Use Case (TDD)
 
-- [ ] 3.1 Write `sessions/prompts/summarize_campaign_v1.jinja` (previous `accumulated_summary` + delta sessions since `summarized_up_to_session`).
-- [ ] 3.2 RED: failing unit test — first session establishes summary, `summarized_up_to_session=1`.
-- [ ] 3.3 RED: failing unit test — later session folds only the new session into existing summary (delta-only input).
-- [ ] 3.4 RED: failing unit test — previously skipped sessions self-heal together with the new one.
-- [ ] 3.5 GREEN: implement `sessions/application/commands/summarize_campaign.py` using `complete_json` + `parse_llm_json` (ADR-09); app sets `summarized_up_to_session`, never LLM-emitted; update via repository dict boundary (Campaign entity untouched).
-- [ ] 3.6 Register `CampaignSummaryOutput` fixture in `FakeLlmProvider` (sessions conftest).
+- [x] 3.1 Write `sessions/prompts/summarize_campaign_v1.jinja` (previous `accumulated_summary` + delta sessions since `summarized_up_to_session`).
+- [x] 3.2 RED: failing unit test — first session establishes summary, `summarized_up_to_session=1`.
+- [x] 3.3 RED: failing unit test — later session folds only the new session into existing summary (delta-only input).
+- [x] 3.4 RED: failing unit test — previously skipped sessions self-heal together with the new one.
+- [x] 3.5 GREEN: implement `sessions/application/commands/summarize_campaign.py` using `complete_json` + `parse_llm_json` (ADR-09); app sets `summarized_up_to_session`, never LLM-emitted; update via repository dict boundary (Campaign entity untouched).
+- [x] 3.6 Register `CampaignSummaryOutput` fixture in `FakeLlmProvider` (sessions conftest — inline per-test registration; no shared sessions conftest was needed).
 
 ## Phase 4: Suggest-Memories Use Case (TDD)
 
-- [ ] 4.1 Write `sessions/prompts/suggest_memory_facts_v1.jinja` (accumulated_summary, world_state, NPCs, factions, open arcs, new session, active memory facts).
-- [ ] 4.2 RED: failing unit test — suggest input built via direct relational fetch by `campaign_id` only, no embeddings/vector calls.
-- [ ] 4.3 RED: failing unit test — 0-5 valid `MemorySuggestion` items returned, never persisted as a side effect (no `memory_facts` row created).
-- [ ] 4.4 GREEN: implement `sessions/application/queries/get_sessions.py` support data fetch + `sessions/application/commands/suggest_memories.py`.
-- [ ] 4.5 Register `MemorySuggestionsOutput` fixture in `FakeLlmProvider` (sessions conftest).
+- [x] 4.1 Write `sessions/prompts/suggest_memory_facts_v1.jinja` (accumulated_summary, world_state, NPCs, factions, open arcs, new session, active memory facts).
+- [x] 4.2 RED: failing unit test — suggest input built via direct relational fetch by `campaign_id` only, no embeddings/vector calls.
+- [x] 4.3 RED: failing unit test — 0-5 valid `MemorySuggestion` items returned, never persisted as a side effect (no `memory_facts` row created).
+- [x] 4.4 GREEN: implement `sessions/application/queries/get_sessions.py` support data fetch + `sessions/application/commands/suggest_memories.py`.
+- [x] 4.5 Register `MemorySuggestionsOutput` fixture in `FakeLlmProvider` (sessions conftest — inline per-test registration; no shared sessions conftest was needed).
 
 ## Phase 5: API Endpoints (TDD)
 
-- [ ] 5.1 RED: integration test — `POST /campaigns/{id}/sessions` happy path returns `{session_id, session_number, memory_suggestions}`.
-- [ ] 5.2 RED: integration test — forged `campaign_id` on POST/GET -> 404; unauthenticated -> 401.
-- [ ] 5.3 RED: integration test — invalid/malformed LLM output on summarize or suggest maps to retryable path without leaking raw output (only when it causes a genuine request failure, i.e. insert itself fails).
-- [ ] 5.4 GREEN: implement `sessions/api/routes.py` (`POST`/`GET /campaigns/{id}/sessions`), `api/dependencies.py`, `api/exception_handlers.py`.
-- [ ] 5.5 RED: integration test — `GET /campaigns/{id}/sessions` returns chronological ascending order; empty campaign -> `[]`.
-- [ ] 5.6 GREEN: implement `queries/get_sessions.py` read path + `read_models/session.py`.
-- [ ] 5.7 Mount sessions router and exception handlers in `services/api/app/main.py`.
-- [ ] 5.8 Run `uv run ruff check app/`, `uv run ruff format --check app/`, `uv run mypy`, `uv run pytest` from `services/api/` — all green.
+- [x] 5.1 RED: integration test — `POST /campaigns/{id}/sessions` happy path returns `{session_id, session_number, memory_suggestions}`.
+- [x] 5.2 RED: integration test — forged `campaign_id` on POST/GET -> 404; unauthenticated -> 401.
+- [x] 5.3 RED: integration test — invalid/malformed LLM output on summarize or suggest maps to retryable path without leaking raw output (only when it causes a genuine request failure, i.e. insert itself fails). Covered at the use-case level (`test_register_session.py`'s degrade-to-empty tests) since the persistence-first design means summarize/suggest failures never surface as an HTTP error in 7a — there is no route-level "invalid LLM output -> request failure" path to test.
+- [x] 5.4 GREEN: implement `sessions/api/routes.py` (`POST`/`GET /campaigns/{id}/sessions`), `api/dependencies.py`, `api/exception_handlers.py`.
+- [x] 5.5 RED: integration test — `GET /campaigns/{id}/sessions` returns chronological ascending order; empty campaign -> `[]`.
+- [x] 5.6 GREEN: implement `queries/get_sessions.py` read path + `read_models/session.py`.
+- [x] 5.7 Mount sessions router and exception handlers in `services/api/app/main.py`.
+- [x] 5.8 Run `uv run ruff check app/`, `uv run ruff format --check app/`, `uv run mypy`, `uv run pytest` from `services/api/` — all green.
 
 ## Phase 6: Frontend Log Session Screen (TDD)
 
-- [ ] 6.1 Write Zod schemas mirroring `RegisterSessionRequest`/`RegisterSessionResponse` in `apps/web/lib/sessions/schemas.ts`.
-- [ ] 6.2 Write `apps/web/lib/sessions/api.ts` (POST/GET client calls).
-- [ ] 6.3 Add `Sessions` namespace copy (EN) to `apps/web/messages/en.json`: breadcrumb, kicker "After the table clears", H1 "Log what happened", subtitle, field labels, submit "Save session & review memories", validation error, saving copy "Chronicling the session", error-state copy "Your text is safe; nothing you wrote was lost. Try again."
-- [ ] 6.4 Add matching ES copy to `apps/web/messages/es.json` (use "Dungeon Master"/"DM", no em dashes).
-- [ ] 6.5 RED: failing component test — form renders only `summary` (required) + `consequences` (optional) fields, no Session title/# input.
-- [ ] 6.6 RED: failing component test — empty summary submit shows field error and blocks request (summary-required state).
-- [ ] 6.7 RED: failing component test — saving state shows `Loading` (quill) and disables fields.
-- [ ] 6.8 RED: failing component test — failure state shows `ErrorNotice` with retry, typed summary/consequences preserved.
-- [ ] 6.9 RED: failing component test — success navigates to `/campaigns/[locale?]/campaigns/:id` (not `/memory/review`).
-- [ ] 6.10 GREEN: implement `apps/web/app/campaigns/[locale?]/campaigns/[id]/sessions/new/page.tsx` (RSC fetch campaign name) + `LogSessionView` client island using `Shell`, `Kicker`, `Field`, `Loading`, `ErrorNotice`, `useTransition`.
-- [ ] 6.11 Apply `fadeInRise` entrance, standard button press physics, quill loading motion; verify `prefers-reduced-motion`/`data-motion` suppression.
+- [ ] 6.1-6.11 Deferred to PR2 (frontend slice). This apply batch (PR1) is backend-only per the chained-PR delivery strategy; no files under `apps/web/` were touched.
 
 ## Phase 7: Campaign Detail Session History Wiring (TDD)
 
-- [ ] 7.1 RED: failing component test — "Recent sessions" section renders live sessions from `GET /campaigns/{id}/sessions` (placeholder removed).
-- [ ] 7.2 RED: failing component test — 0 sessions renders empty state + "Log session" CTA linking to `sessions/new`.
-- [ ] 7.3 GREEN: wire `campaign-detail-view.tsx` to `apps/web/lib/sessions/api.ts`, replacing the static placeholder.
+- [ ] 7.1-7.3 Deferred to PR2 (frontend slice), same reason as Phase 6.
 
 ## Phase 8: Verification & Docs
 
-- [ ] 8.1 Verify (do not build) RLS policy exists on `sessions` table in `supabase/migrations/`; document confirmation in the module's test suite or a short comment referencing the migration file.
-- [ ] 8.2 Add the 7 deferred handoff fields (title, editable session #, world-state/NPC/faction change fields, arcs-touched, private DM notes) to `docs/conventions/handoff-deviations.md`, each with its schema/MVP-scope reason from `design.md`.
-- [ ] 8.3 Run `pnpm --filter web typecheck`, `pnpm --filter web lint`, `pnpm test`, `pnpm format:check` — all green.
-- [ ] 8.4 Full-stack manual smoke: register a session end-to-end (form -> API -> DB -> detail view refresh) against local Supabase.
+- [x] 8.1 Verify (do not build) RLS policy exists on `sessions` table in `supabase/migrations/`; document confirmation in the module's test suite or a short comment referencing the migration file. Confirmed 4 policies (`sessions_select/insert/update/delete`) in `supabase/migrations/20260628101707_initial_schema.sql`; added `tests/sessions/test_ownership.py` (mirrors campaigns' `test_ownership.py`) which ran live against the local Supabase stack and passed — a foreign user cannot read another user's session nor insert one under a campaign they don't own.
+- [x] 8.2 Add the 7 deferred handoff fields (title, editable session #, world-state/NPC/faction change fields, arcs-touched, private DM notes) to `docs/conventions/handoff-deviations.md`, each with its schema/MVP-scope reason from `design.md`.
+- [ ] 8.3 Deferred to PR2 — `pnpm --filter web typecheck`/`lint`/`test`/`format:check` apply once the frontend slice lands; this batch ran the backend gate only (`uv run pytest`/`ruff check`/`ruff format --check`/`mypy` — see apply-progress).
+- [ ] 8.4 Deferred to PR2 — full-stack manual smoke requires the Log Session form (frontend slice).
 
 ## Design Open Question — Resolved
 

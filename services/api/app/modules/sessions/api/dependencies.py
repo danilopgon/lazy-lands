@@ -1,0 +1,39 @@
+"""FastAPI dependency providers for sessions handlers.
+
+Mirrors the campaigns module's provider pattern: route bodies never wire
+infrastructure directly.
+"""
+
+from typing import Annotated
+
+from fastapi import Depends
+from supabase import Client
+
+from app.modules.sessions.application.commands.register_session import RegisterSession
+from app.modules.sessions.application.commands.suggest_memories import SuggestMemories
+from app.modules.sessions.application.commands.summarize_campaign import (
+    SummarizeCampaign,
+)
+from app.modules.sessions.application.queries.get_sessions import GetSessions
+from app.modules.sessions.infrastructure.repository import SupabaseSessionRepository
+from app.shared.database import get_user_supabase_client
+from app.shared.llm.dependencies import get_llm_provider
+from app.shared.llm.port import LlmProvider
+
+
+def provide_register_session(
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+    llm_provider: Annotated[LlmProvider, Depends(get_llm_provider)],
+) -> RegisterSession:
+    """Build the RegisterSession command handler with its collaborators."""
+    repository = SupabaseSessionRepository(client)
+    summarize = SummarizeCampaign(llm_provider=llm_provider, repository=repository)
+    suggest = SuggestMemories(llm_provider=llm_provider, repository=repository)
+    return RegisterSession(repository, summarize, suggest)
+
+
+def provide_get_sessions(
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+) -> GetSessions:
+    """Build the GetSessions query handler with the caller-scoped repository."""
+    return GetSessions(SupabaseSessionRepository(client))
