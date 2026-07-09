@@ -28,8 +28,8 @@ complex relationship graphs, visual timeline, and advanced memory compiler.
 | 4 | Auth | done |
 | 5 | Campaign creation and AI onboarding | done |
 | 6 | Campaign view | done |
-| 7 | Sessions: post-session registration | pending |
-| 8 | Session generation and editing | pending |
+| 7 | Sessions: post-session registration and memory review | done |
+| 8 | Session generation and editing | in progress |
 | 9 | PDF export | pending |
 | 10 | Testing and quality | pending |
 
@@ -177,7 +177,7 @@ Status: **done**
 
 ## Block 7 — Sessions: post-session registration and memory review
 
-Status: **pending**
+Status: **done**
 
 ### Session registration
 
@@ -195,25 +195,25 @@ Status: **pending**
 
 ### Memory suggestions (MVP — part of the core DM flow)
 
-- [ ] Frontend renders the `memory_suggestions` list returned by the session save endpoint.
-- [ ] Each suggestion shows: content, type, importance and reason.
-- [ ] DM can **accept** a suggestion → `POST /campaigns/{campaign_id}/memory-facts` creates a
+- [x] Frontend renders the `memory_suggestions` list returned by the session save endpoint.
+- [x] Each suggestion shows: content, type, importance and reason.
+- [x] DM can **accept** a suggestion → `POST /campaigns/{campaign_id}/memory-facts` creates a
   `MemoryFact` with `status=active`. Only the accepted (and optionally edited) content is
   stored — never the raw suggestion automatically.
-- [ ] DM can **reject** a suggestion → no request is sent; the suggestion is discarded.
-- [ ] DM can **edit** a suggestion before accepting → the edited content is sent to
+- [x] DM can **reject** a suggestion → no request is sent; the suggestion is discarded.
+- [x] DM can **edit** a suggestion before accepting → the edited content is sent to
   `POST /campaigns/{campaign_id}/memory-facts`; the original suggestion is not stored.
-- [ ] RLS active on the `memory_facts` table.
+- [x] RLS active on the `memory_facts` table.
 
 ---
 
 ## Block 8 — Session generation and editing
 
-Status: **pending**
+Status: **in progress** (SDD planning complete; stacked-to-main chained PRs: PR 1 backend → PR 2 frontend)
 
 ### Generation
 
-- [ ] FastAPI endpoint `POST /sessions/generate` — receives `campaign_id`.
+- [ ] FastAPI endpoint `POST /campaigns/{campaign_id}/generate-session` — receives `campaign_id` + optional direction params.
 - [ ] `GenerateNextSessionUseCase` builds compressed context: `accumulated_summary` (covers all
   sessions up to and including the last played one) + NPCs + factions + open arcs +
   **active `MemoryFacts`** (~2,000 tokens maximum). Unaccepted suggestions are excluded
