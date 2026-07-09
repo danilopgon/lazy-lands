@@ -310,7 +310,9 @@ function ActiveMemoriesPanel({
           </p>
           <p className="mt-1 text-xs text-[var(--ink-3)]">
             {t('detail.memorySource', {
-              source: memory.source_session_id ?? t('detail.manualMemory'),
+              source: memory.source_session_id
+                ? t('detail.linkedMemory')
+                : t('detail.manualMemory'),
             })}
           </p>
         </div>

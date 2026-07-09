@@ -211,6 +211,34 @@ describe('LogSessionPage (Block 7a session-log-ui)', () => {
     })
   })
 
+  it('still opens memory review when best-effort draft persistence fails', async () => {
+    const user = userEvent.setup()
+    mockRegisterSession.mockResolvedValue({
+      session_id: 'sess-1',
+      session_number: 1,
+      memory_suggestions: [],
+    })
+    mockWriteMemoryReviewDraft.mockImplementation(() => {
+      throw new Error('sessionStorage unavailable')
+    })
+    renderPage()
+
+    await screen.findByRole('heading', { name: /log what happened/i })
+    await user.type(
+      screen.getByLabelText(/what happened/i),
+      'The party arrived in town.'
+    )
+    await user.click(
+      screen.getByRole('button', { name: /save session & review memories/i })
+    )
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith(
+        '/campaigns/camp-1/memory/review?session=sess-1'
+      )
+    })
+  })
+
   it('preserves typed text and shows an error notice on failure', async () => {
     const user = userEvent.setup()
     const { SessionApiError } = await import('@/lib/sessions/api')

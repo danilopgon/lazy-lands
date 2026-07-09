@@ -9,6 +9,7 @@ import {
   getMemoryFacts,
   MemoryApiError,
   MemoryCampaignNotFoundError,
+  MemoryFactNotFoundError,
   updateMemoryFact,
 } from '@/lib/memory/api'
 
@@ -95,5 +96,17 @@ describe('memory api client', () => {
     await expect(
       createMemoryFact('camp-1', { content: 'x' })
     ).rejects.toBeInstanceOf(MemoryApiError)
+  })
+
+  it('maps update 404s to MemoryFactNotFoundError', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Memory fact not found.' }), {
+        status: 404,
+      })
+    )
+
+    await expect(
+      updateMemoryFact('missing-memory', { status: 'archived' })
+    ).rejects.toBeInstanceOf(MemoryFactNotFoundError)
   })
 })

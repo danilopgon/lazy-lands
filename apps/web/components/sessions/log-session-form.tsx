@@ -68,12 +68,17 @@ export function LogSessionForm({ campaignId }: LogSessionFormProps) {
         consequences: data.consequences?.trim() ? data.consequences : undefined,
       }),
     onSuccess: (response) => {
-      writeMemoryReviewDraft({
-        campaign_id: campaignId,
-        session_id: response.session_id,
-        session_number: response.session_number,
-        memory_suggestions: response.memory_suggestions,
-      })
+      try {
+        writeMemoryReviewDraft({
+          campaign_id: campaignId,
+          session_id: response.session_id,
+          session_number: response.session_number,
+          memory_suggestions: response.memory_suggestions,
+        })
+      } catch {
+        // Draft storage is best-effort. Navigation still lets the DM continue
+        // to the safe empty review state if sessionStorage is unavailable.
+      }
       router.push(
         `/campaigns/${campaignId}/memory/review?session=${response.session_id}`
       )

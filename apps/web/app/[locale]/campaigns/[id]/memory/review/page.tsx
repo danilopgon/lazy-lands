@@ -35,6 +35,7 @@ type PendingSuggestion = MemorySuggestion & {
 }
 
 type Feedback = 'accepted' | 'edited' | 'dismissed' | 'retired' | null
+type ActionError = 'create' | 'retire' | null
 
 /** Creates a stable client-only key for transient suggestions that have no persisted ID. */
 function suggestionId(suggestion: MemorySuggestion, index: number) {
@@ -82,6 +83,7 @@ export default function MemoryReviewPage() {
   const [editing, setEditing] = useState<string | null>(null)
   const [fx, setFx] = useState<Record<string, 'stamping' | 'discarding'>>({})
   const [feedback, setFeedback] = useState<Feedback>(null)
+  const [actionError, setActionError] = useState<ActionError>(null)
 
   const campaignQuery = useQuery({
     queryKey: ['campaign', campaignId],
@@ -164,6 +166,7 @@ export default function MemoryReviewPage() {
       }),
     onSuccess: (_fact, variables) => {
       setEditing(null)
+      setActionError(null)
       setFeedback(
         variables.content === variables.suggestion.content
           ? 'accepted'
@@ -185,16 +188,23 @@ export default function MemoryReviewPage() {
         })
       }, 120)
     },
+    onError: () => {
+      setActionError('create')
+    },
   })
 
   const retireMutation = useMutation({
     mutationFn: (memoryId: string) =>
       updateMemoryFact(memoryId, { status: 'archived' }),
     onSuccess: () => {
+      setActionError(null)
       setFeedback('retired')
       void queryClient.invalidateQueries({
         queryKey: ['campaign', campaignId, 'memory-facts', 'active'],
       })
+    },
+    onError: () => {
+      setActionError('retire')
     },
   })
 
@@ -208,6 +218,7 @@ export default function MemoryReviewPage() {
         delete next[suggestion.id]
         return next
       })
+      setActionError(null)
       setFeedback('dismissed')
     }, 120)
   }
@@ -289,6 +300,12 @@ export default function MemoryReviewPage() {
       {feedback ? (
         <Notice className="mt-5" variant="plain" role="status">
           {t(`feedback.${feedback}`)}
+        </Notice>
+      ) : null}
+
+      {actionError ? (
+        <Notice className="mt-5" variant="error" ornament="⚠" role="alert">
+          {t(`actionError.${actionError}`)}
         </Notice>
       ) : null}
 

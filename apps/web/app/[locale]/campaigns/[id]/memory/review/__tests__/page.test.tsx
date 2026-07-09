@@ -280,6 +280,40 @@ describe('MemoryReviewPage', () => {
     })
   })
 
+  it('keeps a failed accept retryable and shows feedback', async () => {
+    const user = userEvent.setup()
+    mockCreateMemoryFact.mockRejectedValue(new Error('network'))
+
+    renderPage()
+
+    await user.click(
+      await screen.findByRole('button', { name: /accept as memory/i })
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/could not stamp/i)
+    })
+    expect(screen.getByText(/captain vess owes/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /accept as memory/i })
+    ).toBeEnabled()
+  })
+
+  it('keeps a failed retire retryable and shows feedback', async () => {
+    const user = userEvent.setup()
+    mockUpdateMemoryFact.mockRejectedValue(new Error('network'))
+
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: /retire/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/could not retire/i)
+    })
+    expect(screen.getByText(/the guild remembers/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /retire/i })).toBeEnabled()
+  })
+
   it('dismisses a suggestion without creating a memory fact', async () => {
     const user = userEvent.setup()
 

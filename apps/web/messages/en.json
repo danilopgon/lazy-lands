@@ -297,7 +297,8 @@
       "memoriesLoadError": "Could not load active memories.",
       "noActiveMemories": "No memories yet",
       "memorySource": "Accepted · {source}",
-      "manualMemory": "Manual note"
+      "manualMemory": "Manual note",
+      "linkedMemory": "Linked session"
     },
     "worldState": {
       "empty": "No world state recorded yet.",
@@ -472,6 +473,10 @@
       "edited": "Edited & stamped into the chronicle",
       "dismissed": "Struck out. The Scribe will not bring it up again.",
       "retired": "Memory retired from the chronicle"
+    },
+    "actionError": {
+      "create": "Could not stamp that memory into the chronicle. Your suggestion is still here; try again.",
+      "retire": "Could not retire that memory. It is still active; try again."
     }
   },
   "Entities": {

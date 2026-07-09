@@ -297,7 +297,8 @@
       "memoriesLoadError": "No se pudieron cargar las memorias activas.",
       "noActiveMemories": "Aún no hay memorias",
       "memorySource": "Aceptada · {source}",
-      "manualMemory": "Nota manual"
+      "manualMemory": "Nota manual",
+      "linkedMemory": "Sesión vinculada"
     },
     "worldState": {
       "empty": "Aún no hay estado del mundo registrado.",
@@ -472,6 +473,10 @@
       "edited": "Editada y sellada en la crónica",
       "dismissed": "Tachada. El Escriba no volverá a proponerla.",
       "retired": "Memoria retirada de la crónica"
+    },
+    "actionError": {
+      "create": "No se pudo sellar esa memoria en la crónica. La sugerencia sigue aquí; inténtalo de nuevo.",
+      "retire": "No se pudo retirar esa memoria. Sigue activa; inténtalo de nuevo."
     }
   },
   "Entities": {

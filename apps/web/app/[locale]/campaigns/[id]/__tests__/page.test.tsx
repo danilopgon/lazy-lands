@@ -234,6 +234,8 @@ describe('CampaignDetailPage', () => {
         screen.getByText(/the guild remembers the arson/i)
       ).toBeInTheDocument()
     })
+    expect(screen.getByText(/accepted · linked session/i)).toBeInTheDocument()
+    expect(screen.queryByText(/sess-1/i)).not.toBeInTheDocument()
     expect(
       screen.queryByText(/coming in a later chapter/i)
     ).not.toBeInTheDocument()

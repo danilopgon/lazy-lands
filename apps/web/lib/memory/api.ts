@@ -19,6 +19,8 @@ export class MemoryApiError extends Error {}
 
 export class MemoryCampaignNotFoundError extends MemoryApiError {}
 
+export class MemoryFactNotFoundError extends MemoryApiError {}
+
 /** Extracts the most specific backend validation message the UI can safely show. */
 async function extractErrorMessage(response: Response): Promise<string> {
   try {
@@ -44,8 +46,15 @@ async function extractErrorMessage(response: Response): Promise<string> {
 }
 
 /** Converts HTTP failures into typed memory-domain client errors. */
-function throwForStatus(response: Response, message: string): never {
+function throwForStatus(
+  response: Response,
+  message: string,
+  notFoundKind: 'campaign' | 'memoryFact' = 'campaign'
+): never {
   if (response.status === 404) {
+    if (notFoundKind === 'memoryFact') {
+      throw new MemoryFactNotFoundError(message)
+    }
     throw new MemoryCampaignNotFoundError(message)
   }
   throw new MemoryApiError(message)
@@ -100,7 +109,7 @@ export async function updateMemoryFact(
   })
 
   if (!response.ok) {
-    throwForStatus(response, await extractErrorMessage(response))
+    throwForStatus(response, await extractErrorMessage(response), 'memoryFact')
   }
 
   return memoryFactResponseSchema.parse(await response.json())
