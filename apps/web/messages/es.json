@@ -447,6 +447,22 @@
     "scribeProposes": "❧ El Escriba propone...",
     "acceptedStamp": "★ Aceptada",
     "importance": "Importancia · {importance}",
+    "importanceValue": {
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja"
+    },
+    "memoryType": {
+      "consequence": "Consecuencia",
+      "relationship": "Relación",
+      "secret": "Secreto",
+      "promise": "Promesa",
+      "tension": "Tensión",
+      "revelation": "Revelación",
+      "item": "Objeto",
+      "arc_progress": "Avance de arco"
+    },
+    "memoryTypeUnknown": "{type}",
     "touches": "Toca:",
     "none": "Ninguna",
     "accept": "Aceptar como memoria",

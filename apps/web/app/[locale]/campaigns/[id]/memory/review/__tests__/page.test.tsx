@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import en from '@/messages/en.json'
+import es from '@/messages/es.json'
 
 const {
   mockGetCampaignDetail,
@@ -138,6 +139,19 @@ function renderPage() {
   )
 }
 
+function renderPageEs() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  return render(
+    <NextIntlClientProvider locale="es" messages={es}>
+      <QueryClientProvider client={queryClient}>
+        <MemoryReviewPage />
+      </QueryClientProvider>
+    </NextIntlClientProvider>
+  )
+}
+
 describe('MemoryReviewPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -178,6 +192,17 @@ describe('MemoryReviewPage', () => {
     expect(screen.getByText(/the favor changes future/i)).toBeInTheDocument()
     expect(screen.getByText(/the guild remembers/i)).toBeInTheDocument()
     expect(screen.getByText(/accepted · session 7/i)).toBeInTheDocument()
+  })
+
+  it('localizes the importance value and type chip in Spanish', async () => {
+    renderPageEs()
+
+    await screen.findByText(/Los márgenes del Escriba/i)
+    // importance value is translated, not the raw enum token "high"
+    expect(screen.getByText(/Importancia · Alta/i)).toBeInTheDocument()
+    // type chip is translated for enum value "relationship"
+    expect(screen.getByText('Relación')).toBeInTheDocument()
+    expect(screen.queryByText(/relationship/i)).not.toBeInTheDocument()
   })
 
   it('shows direct-link empty pending and empty active states', async () => {

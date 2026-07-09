@@ -15,7 +15,7 @@ const validDraft = {
   memory_suggestions: [
     {
       content: 'Captain Vess owes the party a favor.',
-      type: 'relationship',
+      type: 'relationship' as const,
       importance: 'high' as const,
       reason: 'The favor changes future negotiations.',
       related: ['Captain Vess'],
@@ -86,7 +86,7 @@ describe('memory review draft storage', () => {
         validDraft.memory_suggestions[0],
         {
           content: 'The warehouse fire exposed guild ledgers.',
-          type: 'consequence',
+          type: 'consequence' as const,
           importance: 'medium' as const,
           reason: 'Future faction pressure depends on this evidence.',
           related: ['Black Bear Guild'],
@@ -97,8 +97,8 @@ describe('memory review draft storage', () => {
     rewriteMemoryReviewDraftSuggestions('camp-1', 'sess-1', [
       {
         content: 'The warehouse fire exposed guild ledgers.',
-        type: 'consequence',
-        importance: 'medium',
+        type: 'consequence' as const,
+        importance: 'medium' as const,
         reason: 'Future faction pressure depends on this evidence.',
         related: ['Black Bear Guild'],
       },

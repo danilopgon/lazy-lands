@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.modules.memory.domain.enums import Importance, MemoryStatus
+from app.modules.memory.domain.enums import Importance, MemoryStatus, MemoryType
 
 
 class CreateMemoryFactRequest(BaseModel):
@@ -10,7 +10,7 @@ class CreateMemoryFactRequest(BaseModel):
 
     source_session_id: str | None = None
     content: str = Field(min_length=1, max_length=2000)
-    type: str | None = Field(default=None, min_length=1, max_length=100)
+    type: MemoryType | None = None
     importance: Importance | None = None
 
 

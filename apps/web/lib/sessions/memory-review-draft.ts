@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-param, jsdoc/require-returns */
 import { z } from 'zod'
 
 import { memorySuggestionSchema } from './schemas'
@@ -18,12 +17,23 @@ const memoryReviewDraftSchema = z.object({
 export type MemoryReviewDraft = z.infer<typeof memoryReviewDraftSchema>
 export type MemoryReviewDraftInput = Omit<MemoryReviewDraft, 'version'>
 
-/** Builds the versioned storage key that isolates drafts by campaign and source session. */
+/**
+ * Builds the versioned storage key that isolates drafts by campaign and source session.
+ *
+ * @param {string} campaignId - The campaign that owns the draft.
+ * @param {string} sessionId - The session whose suggestions are being reviewed.
+ * @returns {string} The scoped session-storage key.
+ */
 function storageKey(campaignId: string, sessionId: string) {
   return `${PREFIX}:${campaignId}:${sessionId}`
 }
 
-/** Stores only a validated transient review draft in session storage. */
+/**
+ * Stores only a validated transient review draft in session storage.
+ *
+ * @param {MemoryReviewDraftInput} input - The draft data, excluding the auto-set version field.
+ * @returns {void}
+ */
 export function writeMemoryReviewDraft(input: MemoryReviewDraftInput): void {
   if (typeof window === 'undefined') return
   const draft = memoryReviewDraftSchema.parse({ version: VERSION, ...input })
@@ -33,7 +43,13 @@ export function writeMemoryReviewDraft(input: MemoryReviewDraftInput): void {
   )
 }
 
-/** Reads a scoped draft and removes corrupt or mismatched data before it can render. */
+/**
+ * Reads a scoped draft and removes corrupt or mismatched data before it can render.
+ *
+ * @param {string} campaignId - The campaign that owns the draft.
+ * @param {string} sessionId - The session whose suggestions are being reviewed.
+ * @returns {MemoryReviewDraft | null} The validated draft, or null if missing or corrupt.
+ */
 export function readMemoryReviewDraft(
   campaignId: string,
   sessionId: string
@@ -56,7 +72,13 @@ export function readMemoryReviewDraft(
   }
 }
 
-/** Removes one scoped draft without touching other in-progress session reviews. */
+/**
+ * Removes one scoped draft without touching other in-progress session reviews.
+ *
+ * @param {string} campaignId - The campaign that owns the draft.
+ * @param {string} sessionId - The session whose draft to clear.
+ * @returns {void}
+ */
 export function clearMemoryReviewDraft(
   campaignId: string,
   sessionId: string
@@ -65,7 +87,14 @@ export function clearMemoryReviewDraft(
   sessionStorage.removeItem(storageKey(campaignId, sessionId))
 }
 
-/** Rewrites a scoped draft after a suggestion is accepted or dismissed. */
+/**
+ * Rewrites a scoped draft after a suggestion is accepted or dismissed.
+ *
+ * @param {string} campaignId - The campaign that owns the draft.
+ * @param {string} sessionId - The session whose suggestions to rewrite.
+ * @param {MemorySuggestion[]} remainingSuggestions - The suggestions that still await review.
+ * @returns {void}
+ */
 export function rewriteMemoryReviewDraftSuggestions(
   campaignId: string,
   sessionId: string,
@@ -87,7 +116,13 @@ export function rewriteMemoryReviewDraftSuggestions(
   })
 }
 
-/** Clears the draft once the DM has finished reviewing every pending suggestion. */
+/**
+ * Clears the draft once the DM has finished reviewing every pending suggestion.
+ *
+ * @param {string} campaignId - The campaign that owns the draft.
+ * @param {string} sessionId - The session whose review is complete.
+ * @returns {void}
+ */
 export function completeMemoryReviewDraft(
   campaignId: string,
   sessionId: string

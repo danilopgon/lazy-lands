@@ -16,3 +16,22 @@ class MemoryStatus(StrEnum):
 
     active = "active"
     archived = "archived"
+
+
+class MemoryType(StrEnum):
+    """Finite vocabulary for Scribe memory suggestions.
+
+    Mirrors ``app.modules.sessions.domain.enums.MemoryType``. The
+    ``memory_facts.type`` column stays free-text so existing rows are never
+    rejected at the DB boundary; this enum closes the vocabulary only for
+    Scribe-emitted and DM-accepted writes.
+    """
+
+    consequence = "consequence"
+    relationship = "relationship"
+    secret = "secret"
+    promise = "promise"
+    tension = "tension"
+    revelation = "revelation"
+    item = "item"
+    arc_progress = "arc_progress"

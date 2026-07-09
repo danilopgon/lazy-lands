@@ -6,10 +6,27 @@ export type Importance = z.infer<typeof importanceSchema>
 export const memoryStatusSchema = z.enum(['active', 'archived'])
 export type MemoryStatus = z.infer<typeof memoryStatusSchema>
 
+// Mirrors services/api/app/modules/memory/domain/enums.py `MemoryType`.
+// Scribe-emitted and DM-accepted writes use the finite vocabulary below. The
+// read model (`memoryFactResponseSchema.type`) stays a free-text string so
+// legacy DB rows with previously invented type values are never rejected by
+// the frontend.
+export const memoryTypeSchema = z.enum([
+  'consequence',
+  'relationship',
+  'secret',
+  'promise',
+  'tension',
+  'revelation',
+  'item',
+  'arc_progress',
+])
+export type MemoryType = z.infer<typeof memoryTypeSchema>
+
 export const createMemoryFactRequestSchema = z.object({
   source_session_id: z.string().optional(),
   content: z.string().trim().min(1).max(2000),
-  type: z.string().trim().min(1).max(100).optional(),
+  type: memoryTypeSchema.optional(),
   importance: importanceSchema.optional(),
 })
 export type CreateMemoryFactRequest = z.infer<

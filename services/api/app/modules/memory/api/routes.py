@@ -45,7 +45,7 @@ async def create_memory_fact(
     command = CreateMemoryFactCommand(
         source_session_id=payload.source_session_id,
         content=payload.content,
-        type=payload.type,
+        type=payload.type.value if payload.type else None,
         importance=payload.importance.value if payload.importance else None,
     )
     return await run_in_threadpool(handler.execute, campaign_id, command)

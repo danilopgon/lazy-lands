@@ -447,6 +447,22 @@
     "scribeProposes": "❧ The Scribe proposes...",
     "acceptedStamp": "★ Accepted",
     "importance": "Importance · {importance}",
+    "importanceValue": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "memoryType": {
+      "consequence": "Consequence",
+      "relationship": "Relationship",
+      "secret": "Secret",
+      "promise": "Promise",
+      "tension": "Tension",
+      "revelation": "Revelation",
+      "item": "Item",
+      "arc_progress": "Arc progress"
+    },
+    "memoryTypeUnknown": "{type}",
     "touches": "Touches:",
     "none": "None",
     "accept": "Accept as memory",

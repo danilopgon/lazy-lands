@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-param, jsdoc/require-returns */
 'use client'
 
 import { Link } from '@/i18n/navigation'
@@ -242,7 +241,17 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
   )
 }
 
-/** Renders live active memories without fabricating placeholder chronicle entries. */
+/**
+ * Renders live active memories without fabricating placeholder chronicle entries.
+ *
+ * @param {object} root0 - The active memories panel props.
+ * @param {boolean} root0.isLoading - Whether the facts query is loading.
+ * @param {boolean} root0.isError - Whether the facts query errored.
+ * @param {Awaited<ReturnType<typeof getMemoryFacts>>} root0.memories - Active memory facts to render.
+ * @param {string} root0.retryLabel - Label for the retry control.
+ * @param {() => void} root0.onRetry - Retry the facts query.
+ * @returns {React.ReactElement} The active memories panel element.
+ */
 function ActiveMemoriesPanel({
   isLoading,
   isError,

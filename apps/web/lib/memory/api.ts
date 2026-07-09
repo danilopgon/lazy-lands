@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-param, jsdoc/require-returns */
 import { apiFetch } from '@/lib/api'
 
 import { z } from 'zod'
@@ -21,7 +20,12 @@ export class MemoryCampaignNotFoundError extends MemoryApiError {}
 
 export class MemoryFactNotFoundError extends MemoryApiError {}
 
-/** Extracts the most specific backend validation message the UI can safely show. */
+/**
+ * Extracts the most specific backend validation message the UI can safely show.
+ *
+ * @param {Response} response - The fetch response to inspect.
+ * @returns {Promise<string>} A user-safe error message, with a fallback if parsing fails.
+ */
 async function extractErrorMessage(response: Response): Promise<string> {
   try {
     const body: unknown = await response.json()
@@ -45,7 +49,16 @@ async function extractErrorMessage(response: Response): Promise<string> {
   return FALLBACK_ERROR_MESSAGE
 }
 
-/** Converts HTTP failures into typed memory-domain client errors. */
+/**
+ * Converts HTTP failures into typed memory-domain client errors.
+ *
+ * @param {Response} response - The fetch response to classify.
+ * @param {string} message - The error message to attach.
+ * @param {'campaign' | 'memoryFact'} notFoundKind - Which not-found error type to raise on 404.
+ * @throws {MemoryFactNotFoundError} On 404 with the memoryFact kind.
+ * @throws {MemoryCampaignNotFoundError} On 404 with the campaign kind.
+ * @throws {MemoryApiError} On any other non-404 failure.
+ */
 function throwForStatus(
   response: Response,
   message: string,
@@ -60,7 +73,13 @@ function throwForStatus(
   throw new MemoryApiError(message)
 }
 
-/** Persists a DM-accepted memory fact under the owned campaign. */
+/**
+ * Persists a DM-accepted memory fact under the owned campaign.
+ *
+ * @param {string} campaignId - The campaign that owns the memory fact.
+ * @param {CreateMemoryFactRequest} payload - The validated creation payload.
+ * @returns {Promise<MemoryFactResponse>} The created memory fact.
+ */
 export async function createMemoryFact(
   campaignId: string,
   payload: CreateMemoryFactRequest
@@ -79,7 +98,14 @@ export async function createMemoryFact(
   return memoryFactResponseSchema.parse(await response.json())
 }
 
-/** Loads campaign memory facts, optionally constrained to active facts for review surfaces. */
+/**
+ * Loads campaign memory facts, optionally constrained to active facts for review surfaces.
+ *
+ * @param {string} campaignId - The campaign that owns the memory facts.
+ * @param {object} [options] - Optional query parameters.
+ * @param {MemoryStatus} [options.status] - Filter by memory status.
+ * @returns {Promise<MemoryFactResponse[]>} The matching memory facts.
+ */
 export async function getMemoryFacts(
   campaignId: string,
   options: { status?: MemoryStatus } = {}
@@ -96,7 +122,13 @@ export async function getMemoryFacts(
   return z.array(memoryFactResponseSchema).parse(await response.json())
 }
 
-/** Updates an existing memory fact, including archive-style retirement. */
+/**
+ * Updates an existing memory fact, including archive-style retirement.
+ *
+ * @param {string} memoryFactId - The memory fact to update.
+ * @param {UpdateMemoryFactRequest} payload - The validated update payload.
+ * @returns {Promise<MemoryFactResponse>} The updated memory fact.
+ */
 export async function updateMemoryFact(
   memoryFactId: string,
   payload: UpdateMemoryFactRequest

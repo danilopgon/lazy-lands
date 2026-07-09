@@ -15,7 +15,7 @@ VALID_PAYLOAD = {
     "suggestions": [
         {
             "content": "Captain Vess is hiding in the harbor district.",
-            "type": "npc",
+            "type": "revelation",
             "importance": "medium",
             "reason": "Introduced this session.",
             "related": [],

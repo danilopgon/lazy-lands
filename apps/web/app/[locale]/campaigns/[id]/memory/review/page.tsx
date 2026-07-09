@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-param, jsdoc/require-returns */
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -37,12 +36,23 @@ type PendingSuggestion = MemorySuggestion & {
 type Feedback = 'accepted' | 'edited' | 'dismissed' | 'retired' | null
 type ActionError = 'create' | 'retire' | null
 
-/** Creates a stable client-only key for transient suggestions that have no persisted ID. */
+/**
+ * Creates a stable client-only key for transient suggestions that have no persisted ID.
+ *
+ * @param {MemorySuggestion} suggestion - The suggestion to identify.
+ * @param {number} index - Position of the suggestion within the draft list.
+ * @returns {string} A stable composite key.
+ */
 function suggestionId(suggestion: MemorySuggestion, index: number) {
   return `${suggestion.type}:${suggestion.content}:${index}`
 }
 
-/** Converts a validated draft into renderable pending suggestions without persisting them. */
+/**
+ * Converts a validated draft into renderable pending suggestions without persisting them.
+ *
+ * @param {MemoryReviewDraft | null} draft - The stored review draft, if any.
+ * @returns {PendingSuggestion[]} Pending suggestions keyed for render-only state.
+ */
 function readPendingSuggestions(
   draft: MemoryReviewDraft | null
 ): PendingSuggestion[] {
@@ -54,7 +64,12 @@ function readPendingSuggestions(
     : []
 }
 
-/** Removes the render-only key before rewriting the transient storage draft. */
+/**
+ * Removes the render-only key before rewriting the transient storage draft.
+ *
+ * @param {PendingSuggestion} suggestion - The pending suggestion to strip.
+ * @returns {MemorySuggestion} The suggestion without its transient id.
+ */
 function toMemorySuggestion(suggestion: PendingSuggestion): MemorySuggestion {
   return {
     content: suggestion.content,
@@ -65,7 +80,11 @@ function toMemorySuggestion(suggestion: PendingSuggestion): MemorySuggestion {
   }
 }
 
-/** Runs the DM-only review screen where suggestions become facts only after confirmation. */
+/**
+ * Runs the DM-only review screen where suggestions become facts only after confirmation.
+ *
+ * @returns {React.ReactElement} The memory review page element.
+ */
 export default function MemoryReviewPage() {
   const params = useParams<{ id: string }>()
   const searchParams = useSearchParams()
@@ -135,7 +154,12 @@ export default function MemoryReviewPage() {
     }
   }, [campaignId, isDraftLoaded, loadedDraftKey, pending.length, sessionId])
 
-  /** Removes a processed suggestion from UI state and the scoped transient draft. */
+  /**
+   * Removes a processed suggestion from UI state and the scoped transient draft.
+   *
+   * @param {string} suggestionIdToRemove - The render-only id of the suggestion to remove.
+   * @returns {void}
+   */
   function removePendingSuggestion(suggestionIdToRemove: string) {
     setPending((items) => {
       const remaining = items.filter((item) => item.id !== suggestionIdToRemove)
@@ -208,7 +232,12 @@ export default function MemoryReviewPage() {
     },
   })
 
-  /** Removes a proposal locally so dismissed Scribe output never reaches the API. */
+  /**
+   * Removes a proposal locally so dismissed Scribe output never reaches the API.
+   *
+   * @param {PendingSuggestion} suggestion - The suggestion being dismissed.
+   * @returns {void}
+   */
   function dismissSuggestion(suggestion: PendingSuggestion) {
     setFx((current) => ({ ...current, [suggestion.id]: 'discarding' }))
     window.setTimeout(() => {
@@ -401,7 +430,14 @@ export default function MemoryReviewPage() {
   )
 }
 
-/** Keeps retry actions visually quiet while preserving an accessible button. */
+/**
+ * Keeps retry actions visually quiet while preserving an accessible button.
+ *
+ * @param {object} root0 - The retry button props.
+ * @param {string} root0.label - The actionable label.
+ * @param {() => void} root0.onRetry - The retry callback.
+ * @returns {React.ReactElement} The retry button element.
+ */
 function RetryButton({
   label,
   onRetry,
@@ -420,7 +456,18 @@ function RetryButton({
   )
 }
 
-/** Renders a single Scribe proposal with accept, edit, and dismiss affordances. */
+/**
+ * Renders a single Scribe proposal with accept, edit, and dismiss affordances.
+ *
+ * @param {object} root0 - The suggestion card props.
+ * @param {PendingSuggestion} root0.suggestion - The pending suggestion to render.
+ * @param {'stamping' | 'discarding' | undefined} root0.fx - Optional transient feedback state.
+ * @param {boolean} root0.isBusy - Whether a mutation is in flight.
+ * @param {() => void} root0.onAccept - Accept the suggestion as-is.
+ * @param {() => void} root0.onEdit - Switch to the inline editor.
+ * @param {() => void} root0.onDismiss - Remove the suggestion from the draft.
+ * @returns {React.ReactElement} The suggestion card element.
+ */
 function SuggestionCard({
   suggestion,
   fx,
@@ -458,10 +505,12 @@ function SuggestionCard({
       <div className="px-5 py-4">
         <div className="mb-3 flex flex-wrap gap-2">
           <span className="border border-[var(--accent)] bg-[var(--accent-wash)] px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-            {suggestion.type}
+            {t(`memoryType.${suggestion.type}`)}
           </span>
           <span className="border border-[var(--dotted)] px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)]">
-            {t('importance', { importance: suggestion.importance })}
+            {t('importance', {
+              importance: t(`importanceValue.${suggestion.importance}`),
+            })}
           </span>
         </div>
         <blockquote
@@ -502,7 +551,16 @@ function SuggestionCard({
   )
 }
 
-/** Lets the DM change suggested text before accepting it as canonical memory. */
+/**
+ * Lets the DM change suggested text before accepting it as canonical memory.
+ *
+ * @param {object} root0 - The suggestion editor props.
+ * @param {PendingSuggestion} root0.suggestion - The suggestion being edited.
+ * @param {boolean} root0.isBusy - Whether a mutation is in flight.
+ * @param {(content: string) => void} root0.onSave - Persist the edited text.
+ * @param {() => void} root0.onCancel - Abort editing and return to the card.
+ * @returns {React.ReactElement} The suggestion editor element.
+ */
 function SuggestionEditor({
   suggestion,
   isBusy,
@@ -522,7 +580,7 @@ function SuggestionEditor({
       <div className="px-5 py-4">
         <div className="mb-3 flex flex-wrap gap-2">
           <span className="border border-[var(--accent)] bg-[var(--accent-wash)] px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-            {suggestion.type}
+            {t(`memoryType.${suggestion.type}`)}
           </span>
           <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)]">
             {t('editing')}
@@ -552,7 +610,20 @@ function SuggestionEditor({
   )
 }
 
-/** Shows the active facts that will feed future session preparation. */
+/**
+ * Shows the active facts that will feed future session preparation.
+ *
+ * @param {object} root0 - The active memories props.
+ * @param {MemoryFactResponse[]} root0.memories - Active memory facts to render.
+ * @param {boolean} root0.isLoading - Whether the facts query is loading.
+ * @param {boolean} root0.isError - Whether the facts query errored.
+ * @param {boolean} root0.isBusy - Whether a retire mutation is in flight.
+ * @param {string} root0.retryLabel - Label for the retry control.
+ * @param {(sourceSessionId?: string | null) => string} root0.sourceLabelFor - Maps a source session id to a label.
+ * @param {() => void} root0.onRetry - Retry the facts query.
+ * @param {(memory: MemoryFactResponse) => void} root0.onRetire - Retire a memory fact.
+ * @returns {React.ReactElement} The active memories element.
+ */
 function ActiveMemories({
   memories,
   isLoading,
@@ -613,7 +684,7 @@ function ActiveMemories({
           <div className="min-w-0">
             {memory.type ? (
               <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
-                {memory.type}
+                {t(`memoryType.${memory.type}`)}
               </span>
             ) : null}
             <p className="mt-1 font-serif text-[14.5px] leading-relaxed text-[var(--ink)]">
