@@ -24,6 +24,7 @@ import type { MemoryFactResponse } from '@/lib/memory/schemas'
 import {
   completeMemoryReviewDraft,
   readMemoryReviewDraft,
+  rewriteMemoryReviewDraftSuggestions,
   type MemoryReviewDraft,
 } from '@/lib/sessions/memory-review-draft'
 import type { MemorySuggestion } from '@/lib/sessions/schemas'
@@ -52,6 +53,17 @@ function readPendingSuggestions(
     : []
 }
 
+/** Removes the render-only key before rewriting the transient storage draft. */
+function toMemorySuggestion(suggestion: PendingSuggestion): MemorySuggestion {
+  return {
+    content: suggestion.content,
+    type: suggestion.type,
+    importance: suggestion.importance,
+    reason: suggestion.reason,
+    related: suggestion.related,
+  }
+}
+
 /** Runs the DM-only review screen where suggestions become facts only after confirmation. */
 export default function MemoryReviewPage() {
   const params = useParams<{ id: string }>()
@@ -63,12 +75,10 @@ export default function MemoryReviewPage() {
   const t = useTranslations('MemoryReview')
   const tc = useTranslations('Campaigns')
   const te = useTranslations('Entities')
-  const [draft] = useState<MemoryReviewDraft | null>(() =>
-    sessionId ? readMemoryReviewDraft(campaignId, sessionId) : null
-  )
-  const [pending, setPending] = useState<PendingSuggestion[]>(() =>
-    readPendingSuggestions(draft)
-  )
+  const [draft, setDraft] = useState<MemoryReviewDraft | null>(null)
+  const [pending, setPending] = useState<PendingSuggestion[]>([])
+  const [isDraftLoaded, setIsDraftLoaded] = useState(false)
+  const [loadedDraftKey, setLoadedDraftKey] = useState<string | null>(null)
   const [editing, setEditing] = useState<string | null>(null)
   const [fx, setFx] = useState<Record<string, 'stamping' | 'discarding'>>({})
   const [feedback, setFeedback] = useState<Feedback>(null)
@@ -83,10 +93,60 @@ export default function MemoryReviewPage() {
   })
 
   useEffect(() => {
-    if (sessionId && pending.length === 0) {
+    let isCurrent = true
+    const draftKey = sessionId ? `${campaignId}:${sessionId}` : null
+
+    const loadDraft = () => {
+      if (!isCurrent) return
+
+      if (!sessionId) {
+        setDraft(null)
+        setPending([])
+        setIsDraftLoaded(true)
+        setLoadedDraftKey(null)
+        return
+      }
+
+      const nextDraft = readMemoryReviewDraft(campaignId, sessionId)
+      setDraft(nextDraft)
+      setPending(readPendingSuggestions(nextDraft))
+      setIsDraftLoaded(true)
+      setLoadedDraftKey(draftKey)
+    }
+
+    const timer = window.setTimeout(loadDraft, 0)
+
+    return () => {
+      isCurrent = false
+      window.clearTimeout(timer)
+    }
+  }, [campaignId, sessionId])
+
+  useEffect(() => {
+    if (!sessionId) {
+      return
+    }
+
+    const draftKey = `${campaignId}:${sessionId}`
+    if (isDraftLoaded && loadedDraftKey === draftKey && pending.length === 0) {
       completeMemoryReviewDraft(campaignId, sessionId)
     }
-  }, [campaignId, pending.length, sessionId])
+  }, [campaignId, isDraftLoaded, loadedDraftKey, pending.length, sessionId])
+
+  /** Removes a processed suggestion from UI state and the scoped transient draft. */
+  function removePendingSuggestion(suggestionIdToRemove: string) {
+    setPending((items) => {
+      const remaining = items.filter((item) => item.id !== suggestionIdToRemove)
+      if (sessionId) {
+        rewriteMemoryReviewDraftSuggestions(
+          campaignId,
+          sessionId,
+          remaining.map(toMemorySuggestion)
+        )
+      }
+      return remaining
+    })
+  }
 
   const createMutation = useMutation({
     mutationFn: ({
@@ -114,9 +174,7 @@ export default function MemoryReviewPage() {
         [variables.suggestion.id]: 'stamping',
       }))
       window.setTimeout(() => {
-        setPending((items) =>
-          items.filter((item) => item.id !== variables.suggestion.id)
-        )
+        removePendingSuggestion(variables.suggestion.id)
         setFx((current) => {
           const next = { ...current }
           delete next[variables.suggestion.id]
@@ -144,7 +202,7 @@ export default function MemoryReviewPage() {
   function dismissSuggestion(suggestion: PendingSuggestion) {
     setFx((current) => ({ ...current, [suggestion.id]: 'discarding' }))
     window.setTimeout(() => {
-      setPending((items) => items.filter((item) => item.id !== suggestion.id))
+      removePendingSuggestion(suggestion.id)
       setFx((current) => {
         const next = { ...current }
         delete next[suggestion.id]

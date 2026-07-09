@@ -2,6 +2,7 @@
 import { z } from 'zod'
 
 import { memorySuggestionSchema } from './schemas'
+import type { MemorySuggestion } from './schemas'
 
 const VERSION = 1
 const PREFIX = `lazy-lands:memory-review:v${VERSION}`
@@ -62,6 +63,28 @@ export function clearMemoryReviewDraft(
 ): void {
   if (typeof window === 'undefined') return
   sessionStorage.removeItem(storageKey(campaignId, sessionId))
+}
+
+/** Rewrites a scoped draft after a suggestion is accepted or dismissed. */
+export function rewriteMemoryReviewDraftSuggestions(
+  campaignId: string,
+  sessionId: string,
+  remainingSuggestions: MemorySuggestion[]
+): void {
+  const draft = readMemoryReviewDraft(campaignId, sessionId)
+  if (!draft) return
+
+  if (remainingSuggestions.length === 0) {
+    clearMemoryReviewDraft(campaignId, sessionId)
+    return
+  }
+
+  writeMemoryReviewDraft({
+    campaign_id: draft.campaign_id,
+    session_id: draft.session_id,
+    session_number: draft.session_number,
+    memory_suggestions: remainingSuggestions,
+  })
 }
 
 /** Clears the draft once the DM has finished reviewing every pending suggestion. */

@@ -1,7 +1,11 @@
 import { render, screen, waitFor } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { NextIntlClientProvider } from 'next-intl'
+import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import en from '@/messages/en.json'
 
 const {
   mockGetCampaignDetail,
@@ -10,6 +14,7 @@ const {
   mockUpdateMemoryFact,
   mockReadMemoryReviewDraft,
   mockCompleteMemoryReviewDraft,
+  mockRewriteMemoryReviewDraftSuggestions,
   mockPush,
 } = vi.hoisted(() => ({
   mockGetCampaignDetail: vi.fn(),
@@ -18,6 +23,7 @@ const {
   mockUpdateMemoryFact: vi.fn(),
   mockReadMemoryReviewDraft: vi.fn(),
   mockCompleteMemoryReviewDraft: vi.fn(),
+  mockRewriteMemoryReviewDraftSuggestions: vi.fn(),
   mockPush: vi.fn(),
 }))
 
@@ -38,6 +44,7 @@ vi.mock('@/lib/memory/api', () => ({
 vi.mock('@/lib/sessions/memory-review-draft', () => ({
   readMemoryReviewDraft: mockReadMemoryReviewDraft,
   completeMemoryReviewDraft: mockCompleteMemoryReviewDraft,
+  rewriteMemoryReviewDraftSuggestions: mockRewriteMemoryReviewDraftSuggestions,
 }))
 
 vi.mock('next/navigation', () => ({
@@ -90,6 +97,20 @@ const draft = {
       importance: 'high',
       reason: 'The favor changes future negotiations.',
       related: ['Captain Vess'],
+    },
+  ],
+}
+
+const twoSuggestionDraft = {
+  ...draft,
+  memory_suggestions: [
+    draft.memory_suggestions[0],
+    {
+      content: 'The warehouse fire exposed guild ledgers.',
+      type: 'consequence',
+      importance: 'medium',
+      reason: 'Future faction pressure depends on this evidence.',
+      related: ['Black Bear Guild'],
     },
   ],
 }
@@ -168,6 +189,55 @@ describe('MemoryReviewPage', () => {
     await screen.findByText(/the margins are clean/i)
     expect(screen.getByText(/no suggestions await review/i)).toBeInTheDocument()
     expect(screen.getByText(/no memories yet/i)).toBeInTheDocument()
+  })
+
+  it('does not read the storage draft during initial render', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    })
+
+    renderToString(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <QueryClientProvider client={queryClient}>
+          <MemoryReviewPage />
+        </QueryClientProvider>
+      </NextIntlClientProvider>
+    )
+
+    expect(mockReadMemoryReviewDraft).not.toHaveBeenCalled()
+  })
+
+  it('rewrites the draft after accepting one of multiple suggestions', async () => {
+    const user = userEvent.setup()
+    mockReadMemoryReviewDraft.mockReturnValue(twoSuggestionDraft)
+    mockCreateMemoryFact.mockResolvedValue({ ...activeMemory, id: 'memory-2' })
+
+    renderPage()
+
+    await screen.findByText(/2 suggestions await/i)
+    await user.click(
+      screen.getAllByRole('button', { name: /accept as memory/i })[0]
+    )
+
+    await waitFor(() => {
+      expect(mockRewriteMemoryReviewDraftSuggestions).toHaveBeenCalledWith(
+        'camp-1',
+        'sess-1',
+        [
+          {
+            content: 'The warehouse fire exposed guild ledgers.',
+            type: 'consequence',
+            importance: 'medium',
+            reason: 'Future faction pressure depends on this evidence.',
+            related: ['Black Bear Guild'],
+          },
+        ]
+      )
+    })
+    expect(mockCompleteMemoryReviewDraft).not.toHaveBeenCalled()
   })
 
   it('accepts, edits, dismisses, and retires with busy-safe calls', async () => {

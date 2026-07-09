@@ -4,6 +4,7 @@ import {
   clearMemoryReviewDraft,
   completeMemoryReviewDraft,
   readMemoryReviewDraft,
+  rewriteMemoryReviewDraftSuggestions,
   writeMemoryReviewDraft,
 } from '@/lib/sessions/memory-review-draft'
 
@@ -76,5 +77,45 @@ describe('memory review draft storage', () => {
 
     expect(readMemoryReviewDraft('camp-1', 'sess-1')).toBeNull()
     expect(readMemoryReviewDraft('camp-1', 'sess-2')?.session_id).toBe('sess-2')
+  })
+
+  it('rewrites a scoped draft with remaining suggestions after one is processed', () => {
+    writeMemoryReviewDraft({
+      ...validDraft,
+      memory_suggestions: [
+        validDraft.memory_suggestions[0],
+        {
+          content: 'The warehouse fire exposed guild ledgers.',
+          type: 'consequence',
+          importance: 'medium' as const,
+          reason: 'Future faction pressure depends on this evidence.',
+          related: ['Black Bear Guild'],
+        },
+      ],
+    })
+
+    rewriteMemoryReviewDraftSuggestions('camp-1', 'sess-1', [
+      {
+        content: 'The warehouse fire exposed guild ledgers.',
+        type: 'consequence',
+        importance: 'medium',
+        reason: 'Future faction pressure depends on this evidence.',
+        related: ['Black Bear Guild'],
+      },
+    ])
+
+    const draft = readMemoryReviewDraft('camp-1', 'sess-1')
+    expect(draft?.memory_suggestions).toHaveLength(1)
+    expect(draft?.memory_suggestions[0].content).toBe(
+      'The warehouse fire exposed guild ledgers.'
+    )
+  })
+
+  it('clears a scoped draft when rewriting leaves no remaining suggestions', () => {
+    writeMemoryReviewDraft(validDraft)
+
+    rewriteMemoryReviewDraftSuggestions('camp-1', 'sess-1', [])
+
+    expect(readMemoryReviewDraft('camp-1', 'sess-1')).toBeNull()
   })
 })
