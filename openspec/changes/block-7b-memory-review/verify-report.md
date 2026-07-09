@@ -5,6 +5,7 @@
 **Mode**: Strict TDD  
 **Artifact store**: hybrid  
 **Verified at**: 2026-07-09
+**Final post-commit verification**: 2026-07-09 16:02 local, branch `feat/block-7b-memory-review` ahead of `origin/feat/block-7b-memory-review` by 3 commits.
 
 ## Completeness
 
@@ -43,7 +44,7 @@ Success: no issues found in 123 source files
 
 ```text
 services/api> uv run pytest -m "not dev_inference"
-267 passed, 1 deselected, 16 warnings in 18.30s
+267 passed, 1 deselected, 16 warnings in 23.16s
 ```
 
 **Frontend tests**: ✅ 371 passed
@@ -52,6 +53,7 @@ services/api> uv run pytest -m "not dev_inference"
 root> pnpm --filter web test
 Test Files 51 passed (51)
 Tests 371 passed (371)
+Duration 19.20s
 ```
 
 **Frontend lint**: ✅ Passed, 0 reported warnings
@@ -192,3 +194,18 @@ None.
 **PASS WITH WARNINGS**
 
 Runtime gates passed, strict TDD evidence is now verifier-compliant, and all spec scenarios have passing coverage. Remaining items are non-blocking fidelity/product-contract gaps rather than archive blockers.
+
+## Final Post-Commit Gate
+
+| Command | Result | Evidence |
+|---------|--------|----------|
+| `git status --short --branch` | ✅ Clean | `## feat/block-7b-memory-review...origin/feat/block-7b-memory-review [ahead 3]` |
+| `services/api> uv run ruff check app/ tests/` | ✅ Passed | `All checks passed!` |
+| `services/api> uv run ruff format --check app/ tests/` | ✅ Passed | `161 files already formatted` |
+| `services/api> uv run mypy app/ --ignore-missing-imports` | ✅ Passed | `Success: no issues found in 123 source files` |
+| `services/api> uv run pytest -m "not dev_inference"` | ✅ Passed | `267 passed, 1 deselected, 16 warnings in 23.16s` |
+| `root> pnpm --filter web test` | ✅ Passed | `51 passed`, `371 passed`, `Duration 19.20s` |
+| `root> pnpm --filter web lint` | ✅ Passed | `eslint .` exited 0 |
+| `root> pnpm --filter web typecheck` | ✅ Passed | `tsc --noEmit` exited 0 |
+
+Final pre-PR verdict remains **PASS WITH WARNINGS**. No blockers found. Existing warnings remain limited to active-memory metadata fidelity and simplified strike animation fidelity.
