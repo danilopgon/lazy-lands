@@ -396,7 +396,7 @@ Request:
 }
 ```
 
-Response:
+Response (content-only patches keep the fact active; retire patches return the archived fact):
 
 ```json
 {
@@ -406,7 +406,7 @@ Response:
   "content": "string",
   "type": "consequence",
   "importance": "high",
-  "status": "active"
+  "status": "archived"
 }
 ```
 

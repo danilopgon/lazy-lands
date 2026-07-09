@@ -20,9 +20,15 @@ from app.modules.campaigns.application.errors import (
 from app.modules.health import routes as health
 from app.modules.memory.api import routes as memory
 from app.modules.memory.api.exception_handlers import (
+    campaign_not_found_error_handler as memory_campaign_not_found_error_handler,
+)
+from app.modules.memory.api.exception_handlers import (
     memory_fact_not_found_error_handler,
     memory_fact_persistence_error_handler,
     memory_fact_validation_error_handler,
+)
+from app.modules.memory.application.errors import (
+    CampaignNotFoundError as MemoryCampaignNotFoundError,
 )
 from app.modules.memory.application.errors import (
     MemoryFactNotFoundError,
@@ -84,6 +90,10 @@ app.add_exception_handler(
 app.add_exception_handler(
     SessionPersistenceError,
     session_persistence_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    MemoryCampaignNotFoundError,
+    memory_campaign_not_found_error_handler,  # type: ignore[arg-type]
 )
 app.add_exception_handler(
     MemoryFactNotFoundError,

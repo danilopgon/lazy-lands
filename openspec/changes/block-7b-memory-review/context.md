@@ -31,7 +31,7 @@ suggestions → facts, validated by the DM).
 - Render the `memory_suggestions` list; each shows content, type, importance, reason (`why`), related.
 - **Accept** a suggestion → `POST /campaigns/{campaign_id}/memory-facts` creates a `MemoryFact` with `status=active`. Only the accepted (optionally edited) content is stored — never the raw suggestion automatically.
 - **Reject/Dismiss** → no request is sent; the suggestion is discarded client-side.
-- **Edit before accept** → the edited content is sent to `POST /memory-facts`; the original suggestion is never stored.
+- **Edit before accept** → the edited content is sent to `POST /campaigns/{campaign_id}/memory-facts`; the original suggestion is never stored.
 - Active-memories list on the review screen (and wire the campaign-detail "active memories" placeholder to live data). **Retire** a memory → `PATCH /memory-facts/{id}` with `status=archived` (or DELETE — decide in design; handoff calls it "Retire").
 - Backend `memory` module: `POST /campaigns/{campaign_id}/memory-facts`, `PATCH /memory-facts/{memory_fact_id}`.
 - **Verify (not build) RLS** on `memory_facts`.

@@ -4,17 +4,25 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from app.modules.memory.application.errors import (
+    CampaignNotFoundError,
     MemoryFactNotFoundError,
     MemoryFactPersistenceError,
     MemoryFactValidationError,
 )
 
 
+async def campaign_not_found_error_handler(
+    _request: Request, _exc: CampaignNotFoundError
+) -> JSONResponse:
+    """Map unknown or non-owned campaigns to an accurate 404."""
+    return JSONResponse(status_code=404, content={"error": "Campaign not found."})
+
+
 async def memory_fact_not_found_error_handler(
     _request: Request, _exc: MemoryFactNotFoundError
 ) -> JSONResponse:
     """Map RLS misses and unknown ids to a uniform 404."""
-    return JSONResponse(status_code=404, content={"error": "Not found."})
+    return JSONResponse(status_code=404, content={"error": "Memory fact not found."})
 
 
 async def memory_fact_persistence_error_handler(
@@ -32,9 +40,7 @@ async def memory_fact_persistence_error_handler(
 
 
 async def memory_fact_validation_error_handler(
-    _request: Request, _exc: MemoryFactValidationError
+    _request: Request, exc: MemoryFactValidationError
 ) -> JSONResponse:
     """Map application-level validation misses to 422."""
-    return JSONResponse(
-        status_code=422, content={"error": "At least one field must be provided."}
-    )
+    return JSONResponse(status_code=422, content={"error": exc.message})

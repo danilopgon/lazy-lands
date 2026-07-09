@@ -8,6 +8,7 @@ from app.modules.memory.application.errors import (
     MemoryFactValidationError,
 )
 from app.modules.memory.application.read_models.memory_fact import MemoryFactResponse
+from app.modules.memory.domain.enums import MemoryStatus
 from app.modules.memory.domain.ports import MemoryRepository
 
 
@@ -15,7 +16,7 @@ from app.modules.memory.domain.ports import MemoryRepository
 class UpdateMemoryFactCommand:
     """Application command for patching one MemoryFact."""
 
-    changes: dict
+    changes: dict[str, str | MemoryStatus]
 
 
 class UpdateMemoryFact:

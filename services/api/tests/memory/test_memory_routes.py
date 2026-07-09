@@ -123,6 +123,7 @@ def test_create_memory_fact_forged_campaign_id_returns_404(client) -> None:
     )
 
     assert response.status_code == 404
+    assert response.json() == {"error": "Campaign not found."}
     fake_client.table("memory_facts").insert.assert_not_called()
 
 
@@ -192,6 +193,7 @@ def test_patch_memory_fact_forged_id_returns_404(client) -> None:
     response = client.patch("/memory-facts/forged-memory", json={"status": "archived"})
 
     assert response.status_code == 404
+    assert response.json() == {"error": "Memory fact not found."}
     fake_client.table("memory_facts").update.assert_not_called()
 
 

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from app.modules.memory.application.errors import (
-    MemoryFactNotFoundError,
+    CampaignNotFoundError,
     MemoryFactPersistenceError,
 )
 from app.modules.memory.application.read_models.memory_fact import MemoryFactResponse
@@ -32,7 +32,7 @@ class CreateMemoryFact:
     ) -> MemoryFactResponse:
         """Create a memory fact after an app-layer campaign ownership pre-check."""
         if self._repository.get_campaign(campaign_id) is None:
-            raise MemoryFactNotFoundError()
+            raise CampaignNotFoundError()
 
         fields = {
             "campaign_id": campaign_id,
