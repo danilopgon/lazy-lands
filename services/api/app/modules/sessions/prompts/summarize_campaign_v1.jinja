@@ -18,5 +18,12 @@ Consequences: {{ session.consequences }}
 
 Produce a single updated accumulated summary that folds the new session(s)
 above into the previous summary. Keep it concise, chronological, and
-DM-facing. Respond with a JSON object matching this schema:
+DM-facing.
+
+Language rule: write the updated summary in the SAME LANGUAGE as the DM's
+session summaries above. If the sessions are in Spanish, the summary must be
+in Spanish; if in English, in English. Never translate the DM's input to
+another language.
+
+Respond with a JSON object matching this schema:
 {"accumulated_summary": "<the updated summary text>"}

@@ -7,7 +7,7 @@ Pydantic-validated before it is stored or returned.
 
 from pydantic import BaseModel, Field
 
-from app.modules.sessions.domain.enums import Importance
+from app.modules.sessions.domain.enums import Importance, MemoryType
 
 
 class CampaignSummaryOutput(BaseModel):
@@ -20,7 +20,7 @@ class MemorySuggestion(BaseModel):
     """A transient memory-fact proposal from the Scribe — never persisted here."""
 
     content: str = Field(min_length=1, max_length=2000)
-    type: str = Field(min_length=1, max_length=100)
+    type: MemoryType
     importance: Importance
     reason: str = Field(min_length=1, max_length=1000)
     related: list[str] = Field(default_factory=list, max_length=20)

@@ -328,7 +328,9 @@ Returns sessions for a campaign.
 
 ### `POST /campaigns/{campaign_id}/memory-facts`
 
-Accepts a memory suggestion as active memory.
+Accepts a DM-reviewed memory suggestion, or edited suggestion content, as active memory. The
+endpoint validates campaign ownership before write and does not auto-persist raw Scribe
+suggestions.
 
 Request:
 
@@ -346,19 +348,64 @@ Response:
 ```json
 {
   "id": "uuid",
-  "status": "active"
+  "campaign_id": "uuid",
+  "source_session_id": "uuid",
+  "content": "string",
+  "type": "consequence",
+  "importance": "high",
+  "status": "active",
+  "created_at": "datetime",
+  "updated_at": "datetime"
 }
+```
+
+### `GET /campaigns/{campaign_id}/memory-facts`
+
+Returns MemoryFacts for a campaign. Use `?status=active` for active memories on the Memory
+Review and campaign detail screens. Malformed, unknown, or non-owned campaign ids return 404.
+
+Response:
+
+```json
+[
+  {
+    "id": "uuid",
+    "campaign_id": "uuid",
+    "source_session_id": "uuid",
+    "content": "string",
+    "type": "consequence",
+    "importance": "high",
+    "status": "active",
+    "created_at": "datetime",
+    "updated_at": "datetime"
+  }
+]
 ```
 
 ### `PATCH /memory-facts/{memory_fact_id}`
 
-Updates or archives a MemoryFact.
+Updates a MemoryFact's content or retires it by setting `status` to `archived`. Empty patch bodies
+are rejected; non-owned or unknown ids return 404.
 
 Request:
 
 ```json
 {
   "content": "string",
+  "status": "archived"
+}
+```
+
+Response (content-only patches keep the fact active; retire patches return the archived fact):
+
+```json
+{
+  "id": "uuid",
+  "campaign_id": "uuid",
+  "source_session_id": "uuid",
+  "content": "string",
+  "type": "consequence",
+  "importance": "high",
   "status": "archived"
 }
 ```

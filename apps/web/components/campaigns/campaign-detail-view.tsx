@@ -10,6 +10,7 @@ import { RecentSessions } from './recent-sessions'
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { formatShortDate } from '@/lib/format'
 import { getSessions } from '@/lib/sessions/api'
+import { getMemoryFacts } from '@/lib/memory/api'
 
 import type { CampaignDetailResponse } from '@/lib/campaigns/schemas'
 
@@ -38,6 +39,10 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
   const sessionsQuery = useQuery({
     queryKey: ['campaign', campaign.id, 'sessions'],
     queryFn: () => getSessions(campaign.id),
+  })
+  const memoriesQuery = useQuery({
+    queryKey: ['campaign', campaign.id, 'memory-facts', 'active'],
+    queryFn: () => getMemoryFacts(campaign.id, { status: 'active' }),
   })
 
   return (
@@ -92,13 +97,24 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
         </Link>
         <Link
           href={`/campaigns/${campaign.id}/arcs`}
-          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 hover:bg-[var(--paper-2)] transition-colors"
+          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statArcs')}
           </dt>
           <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.arcs.length}
+          </dd>
+        </Link>
+        <Link
+          href={`/campaigns/${campaign.id}/memory/review`}
+          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 hover:bg-[var(--paper-2)] transition-colors"
+        >
+          <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
+            {t('detail.statMemory')}
+          </dt>
+          <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
+            {memoriesQuery.data?.length ?? 0}
           </dd>
         </Link>
       </dl>
@@ -195,22 +211,121 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           <hr className="my-7 border-t border-dotted border-[var(--dotted)]" />
 
           <div className="ll-rule-anim">
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono text-[11px] text-[var(--ink-3)]">
-                /04
-              </span>
-              <h3 className="font-serif text-[16px] font-semibold text-[var(--ink)]">
-                {t('detail.activeMemories')}
-              </h3>
+            <div className="flex items-baseline justify-between gap-2">
+              <div className="flex items-baseline gap-2">
+                <span className="font-mono text-[11px] text-[var(--ink-3)]">
+                  /04
+                </span>
+                <h3 className="font-serif text-[16px] font-semibold text-[var(--ink)]">
+                  {t('detail.activeMemories')}
+                </h3>
+              </div>
+              <Link
+                href={`/campaigns/${campaign.id}/memory/review`}
+                className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
+              >
+                {t('detail.memoryReview')}
+              </Link>
             </div>
           </div>
-          <div className="mt-3 rounded border-2 border-dashed border-[var(--dotted)] bg-[var(--paper)] p-5 opacity-60">
-            <p className="text-sm italic text-[var(--ink-3)]">
-              {t('detail.comingSoon')}
-            </p>
-          </div>
+          <ActiveMemoriesPanel
+            isLoading={memoriesQuery.isLoading}
+            isError={memoriesQuery.isError}
+            memories={memoriesQuery.data ?? []}
+            retryLabel={t('screen.retry')}
+            onRetry={() => memoriesQuery.refetch()}
+          />
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Renders live active memories without fabricating placeholder chronicle entries.
+ *
+ * @param {object} root0 - The active memories panel props.
+ * @param {boolean} root0.isLoading - Whether the facts query is loading.
+ * @param {boolean} root0.isError - Whether the facts query errored.
+ * @param {Awaited<ReturnType<typeof getMemoryFacts>>} root0.memories - Active memory facts to render.
+ * @param {string} root0.retryLabel - Label for the retry control.
+ * @param {() => void} root0.onRetry - Retry the facts query.
+ * @returns {React.ReactElement} The active memories panel element.
+ */
+function ActiveMemoriesPanel({
+  isLoading,
+  isError,
+  memories,
+  retryLabel,
+  onRetry,
+}: {
+  isLoading: boolean
+  isError: boolean
+  memories: Awaited<ReturnType<typeof getMemoryFacts>>
+  retryLabel: string
+  onRetry: () => void
+}) {
+  const t = useTranslations('Campaigns')
+
+  if (isLoading) {
+    return (
+      <div className="mt-3 border-2 border-[var(--border)] bg-[var(--paper)] p-5">
+        <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--ink-3)]">
+          {t('detail.memoriesLoading')}
+        </p>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="mt-3 border-2 border-[var(--danger)] bg-[var(--danger-wash)] p-5 text-[var(--danger)]">
+        <p className="text-sm">{t('detail.memoriesLoadError')}</p>
+        <button
+          type="button"
+          className="mt-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
+          onClick={onRetry}
+        >
+          {retryLabel}
+        </button>
+      </div>
+    )
+  }
+
+  if (memories.length === 0) {
+    return (
+      <div className="mt-3 border-2 border-dashed border-[var(--dotted)] bg-[var(--paper)] p-5">
+        <p className="text-sm italic text-[var(--ink-3)]">
+          {t('detail.noActiveMemories')}
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-3 border-2 border-[var(--border)] bg-[var(--paper)] px-4 shadow-[4px_4px_0_var(--shadow)]">
+      {memories.map((memory) => (
+        <div
+          key={memory.id}
+          className="border-b border-dotted border-[var(--dotted)] py-3 last:border-b-0"
+        >
+          {memory.type ? (
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
+              {memory.type}
+            </span>
+          ) : null}
+          <p className="mt-1 font-serif text-[14.5px] leading-relaxed text-[var(--ink)]">
+            {memory.content}
+          </p>
+          <p className="mt-1 text-xs text-[var(--ink-3)]">
+            {t('detail.memorySource', {
+              source: memory.source_session_id
+                ? t('detail.linkedMemory')
+                : t('detail.manualMemory'),
+            })}
+          </p>
+        </div>
+      ))}
     </div>
   )
 }

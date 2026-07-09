@@ -18,6 +18,23 @@ from app.modules.campaigns.application.errors import (
     CampaignValidationError,
 )
 from app.modules.health import routes as health
+from app.modules.memory.api import routes as memory
+from app.modules.memory.api.exception_handlers import (
+    campaign_not_found_error_handler as memory_campaign_not_found_error_handler,
+)
+from app.modules.memory.api.exception_handlers import (
+    memory_fact_not_found_error_handler,
+    memory_fact_persistence_error_handler,
+    memory_fact_validation_error_handler,
+)
+from app.modules.memory.application.errors import (
+    CampaignNotFoundError as MemoryCampaignNotFoundError,
+)
+from app.modules.memory.application.errors import (
+    MemoryFactNotFoundError,
+    MemoryFactPersistenceError,
+    MemoryFactValidationError,
+)
 from app.modules.sessions.api import routes as sessions
 from app.modules.sessions.api.exception_handlers import (
     session_not_found_error_handler,
@@ -74,6 +91,22 @@ app.add_exception_handler(
     SessionPersistenceError,
     session_persistence_error_handler,  # type: ignore[arg-type]
 )
+app.add_exception_handler(
+    MemoryCampaignNotFoundError,
+    memory_campaign_not_found_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    MemoryFactNotFoundError,
+    memory_fact_not_found_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    MemoryFactPersistenceError,
+    memory_fact_persistence_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    MemoryFactValidationError,
+    memory_fact_validation_error_handler,  # type: ignore[arg-type]
+)
 
 
 def _error_cors_headers(request: Request) -> dict[str, str]:
@@ -110,4 +143,5 @@ app.include_router(campaigns.router)
 app.include_router(campaigns.npcs_router)
 app.include_router(campaigns.factions_router)
 app.include_router(campaigns.arcs_router)
+app.include_router(memory.router)
 app.include_router(sessions.router)

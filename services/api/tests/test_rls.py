@@ -148,3 +148,117 @@ def test_user_b_reads_zero_sessions(db_conn) -> None:
         cur.execute("select id from sessions")
         rows = cur.fetchall()
     assert rows == []
+
+
+# --- Memory fact ownership and composite FK checks ---------------------------
+
+
+def test_user_a_can_crud_own_memory_fact(db_conn) -> None:
+    """User A can create, read, and archive memory_facts for their campaign."""
+    with as_user(db_conn, "authenticated", USER_A) as cur:
+        cur.execute(
+            """
+            insert into memory_facts (
+                campaign_id, content, type, importance, status
+            )
+            values (
+                %s, 'The warehouse fire changed guild politics.',
+                'consequence', 'high', 'active'
+            )
+            returning id
+            """,
+            (SEEDED_CAMPAIGN,),
+        )
+        memory_id = cur.fetchone()[0]
+
+        cur.execute("select content from memory_facts where id = %s", (memory_id,))
+        assert cur.fetchone()[0] == "The warehouse fire changed guild politics."
+
+        cur.execute(
+            """
+            update memory_facts
+            set status = 'archived'
+            where id = %s
+            returning status
+            """,
+            (memory_id,),
+        )
+        assert cur.fetchone()[0] == "archived"
+
+
+def test_user_b_cannot_select_insert_or_update_user_a_memory_facts(db_conn) -> None:
+    """User B is filtered from A's memories and cannot mutate A's campaign."""
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        cur.execute(
+            "select id from memory_facts where campaign_id = %s",
+            (SEEDED_CAMPAIGN,),
+        )
+        assert cur.fetchall() == []
+
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            cur.execute(
+                """
+                insert into memory_facts (campaign_id, content, status)
+                values (%s, 'Should not persist', 'active')
+                """,
+                (SEEDED_CAMPAIGN,),
+            )
+
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        cur.execute(
+            """
+            update memory_facts
+            set status = 'archived'
+            where campaign_id = %s
+            returning id
+            """,
+            (SEEDED_CAMPAIGN,),
+        )
+        assert cur.fetchall() == []
+
+
+@contextlib.contextmanager
+def as_user_with_cross_campaign_session(
+    conn: psycopg.Connection,
+) -> Iterator[tuple[Cursor, str]]:
+    """Create a temporary second campaign/session before switching to USER_A."""
+    other_campaign = "20000000-0000-0000-0000-0000000000b7"
+    other_session = "20000000-0000-0000-0000-000000000007"
+    with conn.transaction(force_rollback=True):
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                insert into campaigns (id, user_id, title)
+                values (%s, %s, 'Temporary other campaign')
+                on conflict (id) do nothing
+                """,
+                (other_campaign, USER_A),
+            )
+            cur.execute(
+                """
+                insert into sessions (id, campaign_id, session_number)
+                values (%s, %s, 777)
+                on conflict (id) do nothing
+                """,
+                (other_session, other_campaign),
+            )
+            cur.execute("set local role authenticated")
+            claims = f'{{"sub":"{USER_A}"}}'
+            cur.execute("select set_config('request.jwt.claims', %s, true)", (claims,))
+            yield cur, other_session
+
+
+def test_memory_fact_rejects_cross_campaign_source_session(db_conn) -> None:
+    """The composite FK rejects a source_session_id from another campaign."""
+    with as_user_with_cross_campaign_session(db_conn) as (cur, other_session):
+        with pytest.raises(psycopg.errors.ForeignKeyViolation):
+            cur.execute(
+                """
+                insert into memory_facts (
+                    campaign_id, source_session_id, content, status
+                )
+                values (%s, %s, 'Cross-campaign session should fail', 'active')
+                """,
+                (SEEDED_CAMPAIGN, other_session),
+            )

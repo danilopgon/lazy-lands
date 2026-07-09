@@ -181,17 +181,17 @@ Status: **pending**
 
 ### Session registration
 
-- [ ] New session screen linked to a campaign.
-- [ ] Field: free-text summary of what happened.
-- [ ] Field: consequences and world state changes.
-- [ ] FastAPI endpoint `POST /campaigns/{campaign_id}/sessions` — single endpoint that:
+- [x] New session screen linked to a campaign.
+- [x] Field: free-text summary of what happened.
+- [x] Field: consequences and world state changes.
+- [x] FastAPI endpoint `POST /campaigns/{campaign_id}/sessions` — single endpoint that:
   1. Persists the session with a sequential number.
   2. Calls `SummarizeCampaignUseCase` to update `accumulated_summary` (previous summary + new session → compressed summary now including session N). Sets `summarized_up_to_session = N`.
   3. Calls `SuggestMemoriesUseCase` to generate 0–5 `MemorySuggestion` objects validated with Pydantic.
   4. Returns `session_id`, `session_number` and `memory_suggestions` in the response.
   Suggestions are returned as part of the response — they are **not persisted** until the DM accepts.
-- [ ] RLS active on the `sessions` table.
-- [ ] Session history per campaign (chronological list).
+- [x] RLS active on the `sessions` table.
+- [x] Session history per campaign (chronological list).
 
 ### Memory suggestions (MVP — part of the core DM flow)
 

@@ -116,7 +116,7 @@ def test_register_session_happy_path_returns_expected_shape(client) -> None:
             "suggestions": [
                 {
                     "content": "Captain Vess is hiding in the harbor district.",
-                    "type": "npc",
+                    "type": "revelation",
                     "importance": "medium",
                     "reason": "Introduced this session.",
                     "related": [],

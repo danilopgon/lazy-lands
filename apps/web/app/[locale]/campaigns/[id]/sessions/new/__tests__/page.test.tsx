@@ -3,13 +3,17 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { mockGetCampaignDetail, mockRegisterSession, mockPush } = vi.hoisted(
-  () => ({
-    mockGetCampaignDetail: vi.fn(),
-    mockRegisterSession: vi.fn(),
-    mockPush: vi.fn(),
-  })
-)
+const {
+  mockGetCampaignDetail,
+  mockRegisterSession,
+  mockPush,
+  mockWriteMemoryReviewDraft,
+} = vi.hoisted(() => ({
+  mockGetCampaignDetail: vi.fn(),
+  mockRegisterSession: vi.fn(),
+  mockPush: vi.fn(),
+  mockWriteMemoryReviewDraft: vi.fn(),
+}))
 
 vi.mock('@/lib/campaigns/api', () => ({
   getCampaignDetail: mockGetCampaignDetail,
@@ -21,6 +25,10 @@ vi.mock('@/lib/sessions/api', () => ({
   registerSession: mockRegisterSession,
   SessionApiError: class SessionApiError extends Error {},
   SessionCampaignNotFoundError: class SessionCampaignNotFoundError extends Error {},
+}))
+
+vi.mock('@/lib/sessions/memory-review-draft', () => ({
+  writeMemoryReviewDraft: mockWriteMemoryReviewDraft,
 }))
 
 vi.mock('next/navigation', () => ({
@@ -153,12 +161,20 @@ describe('LogSessionPage (Block 7a session-log-ui)', () => {
     })
   })
 
-  it('navigates to the campaign detail page on success (not /memory/review)', async () => {
+  it('stores the returned memory suggestions and opens memory review on success', async () => {
     const user = userEvent.setup()
     mockRegisterSession.mockResolvedValue({
       session_id: 'sess-1',
       session_number: 1,
-      memory_suggestions: [],
+      memory_suggestions: [
+        {
+          content: 'Captain Vess owes the party a favor.',
+          type: 'relationship',
+          importance: 'high',
+          reason: 'The favor changes future negotiations.',
+          related: ['Captain Vess'],
+        },
+      ],
     })
     renderPage()
 
@@ -175,7 +191,51 @@ describe('LogSessionPage (Block 7a session-log-ui)', () => {
       expect(mockRegisterSession).toHaveBeenCalledWith('camp-1', {
         summary: 'The party arrived in town.',
       })
-      expect(mockPush).toHaveBeenCalledWith('/campaigns/camp-1')
+      expect(mockWriteMemoryReviewDraft).toHaveBeenCalledWith({
+        campaign_id: 'camp-1',
+        session_id: 'sess-1',
+        session_number: 1,
+        memory_suggestions: [
+          {
+            content: 'Captain Vess owes the party a favor.',
+            type: 'relationship',
+            importance: 'high',
+            reason: 'The favor changes future negotiations.',
+            related: ['Captain Vess'],
+          },
+        ],
+      })
+      expect(mockPush).toHaveBeenCalledWith(
+        '/campaigns/camp-1/memory/review?session=sess-1'
+      )
+    })
+  })
+
+  it('still opens memory review when best-effort draft persistence fails', async () => {
+    const user = userEvent.setup()
+    mockRegisterSession.mockResolvedValue({
+      session_id: 'sess-1',
+      session_number: 1,
+      memory_suggestions: [],
+    })
+    mockWriteMemoryReviewDraft.mockImplementation(() => {
+      throw new Error('sessionStorage unavailable')
+    })
+    renderPage()
+
+    await screen.findByRole('heading', { name: /log what happened/i })
+    await user.type(
+      screen.getByLabelText(/what happened/i),
+      'The party arrived in town.'
+    )
+    await user.click(
+      screen.getByRole('button', { name: /save session & review memories/i })
+    )
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith(
+        '/campaigns/camp-1/memory/review?session=sess-1'
+      )
     })
   })
 

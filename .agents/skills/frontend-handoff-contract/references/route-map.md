@@ -21,7 +21,7 @@ Spanish message catalogs; do not leave prototype English literals hard-coded in 
 | `/campaigns/:id/factions`             | `views-entities.jsx`  | `FactionsView`              |
 | `/campaigns/:id/arcs`                 | `views-arcs.jsx`      | `ArcsView`                  |
 | `/campaigns/:id/sessions/new`         | `views-sessions.jsx`  | `LogSession`                |
-| `/campaigns/:id/memory/review`        | `views-review.jsx`    | `MemoryReview`              |
+| `/campaigns/:id/memory/review`        | `views-sessions.jsx`  | `MemoryReview`              |
 | `/campaigns/:id/prepare`              | `views-prepare.jsx`   | `PrepareSession`            |
 | `/campaigns/:id/settings`             | `views-detail.jsx`    | `SettingsView`              |
 | `/campaigns/:id/sessions/:sid`        | `views-sessions.jsx`  | `GeneratedSession`          |

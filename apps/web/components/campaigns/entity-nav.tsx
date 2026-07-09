@@ -12,11 +12,11 @@ type EntityNavProps = {
 
 /**
  * Contextual sub-navigation for a single campaign: Overview, NPCs, Factions,
- * and Arcs. Rendered below the AppHeader on `/campaigns/[id]` routes so the DM
+ * Arcs, and Memory. Rendered below the AppHeader on `/campaigns/[id]` routes so the DM
  * can move between a campaign's sections without going through the breadcrumb.
  *
- * Only the sections that exist as routes today are listed; Memory and Sessions
- * from the handoff Shell are intentionally omitted until those routes ship.
+ * Only the sections that exist as routes today are listed; Sessions from the
+ * handoff Shell remains omitted until that route family ships.
  *
  * @param {EntityNavProps} root0 - Nav props.
  * @param {string} root0.campaignId - The active campaign id.
@@ -43,6 +43,11 @@ export function EntityNav({ campaignId }: EntityNavProps) {
       key: 'arcs',
       href: `${base}/arcs`,
       active: pathname.startsWith(`${base}/arcs`),
+    },
+    {
+      key: 'memory',
+      href: `${base}/memory/review`,
+      active: pathname.startsWith(`${base}/memory`),
     },
   ]
 

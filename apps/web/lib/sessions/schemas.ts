@@ -15,11 +15,27 @@ export type RegisterSessionRequest = z.infer<
 export const importanceSchema = z.enum(['high', 'medium', 'low'])
 export type Importance = z.infer<typeof importanceSchema>
 
+// Mirrors `MemoryType` in services/api/app/modules/sessions/domain/enums.py.
+// The finite Scribe vocabulary for memory suggestions; the response read
+// model stays lenient (z.string()) so legacy DB rows are never rejected by
+// the frontend either.
+export const memoryTypeSchema = z.enum([
+  'consequence',
+  'relationship',
+  'secret',
+  'promise',
+  'tension',
+  'revelation',
+  'item',
+  'arc_progress',
+])
+export type MemoryType = z.infer<typeof memoryTypeSchema>
+
 // Mirrors `MemorySuggestion` in application/contracts.py — transient, never
 // persisted by this endpoint. 7a has no UI consumer for these; 7b does.
 export const memorySuggestionSchema = z.object({
   content: z.string(),
-  type: z.string(),
+  type: memoryTypeSchema,
   importance: importanceSchema,
   reason: z.string(),
   related: z.array(z.string()),

@@ -53,7 +53,7 @@ async def test_happy_path_persists_then_summarizes_then_suggests() -> None:
     suggest = AsyncMock()
     suggestion = MemorySuggestion(
         content="The party met a smuggler.",
-        type="npc",
+        type="revelation",
         importance="medium",
         reason="Introduced in this session.",
     )

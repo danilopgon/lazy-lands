@@ -283,6 +283,7 @@
       "statNpcs": "PNJ",
       "statFactions": "Facciones",
       "statArcs": "Arcos",
+      "statMemory": "Memoria",
       "worldStateHeading": "El estado del mundo",
       "recentSessions": "Sesiones recientes",
       "comingSoon": "Llegará en un capítulo posterior",
@@ -290,7 +291,14 @@
       "sessionsLoadError": "No se pudieron cargar las sesiones recientes.",
       "arcsNeedingAttention": "Arcos activos",
       "allArcs": "Todos los arcos →",
-      "activeMemories": "Memorias activas"
+      "activeMemories": "Memorias activas",
+      "memoryReview": "Memoria →",
+      "memoriesLoading": "Cargando memorias activas",
+      "memoriesLoadError": "No se pudieron cargar las memorias activas.",
+      "noActiveMemories": "Aún no hay memorias",
+      "memorySource": "Aceptada · {source}",
+      "manualMemory": "Nota manual",
+      "linkedMemory": "Sesión vinculada"
     },
     "worldState": {
       "empty": "Aún no hay estado del mundo registrado.",
@@ -419,6 +427,72 @@
       "emptyDescription": "Registra tu primera sesión y el Escriba empezará a llevar la crónica.",
       "logSession": "Registrar sesión",
       "sessionLabel": "Sesión {number}"
+    }
+  },
+  "MemoryReview": {
+    "breadcrumb": "Memoria",
+    "kicker": "Sesión {session} · Revisión de memoria",
+    "sessionLabel": "Sesión {number}",
+    "sessionSource": "Sesión vinculada",
+    "sessionUnknown": "desconocida",
+    "title": "Los márgenes del Escriba",
+    "loadingTitle": "El Escriba está escribiendo",
+    "loadingCaption": "Abriendo los márgenes",
+    "pendingSection": "Sugerencias de memoria pendientes",
+    "subtitleWithCount": "{count, plural, one {# sugerencia espera tu criterio. Solo lo que aceptes entra en la crónica.} other {# sugerencias esperan tu criterio. Solo lo que aceptes entra en la crónica.}}",
+    "subtitleEmpty": "No hay nada pendiente de revisión.",
+    "emptyPendingTitle": "Los márgenes están limpios",
+    "emptyPendingDescription": "No hay sugerencias pendientes de revisión. Registra tu próxima sesión y el Escriba leerá qué vale la pena recordar.",
+    "backToCampaign": "Volver a la campaña",
+    "scribeProposes": "❧ El Escriba propone...",
+    "acceptedStamp": "★ Aceptada",
+    "importance": "Importancia · {importance}",
+    "importanceValue": {
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja"
+    },
+    "memoryType": {
+      "consequence": "Consecuencia",
+      "relationship": "Relación",
+      "secret": "Secreto",
+      "promise": "Promesa",
+      "tension": "Tensión",
+      "revelation": "Revelación",
+      "item": "Objeto",
+      "arc_progress": "Avance de arco"
+    },
+    "memoryTypeUnknown": "{type}",
+    "touches": "Toca:",
+    "none": "Ninguna",
+    "accept": "Aceptar como memoria",
+    "editAccept": "Editar y aceptar",
+    "dismiss": "Descartar",
+    "editing": "Editando antes de aceptar",
+    "memoryText": "Texto de memoria",
+    "saveAccept": "Guardar y aceptar como memoria",
+    "cancel": "Cancelar",
+    "activeSection": "Memorias activas",
+    "activeTitle": "Memorias activas · {count}",
+    "activeHelp": "Alimentan cada borrador de sesión futuro",
+    "activeLoadingTitle": "El Escriba está escribiendo",
+    "activeLoadingCaption": "Cargando memorias activas",
+    "activeError": "No se pudieron cargar las memorias activas.",
+    "emptyActiveTitle": "Aún no hay memorias",
+    "emptyActiveDescription": "Acepta sugerencias arriba, o quedarán fuera de la crónica por completo.",
+    "acceptedMeta": "Aceptada · {source}",
+    "manualSource": "Nota manual",
+    "retire": "Retirar",
+    "prepareNext": "Preparar siguiente sesión →",
+    "feedback": {
+      "accepted": "Sellada en la crónica",
+      "edited": "Editada y sellada en la crónica",
+      "dismissed": "Tachada. El Escriba no volverá a proponerla.",
+      "retired": "Memoria retirada de la crónica"
+    },
+    "actionError": {
+      "create": "No se pudo sellar esa memoria en la crónica. La sugerencia sigue aquí; inténtalo de nuevo.",
+      "retire": "No se pudo retirar esa memoria. Sigue activa; inténtalo de nuevo."
     }
   },
   "Entities": {
