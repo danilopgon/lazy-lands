@@ -15,6 +15,7 @@ import { LoadingScribe } from '@/components/ui/loading-scribe'
 import { Notice } from '@/components/ui/notice'
 import { registerSessionRequestSchema } from '@/lib/sessions/schemas'
 import { registerSession } from '@/lib/sessions/api'
+import { writeMemoryReviewDraft } from '@/lib/sessions/memory-review-draft'
 
 import { z } from 'zod'
 
@@ -66,8 +67,16 @@ export function LogSessionForm({ campaignId }: LogSessionFormProps) {
         summary: data.summary,
         consequences: data.consequences?.trim() ? data.consequences : undefined,
       }),
-    onSuccess: () => {
-      router.push(`/campaigns/${campaignId}`)
+    onSuccess: (response) => {
+      writeMemoryReviewDraft({
+        campaign_id: campaignId,
+        session_id: response.session_id,
+        session_number: response.session_number,
+        memory_suggestions: response.memory_suggestions,
+      })
+      router.push(
+        `/campaigns/${campaignId}/memory/review?session=${response.session_id}`
+      )
     },
     onError: () => {
       // The DM's exact typed text stays in the form (react-hook-form does not

@@ -1,0 +1,73 @@
+/* eslint-disable jsdoc/require-param, jsdoc/require-returns */
+import { z } from 'zod'
+
+import { memorySuggestionSchema } from './schemas'
+
+const VERSION = 1
+const PREFIX = `lazy-lands:memory-review:v${VERSION}`
+
+const memoryReviewDraftSchema = z.object({
+  version: z.literal(VERSION),
+  campaign_id: z.string().min(1),
+  session_id: z.string().min(1),
+  session_number: z.number().int().positive(),
+  memory_suggestions: z.array(memorySuggestionSchema).max(5),
+})
+
+export type MemoryReviewDraft = z.infer<typeof memoryReviewDraftSchema>
+export type MemoryReviewDraftInput = Omit<MemoryReviewDraft, 'version'>
+
+/** Builds the versioned storage key that isolates drafts by campaign and source session. */
+function storageKey(campaignId: string, sessionId: string) {
+  return `${PREFIX}:${campaignId}:${sessionId}`
+}
+
+/** Stores only a validated transient review draft in session storage. */
+export function writeMemoryReviewDraft(input: MemoryReviewDraftInput): void {
+  if (typeof window === 'undefined') return
+  const draft = memoryReviewDraftSchema.parse({ version: VERSION, ...input })
+  sessionStorage.setItem(
+    storageKey(draft.campaign_id, draft.session_id),
+    JSON.stringify(draft)
+  )
+}
+
+/** Reads a scoped draft and removes corrupt or mismatched data before it can render. */
+export function readMemoryReviewDraft(
+  campaignId: string,
+  sessionId: string
+): MemoryReviewDraft | null {
+  if (typeof window === 'undefined') return null
+  const key = storageKey(campaignId, sessionId)
+  const raw = sessionStorage.getItem(key)
+  if (!raw) return null
+
+  try {
+    const draft = memoryReviewDraftSchema.parse(JSON.parse(raw))
+    if (draft.campaign_id !== campaignId || draft.session_id !== sessionId) {
+      sessionStorage.removeItem(key)
+      return null
+    }
+    return draft
+  } catch {
+    sessionStorage.removeItem(key)
+    return null
+  }
+}
+
+/** Removes one scoped draft without touching other in-progress session reviews. */
+export function clearMemoryReviewDraft(
+  campaignId: string,
+  sessionId: string
+): void {
+  if (typeof window === 'undefined') return
+  sessionStorage.removeItem(storageKey(campaignId, sessionId))
+}
+
+/** Clears the draft once the DM has finished reviewing every pending suggestion. */
+export function completeMemoryReviewDraft(
+  campaignId: string,
+  sessionId: string
+): void {
+  clearMemoryReviewDraft(campaignId, sessionId)
+}

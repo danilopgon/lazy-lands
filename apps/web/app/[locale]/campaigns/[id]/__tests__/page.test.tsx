@@ -3,12 +3,17 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { mockGetCampaignDetail, mockUpdateCampaign, mockGetSessions } =
-  vi.hoisted(() => ({
-    mockGetCampaignDetail: vi.fn(),
-    mockUpdateCampaign: vi.fn(),
-    mockGetSessions: vi.fn(),
-  }))
+const {
+  mockGetCampaignDetail,
+  mockUpdateCampaign,
+  mockGetSessions,
+  mockGetMemoryFacts,
+} = vi.hoisted(() => ({
+  mockGetCampaignDetail: vi.fn(),
+  mockUpdateCampaign: vi.fn(),
+  mockGetSessions: vi.fn(),
+  mockGetMemoryFacts: vi.fn(),
+}))
 
 vi.mock('@/lib/campaigns/api', () => {
   // Mirror the real CampaignApiError: string input maps to backend.generic
@@ -49,6 +54,12 @@ vi.mock('@/lib/sessions/api', () => ({
   getSessions: mockGetSessions,
   SessionApiError: class SessionApiError extends Error {},
   SessionCampaignNotFoundError: class SessionCampaignNotFoundError extends Error {},
+}))
+
+vi.mock('@/lib/memory/api', () => ({
+  getMemoryFacts: mockGetMemoryFacts,
+  MemoryApiError: class MemoryApiError extends Error {},
+  MemoryCampaignNotFoundError: class MemoryCampaignNotFoundError extends Error {},
 }))
 
 vi.mock('next/navigation', () => ({
@@ -138,6 +149,7 @@ describe('CampaignDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetSessions.mockResolvedValue([])
+    mockGetMemoryFacts.mockResolvedValue([])
   })
 
   afterEach(() => {
@@ -194,8 +206,21 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByText('Arcs')).toBeInTheDocument()
   })
 
-  it('renders a dimmed placeholder for the memories section', async () => {
+  it('renders live active memories and memory navigation instead of a placeholder', async () => {
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetMemoryFacts.mockResolvedValueOnce([
+      {
+        id: 'memory-1',
+        campaign_id: 'camp-1',
+        source_session_id: 'sess-1',
+        content: 'The guild remembers the arson.',
+        type: 'consequence',
+        importance: 'medium',
+        status: 'active',
+        created_at: '2026-07-09T00:00:00Z',
+        updated_at: '2026-07-09T00:00:00Z',
+      },
+    ])
     renderPage()
 
     await waitFor(() => {
@@ -204,8 +229,36 @@ describe('CampaignDetailPage', () => {
       ).toBeInTheDocument()
     })
 
-    const placeholders = screen.getAllByText(/coming in a later chapter/i)
-    expect(placeholders).toHaveLength(1)
+    await waitFor(() => {
+      expect(
+        screen.getByText(/the guild remembers the arson/i)
+      ).toBeInTheDocument()
+    })
+    expect(
+      screen.queryByText(/coming in a later chapter/i)
+    ).not.toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /memory/i })).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          href: expect.stringContaining('/campaigns/camp-1/memory/review'),
+        }),
+      ])
+    )
+  })
+
+  it('renders active memories empty and retry states', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetMemoryFacts.mockRejectedValue(new Error('network'))
+
+    renderPage()
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/could not load active memories/i)
+      ).toBeInTheDocument()
+    })
+
+    mockGetMemoryFacts.mockResolvedValue([])
   })
 
   it('renders an empty state with a "Log session" CTA when there are no sessions', async () => {

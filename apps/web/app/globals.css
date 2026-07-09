@@ -307,6 +307,84 @@ body {
   color: var(--ink);
 }
 
+/* Memory review feedback — stamp accepted proposals and strike dismissed ones. */
+@keyframes ll-stamp-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-10deg) scale(1.4);
+  }
+  65% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-7deg) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-7deg) scale(1);
+  }
+}
+
+@keyframes ll-discard-slide {
+  to {
+    opacity: 0;
+    transform: translateX(18px) rotate(0.4deg);
+  }
+}
+
+[data-motion='full'] .ll-stamp {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  z-index: 2;
+  border: 2px solid var(--good);
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  color: var(--good);
+  padding: 0.45rem 0.8rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 var(--shadow);
+  animation: ll-stamp-pop 260ms cubic-bezier(0.2, 1.4, 0.32, 1) both;
+}
+
+[data-motion='full'] .ll-strike {
+  text-decoration-line: line-through;
+  text-decoration-color: var(--danger);
+  text-decoration-thickness: 3px;
+}
+
+[data-motion='full'] .ll-discarding {
+  animation: ll-discard-slide 220ms ease-in both;
+}
+
+[data-motion='subtle'] .ll-stamp,
+[data-motion='off'] .ll-stamp {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: 2px solid var(--good);
+  background: var(--paper);
+  color: var(--good);
+  padding: 0.35rem 0.55rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+[data-motion='subtle'] .ll-strike,
+[data-motion='off'] .ll-strike {
+  text-decoration-line: line-through;
+  text-decoration-color: var(--danger);
+}
+
+[data-motion='subtle'] .ll-discarding,
+[data-motion='off'] .ll-discarding {
+  opacity: 0.6;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -324,7 +402,9 @@ body {
   .ll-enter-4,
   .ll-enter-5,
   .ll-view-enter,
-  .ll-rule-anim {
+  .ll-rule-anim,
+  .ll-discarding,
+  .ll-stamp {
     opacity: 1 !important;
     transform: none !important;
   }
