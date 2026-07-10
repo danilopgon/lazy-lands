@@ -429,7 +429,9 @@
       "emptyTitle": "Aún no hay sesiones registradas",
       "emptyDescription": "Registra tu primera sesión y el Escriba empezará a llevar la crónica.",
       "logSession": "Registrar sesión",
-      "sessionLabel": "Sesión {number}"
+      "sessionLabel": "Sesión {number}",
+      "draftBadge": "Borrador",
+      "resumeDraft": "Continuar borrador"
     }
   },
   "MemoryReview": {
@@ -463,7 +465,9 @@
       "tension": "Tensión",
       "revelation": "Revelación",
       "item": "Objeto",
-      "arc_progress": "Avance de arco"
+      "arc_progress": "Avance de arco",
+      "reputation": "Reputación",
+      "world_state_change": "Cambio en el estado del mundo"
     },
     "memoryTypeUnknown": "{type}",
     "touches": "Toca:",
@@ -564,6 +568,7 @@
         "draft": "Borrador de sesión {number}"
       },
       "kicker": "Sesión {number} · Propuesta",
+      "proposalTitle": "Propuesta de sesión {number}",
       "untitled": "Borrador de sesión generado",
       "subtitle": "Un <scribe>borrador del Escriba</scribe>. Nada aquí es canon hasta que lo hagas tuyo.",
       "backCampaign": "← Campaña",
@@ -571,7 +576,7 @@
       "saveChanges": "Guardar cambios",
       "exportPdf": "Exportar PDF →",
       "exportPdfSoon": "Disponible en el Bloque 9.",
-      "regenerate": "Regenerar",
+      "regenerateComingLater": "Próximamente",
       "regenerating": "Regenerando...",
       "rewriting": "El Escriba está reescribiendo",
       "saveSectionChanges": "Guardar cambios de sección",
@@ -583,6 +588,7 @@
       "memoriesHelp": "El Escriba recurrió a estas memorias aceptadas:",
       "memoriesEmpty": "No hay memorias integradas registradas.",
       "manualSource": "Nota manual",
+      "sourceSession": "Sesión {number}",
       "legend": "Leyenda",
       "legendScribe": "generado, aún no tocado por ti",
       "legendEdited": "ahora es tuyo; regenerar lo reemplaza",
@@ -590,7 +596,15 @@
       "privateNotes": "Notas privadas del DM",
       "privateNotesEmpty": "Aún no hay notas privadas.",
       "excludedFromPdf": "Excluido del PDF",
-      "regeneratedPlaceholder": "Alternativa regenerada. En el producto real, el Escriba ofrecería una nueva versión aquí.",
+      "excludedFromPdfTitle": "Excluido del PDF",
+      "sections": {
+        "synopsis": "Sinopsis",
+        "main_objective": "Objetivo principal",
+        "twist": "Giro",
+        "encounters": "Encuentros",
+        "faction_reactions": "Reacciones de facciones",
+        "arc_progression": "Avance de arco"
+      },
       "toast": {
         "sectionSaved": "Sección guardada",
         "sectionRegenerated": "Sección regenerada por el Escriba",

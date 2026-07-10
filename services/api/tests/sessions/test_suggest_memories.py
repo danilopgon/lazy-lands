@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -22,6 +23,15 @@ VALID_PAYLOAD = {
         }
     ]
 }
+
+PROMPT_PATH = (
+    Path(__file__).parents[2]
+    / "app"
+    / "modules"
+    / "sessions"
+    / "prompts"
+    / "suggest_memory_facts_v1.jinja"
+)
 
 
 @pytest.mark.asyncio
@@ -98,3 +108,21 @@ async def test_zero_suggestions_is_valid_and_never_persists_anything() -> None:
     repo.get_campaign.assert_called_once_with("campaign-1")
     repo.insert_session.assert_not_called()
     repo.update_campaign_summary.assert_not_called()
+
+
+def test_suggest_memory_prompt_instructs_canonical_memory_type_values() -> None:
+    prompt = PROMPT_PATH.read_text(encoding="utf-8")
+
+    assert 'Each suggestion\'s "type" MUST be one of these allowed values' in prompt
+    for memory_type in (
+        "consequence",
+        "relationship",
+        "secret",
+        "promise",
+        "tension",
+        "revelation",
+        "item",
+        "arc_progress",
+    ):
+        assert f"- {memory_type}" in prompt
+    assert "Do not invent other type values." in prompt

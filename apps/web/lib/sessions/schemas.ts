@@ -112,6 +112,7 @@ export type GeneratedSection = z.infer<typeof generatedSectionSchema>
 
 export const generatedContentSchema = z
   .object({
+    title: z.string().min(1).max(200).optional(),
     sections: z.array(generatedSectionSchema).min(1),
     continuity_links: z.array(continuityLinkSchema).optional(),
   })

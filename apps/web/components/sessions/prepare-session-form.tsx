@@ -60,6 +60,14 @@ type ToneOption = (typeof toneOptions)[number]['value']
 type PaceOption = (typeof paceOptions)[number]['value']
 type DifficultyOption = (typeof difficultyOptions)[number]['value']
 
+/**
+ * Prepare-next-session view — gathers optional DM direction, shows the Scribe
+ * context that will be read, and submits the generation request, navigating to
+ * the resumable generated draft on success.
+ *
+ * @param {PrepareSessionViewProps} props - Component props.
+ * @returns {React.ReactElement} The prepare session view element.
+ */
 export function PrepareSessionView({
   campaignId,
   campaign: providedCampaign,
@@ -135,6 +143,11 @@ export function PrepareSessionView({
 
   if (!campaign) return null
 
+  /**
+   * Submit the validated direction and navigate to the generated draft on success.
+   *
+   * @param {FormEvent<HTMLFormElement>} [event] - The form submit event, if any.
+   */
   async function onSubmit(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault()
     setPhase('loading')
@@ -311,6 +324,18 @@ export function PrepareSessionView({
   )
 }
 
+/**
+ * Styled native select bound to a finite option set, localized via a label resolver.
+ *
+ * @param {object} root0 - The select props.
+ * @param {T} root0.value - Currently selected value.
+ * @param {(value: T) => void} root0.onValueChange - Updates the selected value.
+ * @param {readonly { value: T; labelKey: string }[]} root0.options - Finite localized options.
+ * @param {(key: string) => string} root0.translateLabel - Resolves a label key to display copy.
+ * @param {string} [root0.id] - Optional element id for label association.
+ * @returns {React.ReactElement} The select element.
+ * @template T - The finite string union of option values.
+ */
 function Select<T extends string>({
   value,
   onValueChange,
@@ -342,6 +367,12 @@ function Select<T extends string>({
   )
 }
 
+/**
+ * Return the next session number based on the highest logged session number.
+ *
+ * @param {SessionResponse[] | undefined} sessions - Logged sessions, ascending or unordered.
+ * @returns {number | null} The next session number, or null when none exist.
+ */
 function deriveNextSessionNumber(
   sessions: SessionResponse[] | undefined
 ): number | null {

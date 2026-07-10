@@ -51,6 +51,13 @@ function suggestionId(suggestion: MemorySuggestion, index: number) {
   return `${suggestion.type}:${suggestion.content}:${index}`
 }
 
+/**
+ * Resolve a memory type into a localized label or a humanized fallback.
+ *
+ * @param {ReturnType<typeof useTranslations>} t - The MemoryReview translation function.
+ * @param {string | null | undefined} type - Raw memory type from a payload.
+ * @returns {string} Localized type label, or a humanized fallback when the type is unknown.
+ */
 function memoryTypeLabel(
   t: ReturnType<typeof useTranslations>,
   type: string | null | undefined

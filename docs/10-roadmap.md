@@ -282,8 +282,10 @@ Status: **pending**
   `memory_facts`).
 - [ ] Basic PDF export test.
 
-### Block 11 - Handoff cleanup (if needed)
+### Block 11 - Handoff cleanup (if needed) and docs update
 
 Status: **pending**
 
 - [ ] Remove handoff code and update the docs to reflect the final architecture and flow if it changed during development and the specs didn't match the final implementation.
+- [ ] Update the docs to reflect the final architecture and flow if it changed during development and the specs didn't match the final implementation.
+- [ ] Update README and other main documentation with a fact check and final review of the flow, architecture, and any new features or changes that were made during development.

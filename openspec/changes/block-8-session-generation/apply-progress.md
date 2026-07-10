@@ -1,15 +1,29 @@
 # Apply Progress: Block 8 — Session Generation and Editing
 
-**Status**: PR 1 backend complete after backend review remediation; PR 2 frontend implemented with review/user feedback remediation complete, ready for re-verification
+**Status**: PR 1 backend complete after backend review remediation; PR 2 frontend implemented with PR #51 remediation complete and verified
 **Branch**: `feat/block-8-session-generation-frontend`
 **Delivery strategy**: chained PRs, stacked-to-main
 **PR 1 (backend)**: Complete after backend review remediation, ready for backend verification/review
-**PR 2 (frontend)**: Review/user feedback remediated; ready for re-verification
+**PR 2 (frontend)**: Review/user feedback and PR #51 remediation complete; ready for review
 
 ## Completed in this apply run
 
 ### PR 2 frontend remediation
 
+- Preserved generated proposal titles end-to-end: backend `GeneratedContent` now requires/persists
+  `title`, generated-session H1 reads `session.generated_content.title` or a localized proposal
+  fallback, and tests prove synopsis/summary text cannot become the H1.
+- Fixed stale summary overwrites: section PATCH payloads now include `summary` only when saving the
+  `synopsis` section, so later section saves cannot revert a DM-edited synopsis summary.
+- Fixed header Save changes while an editor is open: the current textarea draft is merged into the
+  full `generated_content.sections` PATCH payload before save-all persists.
+- Localized generated section labels from canonical section ids (`synopsis`, `main_objective`,
+  `faction_reactions`, `arc_progression`, etc.) without mutating persisted backend labels.
+- Tightened memory type display to prefer canonical enum values, with only an explicit legacy map for
+  old persisted labels; backend `MemorySuggestion.type` remains validated against `MemoryType`, and
+  the memory-suggestion prompt now instructs the canonical enum vocabulary.
+- Removed raw UUID/source-id rendering from woven memories. The sidebar shows a human-readable
+  `Session {number}` only for readable source ids such as `session-7`; otherwise source text is omitted.
 - Fixed missing dynamic memory type translations by normalizing canonical and legacy values (for example,
   `Faction Relationship`) before resolving localized labels, with readable fallback copy for unknown types.
 - Added campaign-detail header actions and campaign sub-navigation so DMs can reach both `Log session`
@@ -147,13 +161,14 @@
 | Review: direction null/empty consistency | `tests/generation/test_contracts.py` | Unit | ✅ Existing contract tests passed before change | ✅ Added `DirectionInput` null/blank normalization test first | ✅ Targeted tests passed | ✅ Null and blank values default consistently; optional text normalizes to `None` | ✅ Kept defaults centralized |
 | Review: direct no-op update guard | `tests/sessions/test_session_detail.py` | Unit | ✅ Existing session detail tests passed before change | ✅ Added direct empty command test first | ✅ Targeted tests passed | ✅ Use case rejects no-op command before repository update | ✅ Added `SessionValidationError` application error |
 | Review: Gemini prompt hardening | `services/api/app/modules/generation/prompts/generate_session_v1.jinja` | Prompt contract | ✅ Generation prompt rendered in existing use-case tests | ✅ Contract tests already enforce strict schema; prompt was then hardened without loosening validation | ✅ Full backend suite passed | ✅ Prompt now specifies JSON-only output, exact fields, arrays, origin literals, and memory-id constraints | ✅ No schema loosening |
+| PR #51: generated title, summary-safe PATCH, save-all draft, localized labels, canonical memory types | `apps/web/tests/sessions/generated-session-view.test.tsx`, `apps/web/tests/sessions/section-label.test.ts`, `apps/web/tests/sessions/memory-type-label.test.ts`, `tests/generation/test_contracts.py`, `tests/sessions/test_contracts.py`, `tests/sessions/test_suggest_memories.py` | Component/unit/API-contract | ✅ Added failing coverage for H1 title fallback, stale summary omission, open-draft save-all, section localization, source omission, canonical memory type prompt instructions | ✅ Targeted frontend and backend suites passed | ✅ Covers explicit title and fallback, synopsis and non-synopsis saves, source display/omission, canonical enum validation and prompt instructions | ✅ Removed arbitrary suffix-based type drift normalization; kept explicit legacy map only |
 
 ## Test Summary
 
 - **Total backend tests added**: 27 in `tests/generation` + `tests/sessions/test_session_detail.py`, plus repository retry coverage
 - **Total frontend tests added in PR 2**: 33+, including continuity-link remediation and review/user feedback assertions
-- **Total frontend tests passing**: targeted post-feedback suite 6 files / 42 tests; full suite 57 files / 416 tests passed
-- **Total backend tests passing**: 304 passed, 1 skipped
+- **Total frontend tests passing**: targeted generated-session suite 17 tests; full suite 58 files / 431 tests passed
+- **Total backend tests passing**: 307 passed, 1 skipped
 - **Layers used**: Unit and API/integration-style backend tests with FastAPI `TestClient` and fake Supabase chains; frontend unit/component tests with Vitest + React Testing Library
 - **Approval tests**: Existing sessions suite baseline before modifications: `uv run pytest tests/sessions` → 40 passed
 - **Pure functions created**: `estimate_tokens`, `build_prompt_context`
@@ -184,6 +199,17 @@
 - Remediation typecheck: `pnpm typecheck` → passed (`tsc --noEmit` successful)
 - Remediation lint: `pnpm lint` → passed with 11 JSDoc warnings and 0 errors
 - Remediation scoped Prettier: `pnpm exec prettier --check <remediation touched files>` → passed
+- PR #51 targeted backend: `uv run pytest tests/generation tests/sessions/test_session_detail.py tests/sessions/test_contracts.py tests/sessions/test_suggest_memories.py` → 40 passed, 1 warning
+- PR #51 backend full suite: `uv run pytest` → 307 passed, 1 skipped, 16 warnings
+- PR #51 backend lint: `uv run ruff check app/ tests/` → passed
+- PR #51 backend format check: `uv run ruff format --check app/ tests/` → passed (`183 files already formatted`)
+- PR #51 backend typecheck: `uv run mypy app/ --ignore-missing-imports` → passed (`Success: no issues found in 136 source files`)
+- PR #51 targeted frontend: `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx tests/sessions/memory-type-label.test.ts tests/sessions/section-label.test.ts` → 3 files / 23 tests passed
+- PR #51 generated-session regression: `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx` → 17 tests passed
+- PR #51 frontend full suite: `pnpm --filter web test` → 58 files / 431 tests passed
+- PR #51 frontend typecheck: `pnpm --filter web typecheck` and `pnpm typecheck` → passed
+- PR #51 frontend lint: `pnpm --filter web lint` and `pnpm lint` → passed with **0 warnings** and 0 errors
+- PR #51 scoped Prettier: `pnpm exec prettier --check <touched frontend/docs files>` → passed
 
 ## Deviations / Notes
 
@@ -203,5 +229,5 @@
 
 ## Remaining work
 
-- No known remediation blockers. Remaining warnings are existing JSDoc lint warnings in PR2 files;
-  global format drift remains pre-existing and outside this remediation scope.
+- No known remediation blockers. PR #51 remediation has 0 frontend lint warnings; global format drift
+  remains pre-existing and outside this remediation scope.

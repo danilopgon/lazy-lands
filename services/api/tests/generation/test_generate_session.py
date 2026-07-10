@@ -79,6 +79,7 @@ def _output_payload() -> dict[str, object]:
         "arc_progression": [{"arc_title": "Core", "progression": "Clue found."}],
         "continuity_links": [{"memory_fact_id": "mem-1", "relevance": "Payoff."}],
         "generated_content": {
+            "title": "Threads in the Mine",
             "sections": [
                 {
                     "id": "synopsis",
@@ -86,7 +87,7 @@ def _output_payload() -> dict[str, object]:
                     "body": "Draft.",
                     "origin": "scribe",
                 }
-            ]
+            ],
         },
     }
 
@@ -104,6 +105,7 @@ async def test_generate_session_persists_valid_output_with_trace() -> None:
     assert result.title == "Threads in the Mine"
     assert result.trace_id == "session-1"
     assert repo.created[0]["summary"] == "The party follows the arcane core clue."
+    assert repo.created[0]["generated_content"]["title"] == "Threads in the Mine"
     assert repo.created[0]["generated_content"]["sections"][0]["origin"] == "scribe"
     assert repo.created[0]["generated_content"]["continuity_links"] == [
         {"memory_fact_id": "mem-1", "relevance": "Payoff."}

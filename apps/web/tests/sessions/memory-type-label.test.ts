@@ -12,6 +12,16 @@ describe('memory type label helpers', () => {
     expect(getMemoryTypeMessageKey('faction-relationship')).toBe('relationship')
   })
 
+  it('maps legacy memory type variants the describe-review flow produced to canonical keys', () => {
+    expect(getMemoryTypeMessageKey('Story Arc Progress')).toBe('arc_progress')
+    expect(getMemoryTypeMessageKey('NPC Revelation')).toBe('revelation')
+    expect(getMemoryTypeMessageKey('Reputation')).toBe('reputation')
+    expect(getMemoryTypeMessageKey('World State Change')).toBe(
+      'world_state_change'
+    )
+    expect(getMemoryTypeMessageKey('Item')).toBe('item')
+  })
+
   it('normalizes known memory type strings and leaves unknown types as readable fallback copy', () => {
     expect(getMemoryTypeMessageKey('Arc Progress')).toBe('arc_progress')
     expect(getMemoryTypeMessageKey('old prophecy')).toBeNull()

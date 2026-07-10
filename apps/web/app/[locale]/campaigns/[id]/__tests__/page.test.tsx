@@ -450,6 +450,94 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByText(/the town of phandalin/i)).toBeInTheDocument()
   })
 
+  it('renders recent session entries as clickable links so generated drafts stay resumable', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'sess-draft',
+        session_number: 8,
+        summary: null,
+        consequences: null,
+        created_at: '2026-07-10T10:00:00Z',
+      },
+      {
+        id: 'sess-logged',
+        session_number: 7,
+        summary: 'The warehouse burned down.',
+        consequences: 'The guild lost its cache.',
+        created_at: '2026-06-08T10:00:00Z',
+      },
+    ])
+    renderPage()
+
+    await waitFor(() =>
+      expect(screen.getByText(/warehouse burned down/i)).toBeInTheDocument()
+    )
+
+    expect(screen.getByText('Session 8')).toBeInTheDocument()
+    const draftLink = screen.getByRole('link', { name: /resume draft/i })
+    expect(draftLink).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/sess-draft'
+    )
+    // The most recent session stays reachable from the session list entry too.
+    expect(screen.getByRole('link', { name: /^Session 8$/i })).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/sess-draft'
+    )
+    expect(screen.getByRole('link', { name: /^Session 7$/i })).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/sess-logged'
+    )
+  })
+
+  it('omits the Resume draft affordance when no draft-like (unsummarized) session exists', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'sess-logged',
+        session_number: 7,
+        summary: 'The warehouse burned down.',
+        consequences: null,
+        created_at: '2026-06-08T10:00:00Z',
+      },
+    ])
+    renderPage()
+
+    await waitFor(() =>
+      expect(screen.getByText(/warehouse burned down/i)).toBeInTheDocument()
+    )
+
+    expect(screen.queryByRole('link', { name: /resume draft/i })).toBeNull()
+  })
+
+  it('renders the header action buttons with responsive stacking and minimum touch targets', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    renderPage()
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'Shadows over Phandalin' })
+      ).toBeInTheDocument()
+    })
+
+    const logSession = screen.getByRole('link', { name: 'Log session' })
+    const prepareNext = screen.getByRole('link', {
+      name: 'Prepare next session',
+    })
+    expect(logSession).toBeInTheDocument()
+    expect(prepareNext).toBeInTheDocument()
+
+    // Both actions keep the 44px minimum touch target height.
+    expect(logSession.className).toMatch(/h-11/)
+    expect(prepareNext.className).toMatch(/h-11/)
+    // The action container stacks to full-width on mobile and returns to a row
+    // from small screens up so the buttons are never crushed narrow.
+    const header = logSession.parentElement
+    expect(header?.className).toMatch(/flex-col/)
+    expect(header?.className).toMatch(/sm:flex-row/)
+  })
+
   it('filters arcs to active/dormant status and shows max 3 with "All arcs" link', async () => {
     mockGetCampaignDetail.mockResolvedValue(
       buildCampaignDetail({

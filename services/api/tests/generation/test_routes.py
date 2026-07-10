@@ -59,6 +59,7 @@ def _provider() -> FakeLlmProvider:
             "arc_progression": [{"arc_title": "Core", "progression": "Clue found."}],
             "continuity_links": [{"memory_fact_id": "mem-1", "relevance": "Payoff."}],
             "generated_content": {
+                "title": "Threads in the Mine",
                 "sections": [
                     {
                         "id": "synopsis",
@@ -66,7 +67,7 @@ def _provider() -> FakeLlmProvider:
                         "body": "Draft.",
                         "origin": "scribe",
                     }
-                ]
+                ],
             },
         },
     )
@@ -130,6 +131,7 @@ def test_generate_session_route_persists_response(client: TestClient) -> None:
     assert body["title"] == "Threads in the Mine"
     assert body["trace_id"] == "session-1"
     inserted = sessions.insert.call_args[0][0]
+    assert inserted["generated_content"]["title"] == "Threads in the Mine"
     assert inserted["generated_content"]["sections"][0]["origin"] == "scribe"
     assert inserted["generated_content"]["continuity_links"] == [
         {"memory_fact_id": "mem-1", "relevance": "Payoff."}
