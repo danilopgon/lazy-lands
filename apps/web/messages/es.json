@@ -581,6 +581,7 @@
       "rewriting": "El Escriba está reescribiendo",
       "saveSectionChanges": "Guardar cambios de sección",
       "sectionSaveError": "No se pudo guardar esta sección. Tu edición sigue aquí; inténtalo de nuevo.",
+      "saveAllError": "No se pudieron guardar los cambios. Tu borrador sigue aquí; inténtalo de nuevo.",
       "loadingTitle": "El Escriba está escribiendo",
       "loadingCaption": "Abriendo el borrador de sesión generado",
       "loadError": "No se pudo cargar esta sesión generada.",

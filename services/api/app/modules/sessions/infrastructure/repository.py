@@ -166,7 +166,9 @@ class SupabaseSessionRepository:
         try:
             response = (
                 self._client.table("sessions")
-                .select("id,session_number,summary,consequences,created_at")
+                .select(
+                    "id,session_number,summary,consequences,generated_content,created_at"
+                )
                 .eq("campaign_id", campaign_id)
                 .order("session_number", desc=False)
                 .execute()

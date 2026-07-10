@@ -83,19 +83,33 @@ export function RecentSessions({
     <div className="space-y-3">
       {recent.map((session) => {
         const sessionHref = `/campaigns/${campaignId}/sessions/${session.id}`
-        const isDraft = !session.summary && !session.consequences
+        const hasGeneratedContent = Boolean(
+          session.generated_content?.sections?.length
+        )
+        const isDraft =
+          hasGeneratedContent && !session.summary && !session.consequences
         return (
           <div
             key={session.id}
             className="border-b border-dotted border-[var(--dotted)] pb-3 last:border-b-0"
           >
             <div className="flex items-baseline gap-2">
-              <Link
-                href={sessionHref}
-                className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)] hover:underline"
-              >
-                {t('history.sessionLabel', { number: session.session_number })}
-              </Link>
+              {hasGeneratedContent ? (
+                <Link
+                  href={sessionHref}
+                  className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)] hover:underline"
+                >
+                  {t('history.sessionLabel', {
+                    number: session.session_number,
+                  })}
+                </Link>
+              ) : (
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
+                  {t('history.sessionLabel', {
+                    number: session.session_number,
+                  })}
+                </span>
+              )}
               {isDraft ? (
                 <span className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mute)]">
                   {t('history.draftBadge')}
@@ -103,12 +117,18 @@ export function RecentSessions({
               ) : null}
             </div>
             {session.summary ? (
-              <Link
-                href={sessionHref}
-                className="mt-1 block text-sm leading-relaxed text-[var(--ink-2)] hover:underline"
-              >
-                {session.summary}
-              </Link>
+              hasGeneratedContent ? (
+                <Link
+                  href={sessionHref}
+                  className="mt-1 block text-sm leading-relaxed text-[var(--ink-2)] hover:underline"
+                >
+                  {session.summary}
+                </Link>
+              ) : (
+                <p className="mt-1 text-sm leading-relaxed text-[var(--ink-2)]">
+                  {session.summary}
+                </p>
+              )
             ) : null}
             {isDraft ? (
               <Link

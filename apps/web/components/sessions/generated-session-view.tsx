@@ -255,17 +255,23 @@ export function GeneratedSessionView({
       generated_content: generatedContentWithSections(nextSections),
       ...(editing === 'synopsis' ? { summary: draft } : {}),
     }
-    const updated = await updateSessionFn(sessionId, payload)
-    setSections(updated.generated_content?.sections ?? nextSections)
-    setEditing(null)
-    setError(null)
-    showToast(t('toast.allSaved'))
+    try {
+      const updated = await updateSessionFn(sessionId, payload)
+      setSections(updated.generated_content?.sections ?? nextSections)
+      setEditing(null)
+      setError(null)
+      showToast(t('toast.allSaved'))
+    } catch {
+      setError(t('saveAllError'))
+    }
   }
 
   /** Copy the visible sections to the clipboard and confirm with a toast. */
   function copyAll() {
     const text = visibleSections
-      .map((section) => `${section.label.toUpperCase()}\n${section.body}`)
+      .map(
+        (section) => `${sectionLabel(section).toUpperCase()}\n${section.body}`
+      )
       .join('\n\n')
     void navigator.clipboard?.writeText(text).catch(() => {})
     showToast(t('toast.copied'))

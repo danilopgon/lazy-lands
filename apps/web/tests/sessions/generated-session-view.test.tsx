@@ -371,6 +371,30 @@ describe('GeneratedSessionView', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Section saved')
   })
 
+  it('opens section editing from the explicit edit button without relying on body clicks', async () => {
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+      />
+    )
+
+    await userEvent.click(
+      screen.getByText('Halia offers silence for a quiet job.')
+    )
+
+    expect(screen.queryByLabelText('Synopsis')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+
+    expect(screen.getByLabelText('Synopsis')).toHaveValue(
+      'Halia offers silence for a quiet job.'
+    )
+  })
+
   it('preserves continuity links and unknown generated content fields when saving one section', async () => {
     const sessionWithExtra = {
       ...session,
@@ -597,6 +621,36 @@ describe('GeneratedSessionView', () => {
     )
   })
 
+  it('preserves the open editor draft and shows an error when header save fails', async () => {
+    const update = vi.fn().mockRejectedValue(new Error('network'))
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+        updateSessionFn={update}
+      />
+    )
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Edit' })[1])
+    await userEvent.clear(screen.getByLabelText('Twist'))
+    await userEvent.type(
+      screen.getByLabelText('Twist'),
+      'Draft twist before failed header save.'
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not save changes'
+    )
+    expect(screen.getByLabelText('Twist')).toHaveValue(
+      'Draft twist before failed header save.'
+    )
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
   it('cancels editing without calling PATCH', async () => {
     const update = vi.fn()
     renderGenerated(
@@ -641,6 +695,33 @@ describe('GeneratedSessionView', () => {
     )
     expect(screen.getByRole('status')).toHaveTextContent(
       'Session copied to clipboard'
+    )
+  })
+
+  it('copies localized canonical section headings in the active locale', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, { clipboard: { writeText } })
+    render(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+      />,
+      { wrapper: withQueryClient, locale: 'es' }
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copiar' }))
+
+    expect(writeText).toHaveBeenCalledWith(
+      expect.stringContaining('SINOPSIS\nHalia offers silence')
+    )
+    expect(writeText).not.toHaveBeenCalledWith(
+      expect.stringContaining('SYNOPSIS\nHalia offers silence')
+    )
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Sesión copiada al portapapeles'
     )
   })
 })

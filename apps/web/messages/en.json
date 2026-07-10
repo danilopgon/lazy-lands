@@ -581,6 +581,7 @@
       "rewriting": "The Scribe is rewriting",
       "saveSectionChanges": "Save section changes",
       "sectionSaveError": "Could not save this section. Your edit is still here; try again.",
+      "saveAllError": "Could not save changes. Your draft is still here; try again.",
       "loadingTitle": "The Scribe is writing",
       "loadingCaption": "Opening the generated session draft",
       "loadError": "Could not load this generated session.",

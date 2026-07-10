@@ -326,6 +326,49 @@ describe('CampaignDetailPage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('does not link logged sessions without generated content to the generated draft route', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'logged-session',
+        session_number: 1,
+        summary: 'The party arrived in town.',
+        consequences: null,
+        generated_content: null,
+        created_at: '2026-06-01T10:00:00Z',
+      },
+      {
+        id: 'draft-session',
+        session_number: 2,
+        summary: 'The Scribe draft summary.',
+        consequences: null,
+        generated_content: {
+          sections: [
+            {
+              id: 'synopsis',
+              label: 'Synopsis',
+              body: 'Draft body.',
+              origin: 'scribe',
+            },
+          ],
+        },
+        created_at: '2026-06-08T10:00:00Z',
+      },
+    ])
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText(/party arrived in town/i)).toBeInTheDocument()
+    })
+
+    expect(
+      screen.queryByRole('link', { name: /party arrived in town/i })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /the scribe draft summary/i })
+    ).toHaveAttribute('href', '/campaigns/camp-1/sessions/draft-session')
+  })
+
   it('toggles world-state into edit mode with autofocus on "Edit" click', async () => {
     const user = userEvent.setup()
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
@@ -458,6 +501,16 @@ describe('CampaignDetailPage', () => {
         session_number: 8,
         summary: null,
         consequences: null,
+        generated_content: {
+          sections: [
+            {
+              id: 'synopsis',
+              label: 'Synopsis',
+              body: 'Draft body.',
+              origin: 'scribe',
+            },
+          ],
+        },
         created_at: '2026-07-10T10:00:00Z',
       },
       {
@@ -485,10 +538,9 @@ describe('CampaignDetailPage', () => {
       'href',
       '/campaigns/camp-1/sessions/sess-draft'
     )
-    expect(screen.getByRole('link', { name: /^Session 7$/i })).toHaveAttribute(
-      'href',
-      '/campaigns/camp-1/sessions/sess-logged'
-    )
+    expect(
+      screen.queryByRole('link', { name: /^Session 7$/i })
+    ).not.toBeInTheDocument()
   })
 
   it('omits the Resume draft affordance when no draft-like (unsummarized) session exists', async () => {

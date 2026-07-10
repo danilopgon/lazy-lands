@@ -8,8 +8,19 @@
 
 ## Completed in this apply run
 
+### PR #51 user-requested frontend refinements
+
+- Fixed generated-session clipboard output so canonical section ids copy the same localized headings
+  visible in the UI, instead of backend raw labels (for example, Spanish now copies `SINOPSIS`).
+- Verified section editing is discoverable through explicit localized `Edit`/`Editar` buttons and added
+  regression coverage proving body clicks are not required to enter edit mode.
+
 ### PR 2 frontend remediation
 
+- Addressed latest PR #49/#51 review comments: generation output now rejects
+  `generated_content.sections[].origin="edited"`, continuity links must cite active memory facts from
+  the generation context before persistence, campaign recent sessions only link rows with generated
+  content, and header Save changes failures now show a visible error while preserving the open draft.
 - Preserved generated proposal titles end-to-end: backend `GeneratedContent` now requires/persists
   `title`, generated-session H1 reads `session.generated_content.title` or a localized proposal
   fallback, and tests prove synopsis/summary text cannot become the H1.
@@ -162,6 +173,8 @@
 | Review: direct no-op update guard | `tests/sessions/test_session_detail.py` | Unit | ✅ Existing session detail tests passed before change | ✅ Added direct empty command test first | ✅ Targeted tests passed | ✅ Use case rejects no-op command before repository update | ✅ Added `SessionValidationError` application error |
 | Review: Gemini prompt hardening | `services/api/app/modules/generation/prompts/generate_session_v1.jinja` | Prompt contract | ✅ Generation prompt rendered in existing use-case tests | ✅ Contract tests already enforce strict schema; prompt was then hardened without loosening validation | ✅ Full backend suite passed | ✅ Prompt now specifies JSON-only output, exact fields, arrays, origin literals, and memory-id constraints | ✅ No schema loosening |
 | PR #51: generated title, summary-safe PATCH, save-all draft, localized labels, canonical memory types | `apps/web/tests/sessions/generated-session-view.test.tsx`, `apps/web/tests/sessions/section-label.test.ts`, `apps/web/tests/sessions/memory-type-label.test.ts`, `tests/generation/test_contracts.py`, `tests/sessions/test_contracts.py`, `tests/sessions/test_suggest_memories.py` | Component/unit/API-contract | ✅ Added failing coverage for H1 title fallback, stale summary omission, open-draft save-all, section localization, source omission, canonical memory type prompt instructions | ✅ Targeted frontend and backend suites passed | ✅ Covers explicit title and fallback, synopsis and non-synopsis saves, source display/omission, canonical enum validation and prompt instructions | ✅ Removed arbitrary suffix-based type drift normalization; kept explicit legacy map only |
+| Latest PR #49/#51 review remediation | `tests/generation/test_contracts.py`, `tests/generation/test_generate_session.py`, `apps/web/app/[locale]/campaigns/[id]/__tests__/page.test.tsx`, `apps/web/tests/sessions/generated-session-view.test.tsx` | Unit/component | ✅ Added failing tests for edited LLM origins, hallucinated continuity ids, non-generated session links, and header-save failure handling | ✅ Targeted backend and frontend suites passed | ✅ Valid and invalid provenance, valid and invalid continuity links, generated vs logged session rows, success and failure save-all paths | ✅ Kept fixes minimal at contract/use-case and existing component boundaries |
+| PR #51 user refinements: localized copy headings and explicit edit path | `apps/web/tests/sessions/generated-session-view.test.tsx` | Component | ✅ Existing generated-session suite baseline available; RED run after new tests showed 19 passed / 1 failed | ✅ Added failing Spanish clipboard assertion plus explicit edit-button/body-click regression first | ✅ `pnpm --filter web test -- generated-session-view` → 20 passed | ✅ Two behaviors covered: localized copy output and explicit edit-button opening editor while body click does not | ✅ Reused existing `sectionLabel(section)` display helper for clipboard output |
 
 ## Test Summary
 
@@ -210,6 +223,16 @@
 - PR #51 frontend typecheck: `pnpm --filter web typecheck` and `pnpm typecheck` → passed
 - PR #51 frontend lint: `pnpm --filter web lint` and `pnpm lint` → passed with **0 warnings** and 0 errors
 - PR #51 scoped Prettier: `pnpm exec prettier --check <touched frontend/docs files>` → passed
+- Latest PR review focused backend: `uv run pytest tests/generation/test_contracts.py tests/generation/test_generate_session.py tests/generation/test_routes.py` → 18 passed, 1 warning
+- Latest PR review backend lint/typecheck: `uv run ruff check app/ tests/` → passed; `uv run mypy app/ --ignore-missing-imports` → passed
+- Latest PR review focused frontend: `pnpm --filter web test "app/[locale]/campaigns/[id]/__tests__/page.test.tsx" "tests/sessions/generated-session-view.test.tsx"` → 2 files / 35 tests passed
+- Latest PR review frontend full suite/typecheck/lint: `pnpm --filter web test` → 58 files / 433 tests passed; `pnpm typecheck` → passed; `pnpm lint` → passed with 0 warnings
+- Latest PR review diff check: `git diff --check` → passed, with Git line-ending warnings only
+- PR #51 user refinement RED: `pnpm --filter web test -- generated-session-view` → 19 passed / 1 failed before implementation because Spanish copy still used `SYNOPSIS` from the raw backend label.
+- PR #51 user refinement GREEN: `pnpm --filter web test -- generated-session-view` → 1 file / 20 tests passed.
+- PR #51 user refinement full frontend suite: `pnpm --filter web test` → 58 files / 435 tests passed.
+- PR #51 user refinement typecheck/lint: `pnpm typecheck` → passed; `pnpm lint` → passed with 0 warnings.
+- PR #51 user refinement diff check: `git diff --check` → passed, with Git line-ending warnings only.
 
 ## Deviations / Notes
 
