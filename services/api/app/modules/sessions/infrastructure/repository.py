@@ -49,6 +49,22 @@ class SupabaseSessionRepository:
         rows = cast(list[dict[str, Any]], response.data or [])
         return rows[0] if rows else None
 
+    def get_campaign_owner(self, campaign_id: str) -> str | None:
+        """Fetch a caller-visible campaign owner id for ownership helpers."""
+        try:
+            response = (
+                self._client.table("campaigns")
+                .select("user_id")
+                .eq("id", campaign_id)
+                .execute()
+            )
+        except Exception as exc:
+            raise RepositoryError("Failed to get campaign owner") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        if not rows:
+            return None
+        return cast(str | None, rows[0].get("user_id"))
+
     def get_next_session_number(self, campaign_id: str) -> int:
         """Return ``MAX(session_number) + 1`` for the campaign (1 if none exist)."""
         try:
@@ -158,6 +174,39 @@ class SupabaseSessionRepository:
         except Exception as exc:
             raise RepositoryError("Failed to list sessions") from exc
         return cast(list[dict[str, Any]], response.data or [])
+
+    def get_session(self, session_id: str) -> dict | None:
+        """Fetch a single caller-visible session with generated draft JSON."""
+        try:
+            response = (
+                self._client.table("sessions")
+                .select(
+                    "id,campaign_id,session_number,summary,consequences,"
+                    "generated_content,trace_json,created_at,updated_at"
+                )
+                .eq("id", session_id)
+                .execute()
+            )
+        except Exception as exc:
+            raise RepositoryError("Failed to get session") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        return rows[0] if rows else None
+
+    def update_session(self, session_id: str, data: dict) -> dict:
+        """Patch summary/consequences/generated_content and return the updated row."""
+        try:
+            response = (
+                self._client.table("sessions")
+                .update(data)
+                .eq("id", session_id)
+                .execute()
+            )
+        except Exception as exc:
+            raise RepositoryError("Failed to update session") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        if not rows:
+            raise RepositoryError("Session update returned no rows")
+        return rows[0]
 
     def get_sessions_since(
         self, campaign_id: str, since_session_number: int
