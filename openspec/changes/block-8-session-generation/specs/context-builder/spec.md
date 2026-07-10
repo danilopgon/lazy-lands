@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The context builder is a utility within the `GenerateNextSessionUseCase` that assembles the generation prompt input from campaign data using direct relational fetches (no RAG, no embeddings, no vector search — a hard non-goal per PRODUCT.md and the Block 8 proposal). It compresses the fetch result into a ~2,000-token prompt via Jinja template rendering, estimates token count for trace logging, and excludes data that should never reach the Scribe.
+The context builder is a utility within the `GenerateNextSessionUseCase` that assembles the generation prompt input from campaign data using direct relational fetches (no RAG, no embeddings, no vector search — a hard non-goal per PRODUCT.md and the Block 8 proposal). It renders that context through the Jinja prompt template, estimates token count for trace logging, warns when the estimate exceeds the budget, and excludes data that should never reach the Scribe. It does not hard-compress or truncate the prompt to 2,000 tokens.
 
 ## Requirements
 

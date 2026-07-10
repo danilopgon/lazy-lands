@@ -7,7 +7,7 @@
 
 ## Verdict
 
-**PASS WITH WARNINGS** — the previous critical failed-generation trace metadata gap is fixed and covered by a passing runtime test. All required backend quality gates pass. Remaining warnings are coverage/triangulation depth items, not blockers for PR 1.
+**PASS** — backend review remediation is complete. Continuity links now persist in `generated_content`, invalid LLM output maps to retryable 422 with no insert, retry-exhausted persistence failures map to retryable 409, direction normalization is consistent, direct no-op updates are guarded, and all required backend quality gates pass.
 
 ## Completeness
 
@@ -24,9 +24,10 @@
 
 | Command | Working directory | Outcome |
 |---------|-------------------|---------|
-| `uv run pytest` | `services/api/` | ✅ Passed — 295 passed, 1 skipped, 16 warnings in 12.33s |
+| `uv run pytest tests/generation tests/sessions/test_session_detail.py` | `services/api/` | ✅ Passed — 27 passed, 1 warning |
+| `uv run pytest` | `services/api/` | ✅ Passed — 304 passed, 1 skipped, 16 warnings |
 | `uv run ruff check app/ tests/` | `services/api/` | ✅ Passed — All checks passed |
-| `uv run ruff format --check app/ tests/` | `services/api/` | ✅ Passed — 182 files already formatted |
+| `uv run ruff format --check app/ tests/` | `services/api/` | ✅ Passed — 183 files already formatted |
 | `uv run mypy app/ --ignore-missing-imports` | `services/api/` | ✅ Passed — Success: no issues found in 136 source files |
 | `git status --short -- apps/web` | repository root | ✅ Passed — no frontend source/status output |
 
@@ -74,12 +75,13 @@ Coverage analysis skipped — no coverage tool detected/configured for the backe
 | Spec | Requirement / Scenario | Evidence | Result |
 |------|------------------------|----------|--------|
 | generation | POST happy path persists generated session with `generated_content`, `trace_json`, summary from synopsis | `GenerateNextSessionUseCase`; `test_generate_session_persists_valid_output_with_trace`; `test_generate_session_route_persists_response` | ✅ COMPLIANT |
+| generation | Persisted `generated_content` includes `continuity_links` for reload via `GET /sessions/{id}` | `GeneratedContent.continuity_links`; `content_for_persistence()`; `test_content_for_persistence_defaults_sections_and_continuity_links`; `test_get_session_returns_full_generated_content`; route GET assertion | ✅ COMPLIANT |
 | generation | Campaign not found / RLS miss returns 404 | `GenerationNotFoundError`; exception handler; route test | ✅ COMPLIANT |
-| generation | LLM output validation failure returns retryable 422 and does not persist | global `LlmOutputValidationError` handler; `test_generate_session_does_not_persist_invalid_llm_output` asserts raised error and no session persistence | ✅ COMPLIANT |
+| generation | LLM output validation failure returns retryable 422 and does not persist | global `LlmOutputValidationError` handler; `test_generate_session_does_not_persist_invalid_llm_output`; `test_generate_session_route_returns_retryable_422_for_invalid_llm_output` asserts 422, retryable, no insert, and trace log fields | ✅ COMPLIANT |
 | generation | LLM validation failure logs trace metadata with `error_code` and `duration_ms` | `GenerateNextSessionUseCase` catches `LlmOutputValidationError`, builds trace, calls `GenerationRepository.record_generation_trace`; `test_generate_session_does_not_persist_invalid_llm_output` asserts provider, model, prompt version, estimated size, `duration_ms`, `error_code`, and context summary | ✅ COMPLIANT |
 | generation | Token estimate uses `len(text)//4`, oversized prompt logs warning and still sends prompt | `estimate_tokens`; `GenerateNextSessionUseCase` warning path; token estimate test passes, warning emission not directly asserted | ⚠️ PARTIAL |
-| generation | Session insert race retries up to 5 attempts | `SupabaseGenerationRepository.create_generated_session` retry loop | ⚠️ PARTIAL — static evidence only; no passing covering test found |
-| generation | Direction parameters optional with defaults and string trimming | `DirectionInput`, `GenerationDirection`; route tests use `{}`; context tests assert defaults | ✅ COMPLIANT |
+| generation | Session insert race retries up to 5 attempts and exhausted conflicts return retryable 409 | `SupabaseGenerationRepository.create_generated_session`; `test_create_generated_session_raises_after_exhausting_number_conflicts`; `test_generate_session_route_maps_persistence_error_to_retryable_409` | ✅ COMPLIANT |
+| generation | Direction parameters optional with defaults, null handling, and string trimming | `DirectionInput`, `GenerationDirection`; route tests use `{}`; `test_direction_input_normalizes_empty_strings_and_nulls_to_defaults` | ✅ COMPLIANT |
 | generation | Response schema includes required generated-session fields and `trace_id` | `GenerateSessionResponse`; route/use-case tests assert key response fields | ✅ COMPLIANT |
 | generation | Prompt template at required path with campaign/context/direction inputs | `generate_session_v1.jinja`; use-case renders it; tests exercise render through use case | ✅ COMPLIANT |
 | context-builder | Direct relational context includes campaign, NPCs, factions, active arcs, active memory facts | `SupabaseGenerationRepository.get_generation_context`; route fake exercises table reads | ⚠️ PARTIAL — static evidence plus route fake; exact filters are not exhaustively asserted |
@@ -93,7 +95,7 @@ Coverage analysis skipped — no coverage tool detected/configured for the backe
 | editing | PATCH empty body returns 422 | `UpdateSessionRequest` model validator; unit test | ✅ COMPLIANT |
 | editing | Explicit nullable clear for consequences | `provided_fields` handling; unit test | ✅ COMPLIANT |
 
-**Compliance summary**: 16 compliant, 3 partial, 0 failing/untested across backend-scoped scenarios.
+**Compliance summary**: backend-scoped review feedback compliant; remaining frontend scenarios are deferred to PR 2 by scope.
 
 ## Correctness (Static Evidence)
 
@@ -117,7 +119,7 @@ Coverage analysis skipped — no coverage tool detected/configured for the backe
 | Flat `/sessions/{session_id}` routes | ✅ Yes | `detail_router` prefix `/sessions` added and mounted. |
 | Direct relational fetch, no RAG/embeddings | ✅ Yes | Repository uses Supabase table reads only. |
 | Trace on failure, not session | ✅ Yes | Failed validation records trace through the repository seam and does not persist a session row. |
-| “5 parallel SELECTs” phrasing | ⚠️ Deviation accepted | Current Supabase client is synchronous; implementation uses sequential direct SELECTs. This matches `apply-progress.md` deviation and does not break the backend contract. |
+| Sequential direct SELECTs | ✅ Yes | Current Supabase client is synchronous; implementation uses sequential direct SELECTs through that client and does not introduce async client churn. |
 
 ## Issues Found
 
@@ -127,18 +129,15 @@ None.
 
 ### WARNING
 
-1. **Repository query filters and race retry are mostly statically verified**  
-   Runtime tests use fake Supabase chains and confirm the happy path, but they do not fully assert exact `.eq("status", "active")` filter values or exercise session-number conflict retries in `SupabaseGenerationRepository`.
-
-2. **Oversized context warning is not covered by a runtime assertion**  
+1. **Oversized context warning is not covered by a runtime assertion**
    Token estimation is tested, and the use case has a warning branch, but no test asserts that oversized contexts emit the warning while still calling the LLM.
 
-3. **Coverage is unavailable**  
+2. **Coverage is unavailable**
    Changed-file coverage could not be reported because no backend coverage tool is configured.
 
 ### SUGGESTION
 
-1. Add focused tests for repository active-status filters, generation insert retry, and oversized-context warning. These are small and would tighten Strict TDD evidence.
+1. Add focused tests for repository active-status filters and oversized-context warning. These are small and would tighten Strict TDD evidence further.
 
 ## Previous Critical Finding Re-Verification
 

@@ -16,6 +16,7 @@ The system MUST expose `POST /campaigns/{campaign_id}/generate-session` protecte
 - WHEN they send `POST /campaigns/{campaign_id}/generate-session` with an empty body (all direction defaults)
 - THEN the endpoint MUST return 200 with a session object containing `id`, `title`, `synopsis`, `main_objective`, `twist`, `encounters[]`, `faction_reactions[]`, `arc_progression[]`, `continuity_links[]`, `session_number`, `trace_id`
 - AND the session MUST be persisted with `generated_content` (jsonb) and `trace_json` (jsonb) populated
+- AND `generated_content` MUST include the editable `sections[]` and the generated `continuity_links[]` so `GET /sessions/{id}` can reload the same draft context
 - AND the generated `summary` field SHALL be auto-filled from the synopsis
 
 #### Scenario: Campaign not found

@@ -4,14 +4,14 @@
 
 Deliver the **Generate** step of the critical path (Login → Campaign → Session → Memory → **Generate → Export**). The DM can request a structured next-session proposal from the Scribe (the LLM), preview the draft, edit any section inline, and save the finalised version. Per `docs/10-roadmap.md` (Block 8), `docs/05-ai-system.md`, `docs/06-api-contracts.md`, and the `handoff/app/views-prepare.jsx` prototypes.
 
-Generation context includes `accumulated_summary`, NPCs, factions, open arcs, and active `MemoryFacts` — a direct relational fetch (~2,000 tokens max), never RAG/embeddings.
+Generation context includes `accumulated_summary`, NPCs, factions, open arcs, and active `MemoryFacts` — a direct relational fetch with token estimation and oversized-context warning, never RAG/embeddings.
 
 ## Scope
 
 ### In Scope
-- `POST /campaigns/{campaign_id}/generate-session` — validates ownership, builds compressed context, calls LLM via `complete_json`, validates output against `GeneratedSessionOutput` Pydantic model, persists draft session with `generated_content` + `trace_json`.
+- `POST /campaigns/{campaign_id}/generate-session` — validates ownership, builds prompt context, calls LLM via `complete_json`, validates output against `GeneratedSessionOutput` Pydantic model, persists draft session with `generated_content` + `trace_json`.
 - `GenerateNextSessionUseCase` — in the existing `generation/` module (ADR-05). Builds context from campaign + NPCs + factions + open arcs + active MemoryFacts.
-- `PATCH /sessions/{session_id}` — persisted section-level edits with `ContentSource.EDITED` provenance.
+- `PATCH /sessions/{session_id}` — persisted section-level edits with serialized `"edited"` provenance.
 - `GET /sessions/{session_id}` — fetch a single session with full `generated_content` for the editing view.
 - Trace metadata per generation call: provider, model, prompt_version, context_size, duration_ms, error code — stored in `sessions.trace_json`.
 - Frontend Prepare page (`/campaigns/[id]/prepare`) matching the `PrepareSession` handoff.
@@ -33,7 +33,7 @@ Generation context includes `accumulated_summary`, NPCs, factions, open arcs, an
 
 ### New Capabilities
 - `session-generation`: Generate endpoint, use case, context builder, prompt, Pydantic validation, trace persistence, and draft session creation.
-- `session-editing`: PATCH endpoint, per-section ContentSource provenance, inline editing UI, origin badges.
+- `session-editing`: PATCH endpoint, per-section serialized origin provenance (`"scribe"`/`"edited"`), inline editing UI, origin badges.
 - `session-read`: GET single session (by id) with full generated_content for the editing view.
 - `session-generation-ui`: Prepare page form (direction params, context preview, loading/error states).
 - `generated-session-ui`: Generated session view with inline editing, origin badges, memories sidebar, save/copy actions.
@@ -56,7 +56,7 @@ The `GenerateNextSessionUseCase` calls `GenerationRepository.get_generation_cont
 - Open arcs (status=`active`): `title`, `description`, `priority`
 - Active MemoryFacts (status=`active`): `content`, `type`, `importance`
 
-The use case compresses these into a ~2,000-token prompt via `render_prompt("generate_session_v1.jinja", ...)`. The last session is already included in `accumulated_summary` — not provided separately to avoid double-counting. Unaccepted suggestions are excluded.
+The use case renders these into a prompt via `render_prompt("generate_session_v1.jinja", ...)`, estimates token count with a lightweight heuristic, and logs an oversized-context warning when the estimate exceeds the configured budget. The last session is already included in `accumulated_summary` — not provided separately to avoid double-counting. Unaccepted suggestions are excluded. The prompt is not hard-truncated to 2,000 tokens.
 
 ### Token estimation guard
 
@@ -70,7 +70,7 @@ After the LLM call, the use case builds a trace dict with: `provider`, `model`, 
 
 1. `POST /campaigns/{id}/generate-session` creates a **draft session** with `generated_content` populated, `trace_json` populated, `summary` = synopsis (auto-filled from the generated content), `consequences` = null. A sequential `session_number` is assigned (reusing `insert_session_with_next_number` from the sessions repo — the generation module calls it through its own repo protocol). The DM can later edit and add consequences.
 2. Frontend renders the draft via `GET /sessions/{session_id}`.
-3. `PATCH /sessions/{session_id}` updates the `generated_content` with edited sections (origin badge flips to `ContentSource.EDITED` for edited sections). Can also update `summary`, `consequences`.
+3. `PATCH /sessions/{session_id}` updates the `generated_content` with edited sections (origin badge flips to serialized `"edited"` for edited sections). Can also update `summary`, `consequences`.
 
 ### Frontend routing
 
@@ -89,7 +89,7 @@ If the LLM output fails Pydantic validation (`LlmOutputValidationError`), the er
 
 | Area | Impact | Description |
 |------|--------|-------------|
-| `services/api/app/modules/generation/domain/` | New | `GeneratedSessionOutput`, sub-models, `ContentSource` reuse, `GenerationRepository` port |
+| `services/api/app/modules/generation/domain/` | New | `GeneratedSessionOutput`, sub-models with serialized origin strings, `GenerationRepository` port |
 | `services/api/app/modules/generation/application/generate_session.py` | New | `GenerateNextSessionUseCase` |
 | `services/api/app/modules/generation/infrastructure/repository.py` | New | Supabase implementation of `GenerationRepository` |
 | `services/api/app/modules/generation/api/routes.py` | New | `POST /campaigns/{id}/generate-session` |
@@ -136,7 +136,7 @@ Unmount the `generation` router in `main.py`, revert `PATCH /sessions/{id}` and 
 - [ ] Generation context NEVER includes unaccepted MemorySuggestions (only active MemoryFacts).
 - [ ] Session is created with sequential `session_number` that does not conflict with played sessions.
 - [ ] Invalid LLM output returns retryable 422; no draft session persisted on failure; frontend shows retry notice.
-- [ ] `PATCH /sessions/{id}` accepts partial updates to `generated_content`, `summary`, `consequences`; edited sections carry `ContentSource.EDITED`.
+- [ ] `PATCH /sessions/{id}` accepts partial updates to `generated_content`, `summary`, `consequences`; edited sections carry serialized `"edited"` origin.
 - [ ] `GET /sessions/{id}` returns a single session with full `generated_content`.
 - [ ] Generate-prompt template documented in `docs/05-ai-system.md` under "Prompt: generate next session".
 - [ ] Prepare page matches `PrepareSession` handoff (direction form fields, context preview panel, loading/error states).

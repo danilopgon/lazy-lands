@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The system MUST allow a DM to view a generated session draft, edit sections inline, and persist those edits. Every section carries a provenance origin (`ContentSource` enum) that tracks whether the content was Scribe-generated or DM-edited. The Generated Session view (`/campaigns/[id]/sessions/[sessionId]`) matches the `GeneratedSession` component in `handoff/app/views-prepare.jsx`. Private DM notes are frontend-only in MVP.
+The system MUST allow a DM to view a generated session draft, edit sections inline, and persist those edits. Every section carries a serialized provenance origin (`"scribe"` or `"edited"`) that tracks whether the content was Scribe-generated or DM-edited. The Generated Session view (`/campaigns/[id]/sessions/[sessionId]`) matches the `GeneratedSession` component in `handoff/app/views-prepare.jsx`. Private DM notes are frontend-only in MVP.
 
 ## Requirements
 
@@ -77,7 +77,7 @@ All fields are optional at the top level. At least one MUST be provided.
 
 ### Requirement: Origin Badge Provenance
 
-Every section in `generated_content.sections[]` MUST carry an `origin` field matching the `ContentSource` enum values. The frontend SHALL render `OriginBadge` per section: `✦ Scribe` for `"scribe"` origin, `✎ Edited by you` for `"edited"` origin.
+Every section in `generated_content.sections[]` MUST carry an `origin` field with serialized value `"scribe"` or `"edited"`. The frontend SHALL render `OriginBadge` per section: `✦ Scribe` for `"scribe"` origin, `✎ Edited by you` for `"edited"` origin.
 
 #### Scenario: Origin flips on edit
 
@@ -100,12 +100,12 @@ The Generated Session page (`/campaigns/[id]/sessions/[sessionId]`) MUST match t
 
 #### Scenario: View state — memories sidebar
 
-- GIVEN the generated session includes `continuity_links`
+- GIVEN the generated session includes `generated_content.continuity_links`
 - WHEN the page renders
 - THEN the right column SHALL show a "Memories woven in" section
 - AND each memory SHALL display its type as a mono `ll-flag accent` pill, the memory text in serif, and the origin/source
 - AND a "Legend" section below with: `✦ Scribe` explanation, `✎ Edited by you` explanation, `Excluded from PDF` explanation
-- AND the memories SHALL be the accepted memories referenced by `continuity_links` (fetched in the same API call or via a parallel query)
+- AND the memories SHALL be the accepted memories referenced by persisted `generated_content.continuity_links`; the frontend fetches active memory facts separately and maps them for display in the sidebar
 
 #### Scenario: View state — private notes
 

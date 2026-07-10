@@ -26,12 +26,6 @@ class GeneratedSection(BaseModel):
     origin: Literal["scribe", "edited"] = "scribe"
 
 
-class GeneratedContent(BaseModel):
-    """Full generated-content object persisted on ``sessions.generated_content``."""
-
-    sections: list[GeneratedSection] = Field(min_length=1)
-
-
 class Encounter(BaseModel):
     """Encounter proposed by the Scribe."""
 
@@ -61,6 +55,13 @@ class ContinuityLink(BaseModel):
     relevance: str = Field(min_length=1, max_length=1000)
 
 
+class GeneratedContent(BaseModel):
+    """Full generated-content object persisted on ``sessions.generated_content``."""
+
+    sections: list[GeneratedSection] = Field(min_length=1)
+    continuity_links: list[ContinuityLink] = Field(default_factory=list)
+
+
 class GeneratedSessionOutput(BaseModel):
     """Pydantic-validated LLM output for a generated session draft."""
 
@@ -77,7 +78,9 @@ class GeneratedSessionOutput(BaseModel):
     def content_for_persistence(self) -> GeneratedContent:
         """Return explicit sections or derive the default editable draft sections."""
         if self.generated_content is not None:
-            return self.generated_content
+            return self.generated_content.model_copy(
+                update={"continuity_links": self.continuity_links}
+            )
         return GeneratedContent(
             sections=[
                 GeneratedSection(id="synopsis", label="Synopsis", body=self.synopsis),
@@ -87,7 +90,8 @@ class GeneratedSessionOutput(BaseModel):
                     body=self.main_objective,
                 ),
                 GeneratedSection(id="twist", label="Twist", body=self.twist),
-            ]
+            ],
+            continuity_links=self.continuity_links,
         )
 
 
@@ -96,20 +100,24 @@ class GenerationDirection:
     """Optional DM direction for the Scribe, with server-side defaults."""
 
     goal: str | None = None
-    tone: str = DEFAULT_TONE
-    pace: str = DEFAULT_PACE
-    difficulty: str = DEFAULT_DIFFICULTY
+    tone: str | None = DEFAULT_TONE
+    pace: str | None = DEFAULT_PACE
+    difficulty: str | None = DEFAULT_DIFFICULTY
     additional_instructions: str | None = None
 
     def __post_init__(self) -> None:
         """Normalize optional blanks and required defaults after dataclass init."""
         object.__setattr__(self, "goal", _blank_to_none(self.goal))
-        object.__setattr__(self, "tone", self.tone.strip() or DEFAULT_TONE)
-        object.__setattr__(self, "pace", self.pace.strip() or DEFAULT_PACE)
+        object.__setattr__(
+            self, "tone", (self.tone or DEFAULT_TONE).strip() or DEFAULT_TONE
+        )
+        object.__setattr__(
+            self, "pace", (self.pace or DEFAULT_PACE).strip() or DEFAULT_PACE
+        )
         object.__setattr__(
             self,
             "difficulty",
-            self.difficulty.strip() or DEFAULT_DIFFICULTY,
+            (self.difficulty or DEFAULT_DIFFICULTY).strip() or DEFAULT_DIFFICULTY,
         )
         object.__setattr__(
             self,
@@ -149,9 +157,9 @@ class DirectionInput(BaseModel):
     """Reusable validator for direction DTOs."""
 
     goal: str | None = None
-    tone: str = DEFAULT_TONE
-    pace: str = DEFAULT_PACE
-    difficulty: str = DEFAULT_DIFFICULTY
+    tone: str | None = DEFAULT_TONE
+    pace: str | None = DEFAULT_PACE
+    difficulty: str | None = DEFAULT_DIFFICULTY
     additional_instructions: str | None = None
 
     @field_validator("goal", "additional_instructions", mode="before")
@@ -165,15 +173,15 @@ class DirectionInput(BaseModel):
     @classmethod
     def _trim_required_defaults(cls, value: object) -> object:
         if isinstance(value, str):
-            return value.strip()
+            return value.strip() or None
         return value
 
     def to_direction(self) -> GenerationDirection:
         """Map validated input into the application command object."""
         return GenerationDirection(
             goal=self.goal,
-            tone=self.tone,
-            pace=self.pace,
-            difficulty=self.difficulty,
+            tone=self.tone or DEFAULT_TONE,
+            pace=self.pace or DEFAULT_PACE,
+            difficulty=self.difficulty or DEFAULT_DIFFICULTY,
             additional_instructions=self.additional_instructions,
         )

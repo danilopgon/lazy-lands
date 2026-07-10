@@ -12,8 +12,9 @@ you`), and save the finalised version. This completes the **Generate** step of t
 path: Log session → Review memories → **Generate next session** → Edit → Export PDF (Block 9).
 
 ### In scope
-- **Backend `generation/` module**: `GenerateNextSessionUseCase` builds compressed context
-  (accumulated_summary + NPCs + factions + open arcs + active MemoryFacts, ~2,000 tokens max),
+- **Backend `generation/` module**: `GenerateNextSessionUseCase` builds prompt context
+  (accumulated_summary + NPCs + factions + open arcs + active MemoryFacts), estimates token count,
+  warns when the configured budget is exceeded,
   calls the LLM with a contextualised generation prompt, validates JSON against
   `GeneratedSessionOutput`, persists as a session draft with `generated_content` + `trace_json`.
 - **`POST /campaigns/{campaign_id}/generate-session`**: receives optional direction params
@@ -86,8 +87,8 @@ path: Log session → Review memories → **Generate next session** → Edit →
 1. **`generation/` as a new module** (not in `sessions/`) per ADR-05 bounded contexts.
 2. **Full-object PATCH** for `generated_content` — no server-side diffing. Frontend pushes the
    complete sections array with updated origins.
-3. **Token estimation**: `len(text)//4` heuristic — trace-only, no hard truncation. If context
-   exceeds ~2,000 tokens the trace warns but the call proceeds.
+3. **Token estimation**: `len(text)//4` heuristic — trace-only, no hard truncation. If rendered context
+   exceeds the configured budget the trace warns but the call proceeds.
 4. **Per-section regeneration**: UI placeholder only in MVP (simulated delay, no real LLM call).
 5. **No DDL changes**: existing `sessions.generated_content` (jsonb) and `sessions.trace_json` (jsonb)
    columns suffice. Private DM notes are frontend-only state.
