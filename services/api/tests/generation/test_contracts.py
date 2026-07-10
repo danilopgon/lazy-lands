@@ -5,7 +5,13 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from app.modules.generation.application.contracts import GeneratedSessionOutput
+from app.modules.generation.application.contracts import (
+    DEFAULT_DIFFICULTY,
+    DEFAULT_PACE,
+    DEFAULT_TONE,
+    DirectionInput,
+    GeneratedSessionOutput,
+)
 
 
 def _valid_payload() -> dict[str, object]:
@@ -69,3 +75,62 @@ def test_generated_session_output_rejects_unknown_section_origin() -> None:
 
     with pytest.raises(ValidationError):
         GeneratedSessionOutput(**payload)
+
+
+def test_content_for_persistence_defaults_sections_and_continuity_links() -> None:
+    payload = _valid_payload()
+    payload.pop("generated_content")
+
+    content = GeneratedSessionOutput(**payload).content_for_persistence()
+
+    assert content.model_dump(mode="json") == {
+        "sections": [
+            {
+                "id": "synopsis",
+                "label": "Synopsis",
+                "body": "The party follows the arcane core clue into the old mine.",
+                "origin": "scribe",
+            },
+            {
+                "id": "main_objective",
+                "label": "Main objective",
+                "body": "Recover the stabilised arcane core.",
+                "origin": "scribe",
+            },
+            {
+                "id": "twist",
+                "label": "Twist",
+                "body": "The manticore they spared is guarding the entrance.",
+                "origin": "scribe",
+            },
+        ],
+        "continuity_links": [
+            {"memory_fact_id": "memory-1", "relevance": "The spared manticore returns."}
+        ],
+    }
+
+
+def test_content_for_persistence_adds_links_to_explicit_generated_content() -> None:
+    output = GeneratedSessionOutput(**_valid_payload())
+
+    content = output.content_for_persistence()
+
+    assert content.model_dump(mode="json")["continuity_links"] == [
+        {"memory_fact_id": "memory-1", "relevance": "The spared manticore returns."}
+    ]
+
+
+def test_direction_input_normalizes_empty_strings_and_nulls_to_defaults() -> None:
+    direction = DirectionInput(
+        goal="   ",
+        tone=None,
+        pace="  ",
+        difficulty=None,
+        additional_instructions="\n",
+    ).to_direction()
+
+    assert direction.goal is None
+    assert direction.tone == DEFAULT_TONE
+    assert direction.pace == DEFAULT_PACE
+    assert direction.difficulty == DEFAULT_DIFFICULTY
+    assert direction.additional_instructions is None

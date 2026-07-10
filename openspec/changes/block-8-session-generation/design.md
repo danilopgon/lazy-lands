@@ -25,7 +25,8 @@ GENERATION FLOW:
   generation/api/routes.py
     │ → generation/application/generate_session.py (GenerateNextSessionUseCase)
     │   → GenerationRepository.get_generation_context(campaign_id)
-    │     (5 parallel SELECTs: campaign, NPCs, factions, arcs, memory_facts)
+    │     (sequential direct SELECTs through the synchronous Supabase client:
+    │      campaign, NPCs, factions, arcs, memory_facts)
     │   → context_builder.py (assemble + estimate tokens)
     │   → render_prompt("generate_session_v1.jinja", context)
     │   → LlmProvider.complete_json(prompt, GeneratedSessionOutput)
@@ -66,7 +67,7 @@ VIEW FLOW:
 | `generation/application/errors.py` | `GenerationNotFoundError` (→404) |
 | `generation/application/context_builder.py` | Assemble context dict from repo fetch, estimate tokens, build prompt kwargs |
 | `generation/application/generate_session.py` | `GenerateNextSessionUseCase` — orchestrates context → LLM → validate → persist |
-| `generation/infrastructure/repository.py` | `SupabaseGenerationRepository` — 5 parallel Supabase queries |
+| `generation/infrastructure/repository.py` | `SupabaseGenerationRepository` — sequential direct Supabase SELECTs through the synchronous client |
 | `generation/api/routes.py` | `POST /campaigns/{campaign_id}/generate-session` |
 | `generation/api/dependencies.py` | DI wiring for `GenerateNextSessionUseCase` |
 | `generation/api/schemas.py` | `GenerateSessionRequest` (direction params), `GenerateSessionResponse` |
@@ -156,11 +157,11 @@ class UpdateSession:
 | Layer | What | How |
 |-------|------|-----|
 | Unit | `GenerateNextSessionUseCase` with `FakeLlmProvider` | Inject fake that returns valid/invalid JSON; assert correct persist/422 paths. Test context builder token estimation with edge sizes. |
-| Unit | `UpdateSessionUseCase` | Inject fake repository; assert `ContentSource` origin flips, partial update semantics, empty-body rejection. |
-| Unit | `GeneratedSessionOutput` Pydantic model | Test valid full payload, missing fields, wrong origin values. |
-| Integration | `POST /campaigns/{id}/generate-session` | Against real Supabase local stack + `FakeLlmProvider` — assert RLS enforcement, context assembly, persistence, trace metadata. |
-| Integration | `PATCH /sessions/{id}` | Against real Supabase local stack — assert ownership guard, full-object persistence, timestamp update. |
-| Integration | `GET /sessions/{id}` | Against real Supabase local stack — assert `generated_content` and `trace_json` in response. |
+| Unit | `UpdateSessionUseCase` | Inject fake repository; assert serialized origin strings (`"scribe"`, `"edited"`), partial update semantics, and empty-body rejection. |
+| Unit | `GeneratedSessionOutput` Pydantic model | Test valid full payload, missing fields, wrong origin values, and persistence content with `continuity_links`. |
+| API-style unit | `POST /campaigns/{id}/generate-session` | FastAPI `TestClient` with fake Supabase chains + `FakeLlmProvider` — assert RLS-miss mapping, context assembly, persistence, trace metadata, and retryable error mapping. |
+| API-style unit | `PATCH /sessions/{id}` | FastAPI `TestClient` with fake Supabase chains — assert ownership guard, full-object persistence, timestamp/update behavior. |
+| API-style unit | `GET /sessions/{id}` | FastAPI `TestClient` with fake Supabase chains — assert `generated_content` (including `continuity_links`) and `trace_json` in response. |
 | E2E | Prepare → generate → view → edit → save | Playwright: fill form, click generate, verify redirect, edit section, save, verify badge flips. |
 
 ## Migration / Rollout

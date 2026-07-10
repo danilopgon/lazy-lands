@@ -4,7 +4,11 @@ Rules:
 - Propose, never declare canon.
 - Use only the provided accepted context.
 - Do not invent private notes or hidden facts outside the context.
-- Return valid JSON matching the requested schema.
+- Return ONLY valid JSON. Do not wrap it in markdown fences. Do not include commentary.
+- Use exactly the field names shown in the schema below.
+- Use arrays for encounters, faction_reactions, arc_progression, continuity_links, and generated_content.sections, even when empty.
+- Every generated_content section origin must be exactly "scribe".
+- continuity_links[].memory_fact_id must reference an accepted memory id from the context. If no memory applies, return an empty array.
 
 Campaign:
 Title: {{ campaign.title }}
@@ -40,4 +44,29 @@ Accepted memory facts:
 {% else %}- None provided.
 {% endfor %}
 
-Return JSON with: title, synopsis, main_objective, twist, encounters, faction_reactions, arc_progression, continuity_links, and generated_content.sections. Every generated_content section origin must be "scribe".
+Return JSON matching this exact shape:
+{
+  "title": "string",
+  "synopsis": "string",
+  "main_objective": "string",
+  "twist": "string",
+  "encounters": [
+    {"name": "string", "description": "string", "type": "social|combat|exploration|other"}
+  ],
+  "faction_reactions": [
+    {"faction_name": "string", "reaction": "string"}
+  ],
+  "arc_progression": [
+    {"arc_title": "string", "progression": "string"}
+  ],
+  "continuity_links": [
+    {"memory_fact_id": "accepted-memory-id", "relevance": "string"}
+  ],
+  "generated_content": {
+    "sections": [
+      {"id": "synopsis", "label": "Synopsis", "body": "string", "origin": "scribe"},
+      {"id": "main_objective", "label": "Main objective", "body": "string", "origin": "scribe"},
+      {"id": "twist", "label": "Twist", "body": "string", "origin": "scribe"}
+    ]
+  }
+}

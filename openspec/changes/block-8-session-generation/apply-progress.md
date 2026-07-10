@@ -1,9 +1,9 @@
 # Apply Progress: Block 8 — Session Generation and Editing
 
-**Status**: PR 2 frontend slice implemented after PR 1 backend base
+**Status**: PR 1 backend complete after backend review remediation; PR 2 frontend implemented and remediation complete, ready for re-verification
 **Branch**: `feat/block-8-session-generation-frontend`
 **Delivery strategy**: chained PRs, stacked-to-main
-**PR 1 (backend)**: Complete after failed-generation trace remediation, ready for backend verification/review
+**PR 1 (backend)**: Complete after backend review remediation, ready for backend verification/review
 **PR 2 (frontend)**: Critical frontend verification finding remediated; ready for re-verification
 
 ## Completed in this apply run
@@ -49,6 +49,11 @@
 - Critical verification remediation: failed LLM validation now records deterministic generation trace
   metadata through the repository seam without creating a session row. The trace includes provider,
   model, prompt version, estimated context size, duration, `error_code`, and a compact context summary.
+- Backend review remediation: persisted `generated_content` now carries `continuity_links`, invalid
+  LLM output is covered at the route contract as retryable 422 with no insert, persistence conflicts
+  are covered as retryable 409, direction fields accept null/empty values consistently, direct no-op
+  update commands are rejected at the use-case boundary, Gemini-facing prompt JSON instructions were
+  hardened, and OpenSpec docs were reconciled with the actual sync Supabase/fake-chain test approach.
 
 ## Completed task checkboxes
 
@@ -121,26 +126,31 @@
 | 5.2 | `apps/web/tests/sessions/generated-session-view.test.tsx` | Component | N/A (new component) | ✅ Component import failed before implementation | ✅ 5/5 generated view tests passed | ✅ View, edit/save, PATCH failure preservation, cancel, copy | ✅ Local section state with full-object PATCH |
 | Remediation: continuity-link memory filtering | `apps/web/tests/sessions/generated-session-view.test.tsx`, `apps/web/tests/sessions/block-8-schemas.test.ts` | Component/unit | ✅ Existing generated-session tests available | ✅ Added filtering and no-links fallback assertions first; targeted test failed 2/6 because all active memories rendered and no fallback existed | ✅ Targeted generated-session + schema tests passed 11/11 | ✅ Referenced-memory happy path plus no-links empty path | ✅ Used a Set lookup keyed by `memory_fact_id`; schema preserves optional links |
 | 5.3 | Handoff self-review | Review | N/A | ✅ Checklist extracted from `views-prepare.jsx` before implementation | ✅ Implementation compared to checklist | ✅ View/edit/loading/error/regenerating states verified individually | ✅ No blocking deviations; per-section regenerate remains UI placeholder |
-| 6.2 | `apps/web/tests/sessions/*.test.*` | Component/unit | ✅ Existing web suite available | ✅ Tests written before component/API implementation | ✅ `pnpm --filter web test` → 404 passed | ✅ 19 new Block 8 tests plus full suite | ✅ Clean |
+| 6.2 | `apps/web/tests/sessions/*.test.*` | Component/unit | ✅ Existing web suite available | ✅ Tests written before component/API implementation | ✅ `pnpm --filter web test` → 56 files / 405 tests passed after remediation | ✅ 21 new Block 8 tests plus full suite | ✅ Clean |
 | 6.4 | `docs/05-ai-system.md` | Docs | N/A | ✅ Prompt catalog path mismatch existed (`sessions/prompts`) | ✅ Docs updated and touched-file Prettier check passed | ➖ Docs-only | ✅ Corrected generation module prompt path |
+| Review: persist continuity links in `generated_content` | `tests/generation/test_contracts.py`, `tests/generation/test_generate_session.py`, `tests/sessions/test_session_detail.py` | Unit/API-style unit | ✅ `uv run pytest tests/generation tests/sessions/test_session_detail.py` → 27 passed | ✅ Added persistence/reload assertions first; failed before `GeneratedContent` carried links | ✅ `uv run pytest tests/generation tests/sessions/test_session_detail.py` → 27 passed | ✅ Default sections and explicit generated content both include links; GET detail exposes persisted links | ✅ Reused Pydantic model dump path |
+| Review: invalid LLM output HTTP contract | `tests/generation/test_routes.py` | API-style unit | ✅ Existing generation route tests passed before change | ✅ Added route-level invalid provider test first | ✅ Targeted tests passed | ✅ Asserts 422, `retryable=true`, no insert, and logged `error_code`/`duration_ms` | ✅ Existing global handler preserved |
+| Review: retry-exhausted persistence conflict | `tests/generation/test_repository.py`, `tests/generation/test_routes.py` | Unit/API-style unit | ✅ Existing generation tests passed before change | ✅ Added retry exhaustion and 409 mapping tests first | ✅ Targeted tests passed | ✅ Repository attempts exactly 5 inserts; route maps persistence error to retryable 409 | ✅ Kept existing `RepositoryError -> GenerationPersistenceError` mapping |
+| Review: direction null/empty consistency | `tests/generation/test_contracts.py` | Unit | ✅ Existing contract tests passed before change | ✅ Added `DirectionInput` null/blank normalization test first | ✅ Targeted tests passed | ✅ Null and blank values default consistently; optional text normalizes to `None` | ✅ Kept defaults centralized |
+| Review: direct no-op update guard | `tests/sessions/test_session_detail.py` | Unit | ✅ Existing session detail tests passed before change | ✅ Added direct empty command test first | ✅ Targeted tests passed | ✅ Use case rejects no-op command before repository update | ✅ Added `SessionValidationError` application error |
+| Review: Gemini prompt hardening | `services/api/app/modules/generation/prompts/generate_session_v1.jinja` | Prompt contract | ✅ Generation prompt rendered in existing use-case tests | ✅ Contract tests already enforce strict schema; prompt was then hardened without loosening validation | ✅ Full backend suite passed | ✅ Prompt now specifies JSON-only output, exact fields, arrays, origin literals, and memory-id constraints | ✅ No schema loosening |
 
 ## Test Summary
 
-- **Total backend tests added**: 18, plus 1 remediated failed-validation trace assertion
+- **Total backend tests added**: 27 in `tests/generation` + `tests/sessions/test_session_detail.py`, plus repository retry coverage
 - **Total frontend tests added in PR 2**: 21, including 2 continuity-link remediation assertions
 - **Total frontend tests passing**: targeted generated-session/schema suite 11 passed; full suite 56 files / 405 tests passed
-- **Total backend tests passing**: 295 passed, 1 skipped
-- **Layers used**: Unit and API/integration-style backend tests; frontend unit/component tests with Vitest + React Testing Library
+- **Total backend tests passing**: 304 passed, 1 skipped
+- **Layers used**: Unit and API/integration-style backend tests with FastAPI `TestClient` and fake Supabase chains; frontend unit/component tests with Vitest + React Testing Library
 - **Approval tests**: Existing sessions suite baseline before modifications: `uv run pytest tests/sessions` → 40 passed
 - **Pure functions created**: `estimate_tokens`, `build_prompt_context`
 
 ## Verification results
 
-- `uv run pytest tests/generation/test_generate_session.py` from `services/api/` → 3 passed after remediation
-- `uv run pytest tests/generation` from `services/api/` → 11 passed, 1 warning
-- `uv run pytest` from `services/api/` → 295 passed, 1 skipped, 16 warnings
+- `uv run pytest tests/generation tests/sessions/test_session_detail.py` from `services/api/` → 27 passed, 1 warning
+- `uv run pytest` from `services/api/` → 304 passed, 1 skipped, 16 warnings
 - `uv run ruff check app/ tests/` from `services/api/` → passed
-- `uv run ruff format --check app/ tests/` from `services/api/` → passed (`182 files already formatted`)
+- `uv run ruff format --check app/ tests/` from `services/api/` → passed (`183 files already formatted`)
 - `uv run mypy app/ --ignore-missing-imports` from `services/api/` → passed (`Success: no issues found in 136 source files`)
 - `pnpm --filter web test` from repo root → passed (`56 files`, `405 passed` after remediation)
 - `pnpm typecheck` from repo root → passed (`web#typecheck`)
@@ -157,7 +167,7 @@
 
 ## Deviations / Notes
 
-- `SupabaseGenerationRepository` performs the required direct relational SELECTs sequentially through the synchronous Supabase client. The design phrase "5 parallel SELECTs" is not materially implementable with the existing sync client and dependency pattern without introducing async client churn; the boundary and query filters match the spec.
+- `SupabaseGenerationRepository` performs the required direct relational SELECTs sequentially through the synchronous Supabase client; the boundary and query filters match the spec without introducing async client churn.
 - Failed-generation traces are logged through `GenerationRepository.record_generation_trace()` rather than persisted to `sessions.trace_json`, because the spec requires no session row on validation failure and no migration was necessary. The Supabase implementation emits structured application logs; tests use the same port method as a deterministic capture seam.
 - `PATCH /sessions/{session_id}` preserves explicit nullable clears (`consequences: null`) by carrying `provided_fields` from the API request into the command object.
 - PR 2 keeps per-section regeneration as a frontend-only placeholder with a short simulated loading

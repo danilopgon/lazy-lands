@@ -8,10 +8,14 @@ from app.modules.generation.application.contracts import (
     GeneratedSessionOutput,
     GenerationDirection,
 )
-from app.modules.generation.application.errors import GenerationNotFoundError
+from app.modules.generation.application.errors import (
+    GenerationNotFoundError,
+    GenerationPersistenceError,
+)
 from app.modules.generation.application.generate_session import (
     GenerateNextSessionUseCase,
 )
+from app.modules.sessions.infrastructure.errors import RepositoryError
 from app.shared.llm.errors import LlmOutputValidationError
 from app.shared.llm.providers.fake import FakeLlmProvider
 
@@ -37,6 +41,12 @@ class _Repo:
     def record_generation_trace(self, campaign_id: str, trace_json: dict) -> None:
         assert campaign_id == "campaign-1"
         self.failed_traces.append(trace_json)
+
+
+class _FailingPersistRepo(_Repo):
+    def create_generated_session(self, campaign_id: str, session_data: dict) -> dict:
+        super().create_generated_session(campaign_id, session_data)
+        raise RepositoryError("insert failed")
 
 
 def _context(summary: str = "The party humiliated Herman.") -> dict[str, object]:
@@ -95,6 +105,9 @@ async def test_generate_session_persists_valid_output_with_trace() -> None:
     assert result.trace_id == "session-1"
     assert repo.created[0]["summary"] == "The party follows the arcane core clue."
     assert repo.created[0]["generated_content"]["sections"][0]["origin"] == "scribe"
+    assert repo.created[0]["generated_content"]["continuity_links"] == [
+        {"memory_fact_id": "mem-1", "relevance": "Payoff."}
+    ]
     assert repo.created[0]["trace_json"]["prompt_version"] == "generate_session_v1"
     assert repo.created[0]["trace_json"]["error_code"] is None
     assert repo.created[0]["trace_json"]["estimated_context_size"] > 0
@@ -134,3 +147,19 @@ async def test_generate_session_raises_not_found_for_rls_miss() -> None:
 
     with pytest.raises(GenerationNotFoundError):
         await use_case.execute("campaign-1", GenerationDirection())
+
+
+@pytest.mark.asyncio
+async def test_generate_session_wraps_repository_error_as_retryable_error() -> None:
+    repo = _FailingPersistRepo(_context())
+    provider = FakeLlmProvider()
+    provider.register(GeneratedSessionOutput, _output_payload())
+    use_case = GenerateNextSessionUseCase(repo, provider)
+
+    with pytest.raises(GenerationPersistenceError) as exc_info:
+        await use_case.execute("campaign-1", GenerationDirection())
+
+    assert exc_info.value.retryable is True
+    assert repo.created[0]["generated_content"]["continuity_links"] == [
+        {"memory_fact_id": "mem-1", "relevance": "Payoff."}
+    ]

@@ -6,6 +6,7 @@ from typing import Any
 from app.modules.sessions.application.errors import (
     SessionNotFoundError,
     SessionPersistenceError,
+    SessionValidationError,
 )
 from app.modules.sessions.application.read_models.session_detail import (
     SessionDetailResponse,
@@ -58,6 +59,8 @@ class UpdateSessionUseCase:
         if self._repository.get_session(session_id) is None:
             raise SessionNotFoundError()
         changes = command.changes()
+        if not changes:
+            raise SessionValidationError("At least one supported field is required")
         try:
             row = self._repository.update_session(session_id, changes)
         except RepositoryError as exc:
