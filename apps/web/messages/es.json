@@ -22,6 +22,7 @@
     "factions": "Facciones",
     "arcs": "Arcos",
     "memory": "Memoria",
+    "prepare": "Preparar",
     "sessions": "Sesiones",
     "settings": "Ajustes",
     "logout": "Cerrar sesión",
@@ -280,6 +281,8 @@
     "detail": {
       "kicker": "Campaña · {kicker}",
       "updated": "Actualizado {date}",
+      "logSessionHeader": "Registrar sesión",
+      "prepareNextHeader": "Preparar siguiente sesión",
       "statNpcs": "PNJ",
       "statFactions": "Facciones",
       "statArcs": "Arcos",
@@ -500,6 +503,7 @@
       "breadcrumb": "Preparar siguiente sesión",
       "kicker": "Antes de la próxima mesa",
       "title": "Preparar sesión {number}",
+      "titleUnknown": "Preparar siguiente sesión",
       "subtitle": "El Escriba redacta una propuesta de sesión con todo lo que aceptaste. Editarás cada palabra antes de llevarla a la mesa.",
       "contextHeading": "Lo que leerá el Escriba",
       "included": "Incluido",
@@ -513,10 +517,29 @@
       "difficultyLabel": "Dificultad",
       "extraLabel": "Algo más para el Escriba",
       "extraPlaceholder": "Un jugador faltó a la última sesión; dale a su PJ una forma discreta de volver.",
+      "tone": {
+        "keepCurrent": "Mantener el tono actual, intriga de baja magia",
+        "darker": "Más oscuro",
+        "lighter": "Más ligero",
+        "moreAction": "Más acción",
+        "moreRoleplay": "Más interpretación"
+      },
+      "pace": {
+        "balanced": "Equilibrado",
+        "slowBurn": "Cocción lenta",
+        "breakneck": "Vertiginoso"
+      },
+      "difficulty": {
+        "standard": "Estándar",
+        "forgiving": "Indulgente",
+        "deadly": "Letal"
+      },
       "submit": "Preparar propuesta de sesión →",
       "loadingTitle": "Redactando sesión {number}",
+      "loadingTitleUnknown": "Redactando la siguiente sesión",
       "loadingCaption": "El Escriba está tejiendo arcos, memorias e historial de sesiones en una propuesta",
       "error": "El borrador del Escriba llegó mal formado y se descartó. No se perdió contexto. Intenta generar de nuevo.",
+      "validationError": "El borrador del Escriba no pasó la validación y se descartó. No se perdió contexto. Intenta generar de nuevo.",
       "tryAgain": "Intentar de nuevo",
       "context": {
         "campaignSummary": "Resumen de campaña",
@@ -547,6 +570,7 @@
       "copy": "Copiar",
       "saveChanges": "Guardar cambios",
       "exportPdf": "Exportar PDF →",
+      "exportPdfSoon": "Disponible en el Bloque 9.",
       "regenerate": "Regenerar",
       "regenerating": "Regenerando...",
       "rewriting": "El Escriba está reescribiendo",

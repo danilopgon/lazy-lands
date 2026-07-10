@@ -22,6 +22,7 @@
     "factions": "Factions",
     "arcs": "Arcs",
     "memory": "Memory",
+    "prepare": "Prepare",
     "sessions": "Sessions",
     "settings": "Settings",
     "logout": "Log out",
@@ -280,6 +281,8 @@
     "detail": {
       "kicker": "Campaign · {kicker}",
       "updated": "Updated {date}",
+      "logSessionHeader": "Log session",
+      "prepareNextHeader": "Prepare next session",
       "statNpcs": "NPCs",
       "statFactions": "Factions",
       "statArcs": "Arcs",
@@ -500,6 +503,7 @@
       "breadcrumb": "Prepare next session",
       "kicker": "Before the next table",
       "title": "Prepare Session {number}",
+      "titleUnknown": "Prepare next session",
       "subtitle": "The Scribe drafts a session proposal from everything you've accepted. You'll edit every word of it before it reaches the table.",
       "contextHeading": "What the Scribe will read",
       "included": "Included",
@@ -513,10 +517,29 @@
       "difficultyLabel": "Difficulty",
       "extraLabel": "Anything else for the Scribe",
       "extraPlaceholder": "One player missed last session; give their PC a quiet way back in.",
+      "tone": {
+        "keepCurrent": "Keep current, low-magic intrigue",
+        "darker": "Darker",
+        "lighter": "Lighter",
+        "moreAction": "More action",
+        "moreRoleplay": "More roleplay"
+      },
+      "pace": {
+        "balanced": "Balanced",
+        "slowBurn": "Slow burn",
+        "breakneck": "Breakneck"
+      },
+      "difficulty": {
+        "standard": "Standard",
+        "forgiving": "Forgiving",
+        "deadly": "Deadly"
+      },
       "submit": "Prepare session proposal →",
       "loadingTitle": "Drafting Session {number}",
+      "loadingTitleUnknown": "Drafting the next session",
       "loadingCaption": "The Scribe is weaving arcs, memories and session history into a proposal",
       "error": "The Scribe's draft came back malformed and was discarded. No context was lost. Try generating again.",
+      "validationError": "The Scribe's draft failed validation and was discarded. No context was lost. Try generating again.",
       "tryAgain": "Try again",
       "context": {
         "campaignSummary": "Campaign summary",
@@ -547,6 +570,7 @@
       "copy": "Copy",
       "saveChanges": "Save changes",
       "exportPdf": "Export PDF →",
+      "exportPdfSoon": "Coming in Block 9.",
       "regenerate": "Regenerate",
       "regenerating": "Regenerating...",
       "rewriting": "The Scribe is rewriting",

@@ -2,13 +2,15 @@
 
 **Branch**: `feat/block-8-session-generation-frontend`  
 **Scope**: Frontend PR 2 only, with explicit re-check of the continuity-link memory filtering remediation and a guard that no unrelated backend behavior was added.  
-**Verdict**: **PASS after re-verification**
+**Verdict**: **PASS after re-verification and post-feedback command sweep**
 
 ## Executive Summary
 
 The previous critical finding is fixed. `GeneratedSessionView` now renders only active campaign memories whose IDs are referenced by `session.generated_content.continuity_links[].memory_fact_id`, and renders the localized empty fallback when continuity links are absent. The frontend schema preserves optional `generated_content.continuity_links`, so session detail payload parsing no longer drops the filtering input.
 
-Runtime verification passed for the web test suite, typecheck, and lint. Global Prettier still fails due pre-existing repository-wide drift in 145 files; a scoped Prettier check over PR2-touched files passes. Source and git inspection found no modified backend or Supabase files in this frontend PR2 working tree.
+Review/user feedback remediation now also fixes missing dynamic memory type translations, direct dashboard/detail navigation to Prepare, hardcoded Session 8 fallback copy, Spanish Tone/Pace/Difficulty labels with canonical POST values, retryable malformed-output copy, full `generated_content` preservation on section/save-all PATCH, and the Block 9 PDF export 404 route.
+
+Runtime verification passed for the web test suite, typecheck, and lint. Global Prettier still fails due pre-existing repository-wide drift in 144 files; a scoped Prettier check over touched files passes. Source and git inspection found no modified backend or Supabase files in this frontend PR2 working tree.
 
 ## Completeness
 
@@ -17,6 +19,7 @@ Runtime verification passed for the web test suite, typecheck, and lint. Global 
 | Continuity-link memory filtering remediation | Complete | `apps/web/components/sessions/generated-session-view.tsx` builds a `Set` from `continuity_links[].memory_fact_id` and filters active memories against it. |
 | No-links sidebar fallback | Complete | `linkedMemories.length === 0` renders `SessionGeneration.generated.memoriesEmpty`; component test asserts “No woven memories recorded.” |
 | Schema preservation | Complete | `apps/web/lib/sessions/schemas.ts` includes optional `continuity_links` in `generatedContentSchema`; schema tests assert it survives session detail parsing. |
+| Review/user feedback remediation | Complete | Targeted tests cover dynamic memory labels, direct prepare navigation, next-session numbering, localized selects/canonical POST, 422 validation copy, generated-content preservation, and disabled PDF export. |
 | Frontend PR2 runtime gates | Complete with warning | Tests/typecheck/lint pass; global format remains pre-existing drift, scoped touched-file format passes. |
 | Backend behavior guard | Complete | `git diff --name-only -- services/api supabase` and `git diff --stat -- services/api supabase` produced no output. |
 
@@ -63,17 +66,18 @@ None.
 
 - `pnpm lint` passes with 11 warnings, all `jsdoc/require-jsdoc` warnings in PR2 frontend files.
 - `pnpm format:check` fails globally due pre-existing repository-wide Prettier drift in 145 files. Scoped Prettier over PR2-touched files passes.
-- Direction select option labels remain hard-coded English values in the component because they also serve as backend contract values; Spanish UI still shows those English option values.
+- Direction select option labels are now localized in Spanish UI while preserving canonical backend contract values in the submitted payload.
 
 ## Tests / Commands Run
 
 | Command | Outcome |
 | --- | --- |
-| `pnpm --filter web test` | PASS — 56 files, 405 tests passed. Includes `generated-session-view.test.tsx` 6/6 and `block-8-schemas.test.ts` 5/5. |
+| `pnpm --filter web test` | PASS — 57 files, 416 tests passed after review/user feedback remediation. |
 | `pnpm typecheck` | PASS — Turbo replayed `web#typecheck`; `tsc --noEmit` successful. |
-| `pnpm lint` | PASS WITH WARNINGS — 0 errors, 11 `jsdoc/require-jsdoc` warnings. |
-| `pnpm format:check` | FAIL — global Prettier drift in 145 files, including many untouched files. |
-| `pnpm exec prettier --check "apps/web/lib/sessions/api.ts" "apps/web/lib/sessions/schemas.ts" "apps/web/messages/en.json" "apps/web/messages/es.json" "docs/05-ai-system.md" "openspec/changes/block-8-session-generation/apply-progress.md" "openspec/changes/block-8-session-generation/tasks.md" "apps/web/app/[locale]/campaigns/[id]/prepare/page.tsx" "apps/web/app/[locale]/campaigns/[id]/sessions/[sessionId]/page.tsx" "apps/web/components/sessions/generated-session-view.tsx" "apps/web/components/sessions/prepare-session-form.tsx" "apps/web/tests/sessions/block-8-api.test.ts" "apps/web/tests/sessions/block-8-schemas.test.ts" "apps/web/tests/sessions/generated-session-view.test.tsx" "apps/web/tests/sessions/prepare-session-form.test.tsx" "openspec/changes/block-8-session-generation/verify-report-frontend.md"` | PASS — all matched PR2-touched files use Prettier code style. |
+| `pnpm --filter web test -- tests/sessions/memory-type-label.test.ts tests/sessions/prepare-session-form.test.tsx tests/sessions/generated-session-view.test.tsx tests/sessions/block-8-schemas.test.ts tests/entity-nav.test.tsx app/[locale]/campaigns/[id]/__tests__/page.test.tsx` | PASS — 6 files, 42 tests passed after review/user feedback remediation. |
+| `pnpm lint` | PASS WITH WARNINGS — 0 errors, 16 `jsdoc/require-jsdoc` warnings. |
+| `pnpm format:check` | FAIL — global Prettier drift in 144 files, including many untouched files. |
+| `pnpm exec prettier --check <post-feedback touched files>` | PASS — all matched touched files use Prettier code style. |
 | `git diff --name-only -- services/api supabase; git diff --stat -- services/api supabase` | PASS — no output; no backend or Supabase behavior changes in this frontend slice. |
 
 ## Ready to Commit / PR

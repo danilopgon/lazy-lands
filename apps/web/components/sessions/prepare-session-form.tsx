@@ -12,8 +12,15 @@ import { LoadingScribe } from '@/components/ui/loading-scribe'
 import { Notice } from '@/components/ui/notice'
 import { Textarea } from '@/components/ui/textarea'
 import { getCampaignDetail } from '@/lib/campaigns/api'
-import { generateSession } from '@/lib/sessions/api'
-import type { GenerateSessionResponse } from '@/lib/sessions/schemas'
+import {
+  generateSession,
+  getSessions,
+  SessionValidationError,
+} from '@/lib/sessions/api'
+import type {
+  GenerateSessionResponse,
+  SessionResponse,
+} from '@/lib/sessions/schemas'
 
 type ContextRow = readonly [string, string]
 
@@ -27,26 +34,36 @@ type PrepareCampaign = {
 type PrepareSessionViewProps = {
   campaignId: string
   campaign?: PrepareCampaign
+  sessions?: SessionResponse[]
   generateSessionFn?: typeof generateSession
   navigate?: (href: string) => void
 }
 
 const toneOptions = [
-  'Keep current, low-magic intrigue',
-  'Darker',
-  'Lighter',
-  'More action',
-  'More roleplay',
+  { value: 'Keep current, low-magic intrigue', labelKey: 'tone.keepCurrent' },
+  { value: 'Darker', labelKey: 'tone.darker' },
+  { value: 'Lighter', labelKey: 'tone.lighter' },
+  { value: 'More action', labelKey: 'tone.moreAction' },
+  { value: 'More roleplay', labelKey: 'tone.moreRoleplay' },
 ] as const
-const paceOptions = ['Balanced', 'Slow burn', 'Breakneck'] as const
-const difficultyOptions = ['Standard', 'Forgiving', 'Deadly'] as const
-type ToneOption = (typeof toneOptions)[number]
-type PaceOption = (typeof paceOptions)[number]
-type DifficultyOption = (typeof difficultyOptions)[number]
+const paceOptions = [
+  { value: 'Balanced', labelKey: 'pace.balanced' },
+  { value: 'Slow burn', labelKey: 'pace.slowBurn' },
+  { value: 'Breakneck', labelKey: 'pace.breakneck' },
+] as const
+const difficultyOptions = [
+  { value: 'Standard', labelKey: 'difficulty.standard' },
+  { value: 'Forgiving', labelKey: 'difficulty.forgiving' },
+  { value: 'Deadly', labelKey: 'difficulty.deadly' },
+] as const
+type ToneOption = (typeof toneOptions)[number]['value']
+type PaceOption = (typeof paceOptions)[number]['value']
+type DifficultyOption = (typeof difficultyOptions)[number]['value']
 
 export function PrepareSessionView({
   campaignId,
   campaign: providedCampaign,
+  sessions: providedSessions,
   generateSessionFn = generateSession,
   navigate,
 }: PrepareSessionViewProps) {
@@ -54,22 +71,30 @@ export function PrepareSessionView({
   const tc = useTranslations('Campaigns')
   const router = useRouter()
   const [goal, setGoal] = useState('')
-  const [tone, setTone] = useState<ToneOption>(toneOptions[0])
-  const [pace, setPace] = useState<PaceOption>(paceOptions[0])
+  const [tone, setTone] = useState<ToneOption>(toneOptions[0].value)
+  const [pace, setPace] = useState<PaceOption>(paceOptions[0].value)
   const [difficulty, setDifficulty] = useState<DifficultyOption>(
-    difficultyOptions[0]
+    difficultyOptions[0].value
   )
   const [extra, setExtra] = useState('')
   const [phase, setPhase] = useState<'form' | 'loading' | 'error'>('form')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const campaignQuery = useQuery({
     queryKey: ['campaign', campaignId, 'prepare'],
     queryFn: () => getCampaignDetail(campaignId),
     enabled: !providedCampaign,
   })
+  const sessionsQuery = useQuery({
+    queryKey: ['campaign', campaignId, 'sessions', 'prepare'],
+    queryFn: () => getSessions(campaignId),
+    enabled: !providedSessions && !providedCampaign?.sessionNumber,
+  })
 
   const campaign = providedCampaign ?? campaignQuery.data
-  const sessionNumber = providedCampaign?.sessionNumber ?? 8
+  const sessions = providedSessions ?? sessionsQuery.data
+  const sessionNumber =
+    providedCampaign?.sessionNumber ?? deriveNextSessionNumber(sessions)
   const contextRows = useMemo(
     () =>
       providedCampaign?.contextRows ?? [
@@ -113,6 +138,7 @@ export function PrepareSessionView({
   async function onSubmit(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault()
     setPhase('loading')
+    setErrorMessage(null)
     try {
       const response: Pick<GenerateSessionResponse, 'id'> =
         await generateSessionFn(campaignId, {
@@ -125,7 +151,12 @@ export function PrepareSessionView({
       ;(navigate ?? router.push)(
         `/campaigns/${campaignId}/sessions/${response.id}`
       )
-    } catch {
+    } catch (error) {
+      setErrorMessage(
+        error instanceof SessionValidationError
+          ? t('validationError')
+          : t('error')
+      )
       setPhase('error')
     }
   }
@@ -134,7 +165,11 @@ export function PrepareSessionView({
     return (
       <div className="mx-auto max-w-[720px] px-6 py-16">
         <LoadingScribe
-          title={t('loadingTitle', { number: sessionNumber })}
+          title={
+            sessionNumber
+              ? t('loadingTitle', { number: sessionNumber })
+              : t('loadingTitleUnknown')
+          }
           caption={t('loadingCaption')}
         />
       </div>
@@ -163,7 +198,9 @@ export function PrepareSessionView({
         {t('kicker')}
       </p>
       <h1 className="mt-3 font-serif text-[38px] font-semibold leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
-        {t('title', { number: sessionNumber })}
+        {sessionNumber
+          ? t('title', { number: sessionNumber })
+          : t('titleUnknown')}
       </h1>
       <p className="mt-4 max-w-[600px] text-base leading-relaxed text-[var(--ink-2)]">
         {t('subtitle')}
@@ -172,7 +209,7 @@ export function PrepareSessionView({
       {phase === 'error' ? (
         <Notice className="mt-5" variant="error" ornament="⚠" role="alert">
           <div className="flex flex-wrap items-center gap-3">
-            <span>{t('error')}</span>
+            <span>{errorMessage ?? t('error')}</span>
             <button
               type="button"
               className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
@@ -235,6 +272,7 @@ export function PrepareSessionView({
                 value={tone}
                 onValueChange={setTone}
                 options={toneOptions}
+                translateLabel={t}
               />
             </Field>
             <Field label={t('paceLabel')}>
@@ -242,6 +280,7 @@ export function PrepareSessionView({
                 value={pace}
                 onValueChange={setPace}
                 options={paceOptions}
+                translateLabel={t}
               />
             </Field>
           </div>
@@ -250,6 +289,7 @@ export function PrepareSessionView({
               value={difficulty}
               onValueChange={setDifficulty}
               options={difficultyOptions}
+              translateLabel={t}
             />
           </Field>
           <Field label={t('extraLabel')} optional>
@@ -275,12 +315,14 @@ function Select<T extends string>({
   value,
   onValueChange,
   options,
+  translateLabel,
   id,
   ...props
 }: {
   value: T
   onValueChange: (value: T) => void
-  options: readonly T[]
+  options: readonly { value: T; labelKey: string }[]
+  translateLabel: (key: string) => string
   id?: string
 } & Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange' | 'value'>) {
   return (
@@ -292,8 +334,17 @@ function Select<T extends string>({
       {...props}
     >
       {options.map((option) => (
-        <option key={option}>{option}</option>
+        <option key={option.value} value={option.value}>
+          {translateLabel(option.labelKey)}
+        </option>
       ))}
     </select>
   )
+}
+
+function deriveNextSessionNumber(
+  sessions: SessionResponse[] | undefined
+): number | null {
+  if (!sessions?.length) return null
+  return Math.max(...sessions.map((session) => session.session_number)) + 1
 }

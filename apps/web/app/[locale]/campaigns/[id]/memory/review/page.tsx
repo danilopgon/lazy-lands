@@ -26,6 +26,10 @@ import {
   rewriteMemoryReviewDraftSuggestions,
   type MemoryReviewDraft,
 } from '@/lib/sessions/memory-review-draft'
+import {
+  getMemoryTypeMessageKey,
+  humanizeMemoryType,
+} from '@/lib/sessions/memory-type-label'
 import type { MemorySuggestion } from '@/lib/sessions/schemas'
 import { cn } from '@/lib/utils'
 
@@ -45,6 +49,16 @@ type ActionError = 'create' | 'retire' | null
  */
 function suggestionId(suggestion: MemorySuggestion, index: number) {
   return `${suggestion.type}:${suggestion.content}:${index}`
+}
+
+function memoryTypeLabel(
+  t: ReturnType<typeof useTranslations>,
+  type: string | null | undefined
+): string {
+  const key = getMemoryTypeMessageKey(type)
+  return key
+    ? t(`memoryType.${key}`)
+    : t('memoryTypeUnknown', { type: humanizeMemoryType(type) })
 }
 
 /**
@@ -505,7 +519,7 @@ function SuggestionCard({
       <div className="px-5 py-4">
         <div className="mb-3 flex flex-wrap gap-2">
           <span className="border border-[var(--accent)] bg-[var(--accent-wash)] px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-            {t(`memoryType.${suggestion.type}`)}
+            {memoryTypeLabel(t, suggestion.type)}
           </span>
           <span className="border border-[var(--dotted)] px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)]">
             {t('importance', {
@@ -580,7 +594,7 @@ function SuggestionEditor({
       <div className="px-5 py-4">
         <div className="mb-3 flex flex-wrap gap-2">
           <span className="border border-[var(--accent)] bg-[var(--accent-wash)] px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-            {t(`memoryType.${suggestion.type}`)}
+            {memoryTypeLabel(t, suggestion.type)}
           </span>
           <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)]">
             {t('editing')}
@@ -684,7 +698,7 @@ function ActiveMemories({
           <div className="min-w-0">
             {memory.type ? (
               <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
-                {t(`memoryType.${memory.type}`)}
+                {memoryTypeLabel(t, memory.type)}
               </span>
             ) : null}
             <p className="mt-1 font-serif text-[14.5px] leading-relaxed text-[var(--ink)]">

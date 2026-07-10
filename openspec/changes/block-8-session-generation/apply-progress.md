@@ -1,15 +1,27 @@
 # Apply Progress: Block 8 — Session Generation and Editing
 
-**Status**: PR 1 backend complete after backend review remediation; PR 2 frontend implemented and remediation complete, ready for re-verification
+**Status**: PR 1 backend complete after backend review remediation; PR 2 frontend implemented with review/user feedback remediation complete, ready for re-verification
 **Branch**: `feat/block-8-session-generation-frontend`
 **Delivery strategy**: chained PRs, stacked-to-main
 **PR 1 (backend)**: Complete after backend review remediation, ready for backend verification/review
-**PR 2 (frontend)**: Critical frontend verification finding remediated; ready for re-verification
+**PR 2 (frontend)**: Review/user feedback remediated; ready for re-verification
 
 ## Completed in this apply run
 
 ### PR 2 frontend remediation
 
+- Fixed missing dynamic memory type translations by normalizing canonical and legacy values (for example,
+  `Faction Relationship`) before resolving localized labels, with readable fallback copy for unknown types.
+- Added campaign-detail header actions and campaign sub-navigation so DMs can reach both `Log session`
+  and `Prepare next session` directly from the dashboard/detail area.
+- Removed the hardcoded Session 8 fallback from Prepare; the title/loading copy now derives the next
+  session number from session history when available and uses neutral copy when unavailable.
+- Localized Tone/Pace/Difficulty option labels while preserving canonical backend POST values.
+- Specialized the 422 malformed-Scribe-output path with localized retryable validation copy.
+- Fixed section/save-all PATCH payloads to preserve the full existing `generated_content` object,
+  including `continuity_links` and future/unknown persisted fields, while only replacing `sections`.
+- Replaced the Block 9 PDF export link with a disabled accent action and localized "coming in Block 9"
+  copy so the frontend no longer routes to a 404.
 - Fixed Generated Session memories sidebar to render only active MemoryFacts referenced by
   `generated_content.continuity_links[].memory_fact_id`.
 - Added an explicit empty sidebar fallback when the generated session has no continuity links,
@@ -125,6 +137,7 @@
 | 5.1 | Route smoke via component tests | Component | N/A (new route) | ✅ Generated route file absent before implementation | ✅ Typecheck passed | ➖ Thin server route | ✅ Clean |
 | 5.2 | `apps/web/tests/sessions/generated-session-view.test.tsx` | Component | N/A (new component) | ✅ Component import failed before implementation | ✅ 5/5 generated view tests passed | ✅ View, edit/save, PATCH failure preservation, cancel, copy | ✅ Local section state with full-object PATCH |
 | Remediation: continuity-link memory filtering | `apps/web/tests/sessions/generated-session-view.test.tsx`, `apps/web/tests/sessions/block-8-schemas.test.ts` | Component/unit | ✅ Existing generated-session tests available | ✅ Added filtering and no-links fallback assertions first; targeted test failed 2/6 because all active memories rendered and no fallback existed | ✅ Targeted generated-session + schema tests passed 11/11 | ✅ Referenced-memory happy path plus no-links empty path | ✅ Used a Set lookup keyed by `memory_fact_id`; schema preserves optional links |
+| Review/user feedback remediation | `apps/web/tests/sessions/memory-type-label.test.ts`, `apps/web/tests/sessions/prepare-session-form.test.tsx`, `apps/web/tests/sessions/generated-session-view.test.tsx`, `apps/web/tests/sessions/block-8-schemas.test.ts`, `apps/web/tests/entity-nav.test.tsx`, `apps/web/app/[locale]/campaigns/[id]/__tests__/page.test.tsx` | Unit/component | ✅ Existing targeted frontend tests available | ✅ Added failing tests first for dynamic memory labels, direct prepare navigation, next-session numbering, localized selects with canonical POST values, retryable validation copy, generated-content preservation, and disabled PDF export | ✅ Targeted suite passed: 6 files / 42 tests | ✅ Covered legacy and canonical memory types, numbered and neutral prepare copy, section and save-all preservation paths | ✅ Extracted pure memory-type helper and centralized full generated-content merge |
 | 5.3 | Handoff self-review | Review | N/A | ✅ Checklist extracted from `views-prepare.jsx` before implementation | ✅ Implementation compared to checklist | ✅ View/edit/loading/error/regenerating states verified individually | ✅ No blocking deviations; per-section regenerate remains UI placeholder |
 | 6.2 | `apps/web/tests/sessions/*.test.*` | Component/unit | ✅ Existing web suite available | ✅ Tests written before component/API implementation | ✅ `pnpm --filter web test` → 56 files / 405 tests passed after remediation | ✅ 21 new Block 8 tests plus full suite | ✅ Clean |
 | 6.4 | `docs/05-ai-system.md` | Docs | N/A | ✅ Prompt catalog path mismatch existed (`sessions/prompts`) | ✅ Docs updated and touched-file Prettier check passed | ➖ Docs-only | ✅ Corrected generation module prompt path |
@@ -138,8 +151,8 @@
 ## Test Summary
 
 - **Total backend tests added**: 27 in `tests/generation` + `tests/sessions/test_session_detail.py`, plus repository retry coverage
-- **Total frontend tests added in PR 2**: 21, including 2 continuity-link remediation assertions
-- **Total frontend tests passing**: targeted generated-session/schema suite 11 passed; full suite 56 files / 405 tests passed
+- **Total frontend tests added in PR 2**: 33+, including continuity-link remediation and review/user feedback assertions
+- **Total frontend tests passing**: targeted post-feedback suite 6 files / 42 tests; full suite 57 files / 416 tests passed
 - **Total backend tests passing**: 304 passed, 1 skipped
 - **Layers used**: Unit and API/integration-style backend tests with FastAPI `TestClient` and fake Supabase chains; frontend unit/component tests with Vitest + React Testing Library
 - **Approval tests**: Existing sessions suite baseline before modifications: `uv run pytest tests/sessions` → 40 passed
@@ -160,6 +173,13 @@
 - Remediation RED: `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx` → failed 2/6 before implementation because unreferenced memories rendered and no empty fallback existed
 - Remediation GREEN: `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx` → 6 passed
 - Remediation schema/component check: `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx tests/sessions/block-8-schemas.test.ts` → 11 passed
+- Review/user feedback RED: targeted frontend suite failed before implementation (12 failures across 6 files) for missing helper, hardcoded Session 8, English selects in Spanish UI, navigation gaps, erased generated-content fields, and export-link behavior.
+- Review/user feedback GREEN: `pnpm --filter web test -- tests/sessions/memory-type-label.test.ts tests/sessions/prepare-session-form.test.tsx tests/sessions/generated-session-view.test.tsx tests/sessions/block-8-schemas.test.ts tests/entity-nav.test.tsx app/[locale]/campaigns/[id]/__tests__/page.test.tsx` → 6 files, 42 tests passed.
+- Review/user feedback typecheck: `pnpm typecheck` → passed (`web#typecheck`, `tsc --noEmit` successful).
+- Review/user feedback full suite: `pnpm --filter web test` → 57 files, 416 tests passed.
+- Review/user feedback lint: `pnpm lint` → passed with 16 JSDoc warnings and 0 errors.
+- Review/user feedback scoped Prettier: `pnpm exec prettier --check <post-feedback touched files>` → passed.
+- Global format check: `pnpm format:check` still fails due pre-existing repository-wide Prettier drift in 144 untouched/mixed files.
 - Remediation full suite: `pnpm --filter web test` → 56 files, 405 tests passed
 - Remediation typecheck: `pnpm typecheck` → passed (`tsc --noEmit` successful)
 - Remediation lint: `pnpm lint` → passed with 11 JSDoc warnings and 0 errors
@@ -177,6 +197,9 @@
   rendered sidebar now intersects that active set with persisted `generated_content.continuity_links`.
   If no continuity links are available, the sidebar shows an empty fallback rather than all active
   campaign memories.
+- The Generated Session export action intentionally deviates from the original handoff/export-link
+  scenario because PDF export is Block 9 and routing to `/export` currently creates a 404. The action
+  remains visually present as an accent disabled button with localized "coming in Block 9" copy.
 
 ## Remaining work
 

@@ -73,6 +73,90 @@ describe('PrepareSessionView', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Drafting Session 8')
   })
 
+  it('derives the next session number from session history instead of hardcoding eight', () => {
+    renderPrepare(
+      <PrepareSessionView
+        campaignId="camp-1"
+        campaign={{ ...campaign, sessionNumber: undefined }}
+        sessions={[
+          {
+            id: 'session-10',
+            session_number: 10,
+            summary: 'The tower fell.',
+            consequences: null,
+            created_at: null,
+          },
+          {
+            id: 'session-11',
+            session_number: 11,
+            summary: 'The guild answered.',
+            consequences: null,
+            created_at: null,
+          },
+        ]}
+      />
+    )
+
+    expect(
+      screen.getByRole('heading', { name: 'Prepare Session 12' })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Prepare Session 8' })
+    ).not.toBeInTheDocument()
+  })
+
+  it('uses neutral copy when the next session number is unavailable', () => {
+    renderPrepare(
+      <PrepareSessionView
+        campaignId="camp-1"
+        campaign={{ ...campaign, sessionNumber: undefined }}
+        sessions={[]}
+      />
+    )
+
+    expect(
+      screen.getByRole('heading', { name: 'Prepare next session' })
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Prepare Session 8')).not.toBeInTheDocument()
+  })
+
+  it('shows localized Spanish select labels while posting canonical backend values', async () => {
+    const generate = vi.fn().mockResolvedValue({ id: 'session-8' })
+    render(
+      <PrepareSessionView
+        campaignId="camp-1"
+        campaign={campaign}
+        generateSessionFn={generate}
+        navigate={vi.fn()}
+      />,
+      { wrapper: withQueryClient, locale: 'es' }
+    )
+
+    expect(screen.getByRole('option', { name: 'Más acción' })).toHaveValue(
+      'More action'
+    )
+    await userEvent.selectOptions(screen.getByLabelText(/Tono/i), 'More action')
+    await userEvent.selectOptions(screen.getByLabelText(/Ritmo/i), 'Breakneck')
+    await userEvent.selectOptions(
+      screen.getByLabelText(/Dificultad/i),
+      'Deadly'
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Preparar propuesta de sesión →' })
+    )
+
+    await waitFor(() =>
+      expect(generate).toHaveBeenCalledWith(
+        'camp-1',
+        expect.objectContaining({
+          tone: 'More action',
+          pace: 'Breakneck',
+          difficulty: 'Deadly',
+        })
+      )
+    )
+  })
+
   it('keeps typed direction and shows retry notice after generation failure', async () => {
     const generate = vi.fn().mockRejectedValue(new Error('malformed'))
     renderPrepare(
@@ -99,6 +183,32 @@ describe('PrepareSessionView', () => {
     )
     expect(
       screen.getByRole('button', { name: 'Try again' })
+    ).toBeInTheDocument()
+  })
+
+  it('shows a localized retryable message for malformed Scribe output', async () => {
+    const { SessionValidationError } = await import('@/lib/sessions/api')
+    const generate = vi
+      .fn()
+      .mockRejectedValue(new SessionValidationError('invalid llm output'))
+    render(
+      <PrepareSessionView
+        campaignId="camp-1"
+        campaign={campaign}
+        generateSessionFn={generate}
+      />,
+      { wrapper: withQueryClient, locale: 'es' }
+    )
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Preparar propuesta de sesión →' })
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'El borrador del Escriba no pasó la validación'
+    )
+    expect(
+      screen.getByRole('button', { name: 'Intentar de nuevo' })
     ).toBeInTheDocument()
   })
 

@@ -92,10 +92,11 @@ describe('GeneratedSessionView', () => {
     expect(
       screen.getByRole('button', { name: 'Save changes' })
     ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Export PDF →' })).toHaveAttribute(
-      'href',
-      '/campaigns/camp-1/sessions/session-8/export'
-    )
+    expect(screen.getByRole('button', { name: 'Export PDF →' })).toBeDisabled()
+    expect(
+      screen.queryByRole('link', { name: 'Export PDF →' })
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('Coming in Block 9.')).toBeInTheDocument()
     expect(screen.getByText('/01')).toBeInTheDocument()
     expect(screen.getAllByText('✦ Scribe').length).toBeGreaterThan(0)
     expect(screen.getByText('Memories woven in')).toBeInTheDocument()
@@ -162,6 +163,113 @@ describe('GeneratedSessionView', () => {
     expect(screen.getByText('Edited plan for Halia.')).toBeInTheDocument()
     expect(screen.getAllByText('✎ Edited by you').length).toBeGreaterThan(0)
     expect(screen.getByRole('status')).toHaveTextContent('Section saved')
+  })
+
+  it('preserves continuity links and unknown generated content fields when saving one section', async () => {
+    const sessionWithExtra = {
+      ...session,
+      generated_content: {
+        ...session.generated_content,
+        private_seed: 'keep-me',
+      },
+    }
+    const update = vi.fn().mockImplementation(async (_id, payload) => ({
+      ...sessionWithExtra,
+      ...payload,
+    }))
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={sessionWithExtra}
+        memories={memories}
+        updateSessionFn={update}
+      />
+    )
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+    await userEvent.clear(screen.getByLabelText('Synopsis'))
+    await userEvent.type(
+      screen.getByLabelText('Synopsis'),
+      'Edited with links.'
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Save section changes' })
+    )
+
+    await waitFor(() => expect(update).toHaveBeenCalled())
+    expect(update).toHaveBeenCalledWith(
+      'session-8',
+      expect.objectContaining({
+        generated_content: expect.objectContaining({
+          continuity_links: [
+            { memory_fact_id: 'mem-1', relevance: 'Halia split' },
+          ],
+          private_seed: 'keep-me',
+        }),
+      })
+    )
+  })
+
+  it('preserves continuity links and unknown generated content fields when saving all sections', async () => {
+    const sessionWithExtra = {
+      ...session,
+      generated_content: {
+        ...session.generated_content,
+        private_seed: 'keep-me',
+      },
+    }
+    const update = vi.fn().mockImplementation(async (_id, payload) => ({
+      ...sessionWithExtra,
+      ...payload,
+    }))
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={sessionWithExtra}
+        memories={memories}
+        updateSessionFn={update}
+      />
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(update).toHaveBeenCalled())
+    expect(update).toHaveBeenCalledWith(
+      'session-8',
+      expect.objectContaining({
+        generated_content: expect.objectContaining({
+          continuity_links: [
+            { memory_fact_id: 'mem-1', relevance: 'Halia split' },
+          ],
+          private_seed: 'keep-me',
+        }),
+      })
+    )
+  })
+
+  it('localizes legacy memory type labels from persisted generated sessions', () => {
+    render(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={[
+          {
+            ...memories[0],
+            type: 'Faction Relationship',
+          },
+        ]}
+      />,
+      { wrapper: withQueryClient, locale: 'es' }
+    )
+
+    expect(screen.getByText('Relación')).toBeInTheDocument()
+    expect(screen.queryByText('Faction Relationship')).not.toBeInTheDocument()
   })
 
   it('preserves edited text when PATCH fails', async () => {

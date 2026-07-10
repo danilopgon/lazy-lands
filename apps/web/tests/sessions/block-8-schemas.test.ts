@@ -102,4 +102,28 @@ describe('Block 8 session generation schemas', () => {
       'mem-1'
     )
   })
+
+  it('preserves unknown generated content fields so section updates do not erase them', () => {
+    const result = generatedContentSchema.parse({
+      sections: [
+        {
+          id: 'synopsis',
+          label: 'Synopsis',
+          body: 'Draft',
+          origin: 'scribe',
+        },
+      ],
+      continuity_links: [
+        { memory_fact_id: 'mem-1', relevance: 'Halia split favor.' },
+      ],
+      future_backend_field: { keep: true },
+    })
+
+    expect(result).toMatchObject({
+      future_backend_field: { keep: true },
+      continuity_links: [
+        { memory_fact_id: 'mem-1', relevance: 'Halia split favor.' },
+      ],
+    })
+  })
 })

@@ -15,7 +15,15 @@ import { getCampaignDetail } from '@/lib/campaigns/api'
 import { getMemoryFacts } from '@/lib/memory/api'
 import type { MemoryFactResponse } from '@/lib/memory/schemas'
 import { getSession, updateSessionContent } from '@/lib/sessions/api'
-import type { GeneratedSection, SessionDetail } from '@/lib/sessions/schemas'
+import {
+  getMemoryTypeMessageKey,
+  humanizeMemoryType,
+} from '@/lib/sessions/memory-type-label'
+import type {
+  GeneratedContent,
+  GeneratedSection,
+  SessionDetail,
+} from '@/lib/sessions/schemas'
 
 type GeneratedCampaign = { id: string; title: string }
 
@@ -38,6 +46,7 @@ export function GeneratedSessionView({
 }: GeneratedSessionViewProps) {
   const t = useTranslations('SessionGeneration.generated')
   const te = useTranslations('Entities')
+  const tm = useTranslations('MemoryReview')
   const router = useRouter()
   const [editing, setEditing] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
@@ -128,6 +137,22 @@ export function GeneratedSessionView({
     window.setTimeout(() => setToast(null), 2600)
   }
 
+  function generatedContentWithSections(
+    nextSections: GeneratedSection[]
+  ): GeneratedContent {
+    return {
+      ...(session?.generated_content ?? { sections: nextSections }),
+      sections: nextSections,
+    }
+  }
+
+  function memoryTypeLabel(type: string | null | undefined): string {
+    const key = getMemoryTypeMessageKey(type)
+    return key
+      ? tm(`memoryType.${key}`)
+      : tm('memoryTypeUnknown', { type: humanizeMemoryType(type) })
+  }
+
   async function saveSection(sectionId: string) {
     if (!session) return
     const nextSections = visibleSections.map((section) =>
@@ -137,7 +162,7 @@ export function GeneratedSessionView({
     )
     try {
       const updated = await updateSessionFn(sessionId, {
-        generated_content: { sections: nextSections },
+        generated_content: generatedContentWithSections(nextSections),
         summary: sectionId === 'synopsis' ? draft : session.summary,
       })
       setSections(updated.generated_content?.sections ?? nextSections)
@@ -170,7 +195,7 @@ export function GeneratedSessionView({
 
   async function saveAll() {
     await updateSessionFn(sessionId, {
-      generated_content: { sections: visibleSections },
+      generated_content: generatedContentWithSections(visibleSections),
     })
     showToast(t('toast.allSaved'))
   }
@@ -231,15 +256,14 @@ export function GeneratedSessionView({
           >
             {t('saveChanges')}
           </Button>
-          <Button asChild variant="accent">
-            <Link
-              href={`/campaigns/${campaignId}/sessions/${sessionId}/export`}
-            >
-              {t('exportPdf')}
-            </Link>
+          <Button type="button" variant="accent" disabled>
+            {t('exportPdf')}
           </Button>
         </div>
       </div>
+      <p className="mt-2 text-right font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--ink-3)]">
+        {t('exportPdfSoon')}
+      </p>
       {error ? (
         <Notice className="mt-5" variant="error" ornament="⚠" role="alert">
           {error}
@@ -395,7 +419,7 @@ export function GeneratedSessionView({
                 className="border-b border-dotted border-[var(--dotted)] py-3"
               >
                 <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
-                  {memory.type}
+                  {memoryTypeLabel(memory.type)}
                 </span>
                 <p className="mt-1 font-serif text-[13.5px] leading-relaxed text-[var(--ink)]">
                   {memory.content}

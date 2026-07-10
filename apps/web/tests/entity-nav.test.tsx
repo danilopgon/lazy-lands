@@ -30,6 +30,20 @@ describe('EntityNav', () => {
       'href',
       `${BASE}/arcs`
     )
+    expect(screen.getByRole('link', { name: /prepare/i })).toHaveAttribute(
+      'href',
+      `${BASE}/prepare`
+    )
+  })
+
+  it('marks the Prepare tab active on the prepare route', () => {
+    window.history.pushState(null, '', `${BASE}/prepare`)
+    render(<EntityNav campaignId={CAMPAIGN_ID} />)
+
+    expect(screen.getByRole('link', { name: /prepare/i })).toHaveAttribute(
+      'aria-current',
+      'page'
+    )
   })
 
   it('marks Overview active on the campaign root only', () => {

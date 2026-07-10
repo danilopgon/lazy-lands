@@ -204,6 +204,13 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByText('NPCs')).toBeInTheDocument()
     expect(screen.getByText('Factions')).toBeInTheDocument()
     expect(screen.getByText('Arcs')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Log session' })).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/new'
+    )
+    expect(
+      screen.getByRole('link', { name: 'Prepare next session' })
+    ).toHaveAttribute('href', '/campaigns/camp-1/prepare')
   })
 
   it('renders live active memories and memory navigation instead of a placeholder', async () => {

@@ -110,10 +110,12 @@ export const generatedSectionSchema = z.object({
 })
 export type GeneratedSection = z.infer<typeof generatedSectionSchema>
 
-export const generatedContentSchema = z.object({
-  sections: z.array(generatedSectionSchema).min(1),
-  continuity_links: z.array(continuityLinkSchema).optional(),
-})
+export const generatedContentSchema = z
+  .object({
+    sections: z.array(generatedSectionSchema).min(1),
+    continuity_links: z.array(continuityLinkSchema).optional(),
+  })
+  .passthrough()
 export type GeneratedContent = z.infer<typeof generatedContentSchema>
 
 export const generateSessionResponseSchema = z.object({
