@@ -230,6 +230,14 @@ Status: **in progress** (SDD planning complete; stacked-to-main chained PRs: PR 
 - [ ] Inline editing of main fields.
 - [ ] Manually edited fields are saved with `ContentSource.EDITED`.
 
+### Per-section regeneration (MVP — deferred from Block 8, before Block 9)
+
+- [ ] DM can regenerate individual sections (synopsis, encounters, twist, etc.) with a fresh LLM
+  call that preserves the rest of the draft. Requires a `POST /sessions/{id}/regenerate-section`
+  endpoint and per-section prompt templates. UI shows a disabled "Coming later" affordance in
+  Block 8 until this is implemented. Must ship before Block 9 PDF export so the DM can refine
+  each section before exporting.
+
 ---
 
 ## Block 9 — PDF export
