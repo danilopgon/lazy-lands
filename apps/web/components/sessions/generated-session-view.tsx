@@ -1,0 +1,444 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { useQuery } from '@tanstack/react-query'
+
+import { Link, useRouter } from '@/i18n/navigation'
+
+import { Button } from '@/components/ui/button'
+import { LoadingScribe } from '@/components/ui/loading-scribe'
+import { Notice } from '@/components/ui/notice'
+import { OriginBadge } from '@/components/ui/origin-badge'
+import { Textarea } from '@/components/ui/textarea'
+import { getCampaignDetail } from '@/lib/campaigns/api'
+import { getMemoryFacts } from '@/lib/memory/api'
+import type { MemoryFactResponse } from '@/lib/memory/schemas'
+import { getSession, updateSessionContent } from '@/lib/sessions/api'
+import type { GeneratedSection, SessionDetail } from '@/lib/sessions/schemas'
+
+type GeneratedCampaign = { id: string; title: string }
+
+type GeneratedSessionViewProps = {
+  campaignId: string
+  sessionId: string
+  campaign?: GeneratedCampaign
+  session?: SessionDetail
+  memories?: MemoryFactResponse[]
+  updateSessionFn?: typeof updateSessionContent
+}
+
+export function GeneratedSessionView({
+  campaignId,
+  sessionId,
+  campaign: providedCampaign,
+  session: providedSession,
+  memories: providedMemories,
+  updateSessionFn = updateSessionContent,
+}: GeneratedSessionViewProps) {
+  const t = useTranslations('SessionGeneration.generated')
+  const te = useTranslations('Entities')
+  const router = useRouter()
+  const [editing, setEditing] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
+  const [sections, setSections] = useState<GeneratedSection[] | null>(
+    providedSession?.generated_content?.sections ?? null
+  )
+  const [notes, setNotes] = useState('')
+  const [editingNotes, setEditingNotes] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [regenerating, setRegenerating] = useState<string | null>(null)
+
+  const campaignQuery = useQuery({
+    queryKey: ['campaign', campaignId, 'generated'],
+    queryFn: () => getCampaignDetail(campaignId),
+    enabled: !providedCampaign,
+  })
+  const sessionQuery = useQuery({
+    queryKey: ['session', sessionId],
+    queryFn: () => getSession(sessionId),
+    enabled: !providedSession,
+  })
+  const memoriesQuery = useQuery({
+    queryKey: ['campaign', campaignId, 'memory-facts', 'active', 'generated'],
+    queryFn: () => getMemoryFacts(campaignId, { status: 'active' }),
+    enabled: !providedMemories,
+  })
+
+  const campaign = providedCampaign ?? campaignQuery.data
+  const session = providedSession ?? sessionQuery.data
+  const activeMemories = providedMemories ?? memoriesQuery.data
+  const visibleSections = sections ?? session?.generated_content?.sections ?? []
+  const title = session?.summary || visibleSections[0]?.body || t('untitled')
+
+  const continuityLinks = session?.generated_content?.continuity_links
+  const linkedMemories = useMemo(() => {
+    if (!continuityLinks?.length) return []
+
+    const linkedIds = new Set(
+      continuityLinks.map((link) => link.memory_fact_id)
+    )
+    return (activeMemories ?? []).filter(
+      (memory) => memory.status === 'active' && linkedIds.has(memory.id)
+    )
+  }, [activeMemories, continuityLinks])
+
+  if (
+    (!providedCampaign && campaignQuery.isLoading) ||
+    (!providedSession && sessionQuery.isLoading)
+  ) {
+    return (
+      <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
+        <LoadingScribe
+          title={t('loadingTitle')}
+          caption={t('loadingCaption')}
+        />
+      </main>
+    )
+  }
+
+  if (
+    (!providedCampaign && campaignQuery.error) ||
+    (!providedSession && sessionQuery.error)
+  ) {
+    return (
+      <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
+        <Notice variant="error" ornament="⚠" role="alert">
+          <p>{t('loadError')}</p>
+          <button
+            type="button"
+            className="mt-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
+            onClick={() => {
+              void campaignQuery.refetch()
+              void sessionQuery.refetch()
+            }}
+          >
+            {te('retry')}
+          </button>
+        </Notice>
+      </main>
+    )
+  }
+
+  if (!campaign || !session) return null
+
+  function showToast(message: string) {
+    setToast(message)
+    window.setTimeout(() => setToast(null), 2600)
+  }
+
+  async function saveSection(sectionId: string) {
+    if (!session) return
+    const nextSections = visibleSections.map((section) =>
+      section.id === sectionId
+        ? { ...section, body: draft, origin: 'edited' as const }
+        : section
+    )
+    try {
+      const updated = await updateSessionFn(sessionId, {
+        generated_content: { sections: nextSections },
+        summary: sectionId === 'synopsis' ? draft : session.summary,
+      })
+      setSections(updated.generated_content?.sections ?? nextSections)
+      setEditing(null)
+      setError(null)
+      showToast(t('toast.sectionSaved'))
+    } catch {
+      setError(t('sectionSaveError'))
+    }
+  }
+
+  function regenerate(sectionId: string) {
+    setRegenerating(sectionId)
+    window.setTimeout(() => {
+      setSections(
+        visibleSections.map((section) =>
+          section.id === sectionId
+            ? {
+                ...section,
+                body: `${section.body}\n\n${t('regeneratedPlaceholder')}`,
+                origin: 'scribe' as const,
+              }
+            : section
+        )
+      )
+      setRegenerating(null)
+      showToast(t('toast.sectionRegenerated'))
+    }, 200)
+  }
+
+  async function saveAll() {
+    await updateSessionFn(sessionId, {
+      generated_content: { sections: visibleSections },
+    })
+    showToast(t('toast.allSaved'))
+  }
+
+  function copyAll() {
+    const text = visibleSections
+      .map((section) => `${section.label.toUpperCase()}\n${section.body}`)
+      .join('\n\n')
+    void navigator.clipboard?.writeText(text).catch(() => {})
+    showToast(t('toast.copied'))
+  }
+
+  return (
+    <main
+      id="main-content"
+      className="ll-view-enter mx-auto max-w-[900px] px-6 py-16"
+    >
+      <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
+        <Link href="/dashboard">{t('breadcrumbs.campaigns')}</Link> /{' '}
+        <Link href={`/campaigns/${campaignId}`}>{campaign.title}</Link> /{' '}
+        <b className="text-[var(--ink)]">
+          {t('breadcrumbs.draft', { number: session.session_number })}
+        </b>
+      </nav>
+      <div className="flex flex-wrap items-start justify-between gap-5">
+        <div>
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
+            {t('kicker', { number: session.session_number })}
+          </p>
+          <h1 className="mt-3 font-serif text-[38px] font-semibold leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
+            {title}
+          </h1>
+          <p className="mt-3 text-base text-[var(--ink-2)]">
+            {t.rich('subtitle', {
+              scribe: (chunks) => (
+                <span className="font-serif italic text-[var(--accent-deep)]">
+                  {chunks}
+                </span>
+              ),
+            })}
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => router.push(`/campaigns/${campaignId}`)}
+          >
+            {t('backCampaign')}
+          </Button>
+          <Button type="button" variant="secondary" onClick={copyAll}>
+            {t('copy')}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void saveAll()}
+          >
+            {t('saveChanges')}
+          </Button>
+          <Button asChild variant="accent">
+            <Link
+              href={`/campaigns/${campaignId}/sessions/${sessionId}/export`}
+            >
+              {t('exportPdf')}
+            </Link>
+          </Button>
+        </div>
+      </div>
+      {error ? (
+        <Notice className="mt-5" variant="error" ornament="⚠" role="alert">
+          {error}
+        </Notice>
+      ) : null}
+      <div className="mt-8 grid gap-8 llg:grid-cols-[1.5fr_1fr] llg:gap-10">
+        <section className="space-y-4">
+          {visibleSections.map((section, index) => (
+            <article
+              key={section.id}
+              className="border-b border-dotted border-[var(--dotted)] pb-5"
+            >
+              <div className="flex flex-wrap items-baseline gap-3">
+                <span className="font-mono text-[11px] font-bold text-[var(--accent)]">
+                  /{String(index + 1).padStart(2, '0')}
+                </span>
+                <h2 className="font-serif text-[19px] font-semibold text-[var(--ink)]">
+                  {section.label}
+                </h2>
+                <OriginBadge origin={section.origin} />
+                <div className="ml-auto flex gap-3">
+                  {editing !== section.id ? (
+                    <>
+                      <button
+                        type="button"
+                        className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
+                        onClick={() => {
+                          setEditing(section.id)
+                          setDraft(section.body)
+                          setError(null)
+                        }}
+                      >
+                        {te('edit')}
+                      </button>
+                      <button
+                        type="button"
+                        className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-2)] underline"
+                        onClick={() => regenerate(section.id)}
+                        disabled={regenerating === section.id}
+                      >
+                        {regenerating === section.id
+                          ? t('regenerating')
+                          : t('regenerate')}
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+              {editing === section.id ? (
+                <div className="mt-3">
+                  <Textarea
+                    aria-label={section.label}
+                    rows={Math.max(3, section.body.split('\n').length + 1)}
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    autoFocus
+                  />
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => void saveSection(section.id)}
+                    >
+                      {t('saveSectionChanges')}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setEditing(null)}
+                    >
+                      {te('cancel')}
+                    </Button>
+                  </div>
+                </div>
+              ) : regenerating === section.id ? (
+                <div className="mt-3 py-2">
+                  <span className="ll-quill inline-block">✒</span>{' '}
+                  <span className="ll-ellip text-sm text-[var(--ink-3)]">
+                    {t('rewriting')}
+                  </span>
+                </div>
+              ) : (
+                <p className="mt-3 whitespace-pre-line font-serif text-[15px] leading-relaxed text-[var(--ink)]">
+                  {section.body}
+                </p>
+              )}
+            </article>
+          ))}
+          <article className="border-2 border-dashed border-[var(--dotted)] bg-[var(--paper)] p-5">
+            <div className="flex items-baseline gap-3">
+              <h2 className="font-serif text-[19px] font-semibold">
+                {t('privateNotes')}
+              </h2>
+              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-3)]">
+                {t('excludedFromPdf')}
+              </span>
+              <button
+                type="button"
+                className="ml-auto font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
+                onClick={() => setEditingNotes(true)}
+              >
+                {te('edit')}
+              </button>
+            </div>
+            {editingNotes ? (
+              <div className="mt-3">
+                <Textarea
+                  rows={3}
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                  autoFocus
+                />
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setEditingNotes(false)
+                      showToast(t('toast.notesSaved'))
+                    }}
+                  >
+                    {te('saveChanges')}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setEditingNotes(false)}
+                  >
+                    {te('cancel')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-3 font-serif text-sm text-[var(--ink-2)]">
+                {notes || t('privateNotesEmpty')}
+              </p>
+            )}
+          </article>
+        </section>
+        <aside>
+          <h2 className="font-serif text-[19px] font-semibold text-[var(--ink)]">
+            {t('memoriesHeading')}
+          </h2>
+          <p className="mt-1 text-xs text-[var(--ink-3)]">
+            {t('memoriesHelp')}
+          </p>
+          <div className="mt-3">
+            {linkedMemories.map((memory) => (
+              <div
+                key={memory.id}
+                className="border-b border-dotted border-[var(--dotted)] py-3"
+              >
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
+                  {memory.type}
+                </span>
+                <p className="mt-1 font-serif text-[13.5px] leading-relaxed text-[var(--ink)]">
+                  {memory.content}
+                </p>
+                <span className="text-[11px] text-[var(--ink-3)]">
+                  {memory.source_session_id ?? t('manualSource')}
+                </span>
+              </div>
+            ))}
+            {linkedMemories.length === 0 ? (
+              <p className="border-b border-dotted border-[var(--dotted)] py-3 font-serif text-[13.5px] leading-relaxed text-[var(--ink-2)]">
+                {t('memoriesEmpty')}
+              </p>
+            ) : null}
+          </div>
+          <hr className="my-5 border-t border-[var(--line)]" />
+          <h2 className="font-serif text-[19px] font-semibold text-[var(--ink)]">
+            {t('legend')}
+          </h2>
+          <div className="mt-3 grid gap-2 text-xs text-[var(--ink-2)]">
+            <span>
+              <OriginBadge origin="scribe" /> · {t('legendScribe')}
+            </span>
+            <span>
+              <OriginBadge origin="edited" /> · {t('legendEdited')}
+            </span>
+            <span>
+              <span className="font-mono uppercase tracking-[0.08em] text-[var(--ink-3)]">
+                {t('excludedFromPdf')}
+              </span>{' '}
+              · {t('legendExcluded')}
+            </span>
+          </div>
+        </aside>
+      </div>
+      {toast ? (
+        <div
+          className="fixed bottom-5 right-5 border-2 border-[var(--border)] bg-[var(--paper)] px-4 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] shadow-[4px_4px_0_var(--shadow)]"
+          role="status"
+        >
+          {toast}
+        </div>
+      ) : null}
+    </main>
+  )
+}

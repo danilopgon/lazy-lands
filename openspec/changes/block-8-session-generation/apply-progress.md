@@ -1,12 +1,40 @@
 # Apply Progress: Block 8 — Session Generation and Editing
 
-**Status**: PR 1 backend slice implemented
-**Branch**: `feat/block-8-session-generation`
+**Status**: PR 2 frontend slice implemented after PR 1 backend base
+**Branch**: `feat/block-8-session-generation-frontend`
 **Delivery strategy**: chained PRs, stacked-to-main
 **PR 1 (backend)**: Complete after failed-generation trace remediation, ready for backend verification/review
-**PR 2 (frontend)**: Not started
+**PR 2 (frontend)**: Critical frontend verification finding remediated; ready for re-verification
 
 ## Completed in this apply run
+
+### PR 2 frontend remediation
+
+- Fixed Generated Session memories sidebar to render only active MemoryFacts referenced by
+  `generated_content.continuity_links[].memory_fact_id`.
+- Added an explicit empty sidebar fallback when the generated session has no continuity links,
+  preventing unrelated active campaign memories from appearing as woven into the draft.
+- Extended the frontend generated-content schema to preserve optional `continuity_links` on session
+  detail payloads.
+- Added component coverage that failed before the implementation: one unreferenced active memory is
+  excluded, and the no-links case renders the empty fallback.
+
+### PR 2 frontend slice
+
+- Frontend session generation schemas and API client functions for `generateSession`, `getSession`,
+  and `updateSessionContent`, including 404/422 typed error paths.
+- Localized EN/ES copy for Prepare Session and Generated Session views.
+- Prepare Session page and form component matching the `PrepareSession` handoff: context ledger,
+  direction form, loading takeover, retryable error state with typed input preserved, and success
+  redirect to the generated session view.
+- Generated Session page and view component matching the `GeneratedSession` handoff: editable
+  sections, origin badges, copy all, save all, export link placeholder, per-section regeneration
+  placeholder, memories sidebar, legend, and frontend-only private DM notes.
+- Frontend component/API/schema tests for Block 8 PR 2.
+- `docs/05-ai-system.md` prompt catalog updated to reference
+  `generation/prompts/generate_session_v1.jinja` and Block 8 context exclusions.
+
+### Prior PR 1 backend slice
 
 - Backend generation bounded context under `services/api/app/modules/generation/`:
   contracts, ports, errors, context builder, prompt template, use case, repository,
@@ -45,6 +73,17 @@
 - [x] 2.8 App wiring
 - [x] 6.1 Backend tests for PR 1 flows
 - [x] 6.3 PR 1 backend quality gates
+- [x] 3.1 Frontend generation schemas
+- [x] 3.2 Frontend generation/session detail API client
+- [x] 3.3 EN/ES i18n messages
+- [x] 4.1 Prepare Session page route
+- [x] 4.2 Prepare Session form/view
+- [x] 4.3 Prepare handoff verification
+- [x] 5.1 Generated Session page route
+- [x] 5.2 Generated Session view
+- [x] 5.3 Generated Session handoff verification
+- [x] 6.2 Frontend component tests
+- [x] 6.4 Prompt template documentation
 
 ## TDD Cycle Evidence
 
@@ -72,12 +111,26 @@
 | 6.1 | `tests/generation/*`, `tests/sessions/test_session_detail.py` | Unit/API | N/A | ✅ Tests written before implementation for core flows | ✅ Passed | ✅ Success, 404, invalid LLM, PATCH, GET | ✅ Clean |
 | 6.3 | Quality commands | Gate | N/A | ✅ Failing lint/format identified issues | ✅ Passed | ✅ Full backend suite + lint + format + mypy | ✅ Clean |
 | Remediation: failed-generation trace metadata | `tests/generation/test_generate_session.py` | Unit | ✅ `uv run pytest tests/generation/test_generate_session.py` → 3 passed | ✅ Added trace assertion first; failed because no failed trace was recorded | ✅ `uv run pytest tests/generation/test_generate_session.py` → 3 passed | ✅ Success trace path preserved; invalid LLM path asserts no session and trace metadata | ✅ Extracted shared trace builder; repository seam logs failed traces |
+| 3.1 | `apps/web/tests/sessions/block-8-schemas.test.ts` | Unit | ✅ Existing session schema tests present | ✅ New schemas imported before implementation; tests failed with undefined exports | ✅ 5/5 schema tests passed | ✅ Direction defaults, response parsing, origin rejection, update refine, detail parsing | ✅ Shared generated-content schemas exported |
+| 3.2 | `apps/web/tests/sessions/block-8-api.test.ts` | Unit | ✅ Existing session API tests present | ✅ New API functions imported before implementation; tests failed with missing functions | ✅ 5/5 API tests passed | ✅ Generate success, 422 validation, get detail, patch, 404/500 classification | ✅ Preserved server defaults by omitting absent direction fields |
+| 3.3 | `apps/web/tests/i18n-messages.test.ts` plus component tests | Unit | ✅ Existing i18n structure tests present | ✅ Components referenced missing `SessionGeneration` messages | ✅ Full frontend suite passed | ✅ EN/ES catalogs structurally aligned and UI copy covered by renders | ✅ Neutral Spanish copy, no em dash in new UI messages |
+| 4.1 | Route smoke via component tests | Component | N/A (new route) | ✅ Prepare route file absent before implementation | ✅ Typecheck passed | ➖ Thin server route | ✅ Clean |
+| 4.2 | `apps/web/tests/sessions/prepare-session-form.test.tsx` | Component | N/A (new component) | ✅ Component import failed before implementation | ✅ 4/4 prepare component tests passed | ✅ Form, loading, error preservation, success redirect | ✅ Extracted injectable API/navigation seams for tests |
+| 4.3 | Handoff self-review | Review | N/A | ✅ Checklist extracted from `views-prepare.jsx` before implementation | ✅ Implementation compared to checklist | ✅ Form/loading/error states verified individually | ✅ No blocking deviations |
+| 5.1 | Route smoke via component tests | Component | N/A (new route) | ✅ Generated route file absent before implementation | ✅ Typecheck passed | ➖ Thin server route | ✅ Clean |
+| 5.2 | `apps/web/tests/sessions/generated-session-view.test.tsx` | Component | N/A (new component) | ✅ Component import failed before implementation | ✅ 5/5 generated view tests passed | ✅ View, edit/save, PATCH failure preservation, cancel, copy | ✅ Local section state with full-object PATCH |
+| Remediation: continuity-link memory filtering | `apps/web/tests/sessions/generated-session-view.test.tsx`, `apps/web/tests/sessions/block-8-schemas.test.ts` | Component/unit | ✅ Existing generated-session tests available | ✅ Added filtering and no-links fallback assertions first; targeted test failed 2/6 because all active memories rendered and no fallback existed | ✅ Targeted generated-session + schema tests passed 11/11 | ✅ Referenced-memory happy path plus no-links empty path | ✅ Used a Set lookup keyed by `memory_fact_id`; schema preserves optional links |
+| 5.3 | Handoff self-review | Review | N/A | ✅ Checklist extracted from `views-prepare.jsx` before implementation | ✅ Implementation compared to checklist | ✅ View/edit/loading/error/regenerating states verified individually | ✅ No blocking deviations; per-section regenerate remains UI placeholder |
+| 6.2 | `apps/web/tests/sessions/*.test.*` | Component/unit | ✅ Existing web suite available | ✅ Tests written before component/API implementation | ✅ `pnpm --filter web test` → 404 passed | ✅ 19 new Block 8 tests plus full suite | ✅ Clean |
+| 6.4 | `docs/05-ai-system.md` | Docs | N/A | ✅ Prompt catalog path mismatch existed (`sessions/prompts`) | ✅ Docs updated and touched-file Prettier check passed | ➖ Docs-only | ✅ Corrected generation module prompt path |
 
 ## Test Summary
 
 - **Total backend tests added**: 18, plus 1 remediated failed-validation trace assertion
+- **Total frontend tests added in PR 2**: 21, including 2 continuity-link remediation assertions
+- **Total frontend tests passing**: targeted generated-session/schema suite 11 passed; full suite 56 files / 405 tests passed
 - **Total backend tests passing**: 295 passed, 1 skipped
-- **Layers used**: Unit and API/integration-style unit tests with FastAPI `TestClient` and fake Supabase chains
+- **Layers used**: Unit and API/integration-style backend tests; frontend unit/component tests with Vitest + React Testing Library
 - **Approval tests**: Existing sessions suite baseline before modifications: `uv run pytest tests/sessions` → 40 passed
 - **Pure functions created**: `estimate_tokens`, `build_prompt_context`
 
@@ -89,15 +142,33 @@
 - `uv run ruff check app/ tests/` from `services/api/` → passed
 - `uv run ruff format --check app/ tests/` from `services/api/` → passed (`182 files already formatted`)
 - `uv run mypy app/ --ignore-missing-imports` from `services/api/` → passed (`Success: no issues found in 136 source files`)
+- `pnpm --filter web test` from repo root → passed (`56 files`, `405 passed` after remediation)
+- `pnpm typecheck` from repo root → passed (`web#typecheck`)
+- `pnpm lint` from repo root → passed with warnings only (11 JSDoc warnings in new frontend files; no errors)
+- `pnpm format:check` from repo root → failed due pre-existing repository-wide Prettier drift across 157 files, including many untouched files
+- `pnpm exec prettier --check <touched files>` from repo root → passed (`All matched files use Prettier code style`)
+- Remediation RED: `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx` → failed 2/6 before implementation because unreferenced memories rendered and no empty fallback existed
+- Remediation GREEN: `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx` → 6 passed
+- Remediation schema/component check: `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx tests/sessions/block-8-schemas.test.ts` → 11 passed
+- Remediation full suite: `pnpm --filter web test` → 56 files, 405 tests passed
+- Remediation typecheck: `pnpm typecheck` → passed (`tsc --noEmit` successful)
+- Remediation lint: `pnpm lint` → passed with 11 JSDoc warnings and 0 errors
+- Remediation scoped Prettier: `pnpm exec prettier --check <remediation touched files>` → passed
 
 ## Deviations / Notes
 
 - `SupabaseGenerationRepository` performs the required direct relational SELECTs sequentially through the synchronous Supabase client. The design phrase "5 parallel SELECTs" is not materially implementable with the existing sync client and dependency pattern without introducing async client churn; the boundary and query filters match the spec.
 - Failed-generation traces are logged through `GenerationRepository.record_generation_trace()` rather than persisted to `sessions.trace_json`, because the spec requires no session row on validation failure and no migration was necessary. The Supabase implementation emits structured application logs; tests use the same port method as a deterministic capture seam.
 - `PATCH /sessions/{session_id}` preserves explicit nullable clears (`consequences: null`) by carrying `provided_fields` from the API request into the command object.
-- No frontend files were implemented in this run by directive.
+- PR 2 keeps per-section regeneration as a frontend-only placeholder with a short simulated loading
+  state; it does not call a new LLM endpoint, matching the proposal non-goal.
+- Private DM notes remain local component state only and are marked `Excluded from PDF`.
+- Generated Session memories are still loaded through the existing active MemoryFacts query, but the
+  rendered sidebar now intersects that active set with persisted `generated_content.continuity_links`.
+  If no continuity links are available, the sidebar shows an empty fallback rather than all active
+  campaign memories.
 
 ## Remaining work
 
-- PR 2 frontend slice: tasks 3.1–5.3, 6.2, and 6.4.
-- Frontend lint/typecheck/format gates remain deferred to PR 2.
+- No known remediation blockers. Remaining warnings are existing JSDoc lint warnings in PR2 files;
+  global format drift remains pre-existing and outside this remediation scope.
