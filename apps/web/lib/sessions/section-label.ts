@@ -1,10 +1,11 @@
 const sectionLabelMessageKeys = [
   'synopsis',
-  'main_objective',
-  'twist',
+  'goal',
+  'opening',
+  'beats',
   'encounters',
-  'faction_reactions',
-  'arc_progression',
+  'factions',
+  'arcs',
 ] as const
 
 export type SectionLabelMessageKey = (typeof sectionLabelMessageKeys)[number]
@@ -14,8 +15,9 @@ const sectionLabelKeySet = new Set<string>(sectionLabelMessageKeys)
 /**
  * Resolve a generated-section canonical id into a stable i18n message key.
  *
- * The backend persists canonical section ids (`synopsis`, `main_objective`,
- * `twist`, …). This helper normalizes incoming ids and returns the matching
+ * The backend persists exactly 7 canonical section ids, in fixed order
+ * (`synopsis`, `goal`, `opening`, `beats`, `encounters`, `factions`, `arcs`).
+ * This helper normalizes incoming ids and returns the matching
  * message key so the generated-session view can display localized section
  * labels without mutating the persisted `label` payload.
  *

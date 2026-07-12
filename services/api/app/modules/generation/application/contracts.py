@@ -1,13 +1,43 @@
-"""Application contracts for next-session generation."""
+"""Application contracts for next-session generation.
+
+Sections-only contract: the Scribe always emits exactly the seven canonical
+sections below, in order. There is no derived/flat shape any more — the old
+``main_objective``/``twist``/``encounters``/``faction_reactions``/
+``arc_progression`` fields and the ``generated_content``-or-derive branch
+are retired. ``twist`` is folded into ``beats``/``opening`` by the prompt
+(see ``generate_session_v2.jinja``); it is never a standalone field again.
+"""
 
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 DEFAULT_TONE = "Keep current, low-magic intrigue"
 DEFAULT_PACE = "Balanced"
 DEFAULT_DIFFICULTY = "Standard"
+
+# Order is part of the contract: sections render /01../07 in this exact sequence,
+# shared with the frontend section-label allowlist.
+CANONICAL_SECTION_IDS: tuple[str, ...] = (
+    "synopsis",
+    "goal",
+    "opening",
+    "beats",
+    "encounters",
+    "factions",
+    "arcs",
+)
+
+CANONICAL_SECTION_LABELS: dict[str, str] = {
+    "synopsis": "Synopsis",
+    "goal": "Session goal",
+    "opening": "Opening scene",
+    "beats": "Main beats",
+    "encounters": "Encounters",
+    "factions": "Faction reactions",
+    "arcs": "Arc progression",
+}
 
 
 def _blank_to_none(value: str | None) -> str | None:
@@ -35,28 +65,6 @@ class GeneratedDraftSection(BaseModel):
     origin: Literal["scribe"] = "scribe"
 
 
-class Encounter(BaseModel):
-    """Encounter proposed by the Scribe."""
-
-    name: str = Field(min_length=1, max_length=200)
-    description: str = Field(min_length=1, max_length=1000)
-    type: str = Field(min_length=1, max_length=100)
-
-
-class FactionReaction(BaseModel):
-    """Faction consequence proposed for the next session."""
-
-    faction_name: str = Field(min_length=1, max_length=200)
-    reaction: str = Field(min_length=1, max_length=1000)
-
-
-class ArcProgression(BaseModel):
-    """Open arc movement proposed for the next session."""
-
-    arc_title: str = Field(min_length=1, max_length=200)
-    progression: str = Field(min_length=1, max_length=1000)
-
-
 class ContinuityLink(BaseModel):
     """Accepted memory fact woven into the proposal."""
 
@@ -72,56 +80,56 @@ class GeneratedContent(BaseModel):
     continuity_links: list[ContinuityLink] = Field(default_factory=list)
 
 
-class GeneratedDraftContent(BaseModel):
-    """Generated-content object accepted directly from the LLM response."""
-
-    title: str = Field(min_length=1, max_length=200)
-    sections: list[GeneratedDraftSection] = Field(min_length=1)
-
-
 class GeneratedSessionOutput(BaseModel):
-    """Pydantic-validated LLM output for a generated session draft."""
+    """Pydantic-validated LLM output for a generated session draft.
+
+    ``extra="forbid"`` guards against prompt/model drift reintroducing the
+    retired flat fields (``main_objective``, ``twist``, ``encounters``,
+    ``faction_reactions``, ``arc_progression``) — any of those on the raw
+    LLM payload fails validation instead of being silently ignored.
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
     title: str = Field(min_length=1, max_length=200)
-    synopsis: str = Field(min_length=1, max_length=2000)
-    main_objective: str = Field(min_length=1, max_length=500)
-    twist: str = Field(min_length=1, max_length=500)
-    encounters: list[Encounter] = Field(default_factory=list)
-    faction_reactions: list[FactionReaction] = Field(default_factory=list)
-    arc_progression: list[ArcProgression] = Field(default_factory=list)
+    sections: list[GeneratedDraftSection] = Field(min_length=7, max_length=7)
     continuity_links: list[ContinuityLink] = Field(default_factory=list)
-    generated_content: GeneratedDraftContent | None = None
+
+    @field_validator("sections")
+    @classmethod
+    def _validate_canonical_sections(
+        cls, value: list[GeneratedDraftSection]
+    ) -> list[GeneratedDraftSection]:
+        ids = tuple(section.id for section in value)
+        if ids != CANONICAL_SECTION_IDS:
+            raise ValueError(
+                "sections must be exactly the 7 canonical ids in order: "
+                f"{CANONICAL_SECTION_IDS}, got {ids}"
+            )
+        return value
 
     def content_for_persistence(self) -> GeneratedContent:
-        """Return explicit sections or derive the default editable draft sections.
+        """Return the persisted generated-content object.
 
-        ``title`` always reflects the LLM-emitted `GeneratedSessionOutput.title`
-        so the persisted draft and the ``GET /sessions/{id}`` read model expose
-        the generated proposal title rather than leaking the synopsis into the
-        DM's H1.
+        ``title`` always reflects the LLM-emitted ``title`` so the persisted
+        draft and the ``GET /sessions/{id}`` read model expose the generated
+        proposal title rather than leaking the synopsis into the DM's H1.
         """
-        if self.generated_content is not None:
-            content_data = self.generated_content.model_dump(mode="json")
-            content_data["title"] = self.title
-            content_data["continuity_links"] = [
-                link.model_dump(mode="json") for link in self.continuity_links
-            ]
-            return GeneratedContent(
-                **content_data,
-            )
         return GeneratedContent(
             title=self.title,
             sections=[
-                GeneratedSection(id="synopsis", label="Synopsis", body=self.synopsis),
-                GeneratedSection(
-                    id="main_objective",
-                    label="Main objective",
-                    body=self.main_objective,
-                ),
-                GeneratedSection(id="twist", label="Twist", body=self.twist),
+                GeneratedSection(**section.model_dump()) for section in self.sections
             ],
             continuity_links=self.continuity_links,
         )
+
+
+class RegeneratedSectionOutput(BaseModel):
+    """Pydantic-validated LLM output for a single regenerated section body."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    body: str = Field(min_length=1, max_length=4000)
 
 
 @dataclass(frozen=True)
@@ -172,12 +180,7 @@ class GenerateSessionResponse(BaseModel):
     id: str
     session_number: int
     title: str
-    synopsis: str
-    main_objective: str
-    twist: str
-    encounters: list[Encounter]
-    faction_reactions: list[FactionReaction]
-    arc_progression: list[ArcProgression]
+    sections: list[GeneratedSection]
     continuity_links: list[ContinuityLink]
     trace_id: str
 

@@ -31,3 +31,23 @@ class MemoryType(StrEnum):
     revelation = "revelation"
     item = "item"
     arc_progress = "arc_progress"
+
+
+class SectionId(StrEnum):
+    """The 7 canonical generated-session section ids, fixed order.
+
+    Mirrors ``CANONICAL_SECTION_IDS`` in
+    ``generation/application/contracts.py``. Duplicated deliberately (not
+    imported) so ``sessions`` never depends on ``generation`` at module
+    level — FastAPI enum validation alone rejects any id outside these 7
+    with a 422 before the handler runs, satisfying the "no LLM call for an
+    unknown id" requirement at the HTTP boundary.
+    """
+
+    synopsis = "synopsis"
+    goal = "goal"
+    opening = "opening"
+    beats = "beats"
+    encounters = "encounters"
+    factions = "factions"
+    arcs = "arcs"

@@ -1,0 +1,33 @@
+{% macro render_context(campaign, npcs, factions, arcs, memory_facts, current_sections) -%}
+Campaign:
+Title: {{ campaign.title }}
+Description: {{ campaign.description }}
+World state: {{ campaign.world_state }}
+Accumulated summary: {{ campaign.accumulated_summary }}
+Summarized up to session: {{ campaign.summarized_up_to_session }}
+
+NPCs:
+{% for npc in npcs %}- {{ npc.name }}: {{ npc.description }} {{ npc.current_state }} {{ npc.motivation }}
+{% else %}- None provided.
+{% endfor %}
+
+Factions:
+{% for faction in factions %}- {{ faction.name }}: {{ faction.description }} {{ faction.current_stance }} {{ faction.goals }}
+{% else %}- None provided.
+{% endfor %}
+
+Open arcs:
+{% for arc in arcs %}- {{ arc.title }} ({{ arc.priority }}): {{ arc.description }}
+{% else %}- None provided.
+{% endfor %}
+
+Accepted memory facts:
+{% for memory in memory_facts %}- [{{ memory.id }}] {{ memory.type }} / {{ memory.importance }}: {{ memory.content }}
+{% else %}- None provided.
+{% endfor %}
+
+Current draft (for coherence — do not repeat verbatim, propose a fresh take on the target section only):
+{% for section in current_sections %}- [{{ section.id }}] {{ section.label }}: {{ section.body }}
+{% else %}- None.
+{% endfor %}
+{%- endmacro %}

@@ -10,6 +10,9 @@ from fastapi import Depends
 from supabase import Client
 
 from app.modules.sessions.application.commands.export_session import ExportSession
+from app.modules.sessions.application.commands.regenerate_section import (
+    RegenerateSectionUseCase,
+)
 from app.modules.sessions.application.commands.register_session import RegisterSession
 from app.modules.sessions.application.commands.suggest_memories import SuggestMemories
 from app.modules.sessions.application.commands.summarize_campaign import (
@@ -70,3 +73,29 @@ def provide_export_session(
 def provide_pdf_renderer() -> PdfRenderer:
     """Provide the local PDF renderer without exposing request data to it."""
     return WeasyPrintPdfRenderer()
+
+
+def provide_regenerate_section(
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+    llm_provider: Annotated[LlmProvider, Depends(get_llm_provider)],
+) -> RegenerateSectionUseCase:
+    """Build the single-section regeneration handler.
+
+    This is the composition root — the only place ``sessions`` may know
+    about the ``generation`` adapter. The import is function-local (not at
+    module scope) so ``sessions/api/dependencies.py`` never imports
+    ``generation`` at module level, matching the compile-time edge
+    ``generation -> sessions`` from the design (no cycle).
+    """
+    from app.modules.generation.application.regenerate_section_service import (
+        GenerationSectionRegenerator,
+    )
+    from app.modules.generation.infrastructure.repository import (
+        SupabaseGenerationRepository,
+    )
+
+    repository = SupabaseSessionRepository(client)
+    regenerator = GenerationSectionRegenerator(
+        SupabaseGenerationRepository(client), llm_provider
+    )
+    return RegenerateSectionUseCase(repository, regenerator)

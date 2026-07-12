@@ -83,26 +83,28 @@ def _context(summary: str = "The party humiliated Herman.") -> dict[str, object]
 def _output_payload() -> dict[str, object]:
     return {
         "title": "Threads in the Mine",
-        "synopsis": "The party follows the arcane core clue.",
-        "main_objective": "Recover the core.",
-        "twist": "The spared manticore returns.",
-        "encounters": [
-            {"name": "Ravine", "description": "Negotiate.", "type": "social"}
+        "sections": [
+            {
+                "id": section_id,
+                "label": section_id.title(),
+                "body": (
+                    "The party follows the arcane core clue."
+                    if section_id == "synopsis"
+                    else "Draft body."
+                ),
+                "origin": "scribe",
+            }
+            for section_id in (
+                "synopsis",
+                "goal",
+                "opening",
+                "beats",
+                "encounters",
+                "factions",
+                "arcs",
+            )
         ],
-        "faction_reactions": [{"faction_name": "Guild", "reaction": "Watches."}],
-        "arc_progression": [{"arc_title": "Core", "progression": "Clue found."}],
         "continuity_links": [{"memory_fact_id": "mem-1", "relevance": "Payoff."}],
-        "generated_content": {
-            "title": "Threads in the Mine",
-            "sections": [
-                {
-                    "id": "synopsis",
-                    "label": "Synopsis",
-                    "body": "Draft.",
-                    "origin": "scribe",
-                }
-            ],
-        },
     }
 
 
@@ -120,11 +122,24 @@ async def test_generate_session_persists_valid_output_with_trace() -> None:
     assert result.trace_id == "session-1"
     assert repo.created[0]["summary"] == "The party follows the arcane core clue."
     assert repo.created[0]["generated_content"]["title"] == "Threads in the Mine"
+    # Regression guard: all 7 sections must persist 1:1, not the earlier 3.
+    persisted_ids = [
+        section["id"] for section in repo.created[0]["generated_content"]["sections"]
+    ]
+    assert persisted_ids == [
+        "synopsis",
+        "goal",
+        "opening",
+        "beats",
+        "encounters",
+        "factions",
+        "arcs",
+    ]
     assert repo.created[0]["generated_content"]["sections"][0]["origin"] == "scribe"
     assert repo.created[0]["generated_content"]["continuity_links"] == [
         {"memory_fact_id": "mem-1", "relevance": "Payoff."}
     ]
-    assert repo.created[0]["trace_json"]["prompt_version"] == "generate_session_v1"
+    assert repo.created[0]["trace_json"]["prompt_version"] == "generate_session_v2"
     assert repo.created[0]["trace_json"]["error_code"] is None
     assert repo.created[0]["trace_json"]["estimated_context_size"] > 0
 
@@ -146,7 +161,7 @@ async def test_generate_session_does_not_persist_invalid_llm_output() -> None:
     trace = repo.failed_traces[0]
     assert trace["provider"] == "FakeLlmProvider"
     assert trace["model"] == "unknown"
-    assert trace["prompt_version"] == "generate_session_v1"
+    assert trace["prompt_version"] == "generate_session_v2"
     assert trace["estimated_context_size"] > 0
     assert trace["duration_ms"] >= 0
     assert trace["error_code"] == "llm_output_validation_failed"

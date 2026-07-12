@@ -13,6 +13,7 @@ from app.modules.sessions.application.errors import (
     NonExportableSessionError,
     SessionNotFoundError,
     SessionPersistenceError,
+    SessionValidationError,
 )
 
 
@@ -21,6 +22,15 @@ async def session_not_found_error_handler(
 ) -> JSONResponse:
     """Map RLS misses and unknown campaign ids to a uniform 404."""
     return JSONResponse(status_code=404, content={"error": "Not found."})
+
+
+async def session_validation_error_handler(
+    _request: Request, _exc: SessionValidationError
+) -> JSONResponse:
+    """Map a direct application-command contract violation to 422."""
+    return JSONResponse(
+        status_code=422, content={"error": "The Scribe could not do that."}
+    )
 
 
 async def session_persistence_error_handler(
