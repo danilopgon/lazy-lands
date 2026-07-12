@@ -5,6 +5,7 @@ scoped to their owning campaign).
 """
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from starlette.concurrency import run_in_threadpool
@@ -28,6 +29,7 @@ from app.modules.sessions.application.commands.update_session import (
     UpdateSessionUseCase,
 )
 from app.modules.sessions.application.contracts import RegisterSessionResponse
+from app.modules.sessions.application.errors import SessionNotFoundError
 from app.modules.sessions.application.queries.get_session import GetSessionUseCase
 from app.modules.sessions.application.queries.get_sessions import GetSessions
 from app.modules.sessions.application.read_models.session import SessionResponse
@@ -38,6 +40,14 @@ from app.shared.security import get_current_user
 
 router = APIRouter(prefix="/campaigns/{campaign_id}/sessions", tags=["sessions"])
 detail_router = APIRouter(prefix="/sessions", tags=["sessions"])
+
+
+def _validate_session_id(session_id: str) -> None:
+    """Reject malformed identifiers with the same response as unknown sessions."""
+    try:
+        UUID(session_id)
+    except ValueError as exc:
+        raise SessionNotFoundError() from exc
 
 
 @router.post("", response_model=RegisterSessionResponse)
@@ -71,6 +81,7 @@ async def get_session(
     handler: Annotated[GetSessionUseCase, Depends(provide_get_session)],
 ) -> SessionDetailResponse:
     """Return one caller-owned session with generated content and trace JSON."""
+    _validate_session_id(session_id)
     return await run_in_threadpool(handler.execute, session_id)
 
 
@@ -82,6 +93,7 @@ async def update_session(
     handler: Annotated[UpdateSessionUseCase, Depends(provide_update_session)],
 ) -> SessionDetailResponse:
     """Patch generated content, summary, or consequences for one session."""
+    _validate_session_id(session_id)
     command = UpdateSessionCommand(
         **payload.model_dump(exclude_unset=True, mode="json"),
         provided_fields=set(payload.model_fields_set),

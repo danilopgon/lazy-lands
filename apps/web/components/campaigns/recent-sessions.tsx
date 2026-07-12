@@ -83,9 +83,7 @@ export function RecentSessions({
     <div className="space-y-3">
       {recent.map((session) => {
         const sessionHref = `/campaigns/${campaignId}/sessions/${session.id}`
-        const hasGeneratedContent = Boolean(
-          session.generated_content?.sections?.length
-        )
+        const hasGeneratedContent = session.has_generated_content
         const isDraft =
           hasGeneratedContent && !session.summary && !session.consequences
         return (

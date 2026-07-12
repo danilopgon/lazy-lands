@@ -58,11 +58,7 @@ export const sessionResponseSchema = z.object({
   session_number: z.number(),
   summary: z.string().nullable(),
   consequences: z.string().nullable(),
-  generated_content: z
-    .object({ sections: z.array(z.unknown()).optional() })
-    .passthrough()
-    .nullable()
-    .optional(),
+  has_generated_content: z.boolean().default(false),
   created_at: z.string().nullable(),
 })
 export type SessionResponse = z.infer<typeof sessionResponseSchema>

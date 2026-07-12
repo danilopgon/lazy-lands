@@ -401,7 +401,7 @@ describe('CampaignDetailPage', () => {
         session_number: 1,
         summary: 'The party arrived in town.',
         consequences: null,
-        generated_content: null,
+        has_generated_content: false,
         created_at: '2026-06-01T10:00:00Z',
       },
       {
@@ -409,16 +409,7 @@ describe('CampaignDetailPage', () => {
         session_number: 2,
         summary: 'The Scribe draft summary.',
         consequences: null,
-        generated_content: {
-          sections: [
-            {
-              id: 'synopsis',
-              label: 'Synopsis',
-              body: 'Draft body.',
-              origin: 'scribe',
-            },
-          ],
-        },
+        has_generated_content: true,
         created_at: '2026-06-08T10:00:00Z',
       },
     ])
@@ -568,16 +559,7 @@ describe('CampaignDetailPage', () => {
         session_number: 8,
         summary: null,
         consequences: null,
-        generated_content: {
-          sections: [
-            {
-              id: 'synopsis',
-              label: 'Synopsis',
-              body: 'Draft body.',
-              origin: 'scribe',
-            },
-          ],
-        },
+        has_generated_content: true,
         created_at: '2026-07-10T10:00:00Z',
       },
       {
@@ -585,6 +567,7 @@ describe('CampaignDetailPage', () => {
         session_number: 7,
         summary: 'The warehouse burned down.',
         consequences: 'The guild lost its cache.',
+        has_generated_content: false,
         created_at: '2026-06-08T10:00:00Z',
       },
     ])

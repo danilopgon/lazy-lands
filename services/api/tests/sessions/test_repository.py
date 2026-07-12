@@ -109,7 +109,11 @@ def test_list_sessions_orders_ascending_by_session_number() -> None:
     execute_result = MagicMock(
         data=[
             {"id": "s1", "session_number": 1},
-            {"id": "s2", "session_number": 2},
+            {
+                "id": "s2",
+                "session_number": 2,
+                "generated_content": {"sections": [{"body": "Draft."}]},
+            },
         ]
     )
     order_query = client.table.return_value.select.return_value.eq.return_value.order
@@ -119,6 +123,8 @@ def test_list_sessions_orders_ascending_by_session_number() -> None:
     rows = repo.list_sessions("campaign-1")
 
     assert [row["id"] for row in rows] == ["s1", "s2"]
+    assert [row["has_generated_content"] for row in rows] == [False, True]
+    assert "generated_content" not in rows[1]
     order_query.assert_called_once_with("session_number", desc=False)
 
 

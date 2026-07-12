@@ -84,6 +84,7 @@ describe('PrepareSessionView', () => {
             session_number: 10,
             summary: 'The tower fell.',
             consequences: null,
+            has_generated_content: false,
             created_at: null,
           },
           {
@@ -91,6 +92,7 @@ describe('PrepareSessionView', () => {
             session_number: 11,
             summary: 'The guild answered.',
             consequences: null,
+            has_generated_content: false,
             created_at: null,
           },
         ]}

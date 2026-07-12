@@ -1,7 +1,5 @@
 """Session read model returned by ``GET /campaigns/{id}/sessions``."""
 
-from typing import Any
-
 from pydantic import BaseModel
 
 
@@ -12,5 +10,5 @@ class SessionResponse(BaseModel):
     session_number: int
     summary: str | None = None
     consequences: str | None = None
-    generated_content: dict[str, Any] | None = None
+    has_generated_content: bool = False
     created_at: str | None = None

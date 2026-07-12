@@ -20,6 +20,8 @@ from app.modules.sessions.application.queries.get_session import GetSessionUseCa
 from app.shared.database import get_user_supabase_client
 from app.shared.security import AuthContext, get_auth_context
 
+SESSION_ID = "11111111-1111-4111-8111-111111111111"
+
 
 class _Repo:
     def __init__(self, session: dict | None) -> None:
@@ -40,7 +42,7 @@ class _Repo:
 
 def _session() -> dict[str, object]:
     return {
-        "id": "session-1",
+        "id": SESSION_ID,
         "campaign_id": "campaign-1",
         "session_number": 8,
         "summary": "Draft synopsis.",
@@ -66,7 +68,7 @@ def _session() -> dict[str, object]:
 def test_get_session_returns_full_generated_content() -> None:
     result = GetSessionUseCase(_Repo(_session())).execute("session-1")
 
-    assert result.id == "session-1"
+    assert result.id == SESSION_ID
     assert result.generated_content["title"] == "Threads in the Mine"
     assert result.generated_content["sections"][0]["origin"] == "scribe"
     assert result.generated_content["continuity_links"] == [
@@ -175,9 +177,9 @@ def test_session_detail_routes_get_and_patch_generated_content() -> None:
     )
     client = TestClient(app)
     try:
-        get_response = client.get("/sessions/session-1")
+        get_response = client.get(f"/sessions/{SESSION_ID}")
         patch_response = client.patch(
-            "/sessions/session-1",
+            f"/sessions/{SESSION_ID}",
             json={
                 "generated_content": {
                     "sections": [
@@ -205,3 +207,29 @@ def test_session_detail_routes_get_and_patch_generated_content() -> None:
     assert patch_response.json()["generated_content"]["sections"][0]["origin"] == (
         "edited"
     )
+
+
+@pytest.mark.parametrize("method", ["get", "patch"])
+def test_session_detail_routes_return_404_for_malformed_session_id(method: str) -> None:
+    from unittest.mock import MagicMock
+
+    fake_client = MagicMock()
+    fake_client.table.side_effect = AssertionError(
+        "malformed ids must not query Supabase"
+    )
+    app.dependency_overrides[get_user_supabase_client] = lambda: fake_client
+    app.dependency_overrides[get_auth_context] = lambda: AuthContext(
+        user_id="user-1", access_token="token-1"
+    )
+    client = TestClient(app)
+    try:
+        response = getattr(client, method)(
+            "/sessions/undefined",
+            **({"json": {"summary": "Edited."}} if method == "patch" else {}),
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 404
+    assert response.json() == {"error": "Not found."}
+    fake_client.table.assert_not_called()

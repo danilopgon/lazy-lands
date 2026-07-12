@@ -17,6 +17,8 @@ from app.shared.llm.dependencies import get_llm_provider
 from app.shared.llm.providers.fake import FakeLlmProvider
 from app.shared.security import AuthContext, get_auth_context
 
+CAMPAIGN_ID = "11111111-1111-4111-8111-111111111111"
+
 
 class _FakeSupabaseClient:
     def __init__(self) -> None:
@@ -91,7 +93,7 @@ def _fake_generation_client() -> tuple[_FakeSupabaseClient, MagicMock]:
     campaign_query.execute.return_value = MagicMock(
         data=[
             {
-                "id": "campaign-1",
+                "id": CAMPAIGN_ID,
                 "title": "Sombras",
                 "description": "Intrigue.",
                 "world_state": "Winter.",
@@ -104,21 +106,21 @@ def _fake_generation_client() -> tuple[_FakeSupabaseClient, MagicMock]:
         table = fake_client.table(name)
         query = table.select.return_value.eq.return_value
         query.execute.return_value = MagicMock(data=[])
-    for name in ("arcs", "memory_facts"):
-        table = fake_client.table(name)
-        query = table.select.return_value.eq.return_value.eq.return_value
-        query.execute.return_value = MagicMock(
-            data=[
-                {
-                    "id": "mem-1",
-                    "content": "Halia split",
-                    "type": "relationship",
-                    "importance": "high",
-                }
-            ]
-            if name == "memory_facts"
-            else []
-        )
+    arcs = fake_client.table("arcs")
+    arcs_query = arcs.select.return_value.eq.return_value.eq.return_value
+    arcs_query.execute.return_value = MagicMock(data=[])
+    memory_facts = fake_client.table("memory_facts")
+    memory_query = memory_facts.select.return_value.eq.return_value.eq.return_value
+    memory_query.execute.return_value = MagicMock(
+        data=[
+            {
+                "id": "mem-1",
+                "content": "Halia split",
+                "type": "relationship",
+                "importance": "high",
+            }
+        ]
+    )
     sessions = fake_client.table("sessions")
     number_query = sessions.select.return_value.eq.return_value.order.return_value
     number_query.limit.return_value.execute.return_value = MagicMock(data=[])
@@ -134,7 +136,7 @@ def test_generate_session_route_persists_response(client: TestClient) -> None:
     app.dependency_overrides[get_llm_provider] = _provider
     _authenticate()
 
-    response = client.post("/campaigns/campaign-1/generate-session", json={})
+    response = client.post(f"/campaigns/{CAMPAIGN_ID}/generate-session", json={})
 
     assert response.status_code == 200
     body = response.json()
@@ -159,7 +161,7 @@ def test_generate_session_route_returns_retryable_422_for_invalid_llm_output(
     _authenticate()
 
     with caplog.at_level(logging.WARNING):
-        response = client.post("/campaigns/campaign-1/generate-session", json={})
+        response = client.post(f"/campaigns/{CAMPAIGN_ID}/generate-session", json={})
 
     assert response.status_code == 422
     assert response.json()["retryable"] is True
@@ -173,14 +175,14 @@ def test_generate_session_route_maps_persistence_error_to_retryable_409(
 ) -> None:
     class FailingUseCase:
         async def execute(self, campaign_id: str, direction: object) -> object:
-            assert campaign_id == "campaign-1"
+            assert campaign_id == CAMPAIGN_ID
             assert direction is not None
             raise GenerationPersistenceError(retryable=True)
 
     app.dependency_overrides[provide_generate_next_session] = lambda: FailingUseCase()
     _authenticate()
 
-    response = client.post("/campaigns/campaign-1/generate-session", json={})
+    response = client.post(f"/campaigns/{CAMPAIGN_ID}/generate-session", json={})
 
     assert response.status_code == 409
     assert response.json() == {
@@ -197,6 +199,24 @@ def test_generate_session_route_returns_404_for_rls_miss(client: TestClient) -> 
     app.dependency_overrides[get_llm_provider] = _provider
     _authenticate()
 
-    response = client.post("/campaigns/foreign/generate-session", json={})
+    response = client.post(f"/campaigns/{CAMPAIGN_ID}/generate-session", json={})
 
     assert response.status_code == 404
+
+
+def test_generate_session_route_returns_404_for_malformed_campaign_id(
+    client: TestClient,
+) -> None:
+    fake_client = _FakeSupabaseClient()
+    fake_client.table = MagicMock(
+        side_effect=AssertionError("malformed ids must not query Supabase")
+    )
+    app.dependency_overrides[get_user_supabase_client] = lambda: fake_client
+    app.dependency_overrides[get_llm_provider] = _provider
+    _authenticate()
+
+    response = client.post("/campaigns/undefined/generate-session", json={})
+
+    assert response.status_code == 404
+    assert response.json() == {"error": "Not found."}
+    fake_client.table.assert_not_called()
