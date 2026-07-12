@@ -576,7 +576,6 @@
       "copy": "Copiar",
       "saveChanges": "Guardar cambios",
       "exportPdf": "Exportar PDF →",
-      "exportPdfSoon": "Disponible en el Bloque 9.",
       "regenerate": "Regenerar",
       "regenerating": "Regenerando...",
       "rewriting": "El Escriba está reescribiendo",
@@ -617,6 +616,31 @@
         "copied": "Sesión copiada al portapapeles",
         "notesSaved": "Notas guardadas"
       }
+    },
+    "export": {
+      "breadcrumbExport": "Exportar",
+      "kicker": "Sesión {number} · Exportar",
+      "title": "Llévala a la mesa",
+      "subtitle": "Esto exporta tu versión editada. Las notas privadas del DM no entran en el documento.",
+      "backToEditing": "← Volver a editar",
+      "download": "Descargar PDF",
+      "downloading": "Exportando…",
+      "includeHeading": "Incluir en el PDF",
+      "privateNotes": "Notas privadas del DM",
+      "neverExported": "Nunca se exporta",
+      "sectionCount": "{selected} de {total} secciones · A4 vertical",
+      "previewMeta": "{campaign} · Sesión {number} · Preparada por el DM",
+      "previewFooter": "Narrado con Lazy Lands · Editado por el DM",
+      "loadingTitle": "Imprimiendo las páginas",
+      "loadingCaption": "Renderizando tu sesión editada a PDF",
+      "loadingDraftTitle": "El Escriba está escribiendo",
+      "loadingDraftCaption": "Abriendo la vista de exportación",
+      "loadError": "No se pudo cargar esta sesión para exportar.",
+      "successNotice": "✓ {filename} descargado. Que los dados te sean favorables.",
+      "errorNotice": "El PDF no se pudo generar. Tu borrador de sesión está intacto. Inténtalo de nuevo.",
+      "retry": "Inténtalo de nuevo",
+      "missingTitle": "Aún no hay nada que exportar",
+      "missingBody": "Esta sesión no tiene un borrador guardado para exportar. Genera o edita la sesión primero y vuelve luego."
     }
   },
   "Entities": {

@@ -384,14 +384,19 @@ export function GeneratedSessionView({
           >
             {t('saveChanges')}
           </Button>
-          <Button type="button" variant="accent" disabled>
+          <Button
+            type="button"
+            variant="accent"
+            onClick={() =>
+              router.push(
+                `/campaigns/${campaignId}/sessions/${sessionId}/export`
+              )
+            }
+          >
             {t('exportPdf')}
           </Button>
         </div>
       </div>
-      <p className="mt-2 text-right font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--ink-3)]">
-        {t('exportPdfSoon')}
-      </p>
       {error ? (
         <Notice className="mt-5" variant="error" ornament="⚠" role="alert">
           {error}

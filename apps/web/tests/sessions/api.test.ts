@@ -11,8 +11,11 @@ vi.mock('@/lib/api', () => ({
 import {
   registerSession,
   getSessions,
+  downloadSessionPdf,
   SessionApiError,
   SessionCampaignNotFoundError,
+  SessionNotExportableError,
+  SessionValidationError,
 } from '@/lib/sessions/api'
 
 describe('sessions api client (Block 7a frontend)', () => {
@@ -112,5 +115,152 @@ describe('sessions api client (Block 7a frontend)', () => {
     const result = await getSessions('camp-1')
 
     expect(result).toEqual([])
+  })
+})
+
+describe('downloadSessionPdf (PDF export download client)', () => {
+  let createObjectURL: ReturnType<typeof vi.spyOn>
+  let revokeObjectURL: ReturnType<typeof vi.spyOn>
+  let anchorClick: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    createObjectURL = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockReturnValue('blob:mock-url')
+    revokeObjectURL = vi
+      .spyOn(URL, 'revokeObjectURL')
+      .mockImplementation(() => {})
+    // jsdom does not navigate on anchor.click(); stub it to observe the trigger.
+    anchorClick = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    createObjectURL.mockRestore()
+    revokeObjectURL.mockRestore()
+    anchorClick.mockRestore()
+  })
+
+  function pdfResponse(): Response {
+    return new Response('%PDF-1.7 bytes', {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="session-8.pdf"',
+      },
+    })
+  }
+
+  it('requests the export endpoint with repeated section_id params and no body', async () => {
+    mockApiFetch.mockResolvedValue(pdfResponse())
+
+    await downloadSessionPdf('sess-8', ['synopsis', 'beats'])
+
+    expect(mockApiFetch).toHaveBeenCalledTimes(1)
+    const [path, init] = mockApiFetch.mock.calls[0]
+    expect(path).toBe(
+      '/sessions/sess-8/export.pdf?section_id=synopsis&section_id=beats'
+    )
+    // IDs-only: a plain GET with no request body carrying prose.
+    expect(init).toBeUndefined()
+  })
+
+  it('creates and revokes an object URL and returns the attachment filename on success', async () => {
+    mockApiFetch.mockResolvedValue(pdfResponse())
+
+    const filename = await downloadSessionPdf('sess-8', ['synopsis'])
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1)
+    // Duck-type the argument instead of `toBeInstanceOf(Blob)`: `response.blob()`
+    // returns a Blob from the fetch/undici realm, which is not an instance of the
+    // jsdom global `Blob` on every Node version (passes on 24, fails on CI's Node).
+    const objectUrlArg = createObjectURL.mock.calls[0][0] as Blob
+    expect(objectUrlArg.type).toBe('application/pdf')
+    expect(objectUrlArg.size).toBeGreaterThan(0)
+    expect(anchorClick).toHaveBeenCalledTimes(1)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock-url')
+    expect(filename).toBe('session-8.pdf')
+  })
+
+  it('returns a plain filename verbatim, even when it contains a literal percent', async () => {
+    // `decodeURIComponent('100% Loot.pdf')` throws — a plain (non-extended)
+    // filename must never be percent-decoded.
+    mockApiFetch.mockResolvedValue(
+      new Response('%PDF', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': 'attachment; filename="100% Loot.pdf"',
+        },
+      })
+    )
+
+    const filename = await downloadSessionPdf('sess-8', ['synopsis'])
+
+    expect(filename).toBe('100% Loot.pdf')
+  })
+
+  it('prefers the RFC 5987 filename* parameter and decodes it', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response('%PDF', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition':
+            'attachment; filename="fallback.pdf"; filename*=UTF-8\'\'caf%C3%A9.pdf',
+        },
+      })
+    )
+
+    const filename = await downloadSessionPdf('sess-8', ['synopsis'])
+
+    expect(filename).toBe('café.pdf')
+  })
+
+  it('throws SessionValidationError on 422 without creating an object URL', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({ error: 'Select one or more unique saved sections.' }),
+        {
+          status: 422,
+        }
+      )
+    )
+
+    await expect(
+      downloadSessionPdf('sess-8', ['synopsis', 'synopsis'])
+    ).rejects.toBeInstanceOf(SessionValidationError)
+    expect(createObjectURL).not.toHaveBeenCalled()
+  })
+
+  it('throws SessionNotExportableError on 409 (missing/invalid draft)', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: 'This saved session draft cannot be exported.',
+        }),
+        {
+          status: 409,
+        }
+      )
+    )
+
+    await expect(
+      downloadSessionPdf('sess-8', ['synopsis'])
+    ).rejects.toBeInstanceOf(SessionNotExportableError)
+    expect(createObjectURL).not.toHaveBeenCalled()
+  })
+
+  it('throws SessionCampaignNotFoundError on 404', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Not found.' }), { status: 404 })
+    )
+
+    await expect(
+      downloadSessionPdf('forged', ['synopsis'])
+    ).rejects.toBeInstanceOf(SessionCampaignNotFoundError)
+    expect(createObjectURL).not.toHaveBeenCalled()
   })
 })
