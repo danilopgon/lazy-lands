@@ -213,13 +213,29 @@ const FALLBACK_PDF_FILENAME = 'session-export.pdf'
 /**
  * Extract the `filename` from a `Content-Disposition` attachment header.
  *
+ * The RFC 5987 extended parameter (`filename*=UTF-8''…`) is percent-encoded and
+ * takes precedence, so it is decoded. A plain `filename=` is NOT percent-encoded
+ * and is returned verbatim — decoding it would throw on a literal `%` (e.g.
+ * `100% Loot.pdf`).
+ *
  * @param {string | null} header - The raw `Content-Disposition` header value, if any.
  * @returns {string | null} The parsed filename, or `null` when absent or unparseable.
  */
 function filenameFromContentDisposition(header: string | null): string | null {
   if (!header) return null
-  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(header)
-  return match ? decodeURIComponent(match[1].trim()) : null
+
+  const extended = /filename\*=(?:UTF-8'')?([^;]+)/i.exec(header)
+  if (extended) {
+    const raw = extended[1].trim().replace(/^"|"$/g, '')
+    try {
+      return decodeURIComponent(raw)
+    } catch {
+      // Malformed percent sequence — fall back to the plain filename below.
+    }
+  }
+
+  const plain = /filename=("?)([^";]+)\1/i.exec(header)
+  return plain ? plain[2].trim() : null
 }
 
 /**

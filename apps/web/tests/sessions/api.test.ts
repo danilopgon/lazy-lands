@@ -184,6 +184,41 @@ describe('downloadSessionPdf (PDF export download client)', () => {
     expect(filename).toBe('session-8.pdf')
   })
 
+  it('returns a plain filename verbatim, even when it contains a literal percent', async () => {
+    // `decodeURIComponent('100% Loot.pdf')` throws — a plain (non-extended)
+    // filename must never be percent-decoded.
+    mockApiFetch.mockResolvedValue(
+      new Response('%PDF', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': 'attachment; filename="100% Loot.pdf"',
+        },
+      })
+    )
+
+    const filename = await downloadSessionPdf('sess-8', ['synopsis'])
+
+    expect(filename).toBe('100% Loot.pdf')
+  })
+
+  it('prefers the RFC 5987 filename* parameter and decodes it', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response('%PDF', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition':
+            'attachment; filename="fallback.pdf"; filename*=UTF-8\'\'caf%C3%A9.pdf',
+        },
+      })
+    )
+
+    const filename = await downloadSessionPdf('sess-8', ['synopsis'])
+
+    expect(filename).toBe('café.pdf')
+  })
+
   it('throws SessionValidationError on 422 without creating an object URL', async () => {
     mockApiFetch.mockResolvedValue(
       new Response(

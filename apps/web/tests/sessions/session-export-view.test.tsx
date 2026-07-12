@@ -224,7 +224,12 @@ describe('SessionExportView', () => {
     await user.click(downloading)
     expect(downloadFn).toHaveBeenCalledTimes(1)
 
+    // Flush the deferred completion so the success state settles before the
+    // test exits (avoids an act() warning on the unawaited state update).
     control.resolve('session-8.pdf')
+    expect(
+      await screen.findByText(/session-8\.pdf downloaded/)
+    ).toBeInTheDocument()
   })
 
   it('shows a success notice with the filename and preserves the selection', async () => {
