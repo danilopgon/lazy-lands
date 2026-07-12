@@ -7,11 +7,22 @@ vi.mock('@/lib/api', () => ({ apiFetch: mockApiFetch }))
 import {
   generateSession,
   getSession,
+  regenerateSection,
   SessionApiError,
   SessionCampaignNotFoundError,
   SessionValidationError,
   updateSessionContent,
 } from '@/lib/sessions/api'
+
+const SEVEN_SECTIONS = [
+  'synopsis',
+  'goal',
+  'opening',
+  'beats',
+  'encounters',
+  'factions',
+  'arcs',
+].map((id) => ({ id, label: id, body: 'Draft.', origin: 'scribe' as const }))
 
 describe('Block 8 sessions api client', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -24,12 +35,7 @@ describe('Block 8 sessions api client', () => {
           id: 'session-8',
           session_number: 8,
           title: 'The Quiet Ledger',
-          synopsis: 'Draft',
-          main_objective: 'Objective',
-          twist: 'Twist',
-          encounters: [],
-          faction_reactions: [],
-          arc_progression: [],
+          sections: SEVEN_SECTIONS,
           continuity_links: [],
           trace_id: 'session-8',
         }),
@@ -47,6 +53,7 @@ describe('Block 8 sessions api client', () => {
       })
     )
     expect(result.id).toBe('session-8')
+    expect(result.sections).toHaveLength(7)
   })
 
   it('generateSession throws a retryable validation error on malformed Scribe output', async () => {
@@ -145,5 +152,53 @@ describe('Block 8 sessions api client', () => {
       new Response(JSON.stringify({ error: 'boom' }), { status: 500 })
     )
     await expect(getSession('broken')).rejects.toBeInstanceOf(SessionApiError)
+  })
+
+  it('regenerateSection posts only the section id — no steering param', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: 'session-8',
+          campaign_id: 'camp-1',
+          session_number: 8,
+          summary: 'Draft',
+          consequences: null,
+          generated_content: { sections: SEVEN_SECTIONS },
+          trace_json: {},
+          created_at: null,
+          updated_at: null,
+        }),
+        { status: 200 }
+      )
+    )
+
+    const result = await regenerateSection('session-8', 'goal')
+
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      '/sessions/session-8/regenerate-section',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ section_id: 'goal' }),
+      })
+    )
+    expect(result.generated_content?.sections).toHaveLength(7)
+  })
+
+  it('regenerateSection classifies 422 as a validation error and 404 as not found', async () => {
+    mockApiFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'unknown section' }), {
+        status: 422,
+      })
+    )
+    await expect(regenerateSection('session-8', 'goal')).rejects.toBeInstanceOf(
+      SessionValidationError
+    )
+
+    mockApiFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'not found' }), { status: 404 })
+    )
+    await expect(regenerateSection('session-8', 'goal')).rejects.toBeInstanceOf(
+      SessionCampaignNotFoundError
+    )
   })
 })

@@ -576,12 +576,13 @@
       "saveChanges": "Guardar cambios",
       "exportPdf": "Exportar PDF →",
       "exportPdfSoon": "Disponible en el Bloque 9.",
-      "regenerateComingLater": "Próximamente",
+      "regenerate": "Regenerar",
       "regenerating": "Regenerando...",
       "rewriting": "El Escriba está reescribiendo",
       "saveSectionChanges": "Guardar cambios de sección",
       "sectionSaveError": "No se pudo guardar esta sección. Tu edición sigue aquí; inténtalo de nuevo.",
       "saveAllError": "No se pudieron guardar los cambios. Tu borrador sigue aquí; inténtalo de nuevo.",
+      "regenerateError": "No se pudo regenerar esta sección. Tu borrador sigue aquí; inténtalo de nuevo.",
       "copyError": "No se pudo copiar al portapapeles. Inténtalo de nuevo.",
       "loadingTitle": "El Escriba está escribiendo",
       "loadingCaption": "Abriendo el borrador de sesión generado",
@@ -601,11 +602,12 @@
       "excludedFromPdfTitle": "Excluido del PDF",
       "sections": {
         "synopsis": "Sinopsis",
-        "main_objective": "Objetivo principal",
-        "twist": "Giro",
+        "goal": "Objetivo de la sesión",
+        "opening": "Escena inicial",
+        "beats": "Momentos clave",
         "encounters": "Encuentros",
-        "faction_reactions": "Reacciones de facciones",
-        "arc_progression": "Avance de arco"
+        "factions": "Reacciones de facciones",
+        "arcs": "Avance de arco"
       },
       "toast": {
         "sectionSaved": "Sección guardada",

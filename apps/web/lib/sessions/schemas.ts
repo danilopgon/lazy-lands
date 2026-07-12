@@ -81,22 +81,6 @@ export type GenerateSessionRequest = z.infer<
   typeof generateSessionRequestSchema
 >
 
-export const encounterSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  type: z.string(),
-})
-
-export const factionReactionSchema = z.object({
-  faction_name: z.string(),
-  reaction: z.string(),
-})
-
-export const arcProgressionSchema = z.object({
-  arc_title: z.string(),
-  progression: z.string(),
-})
-
 export const continuityLinkSchema = z.object({
   memory_fact_id: z.string(),
   relevance: z.string(),
@@ -120,16 +104,33 @@ export const generatedContentSchema = z
   .passthrough()
 export type GeneratedContent = z.infer<typeof generatedContentSchema>
 
+// Mirrors `SectionId` in services/api/app/modules/sessions/domain/enums.py —
+// the 7 canonical generated-session section ids, fixed order.
+export const sectionIdSchema = z.enum([
+  'synopsis',
+  'goal',
+  'opening',
+  'beats',
+  'encounters',
+  'factions',
+  'arcs',
+])
+export type SectionId = z.infer<typeof sectionIdSchema>
+
+// `POST /sessions/{id}/regenerate-section` request body — no steering field
+// exists here by design; the DM can only pick which section to regenerate.
+export const regenerateSectionRequestSchema = z.object({
+  section_id: sectionIdSchema,
+})
+export type RegenerateSectionRequest = z.infer<
+  typeof regenerateSectionRequestSchema
+>
+
 export const generateSessionResponseSchema = z.object({
   id: z.string(),
   session_number: z.number(),
   title: z.string(),
-  synopsis: z.string(),
-  main_objective: z.string(),
-  twist: z.string(),
-  encounters: z.array(encounterSchema),
-  faction_reactions: z.array(factionReactionSchema),
-  arc_progression: z.array(arcProgressionSchema),
+  sections: z.array(generatedSectionSchema),
   continuity_links: z.array(continuityLinkSchema),
   trace_id: z.string(),
 })
