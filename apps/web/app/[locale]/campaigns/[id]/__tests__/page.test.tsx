@@ -593,6 +593,30 @@ describe('CampaignDetailPage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('keeps a generated session resumable even after its synopsis summary is auto-filled', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'sess-draft',
+        session_number: 8,
+        summary: 'The Scribe drafted a synopsis.',
+        consequences: null,
+        has_generated_content: true,
+        created_at: '2026-07-10T10:00:00Z',
+      },
+    ])
+    renderPage()
+
+    await waitFor(() =>
+      expect(screen.getByText(/scribe drafted a synopsis/i)).toBeInTheDocument()
+    )
+
+    expect(screen.getByRole('link', { name: /resume draft/i })).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/sess-draft'
+    )
+  })
+
   it('omits the Resume draft affordance when no draft-like (unsummarized) session exists', async () => {
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
     mockGetSessions.mockResolvedValue([

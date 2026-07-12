@@ -237,6 +237,11 @@ Status: **in progress** (SDD planning complete; stacked-to-main chained PRs: PR 
   The same canonical section IDs and provenance rules MUST flow through the LLM prompt, Pydantic
   output contract, `generated_content` persistence, session-detail API, localized frontend labels,
   and editable draft UI. Keep read compatibility for existing Block 8 drafts.
+  - Current gap (Block 8): `generate_session_v1.jinja` persists only `synopsis`, `main_objective`,
+    and `twist` as `generated_content.sections`, so the `encounters`, `faction_reactions`, and
+    `arc_progression` returned by `POST /generate-session` are dropped after the redirect/reload
+    and never appear in the generated-session view. Persisting or deriving them into sections is
+    part of this contract-alignment work (flagged by Codex review on PR #51).
 - [ ] DM can regenerate individual sections (synopsis, encounters, twist, etc.) with a fresh LLM
   call that preserves the rest of the draft. Requires a `POST /sessions/{id}/regenerate-section`
   endpoint and per-section prompt templates. UI shows a disabled "Coming later" affordance in

@@ -84,8 +84,10 @@ export function RecentSessions({
       {recent.map((session) => {
         const sessionHref = `/campaigns/${campaignId}/sessions/${session.id}`
         const hasGeneratedContent = session.has_generated_content
-        const isDraft =
-          hasGeneratedContent && !session.summary && !session.consequences
+        // A generated session is a resumable draft until the DM records the
+        // played outcome. Summary is auto-filled from the synopsis at
+        // generation time, so only recorded consequences mark it as logged.
+        const isDraft = hasGeneratedContent && !session.consequences
         return (
           <div
             key={session.id}

@@ -106,7 +106,8 @@ export function GeneratedSessionView({
 
   if (
     (!providedCampaign && campaignQuery.isLoading) ||
-    (!providedSession && sessionQuery.isLoading)
+    (!providedSession && sessionQuery.isLoading) ||
+    (!providedMemories && memoriesQuery.isLoading)
   ) {
     return (
       <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
@@ -120,7 +121,8 @@ export function GeneratedSessionView({
 
   if (
     (!providedCampaign && campaignQuery.error) ||
-    (!providedSession && sessionQuery.error)
+    (!providedSession && sessionQuery.error) ||
+    (!providedMemories && memoriesQuery.error)
   ) {
     return (
       <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
@@ -132,6 +134,7 @@ export function GeneratedSessionView({
             onClick={() => {
               void campaignQuery.refetch()
               void sessionQuery.refetch()
+              void memoriesQuery.refetch()
             }}
           >
             {te('retry')}
@@ -142,6 +145,10 @@ export function GeneratedSessionView({
   }
 
   if (!campaign || !session) return null
+  // Guard against opening a session under a campaign it does not belong to
+  // (e.g. a crafted/stale URL): the route campaign drives breadcrumbs and
+  // actions, so a mismatch would let edits target the wrong campaign context.
+  if (session.campaign_id !== campaignId) return null
 
   /**
    * Show a transient toast message and auto-clear it shortly after.
@@ -266,15 +273,19 @@ export function GeneratedSessionView({
     }
   }
 
-  /** Copy the visible sections to the clipboard and confirm with a toast. */
+  /** Copy the visible sections to the clipboard and confirm only on success. */
   function copyAll() {
-    const text = visibleSections
+    const text = sectionsIncludingOpenDraft()
       .map(
         (section) => `${sectionLabel(section).toUpperCase()}\n${section.body}`
       )
       .join('\n\n')
-    void navigator.clipboard?.writeText(text).catch(() => {})
-    showToast(t('toast.copied'))
+    const clipboard = navigator.clipboard
+    if (!clipboard) return
+    void clipboard
+      .writeText(text)
+      .then(() => showToast(t('toast.copied')))
+      .catch(() => setError(t('copyError')))
   }
 
   return (
