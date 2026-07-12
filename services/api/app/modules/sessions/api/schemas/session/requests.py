@@ -4,6 +4,19 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.modules.sessions.domain.enums import SectionId
+
+
+class RegenerateSectionRequest(BaseModel):
+    """``POST /sessions/{id}/regenerate-section`` request body.
+
+    Carries ONLY the target section id — no steering/direction field exists
+    on this request by design (SR spec). Regeneration is a pure rewrite of
+    the same section against the same context.
+    """
+
+    section_id: SectionId
+
 
 class RegisterSessionRequest(BaseModel):
     """``POST /campaigns/{id}/sessions`` request body.

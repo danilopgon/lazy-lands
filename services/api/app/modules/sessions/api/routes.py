@@ -13,12 +13,18 @@ from starlette.concurrency import run_in_threadpool
 from app.modules.sessions.api.dependencies import (
     provide_get_session,
     provide_get_sessions,
+    provide_regenerate_section,
     provide_register_session,
     provide_update_session,
 )
 from app.modules.sessions.api.schemas.session.requests import (
+    RegenerateSectionRequest,
     RegisterSessionRequest,
     UpdateSessionRequest,
+)
+from app.modules.sessions.application.commands.regenerate_section import (
+    RegenerateSectionCommand,
+    RegenerateSectionUseCase,
 )
 from app.modules.sessions.application.commands.register_session import (
     RegisterSession,
@@ -99,3 +105,18 @@ async def update_session(
         provided_fields=set(payload.model_fields_set),
     )
     return await run_in_threadpool(handler.execute, session_id, command)
+
+
+@detail_router.post(
+    "/{session_id}/regenerate-section", response_model=SessionDetailResponse
+)
+async def regenerate_section(
+    session_id: str,
+    payload: RegenerateSectionRequest,
+    _user_id: Annotated[str, Depends(get_current_user)],
+    handler: Annotated[RegenerateSectionUseCase, Depends(provide_regenerate_section)],
+) -> SessionDetailResponse:
+    """Rewrite one generated-session section, resetting its origin to scribe."""
+    _validate_session_id(session_id)
+    command = RegenerateSectionCommand(section_id=payload.section_id.value)
+    return await handler.execute(session_id, command)
