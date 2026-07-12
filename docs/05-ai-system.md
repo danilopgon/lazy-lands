@@ -59,7 +59,7 @@ services/api/app/modules/
   campaigns/prompts/extract_campaign_v1.jinja
   sessions/prompts/summarize_campaign_v1.jinja
   sessions/prompts/suggest_memory_facts_v1.jinja
-  sessions/prompts/generate_session_v1.jinja
+  generation/prompts/generate_session_v1.jinja
 ```
 
 Bump the `_vN` suffix for any prompt change that affects output shape or behavior, and record
@@ -157,18 +157,19 @@ Rules:
 
 Purpose:
 
-Generate a structured proposal for the next session.
+Generate a structured, editable proposal for the next session. The executable template lives at
+`services/api/app/modules/generation/prompts/generate_session_v1.jinja`.
 
 Input:
 
 - Campaign description.
 - Current world state.
 - Accumulated summary.
-- Latest session.
 - NPCs.
 - Factions.
 - Open arcs.
 - Active MemoryFacts.
+- Optional DM direction: goal, tone, pace, difficulty and additional instructions.
 
 Output:
 
@@ -180,6 +181,8 @@ Output:
 - Faction reactions.
 - Arc progression.
 - Continuity links.
+- Editable `generated_content.sections[]` when the model supplies explicit sections; otherwise the
+  backend derives synopsis, main objective and twist sections.
 
 Validation schema:
 
@@ -192,6 +195,9 @@ Rules:
 - Include faction reactions when relevant.
 - Progress at least one open arc when possible.
 - Do not contradict accepted MemoryFacts.
+- Do not include dismissed suggestions or private DM notes.
+- Use `accumulated_summary` as the representation of prior sessions; do not fetch individual past
+  session bodies for this prompt.
 - Return valid JSON only.
 
 ## JSON validation

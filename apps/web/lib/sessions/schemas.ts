@@ -58,6 +58,109 @@ export const sessionResponseSchema = z.object({
   session_number: z.number(),
   summary: z.string().nullable(),
   consequences: z.string().nullable(),
+  has_generated_content: z.boolean().default(false),
   created_at: z.string().nullable(),
 })
 export type SessionResponse = z.infer<typeof sessionResponseSchema>
+
+const optionalTrimmedNullableString = z
+  .string()
+  .trim()
+  .transform((value) => (value.length > 0 ? value : null))
+  .nullable()
+  .optional()
+
+export const generateSessionRequestSchema = z.object({
+  goal: optionalTrimmedNullableString,
+  tone: z.string().trim().default('Keep current, low-magic intrigue'),
+  pace: z.string().trim().default('Balanced'),
+  difficulty: z.string().trim().default('Standard'),
+  additional_instructions: optionalTrimmedNullableString,
+})
+export type GenerateSessionRequest = z.infer<
+  typeof generateSessionRequestSchema
+>
+
+export const encounterSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  type: z.string(),
+})
+
+export const factionReactionSchema = z.object({
+  faction_name: z.string(),
+  reaction: z.string(),
+})
+
+export const arcProgressionSchema = z.object({
+  arc_title: z.string(),
+  progression: z.string(),
+})
+
+export const continuityLinkSchema = z.object({
+  memory_fact_id: z.string(),
+  relevance: z.string(),
+})
+export type ContinuityLink = z.infer<typeof continuityLinkSchema>
+
+export const generatedSectionSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  body: z.string().min(1),
+  origin: z.enum(['scribe', 'edited']),
+})
+export type GeneratedSection = z.infer<typeof generatedSectionSchema>
+
+export const generatedContentSchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    sections: z.array(generatedSectionSchema).min(1),
+    continuity_links: z.array(continuityLinkSchema).optional(),
+  })
+  .passthrough()
+export type GeneratedContent = z.infer<typeof generatedContentSchema>
+
+export const generateSessionResponseSchema = z.object({
+  id: z.string(),
+  session_number: z.number(),
+  title: z.string(),
+  synopsis: z.string(),
+  main_objective: z.string(),
+  twist: z.string(),
+  encounters: z.array(encounterSchema),
+  faction_reactions: z.array(factionReactionSchema),
+  arc_progression: z.array(arcProgressionSchema),
+  continuity_links: z.array(continuityLinkSchema),
+  trace_id: z.string(),
+})
+export type GenerateSessionResponse = z.infer<
+  typeof generateSessionResponseSchema
+>
+
+export const sessionDetailSchema = z.object({
+  id: z.string(),
+  campaign_id: z.string(),
+  session_number: z.number(),
+  summary: z.string().nullable(),
+  consequences: z.string().nullable(),
+  generated_content: generatedContentSchema.nullable(),
+  trace_json: z.record(z.string(), z.unknown()).nullable(),
+  created_at: z.string().nullable(),
+  updated_at: z.string().nullable(),
+})
+export type SessionDetail = z.infer<typeof sessionDetailSchema>
+
+export const updateSessionContentSchema = z
+  .object({
+    generated_content: generatedContentSchema.nullable().optional(),
+    summary: z.string().nullable().optional(),
+    consequences: z.string().nullable().optional(),
+  })
+  .refine(
+    (value) =>
+      value.generated_content !== undefined ||
+      value.summary !== undefined ||
+      value.consequences !== undefined,
+    'At least one supported field is required'
+  )
+export type UpdateSessionContent = z.infer<typeof updateSessionContentSchema>

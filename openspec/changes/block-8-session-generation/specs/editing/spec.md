@@ -167,12 +167,12 @@ The Generated Session page (`/campaigns/[id]/sessions/[sessionId]`) MUST match t
 - AND show a Toast with "Session copied to clipboard"
 - AND silently fail if clipboard API is unavailable
 
-#### Scenario: Export PDF link
+#### Scenario: Export PDF deferred action
 
 - GIVEN the DM clicks "Export PDF →"
 - WHEN the export button is clicked
-- THEN the frontend SHALL navigate to `/campaigns/[id]/sessions/[sessionId]/export` (Block 9 — PDF export)
-- AND the button SHALL be rendered as an accent `ll-btn` regardless of export implementation status
+- THEN the frontend SHALL NOT navigate to a non-existent export route before Block 9 ships
+- AND the button SHALL be rendered as an accent disabled action with clear localized "coming in Block 9" copy
 
 ### Requirement: Handoff — Error recovery
 

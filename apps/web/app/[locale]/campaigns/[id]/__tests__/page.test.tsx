@@ -134,14 +134,15 @@ function buildCampaignDetail(
 }
 
 /** Render the detail page wrapped in a fresh QueryClientProvider. */
-function renderPage() {
+function renderPage(locale: 'en' | 'es' = 'en') {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   return render(
     <QueryClientProvider client={queryClient}>
       <CampaignDetailPage />
-    </QueryClientProvider>
+    </QueryClientProvider>,
+    { locale }
   )
 }
 
@@ -204,6 +205,13 @@ describe('CampaignDetailPage', () => {
     expect(screen.getByText('NPCs')).toBeInTheDocument()
     expect(screen.getByText('Factions')).toBeInTheDocument()
     expect(screen.getByText('Arcs')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Log session' })).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/new'
+    )
+    expect(
+      screen.getByRole('link', { name: 'Prepare next session' })
+    ).toHaveAttribute('href', '/campaigns/camp-1/prepare')
   })
 
   it('renders live active memories and memory navigation instead of a placeholder', async () => {
@@ -247,6 +255,72 @@ describe('CampaignDetailPage', () => {
       ])
     )
   })
+
+  it.each([
+    [
+      'en',
+      [
+        'Consequence',
+        'Relationship',
+        'Secret',
+        'Promise',
+        'Tension',
+        'Revelation',
+        'Item',
+        'Arc progress',
+      ],
+    ],
+    [
+      'es',
+      [
+        'Consecuencia',
+        'Relación',
+        'Secreto',
+        'Promesa',
+        'Tensión',
+        'Revelación',
+        'Objeto',
+        'Avance de arco',
+      ],
+    ],
+  ] as const)(
+    'localizes canonical active-memory types in %s',
+    async (locale, labels) => {
+      mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+      mockGetMemoryFacts.mockResolvedValue(
+        [
+          'consequence',
+          'relationship',
+          'secret',
+          'promise',
+          'tension',
+          'revelation',
+          'item',
+          'arc_progress',
+        ].map((type, index) => ({
+          id: `memory-${type}`,
+          campaign_id: 'camp-1',
+          source_session_id: null,
+          content: `Memory ${index + 1}`,
+          type,
+          importance: 'medium' as const,
+          status: 'active' as const,
+          created_at: '2026-07-09T00:00:00Z',
+          updated_at: '2026-07-09T00:00:00Z',
+        }))
+      )
+
+      renderPage(locale)
+
+      await waitFor(() => {
+        expect(screen.getByText('Memory 1')).toBeInTheDocument()
+      })
+
+      for (const label of labels) {
+        expect(screen.getByText(label)).toBeInTheDocument()
+      }
+    }
+  )
 
   it('renders active memories empty and retry states', async () => {
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
@@ -317,6 +391,40 @@ describe('CampaignDetailPage', () => {
     expect(
       screen.queryByText(/no sessions logged yet/i)
     ).not.toBeInTheDocument()
+  })
+
+  it('does not link logged sessions without generated content to the generated draft route', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'logged-session',
+        session_number: 1,
+        summary: 'The party arrived in town.',
+        consequences: null,
+        has_generated_content: false,
+        created_at: '2026-06-01T10:00:00Z',
+      },
+      {
+        id: 'draft-session',
+        session_number: 2,
+        summary: 'The Scribe draft summary.',
+        consequences: null,
+        has_generated_content: true,
+        created_at: '2026-06-08T10:00:00Z',
+      },
+    ])
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText(/party arrived in town/i)).toBeInTheDocument()
+    })
+
+    expect(
+      screen.queryByRole('link', { name: /party arrived in town/i })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /the scribe draft summary/i })
+    ).toHaveAttribute('href', '/campaigns/camp-1/sessions/draft-session')
   })
 
   it('toggles world-state into edit mode with autofocus on "Edit" click', async () => {
@@ -441,6 +549,119 @@ describe('CampaignDetailPage', () => {
       screen.queryByText(/this should be discarded/i)
     ).not.toBeInTheDocument()
     expect(screen.getByText(/the town of phandalin/i)).toBeInTheDocument()
+  })
+
+  it('renders recent session entries as clickable links so generated drafts stay resumable', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'sess-draft',
+        session_number: 8,
+        summary: null,
+        consequences: null,
+        has_generated_content: true,
+        created_at: '2026-07-10T10:00:00Z',
+      },
+      {
+        id: 'sess-logged',
+        session_number: 7,
+        summary: 'The warehouse burned down.',
+        consequences: 'The guild lost its cache.',
+        has_generated_content: false,
+        created_at: '2026-06-08T10:00:00Z',
+      },
+    ])
+    renderPage()
+
+    await waitFor(() =>
+      expect(screen.getByText(/warehouse burned down/i)).toBeInTheDocument()
+    )
+
+    expect(screen.getByText('Session 8')).toBeInTheDocument()
+    const draftLink = screen.getByRole('link', { name: /resume draft/i })
+    expect(draftLink).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/sess-draft'
+    )
+    // The most recent session stays reachable from the session list entry too.
+    expect(screen.getByRole('link', { name: /^Session 8$/i })).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/sess-draft'
+    )
+    expect(
+      screen.queryByRole('link', { name: /^Session 7$/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('keeps a generated session resumable even after its synopsis summary is auto-filled', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'sess-draft',
+        session_number: 8,
+        summary: 'The Scribe drafted a synopsis.',
+        consequences: null,
+        has_generated_content: true,
+        created_at: '2026-07-10T10:00:00Z',
+      },
+    ])
+    renderPage()
+
+    await waitFor(() =>
+      expect(screen.getByText(/scribe drafted a synopsis/i)).toBeInTheDocument()
+    )
+
+    expect(screen.getByRole('link', { name: /resume draft/i })).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/sess-draft'
+    )
+  })
+
+  it('omits the Resume draft affordance when no draft-like (unsummarized) session exists', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'sess-logged',
+        session_number: 7,
+        summary: 'The warehouse burned down.',
+        consequences: null,
+        created_at: '2026-06-08T10:00:00Z',
+      },
+    ])
+    renderPage()
+
+    await waitFor(() =>
+      expect(screen.getByText(/warehouse burned down/i)).toBeInTheDocument()
+    )
+
+    expect(screen.queryByRole('link', { name: /resume draft/i })).toBeNull()
+  })
+
+  it('renders the header action buttons with responsive stacking and minimum touch targets', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    renderPage()
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'Shadows over Phandalin' })
+      ).toBeInTheDocument()
+    })
+
+    const logSession = screen.getByRole('link', { name: 'Log session' })
+    const prepareNext = screen.getByRole('link', {
+      name: 'Prepare next session',
+    })
+    expect(logSession).toBeInTheDocument()
+    expect(prepareNext).toBeInTheDocument()
+
+    // Both actions keep the 44px minimum touch target height.
+    expect(logSession.className).toMatch(/h-11/)
+    expect(prepareNext.className).toMatch(/h-11/)
+    // The action container stacks to full-width on mobile and returns to a row
+    // from small screens up so the buttons are never crushed narrow.
+    const header = logSession.parentElement
+    expect(header?.className).toMatch(/flex-col/)
+    expect(header?.className).toMatch(/sm:flex-row/)
   })
 
   it('filters arcs to active/dormant status and shows max 3 with "All arcs" link', async () => {

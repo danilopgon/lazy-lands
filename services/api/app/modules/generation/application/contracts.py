@@ -67,6 +67,7 @@ class ContinuityLink(BaseModel):
 class GeneratedContent(BaseModel):
     """Full generated-content object persisted on ``sessions.generated_content``."""
 
+    title: str = Field(min_length=1, max_length=200)
     sections: list[GeneratedSection] = Field(min_length=1)
     continuity_links: list[ContinuityLink] = Field(default_factory=list)
 
@@ -74,6 +75,7 @@ class GeneratedContent(BaseModel):
 class GeneratedDraftContent(BaseModel):
     """Generated-content object accepted directly from the LLM response."""
 
+    title: str = Field(min_length=1, max_length=200)
     sections: list[GeneratedDraftSection] = Field(min_length=1)
 
 
@@ -91,9 +93,16 @@ class GeneratedSessionOutput(BaseModel):
     generated_content: GeneratedDraftContent | None = None
 
     def content_for_persistence(self) -> GeneratedContent:
-        """Return explicit sections or derive the default editable draft sections."""
+        """Return explicit sections or derive the default editable draft sections.
+
+        ``title`` always reflects the LLM-emitted `GeneratedSessionOutput.title`
+        so the persisted draft and the ``GET /sessions/{id}`` read model expose
+        the generated proposal title rather than leaking the synopsis into the
+        DM's H1.
+        """
         if self.generated_content is not None:
             content_data = self.generated_content.model_dump(mode="json")
+            content_data["title"] = self.title
             content_data["continuity_links"] = [
                 link.model_dump(mode="json") for link in self.continuity_links
             ]
@@ -101,6 +110,7 @@ class GeneratedSessionOutput(BaseModel):
                 **content_data,
             )
         return GeneratedContent(
+            title=self.title,
             sections=[
                 GeneratedSection(id="synopsis", label="Synopsis", body=self.synopsis),
                 GeneratedSection(

@@ -48,6 +48,7 @@ def _session() -> dict[str, object]:
         "summary": "Draft synopsis.",
         "consequences": None,
         "generated_content": {
+            "title": "Threads in the Mine",
             "sections": [
                 {
                     "id": "synopsis",
@@ -68,6 +69,7 @@ def test_get_session_returns_full_generated_content() -> None:
     result = GetSessionUseCase(_Repo(_session())).execute("session-1")
 
     assert result.id == SESSION_ID
+    assert result.generated_content["title"] == "Threads in the Mine"
     assert result.generated_content["sections"][0]["origin"] == "scribe"
     assert result.generated_content["continuity_links"] == [
         {"memory_fact_id": "mem-1", "relevance": "Payoff."}

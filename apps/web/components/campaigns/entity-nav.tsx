@@ -49,6 +49,11 @@ export function EntityNav({ campaignId }: EntityNavProps) {
       href: `${base}/memory/review`,
       active: pathname.startsWith(`${base}/memory`),
     },
+    {
+      key: 'prepare',
+      href: `${base}/prepare`,
+      active: pathname === `${base}/prepare`,
+    },
   ]
 
   return (

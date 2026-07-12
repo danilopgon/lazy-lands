@@ -230,6 +230,24 @@ Status: **in progress** (SDD planning complete; stacked-to-main chained PRs: PR 
 - [ ] Inline editing of main fields.
 - [ ] Manually edited fields are saved with `ContentSource.EDITED`.
 
+### Per-section regeneration (MVP — deferred from Block 8, before Block 9)
+
+- [ ] Align the generated-session contract with the seven editable handoff sections before adding
+  regeneration: `synopsis`, `goal`, `opening`, `beats`, `encounters`, `factions`, and `arcs`.
+  The same canonical section IDs and provenance rules MUST flow through the LLM prompt, Pydantic
+  output contract, `generated_content` persistence, session-detail API, localized frontend labels,
+  and editable draft UI. Keep read compatibility for existing Block 8 drafts.
+  - Current gap (Block 8): `generate_session_v1.jinja` persists only `synopsis`, `main_objective`,
+    and `twist` as `generated_content.sections`, so the `encounters`, `faction_reactions`, and
+    `arc_progression` returned by `POST /generate-session` are dropped after the redirect/reload
+    and never appear in the generated-session view. Persisting or deriving them into sections is
+    part of this contract-alignment work (flagged by Codex review on PR #51).
+- [ ] DM can regenerate individual sections (synopsis, encounters, twist, etc.) with a fresh LLM
+  call that preserves the rest of the draft. Requires a `POST /sessions/{id}/regenerate-section`
+  endpoint and per-section prompt templates. UI shows a disabled "Coming later" affordance in
+  Block 8 until this is implemented. Must ship before Block 9 PDF export so the DM can refine
+  each section before exporting.
+
 ---
 
 ## Block 9 — PDF export
@@ -274,8 +292,10 @@ Status: **pending**
   `memory_facts`).
 - [ ] Basic PDF export test.
 
-### Block 11 - Handoff cleanup (if needed)
+### Block 11 - Handoff cleanup (if needed) and docs update
 
 Status: **pending**
 
 - [ ] Remove handoff code and update the docs to reflect the final architecture and flow if it changed during development and the specs didn't match the final implementation.
+- [ ] Update the docs to reflect the final architecture and flow if it changed during development and the specs didn't match the final implementation.
+- [ ] Update README and other main documentation with a fact check and final review of the flow, architecture, and any new features or changes that were made during development.

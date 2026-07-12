@@ -22,6 +22,7 @@
     "factions": "Facciones",
     "arcs": "Arcos",
     "memory": "Memoria",
+    "prepare": "Preparar",
     "sessions": "Sesiones",
     "settings": "Ajustes",
     "logout": "Cerrar sesión",
@@ -280,6 +281,8 @@
     "detail": {
       "kicker": "Campaña · {kicker}",
       "updated": "Actualizado {date}",
+      "logSessionHeader": "Registrar sesión",
+      "prepareNextHeader": "Preparar siguiente sesión",
       "statNpcs": "PNJ",
       "statFactions": "Facciones",
       "statArcs": "Arcos",
@@ -426,7 +429,9 @@
       "emptyTitle": "Aún no hay sesiones registradas",
       "emptyDescription": "Registra tu primera sesión y el Escriba empezará a llevar la crónica.",
       "logSession": "Registrar sesión",
-      "sessionLabel": "Sesión {number}"
+      "sessionLabel": "Sesión {number}",
+      "draftBadge": "Borrador",
+      "resumeDraft": "Continuar borrador"
     }
   },
   "MemoryReview": {
@@ -460,7 +465,9 @@
       "tension": "Tensión",
       "revelation": "Revelación",
       "item": "Objeto",
-      "arc_progress": "Avance de arco"
+      "arc_progress": "Avance de arco",
+      "reputation": "Reputación",
+      "world_state_change": "Cambio en el estado del mundo"
     },
     "memoryTypeUnknown": "{type}",
     "touches": "Toca:",
@@ -493,6 +500,120 @@
     "actionError": {
       "create": "No se pudo sellar esa memoria en la crónica. La sugerencia sigue aquí; inténtalo de nuevo.",
       "retire": "No se pudo retirar esa memoria. Sigue activa; inténtalo de nuevo."
+    }
+  },
+  "SessionGeneration": {
+    "prepare": {
+      "breadcrumb": "Preparar siguiente sesión",
+      "kicker": "Antes de la próxima mesa",
+      "title": "Preparar sesión {number}",
+      "titleUnknown": "Preparar siguiente sesión",
+      "subtitle": "El Escriba redacta una propuesta de sesión con todo lo que aceptaste. Editarás cada palabra antes de llevarla a la mesa.",
+      "contextHeading": "Lo que leerá el Escriba",
+      "included": "Incluido",
+      "privacy": "Solo se leen memorias <b>aceptadas</b>. Las sugerencias descartadas y las notas privadas nunca llegan al Escriba.",
+      "directionHeading": "Tu dirección",
+      "allOptional": "todo opcional",
+      "goalLabel": "Objetivo deseado para la sesión",
+      "goalPlaceholder": "Llevar la venganza de Herman a su punto crítico.",
+      "toneLabel": "Tono",
+      "paceLabel": "Ritmo",
+      "difficultyLabel": "Dificultad",
+      "extraLabel": "Algo más para el Escriba",
+      "extraPlaceholder": "Un jugador faltó a la última sesión; dale a su PJ una forma discreta de volver.",
+      "tone": {
+        "keepCurrent": "Mantener el tono actual, intriga de baja magia",
+        "darker": "Más oscuro",
+        "lighter": "Más ligero",
+        "moreAction": "Más acción",
+        "moreRoleplay": "Más interpretación"
+      },
+      "pace": {
+        "balanced": "Equilibrado",
+        "slowBurn": "Cocción lenta",
+        "breakneck": "Vertiginoso"
+      },
+      "difficulty": {
+        "standard": "Estándar",
+        "forgiving": "Indulgente",
+        "deadly": "Letal"
+      },
+      "submit": "Preparar propuesta de sesión →",
+      "loadingTitle": "Redactando sesión {number}",
+      "loadingTitleUnknown": "Redactando la siguiente sesión",
+      "loadingCaption": "El Escriba está tejiendo arcos, memorias e historial de sesiones en una propuesta",
+      "error": "El borrador del Escriba llegó mal formado y se descartó. No se perdió contexto. Intenta generar de nuevo.",
+      "validationError": "El borrador del Escriba no pasó la validación y se descartó. No se perdió contexto. Intenta generar de nuevo.",
+      "tryAgain": "Intentar de nuevo",
+      "context": {
+        "campaignSummary": "Resumen de campaña",
+        "campaignSummaryMeta": "Acumulado de sesiones anteriores",
+        "lastSession": "Última sesión",
+        "lastSessionMeta": "Última entrada de la crónica",
+        "worldState": "Estado del mundo",
+        "worldStateMeta": "Tal como lo editaste",
+        "activeNpcs": "PNJ activos",
+        "activeNpcsMeta": "Reparto actual y rencores pendientes",
+        "factions": "Facciones",
+        "factionsMeta": "Poderes registrados y reacciones",
+        "openArcs": "Arcos abiertos",
+        "openArcsMeta": "Hilos activos incluidos",
+        "acceptedMemories": "Memorias aceptadas",
+        "acceptedMemoriesMeta": "Las memorias activas informarán el borrador"
+      }
+    },
+    "generated": {
+      "breadcrumbs": {
+        "campaigns": "Campañas",
+        "draft": "Borrador de sesión {number}"
+      },
+      "kicker": "Sesión {number} · Propuesta",
+      "proposalTitle": "Propuesta de sesión {number}",
+      "untitled": "Borrador de sesión generado",
+      "subtitle": "Un <scribe>borrador del Escriba</scribe>. Nada aquí es canon hasta que lo hagas tuyo.",
+      "backCampaign": "← Campaña",
+      "copy": "Copiar",
+      "saveChanges": "Guardar cambios",
+      "exportPdf": "Exportar PDF →",
+      "exportPdfSoon": "Disponible en el Bloque 9.",
+      "regenerateComingLater": "Próximamente",
+      "regenerating": "Regenerando...",
+      "rewriting": "El Escriba está reescribiendo",
+      "saveSectionChanges": "Guardar cambios de sección",
+      "sectionSaveError": "No se pudo guardar esta sección. Tu edición sigue aquí; inténtalo de nuevo.",
+      "saveAllError": "No se pudieron guardar los cambios. Tu borrador sigue aquí; inténtalo de nuevo.",
+      "copyError": "No se pudo copiar al portapapeles. Inténtalo de nuevo.",
+      "loadingTitle": "El Escriba está escribiendo",
+      "loadingCaption": "Abriendo el borrador de sesión generado",
+      "loadError": "No se pudo cargar esta sesión generada.",
+      "memoriesHeading": "Memorias integradas",
+      "memoriesHelp": "El Escriba recurrió a estas memorias aceptadas:",
+      "memoriesEmpty": "No hay memorias integradas registradas.",
+      "manualSource": "Nota manual",
+      "sourceSession": "Sesión {number}",
+      "legend": "Leyenda",
+      "legendScribe": "generado, aún no tocado por ti",
+      "legendEdited": "ahora es tuyo; regenerar lo reemplaza",
+      "legendExcluded": "las notas privadas nunca se exportan",
+      "privateNotes": "Notas privadas del DM",
+      "privateNotesEmpty": "Aún no hay notas privadas.",
+      "excludedFromPdf": "Excluido del PDF",
+      "excludedFromPdfTitle": "Excluido del PDF",
+      "sections": {
+        "synopsis": "Sinopsis",
+        "main_objective": "Objetivo principal",
+        "twist": "Giro",
+        "encounters": "Encuentros",
+        "faction_reactions": "Reacciones de facciones",
+        "arc_progression": "Avance de arco"
+      },
+      "toast": {
+        "sectionSaved": "Sección guardada",
+        "sectionRegenerated": "Sección regenerada por el Escriba",
+        "allSaved": "Todos los cambios guardados",
+        "copied": "Sesión copiada al portapapeles",
+        "notesSaved": "Notas guardadas"
+      }
     }
   },
   "Entities": {

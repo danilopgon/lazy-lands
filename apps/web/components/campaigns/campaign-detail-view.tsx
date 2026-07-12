@@ -10,6 +10,10 @@ import { RecentSessions } from './recent-sessions'
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { formatShortDate } from '@/lib/format'
 import { getSessions } from '@/lib/sessions/api'
+import {
+  getMemoryTypeMessageKey,
+  humanizeMemoryType,
+} from '@/lib/sessions/memory-type-label'
 import { getMemoryFacts } from '@/lib/memory/api'
 
 import type { CampaignDetailResponse } from '@/lib/campaigns/schemas'
@@ -69,6 +73,20 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
               date: formatShortDate(campaign.updated_at, locale),
             })}
           </p>
+        </div>
+        <div className="flex w-full flex-col justify-end gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+          <Link
+            href={`/campaigns/${campaign.id}/sessions/new`}
+            className="inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-transparent px-5 py-2 font-sans text-sm font-semibold text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:bg-[var(--paper-2)] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+          >
+            {t('detail.logSessionHeader')}
+          </Link>
+          <Link
+            href={`/campaigns/${campaign.id}/prepare`}
+            className="inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-[var(--accent)] px-5 py-2 font-sans text-sm font-semibold text-[var(--bg-contrast)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+          >
+            {t('detail.prepareNextHeader')}
+          </Link>
         </div>
       </div>
 
@@ -266,6 +284,7 @@ function ActiveMemoriesPanel({
   onRetry: () => void
 }) {
   const t = useTranslations('Campaigns')
+  const tm = useTranslations('MemoryReview')
 
   if (isLoading) {
     return (
@@ -311,7 +330,14 @@ function ActiveMemoriesPanel({
         >
           {memory.type ? (
             <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
-              {memory.type}
+              {(() => {
+                const key = getMemoryTypeMessageKey(memory.type)
+                return key
+                  ? tm(`memoryType.${key}`)
+                  : tm('memoryTypeUnknown', {
+                      type: humanizeMemoryType(memory.type),
+                    })
+              })()}
             </span>
           ) : null}
           <p className="mt-1 font-serif text-[14.5px] leading-relaxed text-[var(--ink)]">

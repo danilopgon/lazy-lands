@@ -81,21 +81,66 @@ export function RecentSessions({
 
   return (
     <div className="space-y-3">
-      {recent.map((session) => (
-        <div
-          key={session.id}
-          className="border-b border-dotted border-[var(--dotted)] pb-3 last:border-b-0"
-        >
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
-            {t('history.sessionLabel', { number: session.session_number })}
-          </span>
-          {session.summary ? (
-            <p className="mt-1 text-sm leading-relaxed text-[var(--ink-2)]">
-              {session.summary}
-            </p>
-          ) : null}
-        </div>
-      ))}
+      {recent.map((session) => {
+        const sessionHref = `/campaigns/${campaignId}/sessions/${session.id}`
+        const hasGeneratedContent = session.has_generated_content
+        // A generated session is a resumable draft until the DM records the
+        // played outcome. Summary is auto-filled from the synopsis at
+        // generation time, so only recorded consequences mark it as logged.
+        const isDraft = hasGeneratedContent && !session.consequences
+        return (
+          <div
+            key={session.id}
+            className="border-b border-dotted border-[var(--dotted)] pb-3 last:border-b-0"
+          >
+            <div className="flex items-baseline gap-2">
+              {hasGeneratedContent ? (
+                <Link
+                  href={sessionHref}
+                  className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)] hover:underline"
+                >
+                  {t('history.sessionLabel', {
+                    number: session.session_number,
+                  })}
+                </Link>
+              ) : (
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
+                  {t('history.sessionLabel', {
+                    number: session.session_number,
+                  })}
+                </span>
+              )}
+              {isDraft ? (
+                <span className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mute)]">
+                  {t('history.draftBadge')}
+                </span>
+              ) : null}
+            </div>
+            {session.summary ? (
+              hasGeneratedContent ? (
+                <Link
+                  href={sessionHref}
+                  className="mt-1 block text-sm leading-relaxed text-[var(--ink-2)] hover:underline"
+                >
+                  {session.summary}
+                </Link>
+              ) : (
+                <p className="mt-1 text-sm leading-relaxed text-[var(--ink-2)]">
+                  {session.summary}
+                </p>
+              )
+            ) : null}
+            {isDraft ? (
+              <Link
+                href={sessionHref}
+                className="mt-1 inline-flex font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
+              >
+                {t('history.resumeDraft')}
+              </Link>
+            ) : null}
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -5,9 +5,17 @@ import { z } from 'zod'
 import {
   registerSessionResponseSchema,
   sessionResponseSchema,
+  generateSessionRequestSchema,
+  generateSessionResponseSchema,
+  sessionDetailSchema,
+  updateSessionContentSchema,
   type RegisterSessionRequest,
   type RegisterSessionResponse,
   type SessionResponse,
+  type GenerateSessionRequest,
+  type GenerateSessionResponse,
+  type SessionDetail,
+  type UpdateSessionContent,
 } from './schemas'
 
 /** Generic fallback shown when the backend error body has no recognizable message. */
@@ -20,6 +28,8 @@ const FALLBACK_ERROR_MESSAGE = 'Something went wrong. Please try again.'
 export class SessionApiError extends Error {}
 
 export class SessionCampaignNotFoundError extends SessionApiError {}
+
+export class SessionValidationError extends SessionApiError {}
 
 /**
  * Extract a message from a non-2xx JSON error body.
@@ -106,4 +116,88 @@ export async function getSessions(
   }
 
   return z.array(sessionResponseSchema).parse(await response.json())
+}
+
+/**
+ * `POST /campaigns/{campaignId}/generate-session` — ask the Scribe for an editable draft.
+ *
+ * @param {string} campaignId - The owning campaign's id.
+ * @param {GenerateSessionRequest} payload - Optional DM direction fields.
+ * @returns {Promise<GenerateSessionResponse>} The generated session summary response.
+ */
+export async function generateSession(
+  campaignId: string,
+  payload: Partial<GenerateSessionRequest>
+): Promise<GenerateSessionResponse> {
+  const parsed = generateSessionRequestSchema.partial().parse(payload)
+  const body = Object.fromEntries(
+    Object.entries(parsed).filter(([key]) => key in payload)
+  )
+  const response = await apiFetch(`/campaigns/${campaignId}/generate-session`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new SessionCampaignNotFoundError(`Campaign ${campaignId} not found`)
+    }
+    if (response.status === 422) {
+      throw new SessionValidationError(await extractErrorMessage(response))
+    }
+    throw new SessionApiError(await extractErrorMessage(response))
+  }
+
+  return generateSessionResponseSchema.parse(await response.json())
+}
+
+/**
+ * `GET /sessions/{sessionId}` — fetch a generated session draft with JSON content.
+ *
+ * @param {string} sessionId - The session id.
+ * @returns {Promise<SessionDetail>} The full generated-session detail row.
+ */
+export async function getSession(sessionId: string): Promise<SessionDetail> {
+  const response = await apiFetch(`/sessions/${sessionId}`)
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new SessionCampaignNotFoundError(`Session ${sessionId} not found`)
+    }
+    throw new SessionApiError(await extractErrorMessage(response))
+  }
+
+  return sessionDetailSchema.parse(await response.json())
+}
+
+/**
+ * `PATCH /sessions/{sessionId}` — persist the current generated-content object.
+ *
+ * @param {string} sessionId - The session id.
+ * @param {UpdateSessionContent} payload - Full generated content and optional summary/consequences.
+ * @returns {Promise<SessionDetail>} The updated session detail row.
+ */
+export async function updateSessionContent(
+  sessionId: string,
+  payload: UpdateSessionContent
+): Promise<SessionDetail> {
+  const body = updateSessionContentSchema.parse(payload)
+  const response = await apiFetch(`/sessions/${sessionId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new SessionCampaignNotFoundError(`Session ${sessionId} not found`)
+    }
+    if (response.status === 422) {
+      throw new SessionValidationError(await extractErrorMessage(response))
+    }
+    throw new SessionApiError(await extractErrorMessage(response))
+  }
+
+  return sessionDetailSchema.parse(await response.json())
 }

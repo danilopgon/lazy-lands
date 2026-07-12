@@ -37,6 +37,7 @@ def _valid_payload() -> dict[str, object]:
             {"memory_fact_id": "memory-1", "relevance": "The spared manticore returns."}
         ],
         "generated_content": {
+            "title": "Threads in the Mine",
             "sections": [
                 {
                     "id": "synopsis",
@@ -44,7 +45,7 @@ def _valid_payload() -> dict[str, object]:
                     "body": "The party follows the clue.",
                     "origin": "scribe",
                 }
-            ]
+            ],
         },
     }
 
@@ -96,6 +97,7 @@ def test_content_for_persistence_defaults_sections_and_continuity_links() -> Non
     content = GeneratedSessionOutput(**payload).content_for_persistence()
 
     assert content.model_dump(mode="json") == {
+        "title": "Threads in the Mine",
         "sections": [
             {
                 "id": "synopsis",
@@ -120,6 +122,30 @@ def test_content_for_persistence_defaults_sections_and_continuity_links() -> Non
             {"memory_fact_id": "memory-1", "relevance": "The spared manticore returns."}
         ],
     }
+
+
+def test_content_for_persistence_copies_explicit_title_from_llm_output() -> None:
+    output = GeneratedSessionOutput(**_valid_payload())
+
+    content = output.content_for_persistence()
+
+    assert content.title == "Threads in the Mine"
+    assert content.sections[0].origin == "scribe"
+
+
+def test_generated_content_rejects_a_missing_or_blank_title() -> None:
+    from app.modules.generation.application.contracts import GeneratedContent
+
+    section = {
+        "id": "synopsis",
+        "label": "Synopsis",
+        "body": "Draft.",
+        "origin": "scribe",
+    }
+    with pytest.raises(ValidationError):
+        GeneratedContent(sections=[section], title="")
+    with pytest.raises(ValidationError):
+        GeneratedContent(sections=[section])
 
 
 def test_content_for_persistence_adds_links_to_explicit_generated_content() -> None:
