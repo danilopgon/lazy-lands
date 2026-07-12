@@ -49,11 +49,11 @@ Chain strategy: stacked-to-main
 
 ## Phase 5: Handoff-faithful export screen
 
-- [ ] 5.1 **RED** — Create `apps/web/tests/sessions/session-export-view.test.tsx`: ready/toggle; private exclusion; exporting/quill/duplicate prevention; success; retryable preserved selection; missing replacement; selected-only preview/request, `OriginBadge`, and motion gates.
-- [ ] 5.2 **GREEN** — Create `apps/web/app/[locale]/campaigns/[id]/sessions/[sessionId]/export/page.tsx` and `apps/web/components/sessions/session-export-view.tsx`; modify `apps/web/components/sessions/generated-session-view.tsx` and `apps/web/messages/{en,es}.json` for the localized handoff checklist.
-- [ ] 5.3 **REFACTOR/VERIFY** — Run `pnpm --filter web test -- tests/sessions/session-export-view.test.tsx`; issue the handoff report with ready, private, exporting, success, failure, and missing enumerated separately.
+- [x] 5.1 **RED** — Create `apps/web/tests/sessions/session-export-view.test.tsx`: ready/toggle; private exclusion; exporting/quill/duplicate prevention; success; retryable preserved selection; missing replacement; selected-only preview/request, `OriginBadge`, and motion gates.
+- [x] 5.2 **GREEN** — Create `apps/web/app/[locale]/campaigns/[id]/sessions/[sessionId]/export/page.tsx` and `apps/web/components/sessions/session-export-view.tsx`; modify `apps/web/components/sessions/generated-session-view.tsx` and `apps/web/messages/{en,es}.json` for the localized handoff checklist.
+- [x] 5.3 **REFACTOR/VERIFY** — Run `pnpm --filter web test -- tests/sessions/session-export-view.test.tsx`; issue the handoff report with ready, private, exporting, success, failure, and missing enumerated separately.
 
 ## Phase 6: Integration gate
 
-- [ ] 6.1 Run backend/frontend tests, lint/typecheck, and format checks; retain focused-command and runtime-harness results per unit.
-- [ ] 6.2 Keep the renderer/API/image and UI as independently revertible `stacked-to-main` slices; no size exception is authorized.
+- [x] 6.1 Run backend/frontend tests, lint/typecheck, and format checks; retain focused-command and runtime-harness results per unit.
+- [x] 6.2 Keep the renderer/API/image and UI as independently revertible `stacked-to-main` slices; no size exception is authorized.

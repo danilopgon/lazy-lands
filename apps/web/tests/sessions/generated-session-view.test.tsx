@@ -97,11 +97,10 @@ describe('GeneratedSessionView', () => {
     expect(
       screen.getByRole('button', { name: 'Save changes' })
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Export PDF →' })).toBeDisabled()
-    expect(
-      screen.queryByRole('link', { name: 'Export PDF →' })
-    ).not.toBeInTheDocument()
-    expect(screen.getByText('Coming in Block 9.')).toBeInTheDocument()
+    // Export is now live: the action navigates to the export route and the
+    // "coming soon" caption is gone.
+    expect(screen.getByRole('button', { name: 'Export PDF →' })).toBeEnabled()
+    expect(screen.queryByText('Coming in Block 9.')).not.toBeInTheDocument()
     expect(screen.getByText('/01')).toBeInTheDocument()
     expect(screen.getAllByText('✦ Scribe').length).toBeGreaterThan(0)
     expect(screen.getByText('Memories woven in')).toBeInTheDocument()

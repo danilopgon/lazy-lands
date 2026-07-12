@@ -576,7 +576,6 @@
       "copy": "Copy",
       "saveChanges": "Save changes",
       "exportPdf": "Export PDF →",
-      "exportPdfSoon": "Coming in Block 9.",
       "regenerate": "Regenerate",
       "regenerating": "Regenerating...",
       "rewriting": "The Scribe is rewriting",
@@ -617,6 +616,31 @@
         "copied": "Session copied to clipboard",
         "notesSaved": "Notes saved"
       }
+    },
+    "export": {
+      "breadcrumbExport": "Export",
+      "kicker": "Session {number} · Export",
+      "title": "Take it to the table",
+      "subtitle": "This exports your edited version. Private DM notes stay out of the document.",
+      "backToEditing": "← Back to editing",
+      "download": "Download PDF",
+      "downloading": "Exporting…",
+      "includeHeading": "Include in PDF",
+      "privateNotes": "Private DM notes",
+      "neverExported": "Never exported",
+      "sectionCount": "{selected} of {total} sections · A4 portrait",
+      "previewMeta": "{campaign} · Session {number} · Prepared by the DM",
+      "previewFooter": "Chronicled with Lazy Lands · Edited by the DM",
+      "loadingTitle": "Pressing the pages",
+      "loadingCaption": "Rendering your edited session to PDF",
+      "loadingDraftTitle": "The Scribe is writing",
+      "loadingDraftCaption": "Opening the export view",
+      "loadError": "Could not load this session for export.",
+      "successNotice": "✓ {filename} downloaded. May the dice be kind.",
+      "errorNotice": "The PDF failed to render. Your session draft is untouched. Try exporting again.",
+      "retry": "Try again",
+      "missingTitle": "Nothing to export yet",
+      "missingBody": "This session has no saved draft to export. Generate or edit the session first, then come back."
     }
   },
   "Entities": {
