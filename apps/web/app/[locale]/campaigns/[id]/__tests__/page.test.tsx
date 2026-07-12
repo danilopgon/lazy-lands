@@ -657,11 +657,15 @@ describe('CampaignDetailPage', () => {
     // Both actions keep the 44px minimum touch target height.
     expect(logSession.className).toMatch(/h-11/)
     expect(prepareNext.className).toMatch(/h-11/)
-    // The action container stacks to full-width on mobile and returns to a row
-    // from small screens up so the buttons are never crushed narrow.
-    const header = logSession.parentElement
-    expect(header?.className).toMatch(/flex-col/)
-    expect(header?.className).toMatch(/sm:flex-row/)
+    // Per the handoff, the two actions stay side by side (a wrapping row, never
+    // a vertical stack); it is the header row that switches axis on mobile so
+    // the buttons drop below the title instead of crushing it.
+    const actionGroup = logSession.parentElement
+    expect(actionGroup?.className).toMatch(/flex-wrap/)
+    expect(actionGroup?.className).not.toMatch(/flex-col/)
+    const headRow = actionGroup?.parentElement
+    expect(headRow?.className).toMatch(/flex-col/)
+    expect(headRow?.className).toMatch(/sm:flex-row/)
   })
 
   it('filters arcs to active/dormant status and shows max 3 with "All arcs" link', async () => {

@@ -58,7 +58,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
         / <b className="text-[var(--ink)]">{campaign.title}</b>
       </nav>
 
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
         <div>
           {kicker && (
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
@@ -74,7 +74,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
             })}
           </p>
         </div>
-        <div className="flex w-full flex-col justify-end gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+        <div className="flex flex-wrap gap-2">
           <Link
             href={`/campaigns/${campaign.id}/sessions/new`}
             className="inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-transparent px-5 py-2 font-sans text-sm font-semibold text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:bg-[var(--paper-2)] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
