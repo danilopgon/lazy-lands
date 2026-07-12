@@ -62,7 +62,14 @@ def _context(summary: str = "The party humiliated Herman.") -> dict[str, object]
         "npcs": [],
         "factions": [],
         "arcs": [],
-        "memory_facts": [],
+        "memory_facts": [
+            {
+                "id": "mem-1",
+                "content": "Halia split",
+                "type": "relationship",
+                "importance": "high",
+            }
+        ],
     }
 
 
@@ -138,6 +145,25 @@ async def test_generate_session_does_not_persist_invalid_llm_output() -> None:
         "campaign_id": "campaign-1",
         "summarized_up_to_session": 7,
     }
+
+
+@pytest.mark.asyncio
+async def test_generate_session_rejects_invalid_continuity_links() -> None:
+    repo = _Repo(_context())
+    provider = FakeLlmProvider()
+    payload = _output_payload()
+    payload["continuity_links"] = [
+        {"memory_fact_id": "hallucinated-memory", "relevance": "Invalid citation."}
+    ]
+    provider.register(GeneratedSessionOutput, payload)
+    use_case = GenerateNextSessionUseCase(repo, provider)
+
+    with pytest.raises(LlmOutputValidationError):
+        await use_case.execute("campaign-1", GenerationDirection())
+
+    assert repo.created == []
+    assert len(repo.failed_traces) == 1
+    assert repo.failed_traces[0]["error_code"] == "llm_output_validation_failed"
 
 
 @pytest.mark.asyncio

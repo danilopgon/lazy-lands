@@ -77,6 +77,18 @@ def test_generated_session_output_rejects_unknown_section_origin() -> None:
         GeneratedSessionOutput(**payload)
 
 
+def test_generated_session_output_rejects_edited_section_origin() -> None:
+    payload = _valid_payload()
+    generated_content = payload["generated_content"]
+    assert isinstance(generated_content, dict)
+    sections = generated_content["sections"]
+    assert isinstance(sections, list)
+    sections[0]["origin"] = "edited"
+
+    with pytest.raises(ValidationError):
+        GeneratedSessionOutput(**payload)
+
+
 def test_content_for_persistence_defaults_sections_and_continuity_links() -> None:
     payload = _valid_payload()
     payload.pop("generated_content")

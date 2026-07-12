@@ -65,6 +65,7 @@ class GenerateNextSessionUseCase:
             output = await self._llm_provider.complete_json(
                 prompt, GeneratedSessionOutput
             )
+            self._validate_continuity_links(raw_context, output)
         except LlmOutputValidationError:
             duration_ms = int((time.perf_counter() - started) * 1000)
             trace_json = self._build_trace_json(
@@ -112,6 +113,30 @@ class GenerateNextSessionUseCase:
             continuity_links=output.continuity_links,
             trace_id=session["id"],
         )
+
+    def _validate_continuity_links(
+        self, raw_context: dict, output: GeneratedSessionOutput
+    ) -> None:
+        """Reject continuity links that do not cite active memory facts in context."""
+        active_memory_ids = {
+            str(memory.get("id"))
+            for memory in raw_context.get("memory_facts", [])
+            if memory.get("id")
+        }
+        invalid_ids = [
+            link.memory_fact_id
+            for link in output.continuity_links
+            if link.memory_fact_id not in active_memory_ids
+        ]
+        if invalid_ids:
+            raise LlmOutputValidationError(
+                schema_name=GeneratedSessionOutput.__name__,
+                raw_output=(
+                    "Invalid continuity_links memory_fact_id values: "
+                    f"{invalid_ids}"
+                ),
+                retryable=True,
+            )
 
     def _build_trace_json(
         self,

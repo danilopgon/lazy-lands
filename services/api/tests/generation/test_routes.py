@@ -106,7 +106,18 @@ def _fake_generation_client() -> tuple[_FakeSupabaseClient, MagicMock]:
     for name in ("arcs", "memory_facts"):
         table = fake_client.table(name)
         query = table.select.return_value.eq.return_value.eq.return_value
-        query.execute.return_value = MagicMock(data=[])
+        query.execute.return_value = MagicMock(
+            data=[
+                {
+                    "id": "mem-1",
+                    "content": "Halia split",
+                    "type": "relationship",
+                    "importance": "high",
+                }
+            ]
+            if name == "memory_facts"
+            else []
+        )
     sessions = fake_client.table("sessions")
     number_query = sessions.select.return_value.eq.return_value.order.return_value
     number_query.limit.return_value.execute.return_value = MagicMock(data=[])

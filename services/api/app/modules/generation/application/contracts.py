@@ -26,6 +26,15 @@ class GeneratedSection(BaseModel):
     origin: Literal["scribe", "edited"] = "scribe"
 
 
+class GeneratedDraftSection(BaseModel):
+    """One brand-new LLM-generated section before any DM edits."""
+
+    id: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    body: str = Field(min_length=1)
+    origin: Literal["scribe"] = "scribe"
+
+
 class Encounter(BaseModel):
     """Encounter proposed by the Scribe."""
 
@@ -62,6 +71,12 @@ class GeneratedContent(BaseModel):
     continuity_links: list[ContinuityLink] = Field(default_factory=list)
 
 
+class GeneratedDraftContent(BaseModel):
+    """Generated-content object accepted directly from the LLM response."""
+
+    sections: list[GeneratedDraftSection] = Field(min_length=1)
+
+
 class GeneratedSessionOutput(BaseModel):
     """Pydantic-validated LLM output for a generated session draft."""
 
@@ -73,13 +88,17 @@ class GeneratedSessionOutput(BaseModel):
     faction_reactions: list[FactionReaction] = Field(default_factory=list)
     arc_progression: list[ArcProgression] = Field(default_factory=list)
     continuity_links: list[ContinuityLink] = Field(default_factory=list)
-    generated_content: GeneratedContent | None = None
+    generated_content: GeneratedDraftContent | None = None
 
     def content_for_persistence(self) -> GeneratedContent:
         """Return explicit sections or derive the default editable draft sections."""
         if self.generated_content is not None:
-            return self.generated_content.model_copy(
-                update={"continuity_links": self.continuity_links}
+            content_data = self.generated_content.model_dump(mode="json")
+            content_data["continuity_links"] = [
+                link.model_dump(mode="json") for link in self.continuity_links
+            ]
+            return GeneratedContent(
+                **content_data,
             )
         return GeneratedContent(
             sections=[
