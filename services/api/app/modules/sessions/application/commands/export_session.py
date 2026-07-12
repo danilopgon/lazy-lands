@@ -60,9 +60,12 @@ def _persisted_draft(value: object) -> PersistedExportDraft:
     if not isinstance(value, dict):
         raise NonExportableSessionError()
     try:
-        return PersistedExportDraft.model_validate(value)
+        draft = PersistedExportDraft.model_validate(value)
     except ValidationError as exc:
         raise NonExportableSessionError() from exc
+    if len(draft.sections) != len({section.id for section in draft.sections}):
+        raise NonExportableSessionError()
+    return draft
 
 
 def _session_number(row: dict[str, Any]) -> int:

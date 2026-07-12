@@ -117,6 +117,23 @@ def test_export_selects_a_persisted_synopsis_section_id() -> None:
     assert [section.id for section in document.sections] == ["synopsis"]
 
 
+def test_export_rejects_a_persisted_draft_with_duplicate_section_ids() -> None:
+    session = _persisted_session()
+    generated_content = session["generated_content"]
+    assert isinstance(generated_content, dict)
+    sections = generated_content["sections"]
+    assert isinstance(sections, list)
+    duplicate = sections[1]
+    assert isinstance(duplicate, dict)
+    duplicate["id"] = FIRST_SECTION_ID
+
+    with pytest.raises(NonExportableSessionError):
+        ExportSession(_SessionRepository(session)).execute(
+            "session-1",
+            ExportSessionCommand(selected_section_ids=(FIRST_SECTION_ID,)),
+        )
+
+
 @pytest.mark.parametrize(
     "selected_section_ids",
     [
