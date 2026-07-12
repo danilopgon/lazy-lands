@@ -26,3 +26,7 @@ class SessionPersistenceError(Exception):
         """Initialize with a retry flag; no row was written on this failure."""
         self.retryable = retryable
         super().__init__("Session persistence failed")
+
+
+class SessionValidationError(Exception):
+    """Raised when a direct session application command violates its contract."""

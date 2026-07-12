@@ -10,4 +10,5 @@ class SessionResponse(BaseModel):
     session_number: int
     summary: str | None = None
     consequences: str | None = None
+    has_generated_content: bool = False
     created_at: str | None = None

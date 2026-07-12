@@ -20,6 +20,10 @@ class SessionRepository(Protocol):
         """
         ...
 
+    def get_campaign_owner(self, campaign_id: str) -> str | None:
+        """Return the owner user id for a caller-visible campaign, or None."""
+        ...
+
     def get_next_session_number(self, campaign_id: str) -> int:
         """Return ``MAX(session_number) + 1`` for the campaign (1 if none exist)."""
         ...
@@ -52,6 +56,14 @@ class SessionRepository(Protocol):
 
     def list_sessions(self, campaign_id: str) -> list[dict]:
         """List a campaign's sessions, ascending by ``session_number``."""
+        ...
+
+    def get_session(self, session_id: str) -> dict | None:
+        """Return one caller-visible session row, or None on RLS miss."""
+        ...
+
+    def update_session(self, session_id: str, data: dict) -> dict:
+        """Patch one caller-visible session and return the updated row."""
         ...
 
     def get_sessions_since(

@@ -17,6 +17,15 @@ from app.modules.campaigns.application.errors import (
     CampaignPersistenceError,
     CampaignValidationError,
 )
+from app.modules.generation.api import routes as generation
+from app.modules.generation.api.exception_handlers import (
+    generation_not_found_error_handler,
+    generation_persistence_error_handler,
+)
+from app.modules.generation.application.errors import (
+    GenerationNotFoundError,
+    GenerationPersistenceError,
+)
 from app.modules.health import routes as health
 from app.modules.memory.api import routes as memory
 from app.modules.memory.api.exception_handlers import (
@@ -92,6 +101,14 @@ app.add_exception_handler(
     session_persistence_error_handler,  # type: ignore[arg-type]
 )
 app.add_exception_handler(
+    GenerationNotFoundError,
+    generation_not_found_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    GenerationPersistenceError,
+    generation_persistence_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
     MemoryCampaignNotFoundError,
     memory_campaign_not_found_error_handler,  # type: ignore[arg-type]
 )
@@ -145,3 +162,5 @@ app.include_router(campaigns.factions_router)
 app.include_router(campaigns.arcs_router)
 app.include_router(memory.router)
 app.include_router(sessions.router)
+app.include_router(sessions.detail_router)
+app.include_router(generation.router)

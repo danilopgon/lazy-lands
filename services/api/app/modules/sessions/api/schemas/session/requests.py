@@ -1,6 +1,8 @@
 """Session HTTP request DTOs."""
 
-from pydantic import BaseModel, Field
+from typing import Any
+
+from pydantic import BaseModel, Field, model_validator
 
 
 class RegisterSessionRequest(BaseModel):
@@ -13,3 +15,21 @@ class RegisterSessionRequest(BaseModel):
 
     summary: str = Field(min_length=1, max_length=8000)
     consequences: str | None = Field(default=None, max_length=8000)
+
+
+class UpdateSessionRequest(BaseModel):
+    """``PATCH /sessions/{id}`` request body.
+
+    The generated content object is replaced as-is; the server performs no
+    section-level diffing because the frontend owns edit provenance.
+    """
+
+    generated_content: dict[str, Any] | None = None
+    summary: str | None = Field(default=None, max_length=8000)
+    consequences: str | None = Field(default=None, max_length=8000)
+
+    @model_validator(mode="after")
+    def _require_one_field(self) -> "UpdateSessionRequest":
+        if not self.model_fields_set:
+            raise ValueError("At least one supported field is required")
+        return self

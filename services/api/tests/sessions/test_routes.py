@@ -245,7 +245,13 @@ def test_list_sessions_returns_chronological_order(client) -> None:
         fake_client,
         [
             {"id": "s1", "session_number": 1, "summary": "a", "consequences": None},
-            {"id": "s2", "session_number": 2, "summary": "b", "consequences": None},
+            {
+                "id": "s2",
+                "session_number": 2,
+                "summary": "b",
+                "consequences": None,
+                "generated_content": {"sections": [{"body": "Draft."}]},
+            },
         ],
     )
     app.dependency_overrides[get_user_supabase_client] = lambda: fake_client
@@ -256,6 +262,8 @@ def test_list_sessions_returns_chronological_order(client) -> None:
     assert response.status_code == 200
     body = response.json()
     assert [row["session_number"] for row in body] == [1, 2]
+    assert [row["has_generated_content"] for row in body] == [False, True]
+    assert "generated_content" not in body[1]
 
 
 def test_list_sessions_forged_campaign_id_returns_404(client) -> None:

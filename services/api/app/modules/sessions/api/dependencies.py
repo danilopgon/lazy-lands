@@ -14,6 +14,10 @@ from app.modules.sessions.application.commands.suggest_memories import SuggestMe
 from app.modules.sessions.application.commands.summarize_campaign import (
     SummarizeCampaign,
 )
+from app.modules.sessions.application.commands.update_session import (
+    UpdateSessionUseCase,
+)
+from app.modules.sessions.application.queries.get_session import GetSessionUseCase
 from app.modules.sessions.application.queries.get_sessions import GetSessions
 from app.modules.sessions.infrastructure.repository import SupabaseSessionRepository
 from app.shared.database import get_user_supabase_client
@@ -37,3 +41,17 @@ def provide_get_sessions(
 ) -> GetSessions:
     """Build the GetSessions query handler with the caller-scoped repository."""
     return GetSessions(SupabaseSessionRepository(client))
+
+
+def provide_get_session(
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+) -> GetSessionUseCase:
+    """Build the single-session detail query handler."""
+    return GetSessionUseCase(SupabaseSessionRepository(client))
+
+
+def provide_update_session(
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+) -> UpdateSessionUseCase:
+    """Build the session detail update handler."""
+    return UpdateSessionUseCase(SupabaseSessionRepository(client))
