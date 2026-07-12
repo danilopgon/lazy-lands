@@ -307,6 +307,26 @@ body {
   color: var(--ink);
 }
 
+@keyframes ll-panel-settle {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-motion='full'] .ll-panel-settle {
+  animation: ll-panel-settle 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+[data-motion='subtle'] .ll-panel-settle,
+[data-motion='off'] .ll-panel-settle {
+  animation: none;
+}
+
 /* Memory review feedback — stamp accepted proposals and strike dismissed ones. */
 @keyframes ll-stamp-pop {
   0% {
@@ -407,5 +427,9 @@ body {
   .ll-stamp {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .ll-panel-settle {
+    animation: none !important;
   }
 }

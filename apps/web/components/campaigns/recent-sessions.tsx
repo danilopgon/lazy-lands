@@ -43,8 +43,38 @@ export function RecentSessions({
   const t = useTranslations('Sessions')
   const tc = useTranslations('Campaigns')
 
-  if (isLoading) {
-    return null
+  if (!isError && (isLoading || !sessions)) {
+    return (
+      <div
+        aria-busy="true"
+        className="min-h-[222px] space-y-0 border-2 border-[var(--border)] bg-[var(--paper)] px-4 shadow-[4px_4px_0_var(--shadow)]"
+      >
+        <p
+          role="status"
+          aria-label={tc('detail.sessionsLoading')}
+          className="sr-only"
+        >
+          {tc('detail.sessionsLoading')}
+        </p>
+        {Array.from({ length: MAX_VISIBLE_SESSIONS }, (_, index) => (
+          <div
+            key={index}
+            data-testid="recent-sessions-skeleton-row"
+            className="flex min-h-[74px] flex-col justify-center gap-2 border-b border-dotted border-[var(--dotted)] py-3 last:border-b-0"
+          >
+            <span aria-hidden="true" className="h-4 w-24 bg-[var(--paper-2)]" />
+            <span
+              aria-hidden="true"
+              className="h-3 w-full bg-[var(--paper-2)]"
+            />
+            <span
+              aria-hidden="true"
+              className="h-3 w-3/5 bg-[var(--paper-2)]"
+            />
+          </div>
+        ))}
+      </div>
+    )
   }
 
   if (isError) {
@@ -80,7 +110,7 @@ export function RecentSessions({
     .sort((a, b) => a.session_number - b.session_number)
 
   return (
-    <div className="space-y-3">
+    <div className="ll-panel-settle space-y-3">
       {recent.map((session) => {
         const sessionHref = `/campaigns/${campaignId}/sessions/${session.id}`
         const hasGeneratedContent = session.has_generated_content
@@ -97,14 +127,14 @@ export function RecentSessions({
               {hasGeneratedContent ? (
                 <Link
                   href={sessionHref}
-                  className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)] hover:underline"
+                  className="font-serif text-[15px] font-semibold text-[var(--ink)] hover:underline"
                 >
                   {t('history.sessionLabel', {
                     number: session.session_number,
                   })}
                 </Link>
               ) : (
-                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
+                <span className="font-serif text-[15px] font-semibold text-[var(--ink)]">
                   {t('history.sessionLabel', {
                     number: session.session_number,
                   })}
@@ -120,12 +150,16 @@ export function RecentSessions({
               hasGeneratedContent ? (
                 <Link
                   href={sessionHref}
-                  className="mt-1 block text-sm leading-relaxed text-[var(--ink-2)] hover:underline"
+                  data-testid="session-occurrence-excerpt"
+                  className="mt-1 block line-clamp-2 text-sm leading-relaxed text-[var(--ink-2)] hover:underline"
                 >
                   {session.summary}
                 </Link>
               ) : (
-                <p className="mt-1 text-sm leading-relaxed text-[var(--ink-2)]">
+                <p
+                  data-testid="session-occurrence-excerpt"
+                  className="mt-1 line-clamp-2 text-sm leading-relaxed text-[var(--ink-2)]"
+                >
                   {session.summary}
                 </p>
               )

@@ -291,6 +291,7 @@
       "recentSessions": "Recent sessions",
       "comingSoon": "Coming in a later chapter",
       "logSession": "Log session →",
+      "sessionsLoading": "Loading recent sessions",
       "sessionsLoadError": "Could not load recent sessions.",
       "arcsNeedingAttention": "Active arcs",
       "allArcs": "All arcs →",

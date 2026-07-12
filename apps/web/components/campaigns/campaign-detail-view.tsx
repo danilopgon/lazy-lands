@@ -180,7 +180,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
             <RecentSessions
               campaignId={campaign.id}
               sessions={sessionsQuery.data}
-              isLoading={sessionsQuery.isLoading}
+              isLoading={sessionsQuery.isPending}
               isError={sessionsQuery.isError}
             />
           </div>
@@ -247,7 +247,10 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
             </div>
           </div>
           <ActiveMemoriesPanel
-            isLoading={memoriesQuery.isLoading}
+            isLoading={
+              memoriesQuery.isPending ||
+              (memoriesQuery.data === undefined && !memoriesQuery.isError)
+            }
             isError={memoriesQuery.isError}
             memories={memoriesQuery.data ?? []}
             retryLabel={t('screen.retry')}
@@ -288,10 +291,35 @@ function ActiveMemoriesPanel({
 
   if (isLoading) {
     return (
-      <div className="mt-3 border-2 border-[var(--border)] bg-[var(--paper)] p-5">
-        <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--ink-3)]">
+      <div
+        aria-busy="true"
+        className="mt-3 min-h-[258px] border-2 border-[var(--border)] bg-[var(--paper)] px-4 shadow-[4px_4px_0_var(--shadow)]"
+      >
+        <p
+          role="status"
+          aria-label={t('detail.memoriesLoading')}
+          className="sr-only"
+        >
           {t('detail.memoriesLoading')}
         </p>
+        {Array.from({ length: 3 }, (_, index) => (
+          <div
+            key={index}
+            data-testid="active-memories-skeleton-record"
+            className="flex min-h-[86px] flex-col justify-center gap-2 border-b border-dotted border-[var(--dotted)] py-3 last:border-b-0"
+          >
+            <span aria-hidden="true" className="h-3 w-16 bg-[var(--paper-2)]" />
+            <span
+              aria-hidden="true"
+              className="h-3 w-full bg-[var(--paper-2)]"
+            />
+            <span
+              aria-hidden="true"
+              className="h-3 w-4/5 bg-[var(--paper-2)]"
+            />
+            <span aria-hidden="true" className="h-3 w-24 bg-[var(--paper-2)]" />
+          </div>
+        ))}
       </div>
     )
   }
@@ -322,7 +350,7 @@ function ActiveMemoriesPanel({
   }
 
   return (
-    <div className="mt-3 border-2 border-[var(--border)] bg-[var(--paper)] px-4 shadow-[4px_4px_0_var(--shadow)]">
+    <div className="ll-panel-settle mt-3 border-2 border-[var(--border)] bg-[var(--paper)] px-4 shadow-[4px_4px_0_var(--shadow)]">
       {memories.map((memory) => (
         <div
           key={memory.id}

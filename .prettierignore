@@ -15,3 +15,8 @@ docs/
 openspec/
 PRODUCT.md
 DESIGN.md
+
+# Repository-managed agent skills and support files
+.agents/
+.codex/
+.github/

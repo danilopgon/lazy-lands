@@ -146,6 +146,15 @@ function renderPage(locale: 'en' | 'es' = 'en') {
   )
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+
+  return { promise, resolve }
+}
+
 describe('CampaignDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -254,6 +263,122 @@ describe('CampaignDetailPage', () => {
         }),
       ])
     )
+  })
+
+  it.each([
+    ['en', 'Loading recent sessions', 'Loading active memories'],
+    ['es', 'Cargando sesiones recientes', 'Cargando memorias activas'],
+  ] as const)(
+    'shows independent, localized section skeletons while queries are pending in %s',
+    async (locale, sessionsLoading, memoriesLoading) => {
+      const sessions = deferred<[]>()
+      const memories = deferred<[]>()
+      mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+      mockGetSessions.mockReturnValue(sessions.promise)
+      mockGetMemoryFacts.mockReturnValue(memories.promise)
+
+      renderPage(locale)
+
+      const sessionsStatus = await screen.findByRole('status', {
+        name: sessionsLoading,
+      })
+      const memoriesStatus = screen.getByRole('status', {
+        name: memoriesLoading,
+      })
+
+      expect(sessionsStatus.parentElement).toHaveAttribute('aria-busy', 'true')
+      expect(memoriesStatus.parentElement).toHaveAttribute('aria-busy', 'true')
+      expect(
+        screen.getAllByTestId('recent-sessions-skeleton-row')
+      ).toHaveLength(3)
+      expect(
+        screen.getAllByTestId('active-memories-skeleton-record')
+      ).toHaveLength(3)
+      expect(
+        screen.getAllByTestId('recent-sessions-skeleton-row')[0]
+          .firstElementChild
+      ).toHaveAttribute('aria-hidden', 'true')
+      expect(
+        screen.getAllByTestId('active-memories-skeleton-record')[0]
+          .firstElementChild
+      ).toHaveAttribute('aria-hidden', 'true')
+      expect(
+        screen
+          .getAllByRole('link')
+          .some(
+            (link) =>
+              link.getAttribute('href') === '/campaigns/camp-1/sessions/new'
+          )
+      ).toBe(true)
+      expect(
+        screen
+          .getAllByRole('link')
+          .some(
+            (link) =>
+              link.getAttribute('href') === '/campaigns/camp-1/memory/review'
+          )
+      ).toBe(true)
+    }
+  )
+
+  it('replaces only the resolved pending section and keeps session details intact', async () => {
+    const sessions = deferred<
+      Array<{
+        id: string
+        session_number: number
+        summary: string
+        consequences: string | null
+        has_generated_content: boolean
+        created_at: string
+      }>
+    >()
+    const memories = deferred<[]>()
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockReturnValue(sessions.promise)
+    mockGetMemoryFacts.mockReturnValue(memories.promise)
+
+    renderPage()
+
+    await screen.findByRole('status', { name: 'Loading recent sessions' })
+    sessions.resolve([
+      {
+        id: 'sess-2',
+        session_number: 2,
+        summary: 'The warehouse burned down.',
+        consequences: 'The guild lost its cache.',
+        has_generated_content: false,
+        created_at: '2026-06-08T10:00:00Z',
+      },
+      {
+        id: 'sess-1',
+        session_number: 1,
+        summary: 'The party arrived in town.',
+        consequences: null,
+        has_generated_content: true,
+        created_at: '2026-06-01T10:00:00Z',
+      },
+    ])
+
+    const earlier = await screen.findByText('The party arrived in town.')
+    const later = screen.getByText('The warehouse burned down.')
+    expect(
+      earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    expect(screen.getAllByTestId('session-occurrence-excerpt')).toHaveLength(2)
+    expect(screen.getByRole('link', { name: 'Session 1' })).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/sess-1'
+    )
+    expect(screen.getByRole('link', { name: /resume draft/i })).toHaveAttribute(
+      'href',
+      '/campaigns/camp-1/sessions/sess-1'
+    )
+    expect(
+      screen.queryByRole('status', { name: 'Loading recent sessions' })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('status', { name: 'Loading active memories' })
+    ).toBeInTheDocument()
   })
 
   it.each([
