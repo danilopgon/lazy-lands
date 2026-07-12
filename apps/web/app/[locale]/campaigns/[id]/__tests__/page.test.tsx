@@ -134,14 +134,15 @@ function buildCampaignDetail(
 }
 
 /** Render the detail page wrapped in a fresh QueryClientProvider. */
-function renderPage() {
+function renderPage(locale: 'en' | 'es' = 'en') {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   return render(
     <QueryClientProvider client={queryClient}>
       <CampaignDetailPage />
-    </QueryClientProvider>
+    </QueryClientProvider>,
+    { locale }
   )
 }
 
@@ -254,6 +255,72 @@ describe('CampaignDetailPage', () => {
       ])
     )
   })
+
+  it.each([
+    [
+      'en',
+      [
+        'Consequence',
+        'Relationship',
+        'Secret',
+        'Promise',
+        'Tension',
+        'Revelation',
+        'Item',
+        'Arc progress',
+      ],
+    ],
+    [
+      'es',
+      [
+        'Consecuencia',
+        'Relación',
+        'Secreto',
+        'Promesa',
+        'Tensión',
+        'Revelación',
+        'Objeto',
+        'Avance de arco',
+      ],
+    ],
+  ] as const)(
+    'localizes canonical active-memory types in %s',
+    async (locale, labels) => {
+      mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+      mockGetMemoryFacts.mockResolvedValue(
+        [
+          'consequence',
+          'relationship',
+          'secret',
+          'promise',
+          'tension',
+          'revelation',
+          'item',
+          'arc_progress',
+        ].map((type, index) => ({
+          id: `memory-${type}`,
+          campaign_id: 'camp-1',
+          source_session_id: null,
+          content: `Memory ${index + 1}`,
+          type,
+          importance: 'medium' as const,
+          status: 'active' as const,
+          created_at: '2026-07-09T00:00:00Z',
+          updated_at: '2026-07-09T00:00:00Z',
+        }))
+      )
+
+      renderPage(locale)
+
+      await waitFor(() => {
+        expect(screen.getByText('Memory 1')).toBeInTheDocument()
+      })
+
+      for (const label of labels) {
+        expect(screen.getByText(label)).toBeInTheDocument()
+      }
+    }
+  )
 
   it('renders active memories empty and retry states', async () => {
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())

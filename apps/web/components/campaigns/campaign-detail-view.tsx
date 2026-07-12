@@ -10,6 +10,10 @@ import { RecentSessions } from './recent-sessions'
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { formatShortDate } from '@/lib/format'
 import { getSessions } from '@/lib/sessions/api'
+import {
+  getMemoryTypeMessageKey,
+  humanizeMemoryType,
+} from '@/lib/sessions/memory-type-label'
 import { getMemoryFacts } from '@/lib/memory/api'
 
 import type { CampaignDetailResponse } from '@/lib/campaigns/schemas'
@@ -280,6 +284,7 @@ function ActiveMemoriesPanel({
   onRetry: () => void
 }) {
   const t = useTranslations('Campaigns')
+  const tm = useTranslations('MemoryReview')
 
   if (isLoading) {
     return (
@@ -325,7 +330,14 @@ function ActiveMemoriesPanel({
         >
           {memory.type ? (
             <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
-              {memory.type}
+              {(() => {
+                const key = getMemoryTypeMessageKey(memory.type)
+                return key
+                  ? tm(`memoryType.${key}`)
+                  : tm('memoryTypeUnknown', {
+                      type: humanizeMemoryType(memory.type),
+                    })
+              })()}
             </span>
           ) : null}
           <p className="mt-1 font-serif text-[14.5px] leading-relaxed text-[var(--ink)]">

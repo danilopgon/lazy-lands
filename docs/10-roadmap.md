@@ -232,6 +232,11 @@ Status: **in progress** (SDD planning complete; stacked-to-main chained PRs: PR 
 
 ### Per-section regeneration (MVP — deferred from Block 8, before Block 9)
 
+- [ ] Align the generated-session contract with the seven editable handoff sections before adding
+  regeneration: `synopsis`, `goal`, `opening`, `beats`, `encounters`, `factions`, and `arcs`.
+  The same canonical section IDs and provenance rules MUST flow through the LLM prompt, Pydantic
+  output contract, `generated_content` persistence, session-detail API, localized frontend labels,
+  and editable draft UI. Keep read compatibility for existing Block 8 drafts.
 - [ ] DM can regenerate individual sections (synopsis, encounters, twist, etc.) with a fresh LLM
   call that preserves the rest of the draft. Requires a `POST /sessions/{id}/regenerate-section`
   endpoint and per-section prompt templates. UI shows a disabled "Coming later" affordance in
