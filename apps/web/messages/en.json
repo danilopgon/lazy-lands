@@ -577,12 +577,13 @@
       "saveChanges": "Save changes",
       "exportPdf": "Export PDF →",
       "exportPdfSoon": "Coming in Block 9.",
-      "regenerateComingLater": "Coming later",
+      "regenerate": "Regenerate",
       "regenerating": "Regenerating...",
       "rewriting": "The Scribe is rewriting",
       "saveSectionChanges": "Save section changes",
       "sectionSaveError": "Could not save this section. Your edit is still here; try again.",
       "saveAllError": "Could not save changes. Your draft is still here; try again.",
+      "regenerateError": "Could not regenerate this section. Your draft is still here; try again.",
       "copyError": "Could not copy to the clipboard. Try again.",
       "loadingTitle": "The Scribe is writing",
       "loadingCaption": "Opening the generated session draft",
@@ -602,11 +603,12 @@
       "excludedFromPdfTitle": "Excluded from PDF",
       "sections": {
         "synopsis": "Synopsis",
-        "main_objective": "Main objective",
-        "twist": "Twist",
+        "goal": "Session goal",
+        "opening": "Opening scene",
+        "beats": "Main beats",
         "encounters": "Encounters",
-        "faction_reactions": "Faction reactions",
-        "arc_progression": "Arc progression"
+        "factions": "Faction reactions",
+        "arcs": "Arc progression"
       },
       "toast": {
         "sectionSaved": "Section saved",

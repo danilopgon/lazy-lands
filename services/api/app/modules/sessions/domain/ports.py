@@ -3,6 +3,31 @@
 from typing import Protocol
 
 
+class SectionRegenerator(Protocol):
+    """Driven port for regenerating one generated-session section.
+
+    Implemented by the ``generation`` module's adapter (compile-time edge is
+    generation -> sessions); ``sessions`` never imports ``generation`` at
+    module level, only through this port and a function-local import at the
+    DI composition root (``sessions/api/dependencies.py``).
+    """
+
+    async def regenerate_section(
+        self,
+        campaign_id: str,
+        section_id: str,
+        current_sections: list[dict],
+    ) -> dict:
+        """Return the freshly regenerated section as a plain dict.
+
+        Returns:
+            A dict shaped ``{id, label, body, origin: "scribe", trace_json}``.
+            No steering/direction input is accepted — this is a pure
+            regeneration of the given section against the current context.
+        """
+        ...
+
+
 class SessionRepository(Protocol):
     """Ownership-scoped persistence contract for sessions and campaign summaries.
 

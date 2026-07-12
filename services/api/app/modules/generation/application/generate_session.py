@@ -27,7 +27,7 @@ from app.shared.prompts import render_prompt
 
 logger = logging.getLogger(__name__)
 
-PROMPT_VERSION = "generate_session_v1"
+PROMPT_VERSION = "generate_session_v2"
 MAX_GENERATION_TOKENS = 2000
 
 
@@ -57,7 +57,7 @@ class GenerateNextSessionUseCase:
             raise GenerationNotFoundError()
 
         prompt_context = build_prompt_context(raw_context, direction)
-        prompt = render_prompt("generate_session_v1.jinja", **prompt_context)
+        prompt = render_prompt("generate_session_v2.jinja", **prompt_context)
         estimated_context_size = estimate_tokens(prompt)
         if estimated_context_size > MAX_GENERATION_TOKENS:
             logger.warning(
@@ -97,12 +97,14 @@ class GenerateNextSessionUseCase:
             duration_ms=duration_ms,
             error_code=None,
         )
+        content = output.content_for_persistence()
+        synopsis_section = next(
+            section for section in content.sections if section.id == "synopsis"
+        )
         session_data = {
-            "summary": output.synopsis,
+            "summary": synopsis_section.body,
             "consequences": None,
-            "generated_content": output.content_for_persistence().model_dump(
-                mode="json"
-            ),
+            "generated_content": content.model_dump(mode="json"),
             "trace_json": trace_json,
         }
         try:
@@ -116,12 +118,7 @@ class GenerateNextSessionUseCase:
             id=session["id"],
             session_number=session["session_number"],
             title=output.title,
-            synopsis=output.synopsis,
-            main_objective=output.main_objective,
-            twist=output.twist,
-            encounters=output.encounters,
-            faction_reactions=output.faction_reactions,
-            arc_progression=output.arc_progression,
+            sections=content.sections,
             continuity_links=output.continuity_links,
             trace_id=session["id"],
         )

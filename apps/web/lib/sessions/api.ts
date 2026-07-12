@@ -7,6 +7,7 @@ import {
   sessionResponseSchema,
   generateSessionRequestSchema,
   generateSessionResponseSchema,
+  regenerateSectionRequestSchema,
   sessionDetailSchema,
   updateSessionContentSchema,
   type RegisterSessionRequest,
@@ -14,6 +15,7 @@ import {
   type SessionResponse,
   type GenerateSessionRequest,
   type GenerateSessionResponse,
+  type SectionId,
   type SessionDetail,
   type UpdateSessionContent,
 } from './schemas'
@@ -185,6 +187,43 @@ export async function updateSessionContent(
   const body = updateSessionContentSchema.parse(payload)
   const response = await apiFetch(`/sessions/${sessionId}`, {
     method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new SessionCampaignNotFoundError(`Session ${sessionId} not found`)
+    }
+    if (response.status === 422) {
+      throw new SessionValidationError(await extractErrorMessage(response))
+    }
+    throw new SessionApiError(await extractErrorMessage(response))
+  }
+
+  return sessionDetailSchema.parse(await response.json())
+}
+
+/**
+ * `POST /sessions/{sessionId}/regenerate-section` — ask the Scribe to rewrite
+ * exactly one section. Pure — no steering/direction parameter exists; the DM
+ * can only pick which section to regenerate.
+ *
+ * @param {string} sessionId - The session id.
+ * @param {SectionId} sectionId - The canonical id of the section to regenerate.
+ * @returns {Promise<SessionDetail>} The updated session detail row, with the
+ *   targeted section's body replaced and its origin reset to `"scribe"`.
+ * @throws {SessionValidationError} When the section id is unknown (422).
+ * @throws {SessionCampaignNotFoundError} When the session is not found (404).
+ * @throws {SessionApiError} When the backend returns another non-2xx response.
+ */
+export async function regenerateSection(
+  sessionId: string,
+  sectionId: SectionId
+): Promise<SessionDetail> {
+  const body = regenerateSectionRequestSchema.parse({ section_id: sectionId })
+  const response = await apiFetch(`/sessions/${sessionId}/regenerate-section`, {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })

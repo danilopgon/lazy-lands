@@ -158,7 +158,7 @@ Rules:
 Purpose:
 
 Generate a structured, editable proposal for the next session. The executable template lives at
-`services/api/app/modules/generation/prompts/generate_session_v1.jinja`.
+`services/api/app/modules/generation/prompts/generate_session_v2.jinja`.
 
 Input:
 
@@ -171,22 +171,28 @@ Input:
 - Active MemoryFacts.
 - Optional DM direction: goal, tone, pace, difficulty and additional instructions.
 
-Output:
+Output — sections-only contract. The Scribe always emits exactly these 7 canonical
+sections, in this fixed order:
 
-- Title.
-- Synopsis.
-- Main objective.
-- Twist or complication.
-- Encounters.
-- Faction reactions.
-- Arc progression.
-- Continuity links.
-- Editable `generated_content.sections[]` when the model supplies explicit sections; otherwise the
-  backend derives synopsis, main objective and twist sections.
+1. `synopsis` — Synopsis
+2. `goal` — Session goal
+3. `opening` — Opening scene
+4. `beats` — Main beats (a twist or complication, if any, is woven in here — there
+   is no standalone `twist` field)
+5. `encounters` — Encounters
+6. `factions` — Faction reactions
+7. `arcs` — Arc progression
+
+Plus `continuity_links[]` (accepted memory facts woven into the proposal). There is
+no flat/derived shape any more: `main_objective`, `twist`, `encounters`,
+`faction_reactions`, and `arc_progression` are retired as top-level fields, and the
+old "explicit sections, else derive 3 sections" fallback is gone — the LLM output
+always maps 1:1 onto all 7 persisted sections.
 
 Validation schema:
 
-- `GeneratedSessionOutput`
+- `GeneratedSessionOutput` (`extra="forbid"`, `sections` validated to be exactly the
+  7 canonical ids in order)
 
 Rules:
 
@@ -199,6 +205,42 @@ Rules:
 - Use `accumulated_summary` as the representation of prior sessions; do not fetch individual past
   session bodies for this prompt.
 - Return valid JSON only.
+
+## Prompt: regenerate one section
+
+Purpose:
+
+Rewrite exactly one section of an already-generated session draft. Pure — no
+steering/direction input is accepted; regeneration always runs against the same
+context categories as full generation. Reached via
+`POST /sessions/{session_id}/regenerate-section`.
+
+Executable templates: one per section id, sharing a common context block —
+`services/api/app/modules/generation/prompts/_regenerate_context.jinja` (a Jinja
+macro, included by each) and
+`services/api/app/modules/generation/prompts/regenerate_section_{section_id}_v1.jinja`
+(x7, one per canonical section id). All 7 templates plus the shared macro have
+globally-unique filenames across every `modules/*/prompts/` directory, required by
+the shared `render_prompt` first-match loader.
+
+Input: campaign description, world state, accumulated summary, NPCs, factions,
+open arcs, active MemoryFacts, and the current full set of draft sections (for
+coherence — the model must not just repeat them back).
+
+Output: `{"body": "string"}` — only the rewritten body. The id, label, and
+`origin: "scribe"` are supplied by the backend, not the LLM.
+
+Validation schema:
+
+- `RegeneratedSectionOutput` (`extra="forbid"`)
+
+Rules:
+
+- Rewrite only the targeted section; every other section is untouched.
+- A twist may be woven into `beats` (or `opening`) if relevant — never returned as
+  a standalone field.
+- On validation failure, nothing is persisted and the previous section body/origin
+  is left exactly as it was.
 
 ## JSON validation
 

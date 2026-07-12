@@ -167,19 +167,19 @@ describe('GeneratedSessionView', () => {
                 origin: 'scribe' as const,
               },
               {
-                id: 'main_objective',
-                label: 'Main objective',
+                id: 'goal',
+                label: 'Session goal',
                 body: 'Negotiate quietly.',
                 origin: 'scribe' as const,
               },
               {
-                id: 'faction_reactions',
+                id: 'factions',
                 label: 'Faction reactions',
                 body: 'The guild watches.',
                 origin: 'scribe' as const,
               },
               {
-                id: 'arc_progression',
+                id: 'arcs',
                 label: 'Arc progression',
                 body: 'Herman leans in.',
                 origin: 'scribe' as const,
@@ -197,7 +197,7 @@ describe('GeneratedSessionView', () => {
       screen.getByRole('heading', { name: 'Sinopsis' })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: 'Objetivo principal' })
+      screen.getByRole('heading', { name: 'Objetivo de la sesión' })
     ).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: 'Reacciones de facciones' })
@@ -206,13 +206,13 @@ describe('GeneratedSessionView', () => {
       screen.getByRole('heading', { name: 'Avance de arco' })
     ).toBeInTheDocument()
     // Raw English labels from the backend payload must not surface in the Spanish UI.
-    expect(screen.queryByText('Main objective')).not.toBeInTheDocument()
+    expect(screen.queryByText('Session goal')).not.toBeInTheDocument()
     expect(screen.queryByText('Faction reactions')).not.toBeInTheDocument()
 
     await userEvent.click(screen.getAllByRole('button', { name: 'Editar' })[1])
-    await userEvent.clear(screen.getByLabelText('Objetivo principal'))
+    await userEvent.clear(screen.getByLabelText('Objetivo de la sesión'))
     await userEvent.type(
-      screen.getByLabelText('Objetivo principal'),
+      screen.getByLabelText('Objetivo de la sesión'),
       'Negotiate in whispers.'
     )
     await userEvent.click(
@@ -227,8 +227,8 @@ describe('GeneratedSessionView', () => {
         generated_content: expect.objectContaining({
           sections: expect.arrayContaining([
             expect.objectContaining({
-              id: 'main_objective',
-              label: 'Main objective',
+              id: 'goal',
+              label: 'Session goal',
             }),
           ]),
         }),
@@ -290,7 +290,7 @@ describe('GeneratedSessionView', () => {
     expect(screen.queryByText('Manual note')).not.toBeInTheDocument()
   })
 
-  it('hides the prototype regeneration placeholder and shows a disabled coming-later affordance', () => {
+  it('shows a per-section Regenerate control next to Edit for every section', () => {
     renderGenerated(
       <GeneratedSessionView
         campaignId="camp-1"
@@ -302,17 +302,108 @@ describe('GeneratedSessionView', () => {
     )
 
     expect(
-      screen.queryByRole('button', { name: /Regenerate/i })
+      screen.queryByRole('button', { name: /Coming later/i })
     ).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Regenerate' })).toHaveLength(
+      2
+    )
+  })
+
+  it('regenerates a section: shows the quill loading affordance, keeps other sections interactive, updates body/origin, invalidates the query, and toasts', async () => {
+    let resolveRegenerate: (value: typeof session) => void = () => {}
+    const regenerateSectionFn = vi.fn().mockReturnValue(
+      new Promise<typeof session>((resolve) => {
+        resolveRegenerate = resolve
+      })
+    )
+    const regeneratedSession = {
+      ...session,
+      generated_content: {
+        ...session.generated_content,
+        sections: [
+          {
+            id: 'synopsis',
+            label: 'Synopsis',
+            body: 'Halia offers silence for a quiet job.',
+            origin: 'scribe' as const,
+          },
+          {
+            id: 'twist',
+            label: 'Twist',
+            body: 'A fresh twist from the Scribe.',
+            origin: 'scribe' as const,
+          },
+        ],
+      },
+    }
+    const queryClient = new QueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GeneratedSessionView
+          campaignId="camp-1"
+          sessionId="session-8"
+          campaign={campaign}
+          session={session}
+          memories={memories}
+          regenerateSectionFn={regenerateSectionFn}
+        />
+      </QueryClientProvider>
+    )
+
+    const regenerateButtons = screen.getAllByRole('button', {
+      name: 'Regenerate',
+    })
+    await userEvent.click(regenerateButtons[1])
+
     expect(
-      screen.queryByText(/Alternativa regenerada/i)
-    ).not.toBeInTheDocument()
+      await screen.findByRole('button', { name: 'Regenerating...' })
+    ).toBeDisabled()
+    expect(screen.getByText('The Scribe is rewriting')).toBeInTheDocument()
+    // The untouched section stays fully interactive while the other regenerates.
+    expect(regenerateButtons[0]).not.toBeDisabled()
+    expect(regenerateSectionFn).toHaveBeenCalledWith('session-8', 'twist')
+
+    resolveRegenerate(regeneratedSession)
+
+    await waitFor(() =>
+      expect(
+        screen.getByText('A fresh twist from the Scribe.')
+      ).toBeInTheDocument()
+    )
+    expect(screen.getAllByText('✦ Scribe').length).toBeGreaterThan(0)
+    expect(invalidateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: ['session', 'session-8'] })
+    )
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Section regenerated by the Scribe'
+    )
+  })
+
+  it('preserves the prior body and origin when regeneration fails, and re-enables the button', async () => {
+    const regenerateSectionFn = vi.fn().mockRejectedValue(new Error('network'))
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+        regenerateSectionFn={regenerateSectionFn}
+      />
+    )
+
+    await userEvent.click(
+      screen.getAllByRole('button', { name: 'Regenerate' })[1]
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not regenerate this section'
+    )
+    expect(screen.getByText('Robert Herman is waiting.')).toBeInTheDocument()
     expect(
-      screen.queryByText(/Regenerated alternative/i)
-    ).not.toBeInTheDocument()
-    // The disabled affordance must be present so the DM sees this is deferred, not broken.
-    const comingLater = screen.getByRole('button', { name: /Coming later/i })
-    expect(comingLater).toBeDisabled()
+      screen.getAllByRole('button', { name: 'Regenerate' })[1]
+    ).not.toBeDisabled()
   })
 
   it('shows an empty memories fallback when the generated session has no continuity links', () => {

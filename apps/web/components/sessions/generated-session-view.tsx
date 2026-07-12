@@ -1,20 +1,26 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { Link, useRouter } from '@/i18n/navigation'
 
 import { Button } from '@/components/ui/button'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
+import { MarkdownBody } from '@/components/ui/markdown-body'
 import { Notice } from '@/components/ui/notice'
 import { OriginBadge } from '@/components/ui/origin-badge'
 import { Textarea } from '@/components/ui/textarea'
 import { getCampaignDetail } from '@/lib/campaigns/api'
 import { getMemoryFacts } from '@/lib/memory/api'
 import type { MemoryFactResponse } from '@/lib/memory/schemas'
-import { getSession, updateSessionContent } from '@/lib/sessions/api'
+import {
+  getSession,
+  regenerateSection,
+  updateSessionContent,
+} from '@/lib/sessions/api'
 import {
   getMemoryTypeMessageKey,
   humanizeMemoryType,
@@ -23,6 +29,7 @@ import { getSectionLabelMessageKey } from '@/lib/sessions/section-label'
 import type {
   GeneratedContent,
   GeneratedSection,
+  SectionId,
   SessionDetail,
 } from '@/lib/sessions/schemas'
 
@@ -35,6 +42,7 @@ type GeneratedSessionViewProps = {
   session?: SessionDetail
   memories?: MemoryFactResponse[]
   updateSessionFn?: typeof updateSessionContent
+  regenerateSectionFn?: typeof regenerateSection
 }
 
 /**
@@ -52,11 +60,13 @@ export function GeneratedSessionView({
   session: providedSession,
   memories: providedMemories,
   updateSessionFn = updateSessionContent,
+  regenerateSectionFn = regenerateSection,
 }: GeneratedSessionViewProps) {
   const t = useTranslations('SessionGeneration.generated')
   const te = useTranslations('Entities')
   const tm = useTranslations('MemoryReview')
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [editing, setEditing] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [sections, setSections] = useState<GeneratedSection[] | null>(
@@ -66,6 +76,12 @@ export function GeneratedSessionView({
   const [editingNotes, setEditingNotes] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Per-section regeneration state — keyed by section id, NOT a single
+  // global flag, so unrelated sections stay fully interactive while one
+  // section regenerates (NFR-UI-2).
+  const [regeneratingSectionIds, setRegeneratingSectionIds] = useState<
+    Set<string>
+  >(new Set())
 
   const campaignQuery = useQuery({
     queryKey: ['campaign', campaignId, 'generated'],
@@ -255,6 +271,38 @@ export function GeneratedSessionView({
     }
   }
 
+  /**
+   * Rewrite one section via a fresh, pure (no steering input) Scribe call.
+   *
+   * MUST both update local `sections` state AND invalidate the TanStack
+   * query for this session — the local `sections` state shadows the query,
+   * so relying on invalidation alone would leave the DM looking at a stale
+   * body until an unrelated refetch happened to occur.
+   *
+   * @param {string} sectionId - The id of the section to regenerate.
+   */
+  async function regenerateSectionAction(sectionId: string) {
+    setRegeneratingSectionIds((previous) => new Set(previous).add(sectionId))
+    setError(null)
+    try {
+      const updated = await regenerateSectionFn(
+        sessionId,
+        sectionId as SectionId
+      )
+      setSections(updated.generated_content?.sections ?? visibleSections)
+      await queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
+      showToast(t('toast.sectionRegenerated'))
+    } catch {
+      setError(t('regenerateError'))
+    } finally {
+      setRegeneratingSectionIds((previous) => {
+        const next = new Set(previous)
+        next.delete(sectionId)
+        return next
+      })
+    }
+  }
+
   /** Persist the full visible section state as a single "Save changes" action. */
   async function saveAll() {
     const nextSections = sectionsIncludingOpenDraft()
@@ -336,14 +384,6 @@ export function GeneratedSessionView({
           >
             {t('saveChanges')}
           </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled
-            title={t('regenerateComingLater')}
-          >
-            {t('regenerateComingLater')}
-          </Button>
           <Button type="button" variant="accent" disabled>
             {t('exportPdf')}
           </Button>
@@ -374,17 +414,29 @@ export function GeneratedSessionView({
                 <OriginBadge origin={section.origin} />
                 <div className="ml-auto flex gap-3">
                   {editing !== section.id ? (
-                    <button
-                      type="button"
-                      className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
-                      onClick={() => {
-                        setEditing(section.id)
-                        setDraft(section.body)
-                        setError(null)
-                      }}
-                    >
-                      {te('edit')}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
+                        onClick={() => {
+                          setEditing(section.id)
+                          setDraft(section.body)
+                          setError(null)
+                        }}
+                      >
+                        {te('edit')}
+                      </button>
+                      <button
+                        type="button"
+                        className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-3)] underline"
+                        disabled={regeneratingSectionIds.has(section.id)}
+                        onClick={() => void regenerateSectionAction(section.id)}
+                      >
+                        {regeneratingSectionIds.has(section.id)
+                          ? t('regenerating')
+                          : t('regenerate')}
+                      </button>
+                    </>
                   ) : null}
                 </div>
               </div>
@@ -415,10 +467,17 @@ export function GeneratedSessionView({
                     </Button>
                   </div>
                 </div>
+              ) : regeneratingSectionIds.has(section.id) ? (
+                <div className="mt-3 flex items-center gap-2 py-2">
+                  <span aria-hidden="true" className="ll-quill text-base">
+                    ✒
+                  </span>
+                  <span className="ll-ellip font-mono text-[13px] text-[var(--ink-3)]">
+                    {t('rewriting')}
+                  </span>
+                </div>
               ) : (
-                <p className="mt-3 whitespace-pre-line font-serif text-[15px] leading-relaxed text-[var(--ink)]">
-                  {section.body}
-                </p>
+                <MarkdownBody className="mt-3">{section.body}</MarkdownBody>
               )}
             </article>
           ))}
@@ -529,14 +588,17 @@ export function GeneratedSessionView({
           </div>
         </aside>
       </div>
-      {toast ? (
-        <div
-          className="fixed bottom-5 right-5 border-2 border-[var(--border)] bg-[var(--paper)] px-4 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] shadow-[4px_4px_0_var(--shadow)]"
-          role="status"
-        >
-          {toast}
-        </div>
-      ) : null}
+      {toast && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="fixed bottom-5 right-5 z-50 border-2 border-[var(--border)] bg-[var(--paper)] px-4 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] shadow-[4px_4px_0_var(--shadow)]"
+              role="status"
+            >
+              {toast}
+            </div>,
+            document.body
+          )
+        : null}
     </main>
   )
 }

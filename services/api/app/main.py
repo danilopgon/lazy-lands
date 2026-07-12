@@ -48,10 +48,12 @@ from app.modules.sessions.api import routes as sessions
 from app.modules.sessions.api.exception_handlers import (
     session_not_found_error_handler,
     session_persistence_error_handler,
+    session_validation_error_handler,
 )
 from app.modules.sessions.application.errors import (
     SessionNotFoundError,
     SessionPersistenceError,
+    SessionValidationError,
 )
 from app.shared.config import settings
 from app.shared.errors import (
@@ -99,6 +101,10 @@ app.add_exception_handler(
 app.add_exception_handler(
     SessionPersistenceError,
     session_persistence_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    SessionValidationError,
+    session_validation_error_handler,  # type: ignore[arg-type]
 )
 app.add_exception_handler(
     GenerationNotFoundError,

@@ -22,26 +22,25 @@ describe('Block 8 session generation schemas', () => {
     expect(result.additional_instructions).toBeNull()
   })
 
-  it('parses generated-session creation responses with continuity links', () => {
+  it('parses generated-session creation responses with 7 canonical sections', () => {
     const result = generateSessionResponseSchema.parse({
       id: 'session-8',
       session_number: 8,
       title: 'The Quiet Ledger',
-      synopsis: 'Halia calls in the debt.',
-      main_objective: 'Negotiate without exposing the party.',
-      twist: 'Robert Herman is already there.',
-      encounters: [
-        { name: 'Exchange', description: 'A tense parley.', type: 'social' },
-      ],
-      faction_reactions: [
-        { faction_name: 'Black Bear Guild', reaction: 'Watches quietly.' },
-      ],
-      arc_progression: [
-        {
-          arc_title: 'Herman revenge',
-          progression: 'Moves into open conflict.',
-        },
-      ],
+      sections: [
+        'synopsis',
+        'goal',
+        'opening',
+        'beats',
+        'encounters',
+        'factions',
+        'arcs',
+      ].map((id) => ({
+        id,
+        label: id,
+        body: 'Draft.',
+        origin: 'scribe' as const,
+      })),
       continuity_links: [
         { memory_fact_id: 'mem-1', relevance: 'Halia favor split.' },
       ],
@@ -49,6 +48,7 @@ describe('Block 8 session generation schemas', () => {
     })
 
     expect(result.continuity_links).toHaveLength(1)
+    expect(result.sections).toHaveLength(7)
     expect(result.title).toBe('The Quiet Ledger')
   })
 
