@@ -5,6 +5,8 @@
 Pydantic-validated before it is stored or returned.
 """
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.modules.sessions.domain.enums import Importance, MemoryType
@@ -38,3 +40,19 @@ class RegisterSessionResponse(BaseModel):
     session_id: str
     session_number: int
     memory_suggestions: list[MemorySuggestion] = Field(default_factory=list)
+
+
+class PersistedExportSection(BaseModel):
+    """The allowlisted persisted fields that may enter an export document."""
+
+    id: str = Field(min_length=1, max_length=200)
+    label: str = Field(min_length=1, max_length=200)
+    body: str = Field(min_length=1, max_length=20000)
+    origin: Literal["scribe", "edited"]
+
+
+class PersistedExportDraft(BaseModel):
+    """The persisted generated-content snapshot used for PDF export only."""
+
+    title: str = Field(min_length=1, max_length=200)
+    sections: list[PersistedExportSection] = Field(min_length=1)

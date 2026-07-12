@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @page {
+        size: A4 portrait;
+        margin: 18mm 16mm 20mm;
+        @bottom-center {
+          content: "Lazy Lands · DM-edited session {{ document.session_number }}";
+          font-size: 9pt;
+        }
+      }
+
+      body { color: #1a1c19; font-family: sans-serif; font-size: 11pt; line-height: 1.5; }
+      h1 { font-size: 22pt; margin: 0 0 10mm; }
+      h2 { font-size: 14pt; margin: 8mm 0 3mm; page-break-after: avoid; }
+      .origin { color: #585c51; font-size: 8pt; text-transform: uppercase; }
+      .section { break-inside: avoid; }
+    </style>
+  </head>
+  <body>
+    <h1>{{ document.title }}</h1>
+    {% for section in document.sections %}
+    <section class="section">
+      <h2>{{ section.label }}</h2>
+      <p class="origin">{{ section.origin }}</p>
+      {% for paragraph in section.body.split('\n') %}
+      <p>{{ paragraph }}</p>
+      {% endfor %}
+    </section>
+    {% endfor %}
+  </body>
+</html>

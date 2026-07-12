@@ -7,18 +7,26 @@ scoped to their owning campaign).
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
+from fastapi.responses import Response
 from starlette.concurrency import run_in_threadpool
 
 from app.modules.sessions.api.dependencies import (
+    provide_export_session,
     provide_get_session,
     provide_get_sessions,
+    provide_pdf_renderer,
     provide_register_session,
     provide_update_session,
 )
+from app.modules.sessions.api.schemas.session.export import ExportSessionQuery
 from app.modules.sessions.api.schemas.session.requests import (
     RegisterSessionRequest,
     UpdateSessionRequest,
+)
+from app.modules.sessions.application.commands.export_session import (
+    ExportSession,
+    ExportSessionCommand,
 )
 from app.modules.sessions.application.commands.register_session import (
     RegisterSession,
@@ -36,6 +44,7 @@ from app.modules.sessions.application.read_models.session import SessionResponse
 from app.modules.sessions.application.read_models.session_detail import (
     SessionDetailResponse,
 )
+from app.modules.sessions.domain.ports import PdfRenderer
 from app.shared.security import get_current_user
 
 router = APIRouter(prefix="/campaigns/{campaign_id}/sessions", tags=["sessions"])
@@ -48,6 +57,34 @@ def _validate_session_id(session_id: str) -> None:
         UUID(session_id)
     except ValueError as exc:
         raise SessionNotFoundError() from exc
+
+
+@detail_router.get("/{session_id}/export.pdf")
+async def export_session_pdf(
+    session_id: str,
+    query: Annotated[ExportSessionQuery, Query()],
+    _user_id: Annotated[str, Depends(get_current_user)],
+    handler: Annotated[ExportSession, Depends(provide_export_session)],
+    renderer: Annotated[PdfRenderer, Depends(provide_pdf_renderer)],
+) -> Response:
+    """Render selected caller-visible persisted sections as a private PDF."""
+    _validate_session_id(session_id)
+    document = await run_in_threadpool(
+        handler.execute,
+        session_id,
+        ExportSessionCommand(selected_section_ids=tuple(query.section_id)),
+    )
+    pdf = await run_in_threadpool(renderer.render, document)
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            "Cache-Control": "private, no-store",
+            "Content-Disposition": (
+                f'attachment; filename="session-{document.session_number}.pdf"'
+            ),
+        },
+    )
 
 
 @router.post("", response_model=RegisterSessionResponse)

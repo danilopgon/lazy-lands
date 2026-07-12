@@ -46,10 +46,14 @@ from app.modules.memory.application.errors import (
 )
 from app.modules.sessions.api import routes as sessions
 from app.modules.sessions.api.exception_handlers import (
+    export_selection_error_handler,
+    non_exportable_session_error_handler,
     session_not_found_error_handler,
     session_persistence_error_handler,
 )
 from app.modules.sessions.application.errors import (
+    ExportSelectionError,
+    NonExportableSessionError,
     SessionNotFoundError,
     SessionPersistenceError,
 )
@@ -99,6 +103,14 @@ app.add_exception_handler(
 app.add_exception_handler(
     SessionPersistenceError,
     session_persistence_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    ExportSelectionError,
+    export_selection_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    NonExportableSessionError,
+    non_exportable_session_error_handler,  # type: ignore[arg-type]
 )
 app.add_exception_handler(
     GenerationNotFoundError,

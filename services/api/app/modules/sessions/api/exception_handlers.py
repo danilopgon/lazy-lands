@@ -9,6 +9,8 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from app.modules.sessions.application.errors import (
+    ExportSelectionError,
+    NonExportableSessionError,
     SessionNotFoundError,
     SessionPersistenceError,
 )
@@ -37,4 +39,24 @@ async def session_persistence_error_handler(
     return JSONResponse(
         status_code=409,
         content={"error": message, "retryable": exc.retryable},
+    )
+
+
+async def export_selection_error_handler(
+    _request: Request, _exc: ExportSelectionError
+) -> JSONResponse:
+    """Map invalid persisted section selections to an unrendered 422."""
+    return JSONResponse(
+        status_code=422,
+        content={"error": "Select one or more unique saved sections."},
+    )
+
+
+async def non_exportable_session_error_handler(
+    _request: Request, _exc: NonExportableSessionError
+) -> JSONResponse:
+    """Map a missing or invalid saved draft to an unrendered 409."""
+    return JSONResponse(
+        status_code=409,
+        content={"error": "This saved session draft cannot be exported."},
     )
