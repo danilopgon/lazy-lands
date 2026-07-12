@@ -9,6 +9,7 @@ from typing import Annotated
 from fastapi import Depends
 from supabase import Client
 
+from app.modules.sessions.application.commands.export_session import ExportSession
 from app.modules.sessions.application.commands.regenerate_section import (
     RegenerateSectionUseCase,
 )
@@ -22,6 +23,8 @@ from app.modules.sessions.application.commands.update_session import (
 )
 from app.modules.sessions.application.queries.get_session import GetSessionUseCase
 from app.modules.sessions.application.queries.get_sessions import GetSessions
+from app.modules.sessions.domain.ports import PdfRenderer
+from app.modules.sessions.infrastructure.pdf_renderer import WeasyPrintPdfRenderer
 from app.modules.sessions.infrastructure.repository import SupabaseSessionRepository
 from app.shared.database import get_user_supabase_client
 from app.shared.llm.dependencies import get_llm_provider
@@ -58,6 +61,18 @@ def provide_update_session(
 ) -> UpdateSessionUseCase:
     """Build the session detail update handler."""
     return UpdateSessionUseCase(SupabaseSessionRepository(client))
+
+
+def provide_export_session(
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+) -> ExportSession:
+    """Build the export command with the caller-RLS-scoped repository."""
+    return ExportSession(SupabaseSessionRepository(client))
+
+
+def provide_pdf_renderer() -> PdfRenderer:
+    """Provide the local PDF renderer without exposing request data to it."""
+    return WeasyPrintPdfRenderer()
 
 
 def provide_regenerate_section(

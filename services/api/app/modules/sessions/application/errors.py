@@ -30,3 +30,11 @@ class SessionPersistenceError(Exception):
 
 class SessionValidationError(Exception):
     """Raised when a direct session application command violates its contract."""
+
+
+class ExportSelectionError(SessionValidationError):
+    """Raised when selected export section IDs are empty, repeated, or unknown."""
+
+
+class NonExportableSessionError(Exception):
+    """Raised when an owned session has no valid persisted export snapshot."""

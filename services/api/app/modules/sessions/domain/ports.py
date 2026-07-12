@@ -2,6 +2,8 @@
 
 from typing import Protocol
 
+from app.modules.sessions.domain.pdf_export import ExportDocument
+
 
 class SectionRegenerator(Protocol):
     """Driven port for regenerating one generated-session section.
@@ -120,4 +122,12 @@ class SessionRepository(Protocol):
         Includes campaign state, NPCs, factions, open arcs, and active
         memory facts — no RAG/embeddings/vector search (explicit non-goal).
         """
+        ...
+
+
+class PdfRenderer(Protocol):
+    """Renders a server-owned export document as PDF bytes."""
+
+    def render(self, document: ExportDocument) -> bytes:
+        """Render the supplied document without reading request data."""
         ...
