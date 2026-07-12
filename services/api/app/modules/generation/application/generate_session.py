@@ -2,6 +2,7 @@
 
 import logging
 import time
+from uuid import UUID
 
 from starlette.concurrency import run_in_threadpool
 
@@ -44,6 +45,11 @@ class GenerateNextSessionUseCase:
         self, campaign_id: str, direction: GenerationDirection
     ) -> GenerateSessionResponse:
         """Generate, validate, persist, and return a draft session proposal."""
+        try:
+            UUID(campaign_id)
+        except ValueError as exc:
+            raise GenerationNotFoundError() from exc
+
         raw_context = await run_in_threadpool(
             self._repository.get_generation_context, campaign_id
         )
@@ -74,9 +80,15 @@ class GenerateNextSessionUseCase:
                 duration_ms=duration_ms,
                 error_code="llm_output_validation_failed",
             )
-            await run_in_threadpool(
-                self._repository.record_generation_trace, campaign_id, trace_json
-            )
+            try:
+                await run_in_threadpool(
+                    self._repository.record_generation_trace, campaign_id, trace_json
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to record generation validation trace campaign_id=%s",
+                    campaign_id,
+                )
             raise
         duration_ms = int((time.perf_counter() - started) * 1000)
         trace_json = self._build_trace_json(
@@ -132,8 +144,7 @@ class GenerateNextSessionUseCase:
             raise LlmOutputValidationError(
                 schema_name=GeneratedSessionOutput.__name__,
                 raw_output=(
-                    "Invalid continuity_links memory_fact_id values: "
-                    f"{invalid_ids}"
+                    f"Invalid continuity_links memory_fact_id values: {invalid_ids}"
                 ),
                 retryable=True,
             )

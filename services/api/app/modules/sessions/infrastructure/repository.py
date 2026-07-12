@@ -175,7 +175,17 @@ class SupabaseSessionRepository:
             )
         except Exception as exc:
             raise RepositoryError("Failed to list sessions") from exc
-        return cast(list[dict[str, Any]], response.data or [])
+        return [
+            {
+                **{
+                    key: value
+                    for key, value in row.items()
+                    if key != "generated_content"
+                },
+                "has_generated_content": row.get("generated_content") is not None,
+            }
+            for row in cast(list[dict[str, Any]], response.data or [])
+        ]
 
     def get_session(self, session_id: str) -> dict | None:
         """Fetch a single caller-visible session with generated draft JSON."""
