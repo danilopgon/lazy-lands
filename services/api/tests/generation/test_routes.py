@@ -45,43 +45,40 @@ def _authenticate() -> None:
     )
 
 
+def _output_payload() -> dict[str, object]:
+    return {
+        "title": "Threads in the Mine",
+        "sections": [
+            {
+                "id": section_id,
+                "label": section_id.title(),
+                "body": "Draft.",
+                "origin": "scribe",
+            }
+            for section_id in (
+                "synopsis",
+                "goal",
+                "opening",
+                "beats",
+                "encounters",
+                "factions",
+                "arcs",
+            )
+        ],
+        "continuity_links": [{"memory_fact_id": "mem-1", "relevance": "Payoff."}],
+    }
+
+
 def _provider() -> FakeLlmProvider:
     provider = FakeLlmProvider()
-    provider.register(
-        GeneratedSessionOutput,
-        {
-            "title": "Threads in the Mine",
-            "synopsis": "The party follows the arcane core clue.",
-            "main_objective": "Recover the core.",
-            "twist": "The spared manticore returns.",
-            "encounters": [
-                {"name": "Ravine", "description": "Negotiate.", "type": "social"}
-            ],
-            "faction_reactions": [{"faction_name": "Guild", "reaction": "Watches."}],
-            "arc_progression": [{"arc_title": "Core", "progression": "Clue found."}],
-            "continuity_links": [{"memory_fact_id": "mem-1", "relevance": "Payoff."}],
-            "generated_content": {
-                "title": "Threads in the Mine",
-                "sections": [
-                    {
-                        "id": "synopsis",
-                        "label": "Synopsis",
-                        "body": "Draft.",
-                        "origin": "scribe",
-                    }
-                ],
-            },
-        },
-    )
+    provider.register(GeneratedSessionOutput, _output_payload())
     return provider
 
 
 def _invalid_provider() -> FakeLlmProvider:
     provider = _provider()
     invalid_payload = {
-        "synopsis": "Missing title should fail validation.",
-        "main_objective": "Recover the core.",
-        "twist": "The spared manticore returns.",
+        "sections": _output_payload()["sections"],
     }
     provider.register(GeneratedSessionOutput, invalid_payload)
     return provider
