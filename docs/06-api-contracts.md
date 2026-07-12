@@ -412,6 +412,12 @@ Response (content-only patches keep the fact active; retire patches return the a
 
 ## Generation
 
+Sections-only contract: the Scribe always emits exactly 7 canonical sections,
+fixed order — `synopsis`, `goal`, `opening`, `beats`, `encounters`,
+`factions`, `arcs`. There is no flat `main_objective`/`twist`/`encounters`/
+`faction_reactions`/`arc_progression` shape any more; `twist` is folded into
+`beats`/`opening` by the prompt instead of being a standalone field.
+
 ### `POST /campaigns/{campaign_id}/generate-session`
 
 Generates a structured proposal for the next session.
@@ -429,13 +435,18 @@ Response:
 
 ```json
 {
+  "id": "uuid",
+  "session_number": 8,
   "title": "string",
-  "synopsis": "string",
-  "main_objective": "string",
-  "twist": "string",
-  "encounters": [],
-  "faction_reactions": [],
-  "arc_progression": [],
+  "sections": [
+    { "id": "synopsis", "label": "Synopsis", "body": "string", "origin": "scribe" },
+    { "id": "goal", "label": "Session goal", "body": "string", "origin": "scribe" },
+    { "id": "opening", "label": "Opening scene", "body": "string", "origin": "scribe" },
+    { "id": "beats", "label": "Main beats", "body": "string", "origin": "scribe" },
+    { "id": "encounters", "label": "Encounters", "body": "string", "origin": "scribe" },
+    { "id": "factions", "label": "Faction reactions", "body": "string", "origin": "scribe" },
+    { "id": "arcs", "label": "Arc progression", "body": "string", "origin": "scribe" }
+  ],
   "continuity_links": [],
   "trace_id": "string"
 }
@@ -447,8 +458,83 @@ Responsibilities:
 - Build generation context.
 - Include active MemoryFacts.
 - Include open arcs.
-- Validate AI output with Pydantic.
-- Return structured output.
+- Validate AI output with Pydantic (`GeneratedSessionOutput`, `extra="forbid"`).
+- Return structured output; persist all 7 sections in `sessions.generated_content`.
+
+### `GET /sessions/{session_id}`
+
+Returns the full session row, including the generated draft.
+
+Response:
+
+```json
+{
+  "id": "uuid",
+  "campaign_id": "uuid",
+  "session_number": 8,
+  "summary": "string",
+  "consequences": "string",
+  "generated_content": {
+    "title": "string",
+    "sections": [
+      { "id": "synopsis", "label": "Synopsis", "body": "string", "origin": "scribe" }
+    ],
+    "continuity_links": [{ "memory_fact_id": "uuid", "relevance": "string" }]
+  },
+  "trace_json": {},
+  "created_at": "timestamp",
+  "updated_at": "timestamp"
+}
+```
+
+### `PATCH /sessions/{session_id}`
+
+Persists DM edits to the generated content as-is (no server-side section diffing).
+
+Request (any subset of these fields):
+
+```json
+{
+  "generated_content": { "title": "string", "sections": [] },
+  "summary": "string",
+  "consequences": "string"
+}
+```
+
+Response: same shape as `GET /sessions/{session_id}`.
+
+### `POST /sessions/{session_id}/regenerate-section`
+
+Rewrites exactly one section via a fresh LLM call. Pure — no steering/direction
+input is accepted; the DM can only pick which section to regenerate.
+
+Request:
+
+```json
+{ "section_id": "goal" }
+```
+
+`section_id` must be one of the 7 canonical ids; any other value is rejected
+with `422` before any LLM call is made.
+
+Response: the full `SessionDetailResponse` (same shape as `GET
+/sessions/{session_id}`), with the targeted section's `body` replaced and its
+`origin` reset to `"scribe"` — even if it had previously been `"edited"`. All
+other 6 sections are returned untouched. On LLM validation failure, nothing is
+persisted and the draft is unchanged; the response is a retryable `422` that
+never leaks raw LLM output.
+
+Responsibilities:
+
+- Validate session ownership (per-user Supabase client, RLS) — unauthenticated
+  is `401`; a forged/foreign/unknown session id is a uniform `404` (never
+  `403`, matching the existing cross-tenant convention for `GET`/`PATCH
+  /sessions/{id}`); an unknown `section_id` is `422`.
+- Rebuild the same generation context categories used for full generation
+  (campaign, NPCs, factions, arcs, accepted memories).
+- Render a per-section Jinja prompt template and validate the LLM output with
+  Pydantic (`RegeneratedSectionOutput`).
+- Replace only the targeted section in `generated_content` and persist.
 
 ## Export
 

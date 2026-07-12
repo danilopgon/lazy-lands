@@ -209,44 +209,49 @@ Status: **done**
 
 ## Block 8 — Session generation and editing
 
-Status: **in progress** (SDD planning complete; stacked-to-main chained PRs: PR 1 backend → PR 2 frontend)
+Status: **SHIPPED** (backend PR #49 merged; frontend PR #51 merged; per-section
+regeneration + sections-only contract alignment shipped in the
+`per-section-regeneration` change)
 
 ### Generation
 
-- [ ] FastAPI endpoint `POST /campaigns/{campaign_id}/generate-session` — receives `campaign_id` + optional direction params.
-- [ ] `GenerateNextSessionUseCase` builds compressed context: `accumulated_summary` (covers all
+- [x] FastAPI endpoint `POST /campaigns/{campaign_id}/generate-session` — receives `campaign_id` + optional direction params.
+- [x] `GenerateNextSessionUseCase` builds compressed context: `accumulated_summary` (covers all
   sessions up to and including the last played one) + NPCs + factions + open arcs +
   **active `MemoryFacts`** (~2,000 tokens maximum). Unaccepted suggestions are excluded
   from context. The last session is already part of the summary — it is not provided
   separately to avoid double-counting.
-- [ ] LLM call with the contextualised generation prompt.
-- [ ] The LLM returns structured JSON validated against `GeneratedSessionOutput`.
-- [ ] Save `trace_json` with provider, prompt version, context summary and any errors.
-- [ ] Render of the structured output, with visible continuity links to accepted memories.
+- [x] LLM call with the contextualised generation prompt.
+- [x] The LLM returns structured JSON validated against `GeneratedSessionOutput`.
+- [x] Save `trace_json` with provider, prompt version, context summary and any errors.
+- [x] Render of the structured output, with visible continuity links to accepted memories.
 
 ### Editing
 
-- [ ] The generated output is presented as an editable draft.
-- [ ] Inline editing of main fields.
-- [ ] Manually edited fields are saved with `ContentSource.EDITED`.
+- [x] The generated output is presented as an editable draft.
+- [x] Inline editing of main fields.
+- [x] Manually edited fields are saved with `ContentSource.EDITED`.
 
-### Per-section regeneration (MVP — deferred from Block 8, before Block 9)
+### Per-section regeneration (shipped in `per-section-regeneration`)
 
-- [ ] Align the generated-session contract with the seven editable handoff sections before adding
-  regeneration: `synopsis`, `goal`, `opening`, `beats`, `encounters`, `factions`, and `arcs`.
-  The same canonical section IDs and provenance rules MUST flow through the LLM prompt, Pydantic
-  output contract, `generated_content` persistence, session-detail API, localized frontend labels,
-  and editable draft UI. Keep read compatibility for existing Block 8 drafts.
-  - Current gap (Block 8): `generate_session_v1.jinja` persists only `synopsis`, `main_objective`,
-    and `twist` as `generated_content.sections`, so the `encounters`, `faction_reactions`, and
-    `arc_progression` returned by `POST /generate-session` are dropped after the redirect/reload
-    and never appear in the generated-session view. Persisting or deriving them into sections is
-    part of this contract-alignment work (flagged by Codex review on PR #51).
-- [ ] DM can regenerate individual sections (synopsis, encounters, twist, etc.) with a fresh LLM
-  call that preserves the rest of the draft. Requires a `POST /sessions/{id}/regenerate-section`
-  endpoint and per-section prompt templates. UI shows a disabled "Coming later" affordance in
-  Block 8 until this is implemented. Must ship before Block 9 PDF export so the DM can refine
-  each section before exporting.
+- [x] Aligned the generated-session contract with the seven editable handoff sections:
+  `synopsis`, `goal`, `opening`, `beats`, `encounters`, `factions`, and `arcs`. The same
+  canonical section IDs and provenance rules now flow through the LLM prompt
+  (`generate_session_v2.jinja`), the Pydantic output contract (`GeneratedSessionOutput`,
+  sections-only, `extra="forbid"`), `generated_content` persistence, the session-detail
+  API, localized frontend labels, and the editable draft UI. No read-compat shim was
+  needed — no persisted drafts existed yet.
+  - Fixed the Block 8 gap where `generate_session_v1.jinja`'s derive-fallback only
+    persisted 3 sections (`synopsis`, `main_objective`, `twist`), dropping `encounters`,
+    `faction_reactions`, and `arc_progression` after redirect/reload (flagged by Codex
+    review on PR #51). The sections-only contract removes the fallback entirely — LLM
+    output now maps 1:1 onto all 7 persisted sections.
+- [x] DM can regenerate individual sections with a fresh, pure (no steering input) LLM
+  call that preserves the rest of the draft. `POST /sessions/{id}/regenerate-section`
+  plus 7 per-section prompt templates sharing a `_regenerate_context.jinja` macro. The
+  frontend's "Coming later" disabled affordance was replaced with a working per-section
+  Regenerate control (quill loading affordance, origin reset to `scribe`, success toast,
+  error state that preserves the prior body/origin).
 
 ---
 

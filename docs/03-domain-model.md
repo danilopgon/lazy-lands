@@ -180,24 +180,65 @@ Rules:
 
 ### GeneratedSessionOutput
 
-Structured AI output for a next-session proposal.
+Structured AI output for a next-session proposal. Sections-only contract — there is
+no flat/derived shape. `Encounter`, `FactionReaction`, and `ArcProgression` as
+standalone models are retired, along with the top-level `main_objective` and
+`twist` fields; a twist is woven into the `beats`/`opening` section bodies
+instead of being a separate field.
 
 Main fields:
 
 - `title`
-- `synopsis`
-- `main_objective`
-- `twist`
-- `encounters`
-- `faction_reactions`
-- `arc_progression`
+- `sections` — exactly the 7 canonical `GeneratedDraftSection` entries below, in
+  order
 - `continuity_links`
 
 Rules:
 
-- The backend must validate this output before showing or persisting it.
-- Invalid output must be rejected.
+- The backend must validate this output before showing or persisting it
+  (`extra="forbid"`; `sections` must be exactly the 7 canonical ids in order).
+- Invalid output must be rejected; nothing is persisted.
 - The DM must treat generated content as a draft.
+
+### GeneratedSection / GeneratedDraftSection
+
+One editable generated-content section with provenance. Persisted on
+`sessions.generated_content.sections[]`. The 7 canonical section ids, fixed
+order:
+
+1. `synopsis` — Synopsis
+2. `goal` — Session goal
+3. `opening` — Opening scene
+4. `beats` — Main beats
+5. `encounters` — Encounters
+6. `factions` — Faction reactions
+7. `arcs` — Arc progression
+
+Fields:
+
+- `id`
+- `label`
+- `body`
+- `origin` — `scribe` (untouched Scribe proposal) or `edited` (DM has edited it)
+
+Rules:
+
+- `GeneratedDraftSection.origin` is always `scribe` (brand-new LLM output).
+- Regenerating a section resets its `origin` to `scribe`, even if it had
+  previously been `edited` — a fresh Scribe proposal always overwrites DM edits
+  on that one section (and only that one).
+
+### RegeneratedSectionOutput
+
+Structured AI output for `POST /sessions/{id}/regenerate-section`. Carries only
+the rewritten `body` — the id, label, and origin are supplied by the backend, not
+the LLM.
+
+Rules:
+
+- The backend must validate this output before persisting it (`extra="forbid"`).
+- On validation failure, the previous section body/origin is left untouched and
+  nothing is persisted.
 
 ## Value objects
 
