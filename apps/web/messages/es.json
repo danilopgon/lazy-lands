@@ -291,6 +291,7 @@
       "recentSessions": "Sesiones recientes",
       "comingSoon": "Llegará en un capítulo posterior",
       "logSession": "Registrar sesión →",
+      "sessionsLoading": "Cargando sesiones recientes",
       "sessionsLoadError": "No se pudieron cargar las sesiones recientes.",
       "arcsNeedingAttention": "Arcos activos",
       "allArcs": "Todos los arcos →",
