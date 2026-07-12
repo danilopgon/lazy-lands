@@ -43,9 +43,9 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Download client
 
-- [ ] 4.1 **RED** — Extend `apps/web/tests/sessions/api.test.ts` for repeated IDs-only queries, failed Blob responses, and object-URL lifecycle.
-- [ ] 4.2 **GREEN** — Update `apps/web/lib/sessions/{api.ts,schemas.ts}` for typed download and persisted-section mapping.
-- [ ] 4.3 **REFACTOR/VERIFY** — Keep the browser boundary narrow; run `pnpm --filter web test -- tests/sessions/api.test.ts`.
+- [x] 4.1 **RED** — Extend `apps/web/tests/sessions/api.test.ts` for repeated IDs-only queries, failed Blob responses, and object-URL lifecycle.
+- [x] 4.2 **GREEN** — Update `apps/web/lib/sessions/{api.ts,schemas.ts}` for typed download and persisted-section mapping.
+- [x] 4.3 **REFACTOR/VERIFY** — Keep the browser boundary narrow; run `pnpm --filter web test -- tests/sessions/api.test.ts`.
 
 ## Phase 5: Handoff-faithful export screen
 

@@ -33,6 +33,9 @@ export class SessionCampaignNotFoundError extends SessionApiError {}
 
 export class SessionValidationError extends SessionApiError {}
 
+/** Raised when the persisted draft is missing or has no exportable sections (409). */
+export class SessionNotExportableError extends SessionApiError {}
+
 /**
  * Extract a message from a non-2xx JSON error body.
  *
@@ -202,6 +205,93 @@ export async function updateSessionContent(
   }
 
   return sessionDetailSchema.parse(await response.json())
+}
+
+/** Default download filename when the response carries no usable Content-Disposition. */
+const FALLBACK_PDF_FILENAME = 'session-export.pdf'
+
+/**
+ * Extract the `filename` from a `Content-Disposition` attachment header.
+ *
+ * @param {string | null} header - The raw `Content-Disposition` header value, if any.
+ * @returns {string | null} The parsed filename, or `null` when absent or unparseable.
+ */
+function filenameFromContentDisposition(header: string | null): string | null {
+  if (!header) return null
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(header)
+  return match ? decodeURIComponent(match[1].trim()) : null
+}
+
+/**
+ * Trigger a browser download for a Blob via a transient object URL.
+ * The URL is always revoked, even if the click throws, to avoid leaks.
+ *
+ * @param {Blob} blob - The binary payload to download.
+ * @param {string} filename - The suggested download filename.
+ * @returns {void}
+ */
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
+  try {
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = filename
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/**
+ * `GET /sessions/{sessionId}/export.pdf?section_id=…` — download the persisted,
+ * edited draft as a private A4 PDF. IDs-only by design: only the selected
+ * persisted section IDs travel to the backend, never unsaved prose or notes.
+ *
+ * On success the returned Blob is streamed to the browser as a file download
+ * (create + revoke object URL) and the resolved filename is returned so the
+ * caller can surface it in a success notice.
+ *
+ * @param {string} sessionId - The session id whose saved draft is exported.
+ * @param {readonly string[]} sectionIds - Selected persisted section ids, in order.
+ * @returns {Promise<string>} The downloaded attachment filename.
+ * @throws {SessionValidationError} Empty, duplicate, or unknown selection (422).
+ * @throws {SessionNotExportableError} Missing or non-exportable saved draft (409).
+ * @throws {SessionCampaignNotFoundError} Unknown, foreign, or malformed session (404).
+ * @throws {SessionApiError} Any other non-2xx response.
+ */
+export async function downloadSessionPdf(
+  sessionId: string,
+  sectionIds: readonly string[]
+): Promise<string> {
+  const params = new URLSearchParams()
+  for (const id of sectionIds) params.append('section_id', id)
+
+  const response = await apiFetch(
+    `/sessions/${sessionId}/export.pdf?${params.toString()}`
+  )
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new SessionCampaignNotFoundError(`Session ${sessionId} not found`)
+    }
+    if (response.status === 409) {
+      throw new SessionNotExportableError(await extractErrorMessage(response))
+    }
+    if (response.status === 422) {
+      throw new SessionValidationError(await extractErrorMessage(response))
+    }
+    throw new SessionApiError(await extractErrorMessage(response))
+  }
+
+  const blob = await response.blob()
+  const filename =
+    filenameFromContentDisposition(
+      response.headers.get('Content-Disposition')
+    ) ?? FALLBACK_PDF_FILENAME
+  triggerBlobDownload(blob, filename)
+  return filename
 }
 
 /**
