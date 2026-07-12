@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -8,6 +9,7 @@ import { Link, useRouter } from '@/i18n/navigation'
 
 import { Button } from '@/components/ui/button'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
+import { MarkdownBody } from '@/components/ui/markdown-body'
 import { Notice } from '@/components/ui/notice'
 import { OriginBadge } from '@/components/ui/origin-badge'
 import { Textarea } from '@/components/ui/textarea'
@@ -475,9 +477,7 @@ export function GeneratedSessionView({
                   </span>
                 </div>
               ) : (
-                <p className="mt-3 whitespace-pre-line font-serif text-[15px] leading-relaxed text-[var(--ink)]">
-                  {section.body}
-                </p>
+                <MarkdownBody className="mt-3">{section.body}</MarkdownBody>
               )}
             </article>
           ))}
@@ -588,14 +588,17 @@ export function GeneratedSessionView({
           </div>
         </aside>
       </div>
-      {toast ? (
-        <div
-          className="fixed bottom-5 right-5 border-2 border-[var(--border)] bg-[var(--paper)] px-4 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] shadow-[4px_4px_0_var(--shadow)]"
-          role="status"
-        >
-          {toast}
-        </div>
-      ) : null}
+      {toast && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="fixed bottom-5 right-5 z-50 border-2 border-[var(--border)] bg-[var(--paper)] px-4 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] shadow-[4px_4px_0_var(--shadow)]"
+              role="status"
+            >
+              {toast}
+            </div>,
+            document.body
+          )
+        : null}
     </main>
   )
 }
