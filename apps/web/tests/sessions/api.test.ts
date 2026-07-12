@@ -173,7 +173,12 @@ describe('downloadSessionPdf (PDF export download client)', () => {
     const filename = await downloadSessionPdf('sess-8', ['synopsis'])
 
     expect(createObjectURL).toHaveBeenCalledTimes(1)
-    expect(createObjectURL.mock.calls[0][0]).toBeInstanceOf(Blob)
+    // Duck-type the argument instead of `toBeInstanceOf(Blob)`: `response.blob()`
+    // returns a Blob from the fetch/undici realm, which is not an instance of the
+    // jsdom global `Blob` on every Node version (passes on 24, fails on CI's Node).
+    const objectUrlArg = createObjectURL.mock.calls[0][0] as Blob
+    expect(objectUrlArg.type).toBe('application/pdf')
+    expect(objectUrlArg.size).toBeGreaterThan(0)
     expect(anchorClick).toHaveBeenCalledTimes(1)
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock-url')
     expect(filename).toBe('session-8.pdf')
