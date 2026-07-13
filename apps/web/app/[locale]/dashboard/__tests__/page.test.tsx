@@ -197,6 +197,19 @@ describe('DashboardPage', () => {
     expect(screen.getByText('1 of 2')).toBeInTheDocument()
   })
 
+  it('exposes the campaign search control by its accessible name for keyboard users', async () => {
+    mockGetCampaigns.mockResolvedValue([buildCampaign()])
+    renderPage()
+
+    const search = await screen.findByRole('textbox', {
+      name: 'Search campaigns',
+    })
+
+    await userEvent.type(search, 'shadows')
+
+    expect(screen.getByText('Shadows over Phandalin')).toBeInTheDocument()
+  })
+
   it('"+ New campaign" button navigates to /campaigns/new', async () => {
     const user = userEvent.setup()
     mockGetCampaigns.mockResolvedValue([buildCampaign()])

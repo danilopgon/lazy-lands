@@ -62,7 +62,10 @@ export function EntityListScreen({
 
   if (isLoading) {
     return (
-      <main id="main-content" className="mx-auto max-w-[1100px] px-6 py-16">
+      <main
+        id="main-content"
+        className="ll-workspace mx-auto max-w-[1100px] px-6 py-16"
+      >
         <LoadingScribe
           title={t('screen.loadingTitle')}
           caption={t('screen.opening', { title })}
@@ -74,7 +77,10 @@ export function EntityListScreen({
   if (error) {
     const isNotFound = error instanceof CampaignNotFoundError
     return (
-      <main id="main-content" className="mx-auto max-w-[1100px] px-6 py-16">
+      <main
+        id="main-content"
+        className="ll-workspace mx-auto max-w-[1100px] px-6 py-16"
+      >
         <Notice variant="error">
           <p>{isNotFound ? t('screen.notFound') : t('screen.loadError')}</p>
           <button
@@ -96,7 +102,7 @@ export function EntityListScreen({
   return (
     <main
       id="main-content"
-      className="ll-view-enter mx-auto max-w-[1100px] px-6 py-16"
+      className="ll-view-enter ll-workspace mx-auto max-w-[1100px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
         <Link href="/dashboard" className="hover:text-[var(--ink)]">

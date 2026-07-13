@@ -152,6 +152,15 @@ function renderPageEs() {
   )
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+
+  return { promise, resolve }
+}
+
 describe('MemoryReviewPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -167,6 +176,37 @@ describe('MemoryReviewPage', () => {
 
     expect(screen.getByRole('status')).toBeInTheDocument()
     expect(screen.getByText(/opening the margins/i)).toBeInTheDocument()
+  })
+
+  it('keeps pending review controls available while active memories are loading', async () => {
+    const memories = deferred<(typeof activeMemory)[]>()
+    mockGetMemoryFacts.mockReturnValue(memories.promise)
+
+    renderPage()
+
+    expect(
+      await screen.findByRole('button', { name: /accept as memory/i })
+    ).toBeEnabled()
+    expect(screen.getByText(/loading active memories/i)).toBeInTheDocument()
+  })
+
+  it('renders campaign error and not-found notices with retry actions', async () => {
+    const { CampaignNotFoundError } = await import('@/lib/campaigns/api')
+    mockGetCampaignDetail.mockRejectedValueOnce(new Error('network'))
+
+    const first = renderPage()
+
+    expect(await screen.findByText(/something went wrong/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /retry/i })).toBeEnabled()
+    first.unmount()
+
+    mockGetCampaignDetail.mockRejectedValueOnce(
+      new CampaignNotFoundError('Campaign camp-1 not found')
+    )
+    renderPage()
+
+    expect(await screen.findByText(/campaign not found/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /retry/i })).toBeEnabled()
   })
 
   it('renders retryable backend error when active memories fail', async () => {
@@ -305,6 +345,40 @@ describe('MemoryReviewPage', () => {
     })
   })
 
+  it('keeps pending controls before active-canon controls at 900px keyboard order', async () => {
+    const user = userEvent.setup()
+    const initialWidth = window.innerWidth
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      value: 900,
+    })
+
+    renderPage()
+
+    const accept = await screen.findByRole('button', {
+      name: /accept as memory/i,
+    })
+    const edit = screen.getByRole('button', { name: /edit & accept/i })
+    const dismiss = screen.getByRole('button', { name: /^dismiss$/i })
+    const retire = screen.getByRole('button', { name: /retire/i })
+
+    expect(
+      accept.compareDocumentPosition(retire) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    accept.focus()
+    await user.tab()
+    expect(edit).toHaveFocus()
+    await user.tab()
+    expect(dismiss).toHaveFocus()
+    await user.tab()
+    expect(retire).toHaveFocus()
+
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      value: initialWidth,
+    })
+  })
+
   it('keeps a failed accept retryable and shows feedback', async () => {
     const user = userEvent.setup()
     mockCreateMemoryFact.mockRejectedValue(new Error('network'))
@@ -350,5 +424,74 @@ describe('MemoryReviewPage', () => {
       expect(screen.getByText(/struck out/i)).toBeInTheDocument()
     })
     expect(mockCreateMemoryFact).not.toHaveBeenCalled()
+  })
+
+  it('exercises edit-and-accept, dismiss, and retire through Spanish controls', async () => {
+    const user = userEvent.setup()
+    mockReadMemoryReviewDraft.mockReturnValue(twoSuggestionDraft)
+    mockCreateMemoryFact.mockResolvedValue({ ...activeMemory, id: 'memory-2' })
+    mockUpdateMemoryFact.mockResolvedValue({
+      ...activeMemory,
+      status: 'archived',
+    })
+
+    renderPageEs()
+
+    await user.click(
+      (await screen.findAllByRole('button', { name: /editar y aceptar/i }))[0]
+    )
+    const memoryText = screen.getByRole('textbox', {
+      name: /texto de memoria/i,
+    })
+    await user.clear(memoryText)
+    await user.type(memoryText, 'Captain Vess trusts the wizard.')
+    await user.click(
+      screen.getByRole('button', { name: /guardar y aceptar como memoria/i })
+    )
+    await waitFor(() => {
+      expect(mockCreateMemoryFact).toHaveBeenCalledWith('camp-1', {
+        source_session_id: 'sess-1',
+        content: 'Captain Vess trusts the wizard.',
+        type: 'relationship',
+        importance: 'high',
+      })
+    })
+
+    const dismiss = await screen.findByRole('button', { name: /^descartar$/i })
+    await user.click(dismiss)
+    expect(await screen.findByText(/tachada/i)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /retirar/i }))
+    await waitFor(() => {
+      expect(mockUpdateMemoryFact).toHaveBeenCalledWith('memory-1', {
+        status: 'archived',
+      })
+    })
+  })
+
+  it('keeps Spanish accept and retire failures actionable', async () => {
+    const user = userEvent.setup()
+    mockCreateMemoryFact.mockRejectedValue(new Error('network'))
+    mockUpdateMemoryFact.mockRejectedValue(new Error('network'))
+
+    renderPageEs()
+
+    const accept = await screen.findByRole('button', {
+      name: /aceptar como memoria/i,
+    })
+    await user.click(accept)
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /no se pudo sellar esa memoria/i
+    )
+    expect(accept).toBeEnabled()
+    expect(screen.getByText(/captain vess owes/i)).toBeInTheDocument()
+
+    const retire = screen.getByRole('button', { name: /retirar/i })
+    await user.click(retire)
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /no se pudo retirar esa memoria/i
+    )
+    expect(retire).toBeEnabled()
+    expect(screen.getByText(/the guild remembers/i)).toBeInTheDocument()
   })
 })

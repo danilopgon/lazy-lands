@@ -275,6 +275,38 @@ body {
   transform: translateY(2px);
 }
 
+/* Private operational surfaces may opt into this tier individually. It never
+   changes the application shell or the document flow at narrow widths. */
+@media (min-width: 1440px) {
+  .ll-workspace {
+    max-width: 1360px;
+  }
+
+  .ll-workspace-main {
+    max-width: 75ch;
+    min-width: 0;
+  }
+
+  .ll-workspace-context {
+    min-width: 0;
+  }
+
+  .ll-memory-review-lanes {
+    display: grid;
+    grid-template-columns: minmax(0, 75ch) minmax(20rem, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .ll-memory-review-canon {
+    border-left: 2px solid var(--line-strong);
+    border-top: 0;
+    margin-top: 0;
+    padding-left: 2rem;
+    padding-top: 0;
+  }
+}
+
 /* ─── Campaign Detail View ─────────────────────────────────────── */
 
 @keyframes ll-view-enter {

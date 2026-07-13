@@ -251,6 +251,14 @@ Frontend TypeScript object shapes should use `type` aliases rather than `interfa
 
 Theme tokens in `apps/web/app/globals.css` must stay reflected in `DESIGN.md`, which is the durable source of truth for Print Chronicle tokens and breakpoints.
 
+### Large-screen workspace ownership
+
+The frontend owns selective large-screen composition. `apps/web/app/globals.css` defines the
+CSS-only `>=1440px` workspace utilities, and eligible route components opt in explicitly.
+Route composition owns the choice of operational collection/context zone; it must retain DOM
+and focus order, normal-flow private notes, bounded reading lanes, and the existing `<=900px`
+collapse. This policy does not alter the app shell, APIs, route hierarchy, or data flow.
+
 ## Backend responsibility
 
 The backend is responsible for:

@@ -92,8 +92,11 @@ export default async function LocaleLayout({
   const messages = await getMessages({ locale })
   const t = await getTranslations({ locale, namespace: 'Root' })
 
+  const motion =
+    process.env.VISUAL_REGRESSION_TEST_MODE === 'true' ? 'off' : 'full'
+
   return (
-    <html lang={locale} data-theme="light" data-motion="full">
+    <html lang={locale} data-theme="light" data-motion={motion}>
       <body
         className={`${instrumentSans.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}
       >

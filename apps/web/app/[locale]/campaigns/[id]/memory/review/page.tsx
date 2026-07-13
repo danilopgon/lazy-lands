@@ -315,7 +315,7 @@ export default function MemoryReviewPage() {
   return (
     <main
       id="main-content"
-      className="ll-view-enter mx-auto max-w-[900px] px-6 py-16"
+      className="ll-view-enter ll-workspace mx-auto max-w-[900px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
         <Link href="/dashboard" className="hover:text-[var(--ink)]">
@@ -359,78 +359,83 @@ export default function MemoryReviewPage() {
         </Notice>
       ) : null}
 
-      <section className="mt-6 grid gap-4" aria-label={t('pendingSection')}>
-        {pending.length === 0 ? (
-          <EmptyState
-            className="border-dashed bg-transparent shadow-none"
-            title={t('emptyPendingTitle')}
-            description={t('emptyPendingDescription')}
-            action={
-              <Button
-                type="button"
-                onClick={() => router.push(`/campaigns/${campaignId}`)}
-              >
-                {t('backToCampaign')}
-              </Button>
-            }
-          />
-        ) : (
-          pending.map((suggestion) =>
-            editing === suggestion.id ? (
-              <SuggestionEditor
-                key={suggestion.id}
-                suggestion={suggestion}
-                isBusy={createMutation.isPending}
-                onCancel={() => setEditing(null)}
-                onSave={(content) =>
-                  createMutation.mutate({ suggestion, content })
-                }
-              />
-            ) : (
-              <SuggestionCard
-                key={suggestion.id}
-                suggestion={suggestion}
-                fx={fx[suggestion.id]}
-                isBusy={createMutation.isPending || Boolean(fx[suggestion.id])}
-                onAccept={() =>
-                  createMutation.mutate({
-                    suggestion,
-                    content: suggestion.content,
-                  })
-                }
-                onEdit={() => setEditing(suggestion.id)}
-                onDismiss={() => dismissSuggestion(suggestion)}
-              />
+      <div className="ll-memory-review-lanes mt-6">
+        <section className="grid gap-4" aria-label={t('pendingSection')}>
+          {pending.length === 0 ? (
+            <EmptyState
+              className="border-dashed bg-transparent shadow-none"
+              title={t('emptyPendingTitle')}
+              description={t('emptyPendingDescription')}
+              action={
+                <Button
+                  type="button"
+                  onClick={() => router.push(`/campaigns/${campaignId}`)}
+                >
+                  {t('backToCampaign')}
+                </Button>
+              }
+            />
+          ) : (
+            pending.map((suggestion) =>
+              editing === suggestion.id ? (
+                <SuggestionEditor
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  isBusy={createMutation.isPending}
+                  onCancel={() => setEditing(null)}
+                  onSave={(content) =>
+                    createMutation.mutate({ suggestion, content })
+                  }
+                />
+              ) : (
+                <SuggestionCard
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  fx={fx[suggestion.id]}
+                  isBusy={
+                    createMutation.isPending || Boolean(fx[suggestion.id])
+                  }
+                  onAccept={() =>
+                    createMutation.mutate({
+                      suggestion,
+                      content: suggestion.content,
+                    })
+                  }
+                  onEdit={() => setEditing(suggestion.id)}
+                  onDismiss={() => dismissSuggestion(suggestion)}
+                />
+              )
             )
-          )
-        )}
-      </section>
+          )}
+        </section>
 
-      <hr className="my-8 border-t border-[var(--line)]" />
+        <section
+          className="ll-memory-review-canon mt-7 border-t-2 border-[var(--line-strong)] pt-6"
+          aria-label={t('activeSection')}
+        >
+          <div className="ll-rule-anim flex items-baseline justify-between gap-4">
+            <h2 className="font-serif text-[19px] font-semibold text-[var(--ink)]">
+              {t('activeTitle', { count: memoriesQuery.data?.length ?? 0 })}
+            </h2>
+            <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--ink-3)]">
+              {t('activeHelp')}
+            </p>
+          </div>
 
-      <section aria-label={t('activeSection')}>
-        <div className="ll-rule-anim flex items-baseline justify-between gap-4">
-          <h2 className="font-serif text-[19px] font-semibold text-[var(--ink)]">
-            {t('activeTitle', { count: memoriesQuery.data?.length ?? 0 })}
-          </h2>
-          <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--ink-3)]">
-            {t('activeHelp')}
-          </p>
-        </div>
-
-        <div className="mt-3 border-2 border-[var(--border)] bg-[var(--paper)] px-5 shadow-[6px_6px_0_var(--shadow)]">
-          <ActiveMemories
-            memories={memoriesQuery.data ?? []}
-            isLoading={memoriesQuery.isLoading}
-            isError={memoriesQuery.isError}
-            isBusy={retireMutation.isPending}
-            retryLabel={te('retry')}
-            sourceLabelFor={sourceLabelFor}
-            onRetry={() => memoriesQuery.refetch()}
-            onRetire={(memory) => retireMutation.mutate(memory.id)}
-          />
-        </div>
-      </section>
+          <div className="mt-3 border-2 border-[var(--border)] bg-[var(--paper)] px-5 shadow-[6px_6px_0_var(--shadow)]">
+            <ActiveMemories
+              memories={memoriesQuery.data ?? []}
+              isLoading={memoriesQuery.isLoading}
+              isError={memoriesQuery.isError}
+              isBusy={retireMutation.isPending}
+              retryLabel={te('retry')}
+              sourceLabelFor={sourceLabelFor}
+              onRetry={() => memoriesQuery.refetch()}
+              onRetire={(memory) => retireMutation.mutate(memory.id)}
+            />
+          </div>
+        </section>
+      </div>
 
       <div className="mt-6 flex justify-end gap-3">
         <Button

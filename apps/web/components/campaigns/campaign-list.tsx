@@ -56,6 +56,7 @@ export function CampaignList({ campaigns }: CampaignListProps) {
       <div className="mt-5 flex items-center gap-2.5">
         <Input
           className="max-w-[300px]"
+          aria-label={t('searchPlaceholder')}
           placeholder={`${t('searchPlaceholder')}…`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -67,7 +68,7 @@ export function CampaignList({ campaigns }: CampaignListProps) {
           })}
         </span>
       </div>
-      <div className="ll-camp-grid mt-3 grid grid-cols-1 gap-4 llg:grid-cols-2">
+      <div className="ll-camp-grid mt-3 grid grid-cols-1 gap-4 llg:grid-cols-2 min-[1440px]:grid-cols-3">
         {filtered.map((c) => (
           <CampaignCard key={c.id} campaign={c} />
         ))}

@@ -47,7 +47,7 @@ type GeneratedSessionViewProps = {
 
 /**
  * Generated session draft view — renders the Scribe's proposal sections, the
- * woven-memory sidebar, legend, and private DM notes. Each section is editable
+ * woven-memory sidebar and legend. Each section is editable
  * inline and persisted via PATCH; the generated-proposal title drives the H1.
  *
  * @param {GeneratedSessionViewProps} props - Component props.
@@ -72,8 +72,6 @@ export function GeneratedSessionView({
   const [sections, setSections] = useState<GeneratedSection[] | null>(
     providedSession?.generated_content?.sections ?? null
   )
-  const [notes, setNotes] = useState('')
-  const [editingNotes, setEditingNotes] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   // Per-section regeneration state — keyed by section id, NOT a single
@@ -339,7 +337,7 @@ export function GeneratedSessionView({
   return (
     <main
       id="main-content"
-      className="ll-view-enter mx-auto max-w-[900px] px-6 py-16"
+      className="ll-view-enter ll-workspace mx-auto max-w-[900px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
         <Link href="/dashboard">{t('breadcrumbs.campaigns')}</Link> /{' '}
@@ -402,8 +400,8 @@ export function GeneratedSessionView({
           {error}
         </Notice>
       ) : null}
-      <div className="mt-8 grid gap-8 llg:grid-cols-[1.5fr_1fr] llg:gap-10">
-        <section className="space-y-4">
+      <div className="mt-8 grid gap-8 llg:grid-cols-[1.5fr_1fr] llg:gap-10 min-[1440px]:grid-cols-[minmax(0,75ch)_minmax(20rem,1fr)]">
+        <section className="ll-workspace-main space-y-4">
           {visibleSections.map((section, index) => (
             <article
               key={section.id}
@@ -486,59 +484,8 @@ export function GeneratedSessionView({
               )}
             </article>
           ))}
-          <article className="border-2 border-dashed border-[var(--dotted)] bg-[var(--paper)] p-5">
-            <div className="flex items-baseline gap-3">
-              <h2 className="font-serif text-[19px] font-semibold">
-                {t('privateNotes')}
-              </h2>
-              <span className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mute)]">
-                {t('excludedFromPdf')}
-              </span>
-              <button
-                type="button"
-                className="ml-auto font-mono text-[11px] font-semibold uppercase tracking-[0.1em] underline"
-                onClick={() => setEditingNotes(true)}
-              >
-                {te('edit')}
-              </button>
-            </div>
-            {editingNotes ? (
-              <div className="mt-3">
-                <Textarea
-                  rows={3}
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  autoFocus
-                />
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => {
-                      setEditingNotes(false)
-                      showToast(t('toast.notesSaved'))
-                    }}
-                  >
-                    {te('saveChanges')}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setEditingNotes(false)}
-                  >
-                    {te('cancel')}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <p className="mt-3 font-serif text-sm text-[var(--ink-2)]">
-                {notes || t('privateNotesEmpty')}
-              </p>
-            )}
-          </article>
         </section>
-        <aside>
+        <aside className="ll-workspace-context">
           <h2 className="font-serif text-[19px] font-semibold text-[var(--ink)]">
             {t('memoriesHeading')}
           </h2>
@@ -573,6 +520,20 @@ export function GeneratedSessionView({
               </p>
             ) : null}
           </div>
+          <hr className="my-5 border-t border-[var(--line)]" />
+          <section className="border-2 border-dashed border-[var(--dotted)] bg-[var(--paper)] p-5">
+            <div className="flex items-baseline gap-3">
+              <h2 className="font-serif text-[19px] font-semibold text-[var(--ink)]">
+                {t('privateNotes')}
+              </h2>
+              <span className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mute)]">
+                {t('excludedFromPdf')}
+              </span>
+            </div>
+            <p className="mt-3 font-serif text-sm text-[var(--ink-2)]">
+              {t('privateNotesComingSoon')}
+            </p>
+          </section>
           <hr className="my-5 border-t border-[var(--line)]" />
           <h2 className="font-serif text-[19px] font-semibold text-[var(--ink)]">
             {t('legend')}

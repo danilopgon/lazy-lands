@@ -24,7 +24,10 @@ export default function DashboardPage() {
   })
 
   return (
-    <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
+    <main
+      id="main-content"
+      className="ll-workspace mx-auto max-w-[900px] px-6 py-16"
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">

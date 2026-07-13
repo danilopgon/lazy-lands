@@ -113,6 +113,51 @@ describe('GeneratedSessionView', () => {
     expect(screen.getByText('Private DM notes')).toBeInTheDocument()
   })
 
+  it.each([
+    ['en', 'Private DM notes', 'Coming soon', 'Excluded from PDF'],
+    ['es', 'Notas privadas del DM', 'Próximamente', 'Excluido del PDF'],
+  ] as const)(
+    'renders noninteractive deferred private notes in the aside for %s',
+    (locale, notes, comingSoon, excluded) => {
+      render(
+        <GeneratedSessionView
+          campaignId="camp-1"
+          sessionId="session-8"
+          campaign={campaign}
+          session={session}
+          memories={memories}
+        />,
+        { wrapper: withQueryClient, locale }
+      )
+
+      const notesHeading = screen.getByRole('heading', { name: notes })
+      const memoriesHeading = screen.getByRole('heading', {
+        name: locale === 'en' ? 'Memories woven in' : 'Memorias integradas',
+      })
+      const legendHeading = screen.getByRole('heading', {
+        name: locale === 'en' ? 'Legend' : 'Leyenda',
+      })
+      expect(
+        memoriesHeading.compareDocumentPosition(notesHeading) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy()
+      expect(
+        notesHeading.compareDocumentPosition(legendHeading) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy()
+      expect(screen.getByText(comingSoon)).toBeInTheDocument()
+      expect(screen.getAllByText(excluded)).toHaveLength(2)
+      expect(
+        screen.queryByRole('textbox', { name: notes })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.getAllByRole('button', {
+          name: locale === 'en' ? 'Edit' : 'Editar',
+        })
+      ).toHaveLength(2)
+    }
+  )
+
   it('uses a generated_content.title when present instead of the synopsis summary', () => {
     renderGenerated(
       <GeneratedSessionView

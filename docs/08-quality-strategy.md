@@ -51,6 +51,32 @@ Critical frontend tests:
 - Generated session render.
 - Copy generated session action.
 
+### Responsive workspace verification
+
+For any route opting into the `>=1440px` workspace tier, verify the following matrix before
+release:
+
+- 1440×900, 1536×960, and 1920×1080 for populated, loading, error, empty, success, and
+  action-failure states where the route exposes them.
+- English and Spanish at 1440×900, including no horizontal overflow or clipped controls.
+- `prefers-reduced-motion: reduce` at 1440×900; existing motion gates must remain effective.
+- Keyboard navigation keeps the existing DOM/focus order and every recovery/action control is
+  reachable.
+- At `<=900px`, eligible routes remain in normal document flow; auth, focused forms/review,
+  legal pages, and the export preview remain bounded.
+
+Use RTL for visible behavior, controls, and feedback. Use Playwright viewport checks and visual
+review for composition and overflow; do not assert utility class names as behavior.
+
+### Deterministic visual baselines
+
+Campaign detail, generated-session, and Memory Review baselines use Chromium with fixed fixture
+data, dates, locale, loaded fonts, intercepted mutations, and `data-motion="off"`. Capture English
+and Spanish at 1440×900 and 900×900. The feature owner updates a baseline only after reviewing each
+PNG diff; reviewers verify the viewport, fixture host, and motion mode. Focused RTL owns caps/order,
+truthful links, deferred-note noninteractivity, and Memory Review action/failure behavior. These
+snapshots deliberately avoid authenticated storage and broad end-to-end fixtures.
+
 ## Backend testing
 
 Recommended tools:
