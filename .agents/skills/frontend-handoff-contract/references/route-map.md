@@ -26,6 +26,11 @@ shipped UI.
 | `/campaigns/:id/settings`             | — not shipped —                                                             | —                                                                                    | Build from `DESIGN.md` + `PRODUCT.md` (no shipped precedent)            |
 | `/campaigns/:id/sessions/:sid`        | `apps/web/app/[locale]/campaigns/[id]/sessions/[sessionId]/page.tsx`        | `GeneratedSessionView`                                                              | Was stale (previously pointed at the wrong prototype file)              |
 | `/campaigns/:id/sessions/:sid/export` | `apps/web/app/[locale]/campaigns/[id]/sessions/[sessionId]/export/page.tsx` | `SessionExportView`                                                                 | Direct                                                                   |
+| `/forgot-password`                    | `apps/web/app/[locale]/forgot-password/page.tsx`                           | Inline in `page.tsx`                                                                | Direct                                                                   |
+| `/auth/reset`                         | `apps/web/app/[locale]/auth/reset/page.tsx`                                | Inline in `page.tsx`                                                                | Direct                                                                   |
+| `/auth/confirm`                       | `apps/web/app/[locale]/auth/confirm/page.tsx`                              | Inline in `page.tsx`                                                                | Direct                                                                   |
+| `/privacy`                            | `apps/web/app/[locale]/privacy/page.tsx`                                   | Inline in `page.tsx`                                                                | Legal/static page                                                       |
+| `/cookies`                            | `apps/web/app/[locale]/cookies/page.tsx`                                   | Inline in `page.tsx`                                                                | Legal/static page                                                       |
 
 ## Shared Components (`apps/web/components/**`)
 
