@@ -18,7 +18,7 @@ RLS actually apply.
 from __future__ import annotations
 
 import contextlib
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 import psycopg
 import pytest
@@ -77,6 +77,39 @@ def as_user(conn: psycopg.Connection, role: str, sub: str | None) -> Iterator[Cu
                     "select set_config('request.jwt.claims', %s, true)", (claims,)
                 )
             yield cur
+
+
+@contextlib.contextmanager
+def as_owner_then_non_owner(
+    conn: psycopg.Connection,
+) -> Iterator[tuple[Cursor, Callable[[], None]]]:
+    """Seed as USER_A, then switch to USER_B inside the SAME transaction.
+
+    RLS SELECT/UPDATE *denial* is only meaningful when a real owned row exists
+    to be filtered. If the seed row were rolled back before USER_B runs (as
+    happens with two separate ``as_user`` blocks), the non-owner SELECT/UPDATE
+    would return empty simply because the table is empty — passing even if the
+    policy were dropped. Keeping owner and non-owner in one transaction closes
+    that false-confidence gap (raised in review of PR #64).
+
+    Yields the shared cursor and a ``switch_to_user_b`` callback the caller
+    invokes after seeding. ``force_rollback=True`` discards the seed afterwards.
+    """
+    with conn.transaction(force_rollback=True):
+        with conn.cursor() as cur:
+            cur.execute("set local role authenticated")
+            cur.execute(
+                "select set_config('request.jwt.claims', %s, true)",
+                (f'{{"sub":"{USER_A}"}}',),
+            )
+
+            def switch_to_user_b() -> None:
+                cur.execute(
+                    "select set_config('request.jwt.claims', %s, true)",
+                    (f'{{"sub":"{USER_B}"}}',),
+                )
+
+            yield cur, switch_to_user_b
 
 
 # --- FR-2.2 / Scenario 1: Owner reads own campaign ---------------------------
@@ -150,6 +183,130 @@ def test_user_b_reads_zero_sessions(db_conn) -> None:
     assert rows == []
 
 
+# --- NPC ownership via parent campaign ---------------------------------------
+
+
+def test_user_a_can_crud_own_npc(db_conn) -> None:
+    """User A can create, read, and update npcs for their own campaign."""
+    with as_user(db_conn, "authenticated", USER_A) as cur:
+        cur.execute(
+            """
+            insert into npcs (campaign_id, name)
+            values (%s, 'Herman Vale')
+            returning id
+            """,
+            (SEEDED_CAMPAIGN,),
+        )
+        npc_id = cur.fetchone()[0]
+
+        cur.execute("select name from npcs where id = %s", (npc_id,))
+        assert cur.fetchone()[0] == "Herman Vale"
+
+        cur.execute(
+            "update npcs set name = 'Herman the Bitter' where id = %s returning name",
+            (npc_id,),
+        )
+        assert cur.fetchone()[0] == "Herman the Bitter"
+
+
+def test_user_b_cannot_select_insert_or_update_user_a_npcs(db_conn) -> None:
+    """User B cannot see, update, or insert npcs in USER_A's campaign.
+
+    The owned npc is seeded and kept alive while USER_B runs, so the SELECT and
+    UPDATE assertions verify RLS *filtering of an existing row*, not an empty
+    table.
+    """
+    with as_owner_then_non_owner(db_conn) as (cur, switch_to_user_b):
+        cur.execute(
+            "insert into npcs (campaign_id, name) values (%s, 'Seed NPC') returning id",
+            (SEEDED_CAMPAIGN,),
+        )
+        npc_id = cur.fetchone()[0]
+
+        switch_to_user_b()
+
+        cur.execute("select id from npcs where campaign_id = %s", (SEEDED_CAMPAIGN,))
+        assert cur.fetchall() == []
+
+        cur.execute(
+            "update npcs set name = 'hijacked' where id = %s returning id",
+            (npc_id,),
+        )
+        assert cur.fetchall() == []
+
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with db_conn.transaction():  # savepoint keeps the outer txn alive
+                cur.execute(
+                    "insert into npcs (campaign_id, name) "
+                    "values (%s, 'Should not persist')",
+                    (SEEDED_CAMPAIGN,),
+                )
+
+
+# --- Faction ownership via parent campaign -----------------------------------
+
+
+def test_user_a_can_crud_own_faction(db_conn) -> None:
+    """User A can create, read, and update factions for their own campaign."""
+    with as_user(db_conn, "authenticated", USER_A) as cur:
+        cur.execute(
+            """
+            insert into factions (campaign_id, name)
+            values (%s, 'The Salt Guild')
+            returning id
+            """,
+            (SEEDED_CAMPAIGN,),
+        )
+        faction_id = cur.fetchone()[0]
+
+        cur.execute("select name from factions where id = %s", (faction_id,))
+        assert cur.fetchone()[0] == "The Salt Guild"
+
+        cur.execute(
+            "update factions set name = 'The Broken Guild' "
+            "where id = %s returning name",
+            (faction_id,),
+        )
+        assert cur.fetchone()[0] == "The Broken Guild"
+
+
+def test_user_b_cannot_select_insert_or_update_user_a_factions(db_conn) -> None:
+    """User B cannot see, update, or insert factions in USER_A's campaign.
+
+    The owned faction is seeded and kept alive while USER_B runs, so the SELECT
+    and UPDATE assertions verify RLS *filtering of an existing row*, not an
+    empty table.
+    """
+    with as_owner_then_non_owner(db_conn) as (cur, switch_to_user_b):
+        cur.execute(
+            "insert into factions (campaign_id, name) "
+            "values (%s, 'Seed Faction') returning id",
+            (SEEDED_CAMPAIGN,),
+        )
+        faction_id = cur.fetchone()[0]
+
+        switch_to_user_b()
+
+        cur.execute(
+            "select id from factions where campaign_id = %s", (SEEDED_CAMPAIGN,)
+        )
+        assert cur.fetchall() == []
+
+        cur.execute(
+            "update factions set name = 'hijacked' where id = %s returning id",
+            (faction_id,),
+        )
+        assert cur.fetchall() == []
+
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with db_conn.transaction():  # savepoint keeps the outer txn alive
+                cur.execute(
+                    "insert into factions (campaign_id, name) "
+                    "values (%s, 'Should not persist')",
+                    (SEEDED_CAMPAIGN,),
+                )
+
+
 # --- Memory fact ownership and composite FK checks ---------------------------
 
 
@@ -187,35 +344,46 @@ def test_user_a_can_crud_own_memory_fact(db_conn) -> None:
 
 
 def test_user_b_cannot_select_insert_or_update_user_a_memory_facts(db_conn) -> None:
-    """User B is filtered from A's memories and cannot mutate A's campaign."""
-    with as_user(db_conn, "authenticated", USER_B) as cur:
+    """User B cannot see, update, or insert memory_facts in USER_A's campaign.
+
+    The owned memory fact is seeded and kept alive while USER_B runs, so the
+    SELECT and UPDATE assertions verify RLS *filtering of an existing row*, not
+    an empty table.
+    """
+    with as_owner_then_non_owner(db_conn) as (cur, switch_to_user_b):
+        cur.execute(
+            """
+            insert into memory_facts (campaign_id, content, type, importance, status)
+            values (%s, 'Owner-only memory.', 'consequence', 'high', 'active')
+            returning id
+            """,
+            (SEEDED_CAMPAIGN,),
+        )
+        memory_id = cur.fetchone()[0]
+
+        switch_to_user_b()
+
         cur.execute(
             "select id from memory_facts where campaign_id = %s",
             (SEEDED_CAMPAIGN,),
         )
         assert cur.fetchall() == []
 
-    with as_user(db_conn, "authenticated", USER_B) as cur:
-        with pytest.raises(psycopg.errors.InsufficientPrivilege):
-            cur.execute(
-                """
-                insert into memory_facts (campaign_id, content, status)
-                values (%s, 'Should not persist', 'active')
-                """,
-                (SEEDED_CAMPAIGN,),
-            )
-
-    with as_user(db_conn, "authenticated", USER_B) as cur:
         cur.execute(
-            """
-            update memory_facts
-            set status = 'archived'
-            where campaign_id = %s
-            returning id
-            """,
-            (SEEDED_CAMPAIGN,),
+            "update memory_facts set status = 'archived' where id = %s returning id",
+            (memory_id,),
         )
         assert cur.fetchall() == []
+
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with db_conn.transaction():  # savepoint keeps the outer txn alive
+                cur.execute(
+                    """
+                    insert into memory_facts (campaign_id, content, status)
+                    values (%s, 'Should not persist', 'active')
+                    """,
+                    (SEEDED_CAMPAIGN,),
+                )
 
 
 @contextlib.contextmanager
