@@ -54,6 +54,8 @@ export const campaignSummarySchema = z.object({
   npc_count: z.number(),
   faction_count: z.number(),
   arc_count: z.number(),
+  session_count: z.number(),
+  memory_count: z.number(),
 })
 export type CampaignSummary = z.infer<typeof campaignSummarySchema>
 

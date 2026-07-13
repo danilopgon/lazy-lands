@@ -52,6 +52,8 @@ function buildCampaign(
     npc_count: 4,
     faction_count: 2,
     arc_count: 3,
+    session_count: 6,
+    memory_count: 7,
     ...overrides,
   }
 }
@@ -241,18 +243,59 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Arcs')).toBeInTheDocument()
   })
 
-  it('renders Sessions and Memories as "—" placeholders (Block 7 — not yet data-bound)', async () => {
-    mockGetCampaigns.mockResolvedValue([buildCampaign()])
+  it('renders real Sessions and Memories counts in the correct stat order', async () => {
+    mockGetCampaigns.mockResolvedValue([
+      buildCampaign({
+        session_count: 5,
+        npc_count: 2,
+        faction_count: 1,
+        memory_count: 3,
+        arc_count: 4,
+      }),
+    ])
     renderPage()
 
     await waitFor(() => {
       expect(screen.getByText('Shadows over Phandalin')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('Sessions')).toBeInTheDocument()
-    expect(screen.getByText('Memories')).toBeInTheDocument()
-    // Two placeholder columns, both showing an em dash instead of a count.
-    expect(screen.getAllByText('—')).toHaveLength(2)
+    const statLabels = ['Sessions', 'NPCs', 'Factions', 'Memories', 'Arcs']
+    const statValues = ['5', '2', '1', '3', '4']
+    const statRow = screen.getByText('Sessions').parentElement?.parentElement
+    expect(statRow).not.toBeNull()
+    const renderedLabels = statRow
+      ? Array.from(statRow.children).map(
+          (child) => child.querySelector('div:last-child')?.textContent
+        )
+      : []
+    expect(renderedLabels).toEqual(statLabels)
+    const renderedValues = statRow
+      ? Array.from(statRow.children).map(
+          (child) => child.querySelector('div:first-child')?.textContent
+        )
+      : []
+    expect(renderedValues).toEqual(statValues)
+  })
+
+  it('renders zero Sessions and Memories counts as numeric "0", not a dash', async () => {
+    mockGetCampaigns.mockResolvedValue([
+      buildCampaign({ session_count: 0, memory_count: 0 }),
+    ])
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Shadows over Phandalin')).toBeInTheDocument()
+    })
+
+    expect(screen.queryByText('—')).not.toBeInTheDocument()
+    const sessionsValue = screen
+      .getByText('Sessions')
+      .parentElement?.querySelector('div:first-child')
+    const memoriesValue = screen
+      .getByText('Memories')
+      .parentElement?.querySelector('div:first-child')
+    expect(sessionsValue?.textContent).toBe('0')
+    expect(memoriesValue?.textContent).toBe('0')
   })
 
   it('shows the campaign count and session summary in the subtitle', async () => {

@@ -182,14 +182,17 @@ def test_list_campaigns_selects_summary_fields_ordered_by_updated_at_desc() -> N
     ]
     order_query = client.table.return_value.select.return_value.order.return_value
     order_query.execute.return_value = execute_result
+    memory_query = (
+        client.table.return_value.select.return_value.in_.return_value.eq.return_value
+    )
+    memory_query.execute.return_value = MagicMock(data=[])
     repo = SupabaseCampaignRepository(client)
 
     rows = repo.list_campaigns()
 
     assert [row["id"] for row in rows] == ["new", "old"]
     client.table.assert_any_call("campaigns")
-    client.table.return_value.select.assert_called_once()
-    select_arg = client.table.return_value.select.call_args[0][0]
+    select_arg = client.table.return_value.select.call_args_list[0][0][0]
     # system/tone columns exist after Migration A (WU3) and are selected.
     assert "system" in select_arg
     assert "tone" in select_arg
@@ -212,6 +215,10 @@ def test_list_campaigns_normalizes_empty_count_lists_to_zero() -> None:
     ]
     order_query = client.table.return_value.select.return_value.order.return_value
     order_query.execute.return_value = execute_result
+    memory_query = (
+        client.table.return_value.select.return_value.in_.return_value.eq.return_value
+    )
+    memory_query.execute.return_value = MagicMock(data=[])
     repo = SupabaseCampaignRepository(client)
 
     rows = repo.list_campaigns()
@@ -219,6 +226,77 @@ def test_list_campaigns_normalizes_empty_count_lists_to_zero() -> None:
     assert rows[0]["npc_count"] == 0
     assert rows[0]["faction_count"] == 0
     assert rows[0]["arc_count"] == 0
+
+
+def test_list_campaigns_selects_session_count_and_computes_active_memory_count() -> None:
+    client = MagicMock()
+    campaigns_execute_result = MagicMock()
+    campaigns_execute_result.data = [
+        {
+            "id": "campaign-1",
+            "title": "Sombras",
+            "session_count": [{"count": 5}],
+        }
+    ]
+    order_query = client.table.return_value.select.return_value.order.return_value
+    order_query.execute.return_value = campaigns_execute_result
+
+    memory_execute_result = MagicMock()
+    memory_execute_result.data = [
+        {"campaign_id": "campaign-1"},
+        {"campaign_id": "campaign-1"},
+        {"campaign_id": "campaign-1"},
+    ]
+    memory_query = (
+        client.table.return_value.select.return_value.in_.return_value.eq.return_value
+    )
+    memory_query.execute.return_value = memory_execute_result
+
+    repo = SupabaseCampaignRepository(client)
+
+    rows = repo.list_campaigns()
+
+    assert rows[0]["session_count"] == 5
+    assert rows[0]["memory_count"] == 3
+    select_arg = client.table.return_value.select.call_args_list[0][0][0]
+    assert "session_count:sessions(count)" in select_arg
+    client.table.return_value.select.return_value.in_.assert_called_once_with(
+        "campaign_id", ["campaign-1"]
+    )
+    client.table.return_value.select.return_value.in_.return_value.eq.assert_called_once_with(
+        "status", "active"
+    )
+
+
+def test_normalize_campaign_summary_unwraps_session_count_nested_shape() -> None:
+    normalized_present = SupabaseCampaignRepository._normalize_campaign_summary(
+        {"id": "campaign-1", "session_count": [{"count": 7}]}
+    )
+    assert normalized_present["session_count"] == 7
+
+    normalized_empty = SupabaseCampaignRepository._normalize_campaign_summary(
+        {"id": "campaign-1", "session_count": []}
+    )
+    assert normalized_empty["session_count"] == 0
+
+    normalized_none = SupabaseCampaignRepository._normalize_campaign_summary(
+        {"id": "campaign-1", "session_count": None}
+    )
+    assert normalized_none["session_count"] == 0
+
+
+def test_list_campaigns_skips_memory_query_when_no_campaigns() -> None:
+    client = MagicMock()
+    execute_result = MagicMock()
+    execute_result.data = []
+    order_query = client.table.return_value.select.return_value.order.return_value
+    order_query.execute.return_value = execute_result
+    repo = SupabaseCampaignRepository(client)
+
+    rows = repo.list_campaigns()
+
+    assert rows == []
+    client.table.return_value.select.return_value.in_.assert_not_called()
 
 
 def test_get_campaign_returns_first_row_or_none_on_rls_miss() -> None:

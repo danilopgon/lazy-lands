@@ -32,7 +32,8 @@ class SupabaseCampaignRepository:
                     "id,title,description,updated_at,system,tone,"
                     "npc_count:npcs(count),"
                     "faction_count:factions(count),"
-                    "arc_count:arcs(count)"
+                    "arc_count:arcs(count),"
+                    "session_count:sessions(count)"
                 )
                 .order("updated_at", desc=True)
                 .execute()
@@ -40,7 +41,34 @@ class SupabaseCampaignRepository:
         except Exception as exc:
             raise RepositoryError("Failed to list campaigns") from exc
         rows = cast(list[dict[str, Any]], response.data or [])
-        return [self._normalize_campaign_summary(row) for row in rows]
+        campaign_ids = [row["id"] for row in rows if row.get("id")]
+        memory_counts = self._active_memory_counts(campaign_ids)
+        return [
+            self._normalize_campaign_summary(row, memory_counts.get(row.get("id"), 0))
+            for row in rows
+        ]
+
+    def _active_memory_counts(self, campaign_ids: list[str]) -> dict[str, int]:
+        """Count active memory facts per campaign. Skips the query when empty."""
+        if not campaign_ids:
+            return {}
+        try:
+            response = (
+                self._client.table("memory_facts")
+                .select("campaign_id")
+                .in_("campaign_id", campaign_ids)
+                .eq("status", "active")
+                .execute()
+            )
+        except Exception as exc:
+            raise RepositoryError("Failed to count active memory facts") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        counts: dict[str, int] = {}
+        for row in rows:
+            campaign_id = row.get("campaign_id")
+            if campaign_id:
+                counts[campaign_id] = counts.get(campaign_id, 0) + 1
+        return counts
 
     def get_campaign(self, campaign_id: str) -> dict | None:
         """Fetch a single caller-visible campaign, returning None on RLS miss."""
@@ -256,12 +284,15 @@ class SupabaseCampaignRepository:
             raise RepositoryError(f"Failed to insert into {table}") from exc
 
     @staticmethod
-    def _normalize_campaign_summary(row: dict[str, Any]) -> dict[str, Any]:
+    def _normalize_campaign_summary(
+        row: dict[str, Any], memory_count: int = 0
+    ) -> dict[str, Any]:
         normalized = dict(row)
-        for output_key in ("npc_count", "faction_count", "arc_count"):
+        for output_key in ("npc_count", "faction_count", "arc_count", "session_count"):
             value = normalized.get(output_key)
             if isinstance(value, list) and value and isinstance(value[0], dict):
                 normalized[output_key] = value[0].get("count", 0)
             elif value is None or value == []:
                 normalized[output_key] = 0
+        normalized["memory_count"] = memory_count
         return normalized

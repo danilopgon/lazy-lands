@@ -19,6 +19,8 @@ class CampaignSummary(BaseModel):
     npc_count: int = 0
     faction_count: int = 0
     arc_count: int = 0
+    session_count: int = 0
+    memory_count: int = 0
 
 
 class CampaignMutationResponse(BaseModel):
