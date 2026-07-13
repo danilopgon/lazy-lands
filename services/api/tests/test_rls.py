@@ -150,6 +150,123 @@ def test_user_b_reads_zero_sessions(db_conn) -> None:
     assert rows == []
 
 
+# --- NPC ownership via parent campaign ---------------------------------------
+
+
+def test_user_a_can_crud_own_npc(db_conn) -> None:
+    """User A can create, read, and update npcs for their own campaign."""
+    with as_user(db_conn, "authenticated", USER_A) as cur:
+        cur.execute(
+            """
+            insert into npcs (campaign_id, name)
+            values (%s, 'Herman Vale')
+            returning id
+            """,
+            (SEEDED_CAMPAIGN,),
+        )
+        npc_id = cur.fetchone()[0]
+
+        cur.execute("select name from npcs where id = %s", (npc_id,))
+        assert cur.fetchone()[0] == "Herman Vale"
+
+        cur.execute(
+            "update npcs set name = 'Herman the Bitter' where id = %s returning name",
+            (npc_id,),
+        )
+        assert cur.fetchone()[0] == "Herman the Bitter"
+
+
+def test_user_b_cannot_select_insert_or_update_user_a_npcs(db_conn) -> None:
+    """User B is filtered from A's npcs and cannot mutate A's campaign."""
+    with as_user(db_conn, "authenticated", USER_A) as cur:
+        cur.execute(
+            "insert into npcs (campaign_id, name) values (%s, 'Seed NPC')",
+            (SEEDED_CAMPAIGN,),
+        )
+        cur.execute("select id from npcs where campaign_id = %s", (SEEDED_CAMPAIGN,))
+        assert cur.fetchall() != []
+
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        cur.execute("select id from npcs where campaign_id = %s", (SEEDED_CAMPAIGN,))
+        assert cur.fetchall() == []
+
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            cur.execute(
+                "insert into npcs (campaign_id, name) "
+                "values (%s, 'Should not persist')",
+                (SEEDED_CAMPAIGN,),
+            )
+
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        cur.execute(
+            "update npcs set name = 'hijacked' where campaign_id = %s returning id",
+            (SEEDED_CAMPAIGN,),
+        )
+        assert cur.fetchall() == []
+
+
+# --- Faction ownership via parent campaign -----------------------------------
+
+
+def test_user_a_can_crud_own_faction(db_conn) -> None:
+    """User A can create, read, and update factions for their own campaign."""
+    with as_user(db_conn, "authenticated", USER_A) as cur:
+        cur.execute(
+            """
+            insert into factions (campaign_id, name)
+            values (%s, 'The Salt Guild')
+            returning id
+            """,
+            (SEEDED_CAMPAIGN,),
+        )
+        faction_id = cur.fetchone()[0]
+
+        cur.execute("select name from factions where id = %s", (faction_id,))
+        assert cur.fetchone()[0] == "The Salt Guild"
+
+        cur.execute(
+            "update factions set name = 'The Broken Guild' "
+            "where id = %s returning name",
+            (faction_id,),
+        )
+        assert cur.fetchone()[0] == "The Broken Guild"
+
+
+def test_user_b_cannot_select_insert_or_update_user_a_factions(db_conn) -> None:
+    """User B is filtered from A's factions and cannot mutate A's campaign."""
+    with as_user(db_conn, "authenticated", USER_A) as cur:
+        cur.execute(
+            "insert into factions (campaign_id, name) values (%s, 'Seed Faction')",
+            (SEEDED_CAMPAIGN,),
+        )
+        cur.execute(
+            "select id from factions where campaign_id = %s", (SEEDED_CAMPAIGN,)
+        )
+        assert cur.fetchall() != []
+
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        cur.execute(
+            "select id from factions where campaign_id = %s", (SEEDED_CAMPAIGN,)
+        )
+        assert cur.fetchall() == []
+
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            cur.execute(
+                "insert into factions (campaign_id, name) "
+                "values (%s, 'Should not persist')",
+                (SEEDED_CAMPAIGN,),
+            )
+
+    with as_user(db_conn, "authenticated", USER_B) as cur:
+        cur.execute(
+            "update factions set name = 'hijacked' where campaign_id = %s returning id",
+            (SEEDED_CAMPAIGN,),
+        )
+        assert cur.fetchall() == []
+
+
 # --- Memory fact ownership and composite FK checks ---------------------------
 
 

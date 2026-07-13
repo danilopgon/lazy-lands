@@ -29,9 +29,9 @@ complex relationship graphs, visual timeline, and advanced memory compiler.
 | 5 | Campaign creation and AI onboarding | done |
 | 6 | Campaign view | done |
 | 7 | Sessions: post-session registration and memory review | done |
-| 8 | Session generation and editing | in progress |
-| 9 | PDF export | pending |
-| 10 | Testing and quality | pending |
+| 8 | Session generation and editing | done |
+| 9 | PDF export | done |
+| 10 | Testing and quality | done |
 
 ---
 
@@ -257,45 +257,65 @@ regeneration + sections-only contract alignment shipped in the
 
 ## Block 9 — PDF export
 
-Status: **pending**
+Status: **done** (backend PR #59, UI PR #61 merged)
 
-- [ ] FastAPI endpoint `GET /sessions/{id}/export.pdf`.
-- [ ] HTML render of the generated session.
-- [ ] PDF conversion with WeasyPrint or Playwright.
-- [ ] Clean layout, readable at the table.
-- [ ] Basic test: the endpoint returns `application/pdf`.
+- [x] FastAPI endpoint `GET /sessions/{id}/export.pdf`.
+- [x] HTML render of the generated session.
+- [x] PDF conversion with WeasyPrint or Playwright.
+- [x] Clean layout, readable at the table.
+- [x] Basic test: the endpoint returns `application/pdf` (`tests/sessions/test_pdf_export.py`).
 
 ---
 
 ## Block 10 — Testing and quality (if needed)
 
-Status: **pending**
+Status: **done** — most criteria were satisfied incrementally during Blocks 5–9.
+Audit on 2026-07-13 against the live suite covered 12 of 14 criteria; the 2 residual
+gaps (prompt snapshots, `npcs`/`factions` RLS) were closed in the
+`chore/close-testing-gaps` change and verified green (prompt snapshots + RLS run against
+local Supabase).
 
 ### AI and prompt tests
 
-- [ ] Unit tests for prompt builders.
-- [ ] Unit tests for Pydantic schemas.
-- [ ] Tests for `GenerateNextSessionUseCase` with `FakeLlmProvider`.
-- [ ] LLM JSON validation: valid case, invalid case and fallback.
-- [ ] Snapshot tests for main prompts.
+- [x] Unit tests for prompt builders (`tests/generation/test_prompts.py`,
+  `tests/generation/test_regenerate_prompts.py`, `tests/sessions/test_prompts_language.py`).
+- [x] Unit tests for Pydantic schemas (`tests/generation/test_contracts.py`,
+  `tests/sessions/test_contracts.py`, `tests/campaigns/test_schema.py`, `tests/test_schema.py`).
+- [x] Tests for `GenerateNextSessionUseCase` with `FakeLlmProvider`
+  (`tests/generation/test_generate_session.py`).
+- [x] LLM JSON validation: valid case, invalid case and fallback (`tests/test_json_guard.py`,
+  `tests/test_fallback.py`, `tests/test_llm_errors.py`; valid/invalid persistence covered in
+  `tests/generation/test_generate_session.py`).
+- [x] Snapshot tests for main prompts (`tests/test_prompt_snapshots.py`, syrupy) — frozen
+  snapshots of the four core prompts (`extract_campaign_v1`, `generate_session_v2`,
+  `suggest_memory_facts_v1`, `summarize_campaign_v1`). The per-section regenerate prompts stay
+  covered by `tests/generation/test_regenerate_prompts.py`.
 
 ### Memory layer tests (required — ADR-08)
 
-- [ ] A `MemorySuggestion` is not auto-saved as a `MemoryFact` — the suggestion endpoint
-  returns suggestions without writing to `memory_facts`.
-- [ ] Accept suggestion → `POST /campaigns/{id}/memory-facts` creates an active `MemoryFact`.
-- [ ] Reject suggestion → no `MemoryFact` is created (no request is sent).
-- [ ] Edit suggestion before accept → the edited content is saved as the `MemoryFact`,
-  not the original AI suggestion.
-- [ ] Generation context includes active `MemoryFacts` and excludes unaccepted suggestions.
+- [x] A `MemorySuggestion` is not auto-saved as a `MemoryFact` — the suggestion endpoint
+  returns suggestions without writing to `memory_facts` (`tests/sessions/test_suggest_memories.py`;
+  frontend "dismisses a suggestion without creating a memory fact").
+- [x] Accept suggestion → `POST /campaigns/{id}/memory-facts` creates an active `MemoryFact`
+  (`tests/memory/test_memory_routes.py::test_create_memory_fact_persists_active_fact`).
+- [x] Reject suggestion → no `MemoryFact` is created (no request is sent) — memory-review page
+  test "dismisses a suggestion without creating a memory fact".
+- [x] Edit suggestion before accept → the edited content is saved as the `MemoryFact`,
+  not the original AI suggestion — memory-review page test "accepts, edits, dismisses, and
+  retires with busy-safe calls".
+- [x] Generation context includes active `MemoryFacts` and excludes unaccepted suggestions
+  (`tests/generation/test_context_builder.py::test_build_prompt_context_excludes_suggestions_and_private_notes`).
 
 ### Infrastructure tests
 
-- [ ] Repository tests against local Supabase or mocks.
-- [ ] Auth dependency tests with valid and invalid JWTs.
-- [ ] Minimal RLS tests in Supabase (`campaigns`, `npcs`, `factions`, `sessions`,
-  `memory_facts`).
-- [ ] Basic PDF export test.
+- [x] Repository tests against local Supabase or mocks (`tests/campaigns/test_repository.py`,
+  `tests/sessions/test_repository.py`, `tests/generation/test_repository.py`).
+- [x] Auth dependency tests with valid and invalid JWTs (`tests/test_jwt_auth.py`,
+  `tests/test_security.py`).
+- [x] Minimal RLS tests in Supabase (`campaigns`, `npcs`, `factions`, `sessions`,
+  `memory_facts`) — `tests/test_rls.py` now covers all five tables (owner CRUD + non-owner
+  select/insert/update denial for `npcs` and `factions`), verified against local Supabase.
+- [x] Basic PDF export test (`tests/sessions/test_pdf_export.py`).
 
 ### Block 11 - Handoff cleanup (if needed) and docs update
 
