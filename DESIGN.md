@@ -205,7 +205,7 @@ Imagery, where needed (none required for MVP), should be striped placeholder blo
 
 - The tokens are **framework-agnostic** — plain CSS custom properties + classes, ported into Tailwind `@theme` in `apps/web`. Keep the token names and the five DNA rules when extending them.
 - Motion/texture are attribute/variable driven. Theme settings are post-MVP and should not be scaffolded in Block 0.
-- The wordmark is type-set, not a logo file: `Lazy ` (ink) + `Lands` (emerald), Source Serif 4 600. A standalone identity asset exists at `docs/assets/brand/lazy-lands-linkedin-card.png`.
+- The wordmark is type-set, not a logo file: `Lazy` (ink) + `Lands` (emerald) separated by a space, Source Serif 4 600. A standalone identity asset exists at `docs/assets/brand/lazy-lands-linkedin-card.png`.
 
 ---
 

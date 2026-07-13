@@ -13,7 +13,7 @@ shipped UI.
 | `/`                                   | `apps/web/app/[locale]/page.tsx`                                            | `LandingPage`, `AnnouncementBar`, `CookieBanner`                                   | Direct                                                                   |
 | `/login`                              | `apps/web/app/[locale]/login/page.tsx`                                      | Inline in `page.tsx` (`Button`, `Input`, `Label`, `Notice`)                         | Direct                                                                   |
 | `/register`                           | `apps/web/app/[locale]/register/page.tsx`                                   | Inline in `page.tsx`, `PasswordRequirements`                                        | Direct                                                                   |
-| `/campaigns`                          | `apps/web/app/[locale]/dashboard/page.tsx`                                  | `CampaignList`                                                                      | Path-diverged: list view ships at `/dashboard`                          |
+| `/dashboard`                          | `apps/web/app/[locale]/dashboard/page.tsx`                                  | `CampaignList`                                                                      | Campaign list — there is no `/campaigns` index route                          |
 | `/campaigns/new`                      | `apps/web/app/[locale]/campaigns/new/page.tsx`                              | Inline in `page.tsx`                                                                | Direct                                                                   |
 | `/campaigns/new/review`               | `apps/web/app/[locale]/campaigns/new/review/page.tsx`                       | Inline in `page.tsx`                                                                | Direct                                                                   |
 | `/campaigns/:id`                      | `apps/web/app/[locale]/campaigns/[id]/page.tsx`                             | `CampaignDetailView`                                                                | Direct                                                                   |
@@ -36,13 +36,13 @@ these already exist and reuse them; only build a new primitive if none fits.
 | -------------- | ------------------------------------------ | ---------------------------------------- | ------------------------------------------------ |
 | `AppHeader`    | App shell with top nav                     | route/campaign context via layout       | `apps/web/components/layout/app-header.tsx`      |
 | `Field`        | Form field wrapper with label, help, error | `label`, `optional?`, `help?`, `error?`  | `apps/web/components/ui/field.tsx`               |
-| `LoadingScribe`| Loading state with quill animation         | `title`, `sub`                          | `apps/web/components/ui/loading-scribe.tsx`      |
-| `Notice`       | Error/info/Scribe banner                   | `variant`, `action?`, `onAction?`       | `apps/web/components/ui/notice.tsx`              |
-| `EmptyState`   | Empty state with ornament + CTA            | `orn?`, `title`, `action?`, `onAction?` | `apps/web/components/ui/empty-state.tsx`         |
+| `LoadingScribe`| Loading state with quill animation         | `title?`, `caption?`                    | `apps/web/components/ui/loading-scribe.tsx`      |
+| `Notice`       | Error/info/Scribe banner                   | `variant?`, `ornament?`, `children`     | `apps/web/components/ui/notice.tsx`              |
+| `EmptyState`   | Empty state with ornament + CTA            | `title`, `description`, `action?`, `ornament?` | `apps/web/components/ui/empty-state.tsx`         |
 | `OriginBadge`  | Scribe vs edited provenance                | `origin` ("scribe" \| "edited")         | `apps/web/components/ui/origin-badge.tsx`        |
 | `Modal`        | Modal dialog                               | `title`, `onClose`, `footer?`           | `apps/web/components/ui/modal.tsx`               |
 | `StatLedger`   | Stat/metadata ledger row                   | items                                    | `apps/web/components/ui/stat-ledger.tsx`         |
-| `SectionHeader`| Section heading with kicker                | `kicker`, `title`                        | `apps/web/components/ui/section-header.tsx`      |
+| `SectionHeader`| Section heading with kicker                | `title`, `kicker?`, `description?`, `marker?`, `titleAs?` | `apps/web/components/ui/section-header.tsx`      |
 | `MarkdownBody` | Renders Scribe-generated markdown prose    | `content`                                | `apps/web/components/ui/markdown-body.tsx`       |
 
 ## Design System Quick Reference (DESIGN.md)

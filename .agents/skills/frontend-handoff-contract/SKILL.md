@@ -22,9 +22,9 @@ This skill is MANDATORY, not advisory. It defines a hard workflow that must be f
 1. **`DESIGN.md` + the shipped `apps/web/` screen define what to build.** For a screen with no shipped precedent, `DESIGN.md` + `PRODUCT.md` + the spec's handoff checklist are authoritative. If the spec contradicts the design system, flag the conflict — do not silently deviate.
 2. **Read before writing.** Never write a single line of implementation code before completing the Pre-Implementation phase below.
 3. **Self-review before declaring done.** Never report task completion before completing the Adversarial Self-Review phase below.
-4. **No copy placeholders.** Every field, label, state, and interaction from the handoff must exist in the implementation. "I'll add it later" is not acceptable.
+4. **No copy placeholders.** Every field, label, state, and interaction from the reference substrate (the shipped screen, `DESIGN.md`, or the spec's checklist) must exist in the implementation. "I'll add it later" is not acceptable.
 5. **Design tokens are non-negotiable.** Use CSS custom properties from DESIGN.md. Never hardcode colors, shadows, or border-radius.
-6. **Approved bug fixes and UX improvements can override handoff.** If a bug or improvement proves the prototype is ergonomically wrong, surface the contradiction to the user explicitly and follow the approved fix. Never silently deviate and never preserve a known bug just to match the handoff.
+6. **Approved bug fixes and UX improvements can override the reference.** If a bug or improvement proves the shipped screen is ergonomically wrong, surface the contradiction to the user explicitly and follow the approved fix. Never silently deviate and never preserve a known bug just to match the shipped screen.
 
 ## Execution Steps
 
@@ -49,7 +49,7 @@ This skill is MANDATORY, not advisory. It defines a hard workflow that must be f
 
 - Build against the checklist. One item at a time.
 - Use existing design system components (shadcn/ui + custom Lazy Lands primitives).
-- Map handoff CSS classes to Tailwind + CSS custom properties:
+- Map the design-system `.ll-*` CSS classes (documented in `DESIGN.md`) to Tailwind + CSS custom properties:
   - `.ll-paper` → Card with `border-2 border-[var(--border)] shadow-[6px_6px_0_var(--shadow)] bg-[var(--paper)]`
   - `.ll-input` → Input with `border-[1.5px] border-dashed border-[var(--dotted)] rounded-none`
   - `.ll-label` → `font-mono text-[10px] font-semibold uppercase tracking-[0.1em]`
@@ -68,7 +68,7 @@ After implementation, perform this review. Do NOT skip. Do NOT abbreviate.
    - Is every state implemented? (loading, error, empty)
    - Is the copy exact? (compare character by character — do not paraphrase)
    - Is the layout structure identical? (grid columns, card wrappers, spacing)
-   - Are shared components used where the handoff uses them?
+   - Are shared components used where the reference substrate uses them?
 4. **Check design system compliance:**
    - Zero border-radius on everything?
    - Hard ink shadows (no blur)?
@@ -87,19 +87,19 @@ After implementation, perform this review. Do NOT skip. Do NOT abbreviate.
    - `data-motion="subtle"`: drop decorative entrances, keep action feedback?
    - `data-motion="off"`: remove all animations and transitions?
 6. **Generate a compliance report.** States are the most commonly-missed
-   category — you MUST enumerate every handoff state on its own line, never
+   category — you MUST enumerate every reference state on its own line, never
    collapse them into a single "states: X/Z" score. A state that exists in the
-   handoff but not the implementation (or is implemented with a weaker pattern —
+   reference but not the implementation (or is implemented with a weaker pattern —
    e.g. a disabled button instead of a full loading takeover) is a FAIL, not a
    rounding error.
    ```
-   ## Handoff Compliance Report
+   ## Compliance Report
    - Structure: X/Y elements match
-   - Copy: X/Y strings exact (list any paraphrased/generic vs handoff voice)
-   - States (one row PER handoff state — loading, error, empty, success, …):
-     - loading: handoff = <what it shows> | impl = <what it shows> | MATCH/GAP
-     - error:   handoff = <…>            | impl = <…>            | MATCH/GAP
-     - empty:   handoff = <…>            | impl = <…>            | MATCH/GAP
+   - Copy: X/Y strings exact (list any paraphrased/generic vs the reference voice)
+   - States (one row PER reference state — loading, error, empty, success, …):
+     - loading: reference = <what it shows> | impl = <what it shows> | MATCH/GAP
+     - error:   reference = <…>            | impl = <…>            | MATCH/GAP
+     - empty:   reference = <…>            | impl = <…>            | MATCH/GAP
    - Design tokens: X violations found
    - Motion: X/Y animations implemented (list missing)
    - VERDICT: PASS (>=90% match AND every state MATCH) / FAIL
@@ -111,8 +111,8 @@ After implementation, perform this review. Do NOT skip. Do NOT abbreviate.
 | Situation                                    | Action                                                                                                                                                                                                                                                                                          |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | No shipped precedent (new screen)            | Build from `DESIGN.md` + `PRODUCT.md` + the spec's handoff checklist; do not hard-stop.                                                                                                                                                                                                          |
-| Spec/tests contradict handoff                | HARD STOP. Surface both to the user and ask which wins. NEVER self-resolve in favor of the spec or of already-passing tests — passing tests that encode a non-handoff behavior are evidence of the gap, not authority over it. Existing green tests do not exempt a screen from handoff review. |
-| Approved bug/improvement contradicts handoff | HARD STOP. Tell the user the handoff would be contradicted, explain why the bug/improvement should win, and proceed only after the user-visible decision is recorded in the issue, PR, SDD artifact, or docs.                                                                                   |
+| Spec/tests contradict the reference          | HARD STOP. Surface both to the user and ask which wins. NEVER self-resolve in favor of the spec or of already-passing tests — passing tests that encode a non-reference behavior are evidence of the gap, not authority over it. Existing green tests do not exempt a screen from reference review. |
+| Approved bug/improvement contradicts the reference | HARD STOP. Tell the user the reference would be contradicted, explain why the bug/improvement should win, and proceed only after the user-visible decision is recorded in the issue, PR, SDD artifact, or docs. |
 | Shared component missing                     | Build it as reusable component before the page.                                                                                                                                                                                                                                                 |
 | Self-review finds >2 CRITICAL gaps           | Fix all before reporting. Report the fixes made.                                                                                                                                                                                                                                                |
 | Unsure about a design detail                 | Check `DESIGN.md` first, then `route-map.md`'s quick-reference, then a shipped sibling screen.                                                                                                                                                                                                   |
@@ -124,7 +124,7 @@ When reporting completion, include:
 1. The Phase 1 checklist (with all items checked).
 2. The Phase 3 compliance report.
 3. List of files created or modified.
-4. Any deviations from handoff with explicit justification.
+4. Any deviations from the reference with explicit justification.
 
 ## References
 

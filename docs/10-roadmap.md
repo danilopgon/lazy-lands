@@ -322,7 +322,7 @@ local Supabase).
 
 Status: **done**
 
-- [x] Pruned the `handoff` prototype directory to zero physical files (18 prototype files removed; the brand PNG was
+- [x] Pruned the `handoff` prototype directory to zero physical files (17 prototype files removed and the brand PNG
   relocated to `docs/assets/brand/`). Reference value is preserved in `DESIGN.md`, the
   `frontend-handoff-contract` skill's `route-map.md`, and the shipped `apps/web/` app itself —
   nothing was lost, only repointed onto the real implementation.
