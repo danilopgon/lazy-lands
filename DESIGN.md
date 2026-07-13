@@ -4,10 +4,10 @@
 > tokens, type, components and motion. It is a **letterpress-meets-editorial** system:
 > the warmth and legibility of a printed chronicle, on the structural bones of a woodcut print.
 >
-> Reference implementation: `handoff/Lazy Lands Prototype.html` (+ `app/chronicle.css`, the
-> single stylesheet that encodes the full prototype system). Production implementation target:
-> `apps/web`, a Next.js App Router frontend that ports this system through TailwindCSS,
-> CSS custom properties and shadcn/ui primitives.
+> Source of truth for implementation: the shipped `apps/web` Next.js App Router frontend, which
+> ports this system through TailwindCSS, CSS custom properties and shadcn/ui primitives. See
+> `.agents/skills/frontend-handoff-contract/references/route-map.md` for the route-to-screen
+> mapping.
 
 ---
 
@@ -126,7 +126,7 @@ Three families, loaded from Google Fonts. **Load all three or the system breaks*
 
 ## 6. Core components
 
-All prefixed `.ll-`. Full CSS in `app/chronicle.css`. Highlights:
+All prefixed `.ll-`. Full CSS lives in the shipped `apps/web` Tailwind/CSS layer. Highlights:
 
 ### Buttons `.ll-btn`
 
@@ -176,7 +176,7 @@ Hard-bordered, press _into_ their own shadow on click (the letterpress gesture).
 ## 7. Motion — “the press in action”
 
 Motion is a first-class part of the brand: every action behaves like ink hitting paper.
-All gated by `data-motion` (§2). Keyframes live at the bottom of `chronicle.css`.
+All gated by `data-motion` (§2). Keyframes live in the shipped `apps/web` CSS layer.
 
 | Moment               | Class                           | Behavior                                                                                     |
 | -------------------- | ------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -203,16 +203,15 @@ Imagery, where needed (none required for MVP), should be striped placeholder blo
 
 ## 9. Implementation notes for the build
 
-- `app/chronicle.css` is **framework-agnostic** — it’s plain CSS custom properties + classes. Port the tokens to Tailwind `@theme` / CSS modules / styled-components as you like, but keep the token names and the five DNA rules.
-- The prototype is React 18 + Babel-in-browser purely for fast iteration. **Do not ship that setup** — it’s a fidelity reference, not a starting codebase. Rebuild components in your real stack against these tokens.
+- The tokens are **framework-agnostic** — plain CSS custom properties + classes, ported into Tailwind `@theme` in `apps/web`. Keep the token names and the five DNA rules when extending them.
 - Motion/texture are attribute/variable driven. Theme settings are post-MVP and should not be scaffolded in Block 0.
-- The wordmark is type-set, not a logo file: `Lazy ` (ink) + `Lands` (emerald), Source Serif 4 600. A standalone identity asset exists at `handoff/Lazy Lands — LinkedIn Card.png`.
+- The wordmark is type-set, not a logo file: `Lazy` (ink) + `Lands` (emerald) separated by a space, Source Serif 4 600. A standalone identity asset exists at `docs/assets/brand/lazy-lands-linkedin-card.png`.
 
 ---
 
 ## 10. Next.js + Tailwind implementation guide
 
-`handoff/` is temporary prototype reference material. `DESIGN.md` is the durable source for production implementation. Do not copy prototype HTML, inline styles, or Babel-in-browser code into the Next.js app; rebuild with React components, TailwindCSS, and shadcn/ui primitives.
+`DESIGN.md` is the durable source for production implementation. Build with React components, TailwindCSS, and shadcn/ui primitives, following the tokens and DNA rules above.
 
 ### Current `apps/web` status
 
@@ -311,9 +310,9 @@ Always respect `prefers-reduced-motion: reduce`. Entrance animation is decorativ
 
 ---
 
-## 11. Landing page layout deviations from handoff
+## 11. Landing page layout deviations from the original prototype
 
-The handoff (`handoff/`) is a starting reference, not a final spec. The following deviations were introduced in `chore/design-cleanup` to address generic AI-default layout patterns while staying within the Print Chronicle system.
+The original prototype design was a starting reference, not a final spec. The following deviations were introduced in `chore/design-cleanup` to address generic AI-default layout patterns while staying within the Print Chronicle system.
 
 ### 11.1 Pillars section — step indicator redesign
 

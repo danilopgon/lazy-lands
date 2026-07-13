@@ -58,7 +58,6 @@ Use this backlog to avoid losing decisions while protecting the TFM MVP from sco
 | Item | Why it matters | Source | Notes |
 |---|---|---|---|
 | `campaign-card` empty tone/factions copy | It renders an em dash for empty tone/factions, which violates the project UI copy preference against em dashes. | Engram #547 | Cleanup only; not a blocker. |
-| Frontend handoff route map for MemoryReview | `.agents/skills/frontend-handoff-contract/references/route-map.md` points MemoryReview to `views-review.jsx`, but the component lives in `handoff/app/views-sessions.jsx`. | Engram #547 | Fix before starting memory review UI work. |
 | Arc status documentation drift | `docs/03-domain-model.md` still lists old arc statuses: `open`, `resolved`, `dropped`. Block 6 uses `active`, `dormant`, `resolved`, `discarded`. | Engram #547; Block 6 implementation context | Align the domain docs during a docs sweep. |
 
 ## Guardrails

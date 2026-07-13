@@ -9,7 +9,6 @@ pnpm-lock.yaml
 coverage
 
 # Pre-existing reference files - not managed by Prettier
-handoff/
 docs/
 .atl/
 openspec/

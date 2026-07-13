@@ -6,6 +6,6 @@ Use these conventions when the work needs a stable rule that should outlive a si
 | --- | --- |
 | Code comments, docstrings, and TSDoc/JSDoc | `documentation.md` |
 | Bug/improvement issue tracking and PR links | `issue-pr-tracking.md` |
-| Handoff deviations caused by approved bugs or UX improvements | `handoff-deviations.md` |
+| Deviations from the shipped-screen/DESIGN.md reference caused by approved bugs or UX improvements | `handoff-deviations.md` |
 
 Keep each convention focused. If a new rule does not fit an existing file, create a new convention doc instead of appending unrelated policy to another topic.
