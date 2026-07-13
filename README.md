@@ -83,7 +83,6 @@ lazy-lands/
 |   |-- tests/              # pytest test suite
 |-- supabase/               # Migrations, config, seed
 |-- docs/                   # SDD technical documentation
-|-- handoff/                # HTML prototypes (visual reference only)
 |-- .github/workflows/      # CI pipeline
 |-- PRODUCT.md              # Product source of truth
 |-- DESIGN.md               # Design system and tokens
@@ -373,13 +372,12 @@ Demo password: _Pending_
 
 ## Documentation
 
-| Document                           | Purpose                                      |
-| ---------------------------------- | -------------------------------------------- |
-| [PRODUCT.md](./PRODUCT.md)         | Product principles, flow, entity model       |
-| [DESIGN.md](./DESIGN.md)           | Design system, tokens, components, motion    |
-| [docs/README.md](./docs/README.md) | Documentation index and reading guide        |
-| [handoff/](./handoff/)             | Pure HTML prototypes (visual reference only) |
-| [AGENTS.md](./AGENTS.md)           | Instructions for AI coding agents            |
+| Document                           | Purpose                                   |
+| ---------------------------------- | ----------------------------------------- |
+| [PRODUCT.md](./PRODUCT.md)         | Product principles, flow, entity model    |
+| [DESIGN.md](./DESIGN.md)           | Design system, tokens, components, motion |
+| [docs/README.md](./docs/README.md) | Documentation index and reading guide     |
+| [AGENTS.md](./AGENTS.md)           | Instructions for AI coding agents         |
 
 ---
 

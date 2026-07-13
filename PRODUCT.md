@@ -139,7 +139,7 @@ The prototype ships a coherent example campaign — reuse it for demos, fixtures
 - **Arcs:** Recover the stolen anti-dragon plans · Robert Herman’s revenge · Gnomengarde arcane instability · Cryovain’s pressure over the region.
 - **Memories (accepted):** Herman publicly humiliated, not yet retaliated · two PCs earned Halia’s favor, two damaged it · the anti-dragon weapon needs a stable arcane core · the Gnomengarde instability may run deeper · the party spared a manticore that may return.
 
-Full structured data: `handoff/app/data.js` in the prototype bundle.
+This is illustrative sample data for reference, not a stored fixture in the shipped app.
 
 ---
 

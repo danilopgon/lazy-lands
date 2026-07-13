@@ -32,6 +32,7 @@ complex relationship graphs, visual timeline, and advanced memory compiler.
 | 8 | Session generation and editing | done |
 | 9 | PDF export | done |
 | 10 | Testing and quality | done |
+| 11 | Handoff cleanup and docs update | done |
 
 ---
 
@@ -317,10 +318,16 @@ local Supabase).
   select/insert/update denial for `npcs` and `factions`), verified against local Supabase.
 - [x] Basic PDF export test (`tests/sessions/test_pdf_export.py`).
 
-### Block 11 - Handoff cleanup (if needed) and docs update
+### Block 11 - Handoff cleanup and docs update
 
-Status: **pending**
+Status: **done**
 
-- [ ] Remove handoff code and update the docs to reflect the final architecture and flow if it changed during development and the specs didn't match the final implementation.
-- [ ] Update the docs to reflect the final architecture and flow if it changed during development and the specs didn't match the final implementation.
-- [ ] Update README and other main documentation with a fact check and final review of the flow, architecture, and any new features or changes that were made during development.
+- [x] Pruned the `handoff` prototype directory to zero physical files (18 prototype files removed; the brand PNG was
+  relocated to `docs/assets/brand/`). Reference value is preserved in `DESIGN.md`, the
+  `frontend-handoff-contract` skill's `route-map.md`, and the shipped `apps/web/` app itself —
+  nothing was lost, only repointed onto the real implementation.
+- [x] Updated the docs to reflect the final architecture and flow (AGENTS.md, DESIGN.md,
+  README.md, docs/README.md, PRODUCT.md, `docs/conventions/**`, `.prettierignore`) now that
+  every MVP screen has shipped under `apps/web/`.
+- [x] Reviewed README and other main documentation for stale handoff references and corrected
+  them to point at the shipped app and design system.

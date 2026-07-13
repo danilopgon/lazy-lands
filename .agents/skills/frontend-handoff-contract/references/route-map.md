@@ -1,48 +1,49 @@
 # Handoff Route Map
 
-Maps app routes to the handoff prototype file containing the screen implementation.
+Maps app routes to their shipped implementation under `apps/web/app/[locale]/**`.
 
-## Route → File → Component
+## Route → Shipped screen → Presentational component(s) → Notes
 
-Prototype copy in `handoff/app/*.jsx` is authored in English. Production UI tasks must preserve the
-handoff meaning and layout while localizing all user-facing production copy through the English and
-Spanish message catalogs; do not leave prototype English literals hard-coded in shipped UI.
+Production UI copy is authored in English and localized through the English and Spanish message
+catalogs (`apps/web/messages/**` via `next-intl`); do not leave hard-coded English literals in
+shipped UI.
 
-| Route                                 | Handoff File          | Component(s)                |
-| ------------------------------------- | --------------------- | --------------------------- |
-| `/`                                   | `views-landing.jsx`   | `Landing`                   |
-| `/login`                              | `views-public.jsx`    | `Login`                     |
-| `/register`                           | `views-public.jsx`    | `Register`                  |
-| `/campaigns`                          | `views-dashboard.jsx` | `Dashboard`, `CampaignCard` |
-| `/campaigns/new`                      | `views-dashboard.jsx` | `NewCampaign`               |
-| `/campaigns/new/review`               | `views-review.jsx`    | `ExtractionReview`          |
-| `/campaigns/:id`                      | `views-detail.jsx`    | `CampaignDetail`            |
-| `/campaigns/:id/npcs`                 | `views-entities.jsx`  | `NpcsView`                  |
-| `/campaigns/:id/factions`             | `views-entities.jsx`  | `FactionsView`              |
-| `/campaigns/:id/arcs`                 | `views-arcs.jsx`      | `ArcsView`                  |
-| `/campaigns/:id/sessions/new`         | `views-sessions.jsx`  | `LogSession`                |
-| `/campaigns/:id/memory/review`        | `views-sessions.jsx`  | `MemoryReview`              |
-| `/campaigns/:id/prepare`              | `views-prepare.jsx`   | `PrepareSession`            |
-| `/campaigns/:id/settings`             | `views-detail.jsx`    | `SettingsView`              |
-| `/campaigns/:id/sessions/:sid`        | `views-sessions.jsx`  | `GeneratedSession`          |
-| `/campaigns/:id/sessions/:sid/export` | `views-export.jsx`    | `ExportView`                |
+| Route                                 | Shipped screen                                                              | Component(s)                                                                       | Notes                                                                    |
+| -------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `/`                                   | `apps/web/app/[locale]/page.tsx`                                            | `LandingPage`, `AnnouncementBar`, `CookieBanner`                                   | Direct                                                                   |
+| `/login`                              | `apps/web/app/[locale]/login/page.tsx`                                      | Inline in `page.tsx` (`Button`, `Input`, `Label`, `Notice`)                         | Direct                                                                   |
+| `/register`                           | `apps/web/app/[locale]/register/page.tsx`                                   | Inline in `page.tsx`, `PasswordRequirements`                                        | Direct                                                                   |
+| `/campaigns`                          | `apps/web/app/[locale]/dashboard/page.tsx`                                  | `CampaignList`                                                                      | Path-diverged: list view ships at `/dashboard`                          |
+| `/campaigns/new`                      | `apps/web/app/[locale]/campaigns/new/page.tsx`                              | Inline in `page.tsx`                                                                | Direct                                                                   |
+| `/campaigns/new/review`               | `apps/web/app/[locale]/campaigns/new/review/page.tsx`                       | Inline in `page.tsx`                                                                | Direct                                                                   |
+| `/campaigns/:id`                      | `apps/web/app/[locale]/campaigns/[id]/page.tsx`                             | `CampaignDetailView`                                                                | Direct                                                                   |
+| `/campaigns/:id/npcs`                 | `apps/web/app/[locale]/campaigns/[id]/npcs/page.tsx`                        | `EntityListScreen`, `EntitySearch`, `NpcList`, `NpcModal`, `ConfirmDeleteModal`      | Direct                                                                   |
+| `/campaigns/:id/factions`             | `apps/web/app/[locale]/campaigns/[id]/factions/page.tsx`                    | `EntityListScreen`, `EntitySearch`, `FactionList`, `FactionModal`, `ConfirmDeleteModal` | Direct                                                                |
+| `/campaigns/:id/arcs`                 | `apps/web/app/[locale]/campaigns/[id]/arcs/page.tsx`                        | `EntityListScreen`, `EntityFilterBar`, `ArcList`, `ArcModal`, `ConfirmDeleteModal`  | Direct                                                                   |
+| `/campaigns/:id/sessions/new`         | `apps/web/app/[locale]/campaigns/[id]/sessions/new/page.tsx`                | `LogSessionForm`                                                                    | Direct                                                                   |
+| `/campaigns/:id/memory/review`        | `apps/web/app/[locale]/campaigns/[id]/memory/review/page.tsx`               | Inline in `page.tsx` (`EmptyState`, `LoadingScribe`, `Notice`, `OriginBadge`)        | Was stale (previously pointed at the wrong prototype file)              |
+| `/campaigns/:id/prepare`              | `apps/web/app/[locale]/campaigns/[id]/prepare/page.tsx`                     | `PrepareSessionView`                                                                | Direct                                                                   |
+| `/campaigns/:id/settings`             | — not shipped —                                                             | —                                                                                    | Build from `DESIGN.md` + `PRODUCT.md` (no shipped precedent)            |
+| `/campaigns/:id/sessions/:sid`        | `apps/web/app/[locale]/campaigns/[id]/sessions/[sessionId]/page.tsx`        | `GeneratedSessionView`                                                              | Was stale (previously pointed at the wrong prototype file)              |
+| `/campaigns/:id/sessions/:sid/export` | `apps/web/app/[locale]/campaigns/[id]/sessions/[sessionId]/export/page.tsx` | `SessionExportView`                                                                 | Direct                                                                   |
 
-## Shared Components (handoff/app/ui.jsx)
+## Shared Components (`apps/web/components/**`)
 
-These components appear across screens. When implementing a screen, check if the handoff uses any of these and replicate their behavior:
+These production primitives appear across screens. When implementing a screen, check if any of
+these already exist and reuse them; only build a new primitive if none fits.
 
-| Component      | Purpose                                    | Key Props                               |
-| -------------- | ------------------------------------------ | --------------------------------------- |
-| `Shell`        | App shell with top nav                     | `route`, `campaignId?`                  |
-| `Kicker`       | Step indicator / eyebrow text              | children (text)                         |
-| `Field`        | Form field wrapper with label, help, error | `label`, `optional?`, `help?`, `error?` |
-| `Loading`      | Loading state with quill animation         | `title`, `sub`                          |
-| `ErrorNotice`  | Error banner with retry                    | `onRetry?`, `retryLabel?`               |
-| `ScribeNotice` | AI/proposal notice banner                  | `action?`, `onAction?`                  |
-| `EmptyState`   | Empty state with ornament + CTA            | `orn?`, `title`, `action?`, `onAction?` |
-| `OriginBadge`  | Scribe vs edited provenance                | `origin` ("scribe" \| "edited")         |
-| `Modal`        | Modal dialog                               | `title`, `onClose`, `footer?`           |
-| `Toast`        | Transient notification                     | `msg`                                   |
+| Component      | Purpose                                    | Key Props                               | Source                                          |
+| -------------- | ------------------------------------------ | ---------------------------------------- | ------------------------------------------------ |
+| `AppHeader`    | App shell with top nav                     | route/campaign context via layout       | `apps/web/components/layout/app-header.tsx`      |
+| `Field`        | Form field wrapper with label, help, error | `label`, `optional?`, `help?`, `error?`  | `apps/web/components/ui/field.tsx`               |
+| `LoadingScribe`| Loading state with quill animation         | `title`, `sub`                          | `apps/web/components/ui/loading-scribe.tsx`      |
+| `Notice`       | Error/info/Scribe banner                   | `variant`, `action?`, `onAction?`       | `apps/web/components/ui/notice.tsx`              |
+| `EmptyState`   | Empty state with ornament + CTA            | `orn?`, `title`, `action?`, `onAction?` | `apps/web/components/ui/empty-state.tsx`         |
+| `OriginBadge`  | Scribe vs edited provenance                | `origin` ("scribe" \| "edited")         | `apps/web/components/ui/origin-badge.tsx`        |
+| `Modal`        | Modal dialog                               | `title`, `onClose`, `footer?`           | `apps/web/components/ui/modal.tsx`               |
+| `StatLedger`   | Stat/metadata ledger row                   | items                                    | `apps/web/components/ui/stat-ledger.tsx`         |
+| `SectionHeader`| Section heading with kicker                | `kicker`, `title`                        | `apps/web/components/ui/section-header.tsx`      |
+| `MarkdownBody` | Renders Scribe-generated markdown prose    | `content`                                | `apps/web/components/ui/markdown-body.tsx`       |
 
 ## Design System Quick Reference (DESIGN.md)
 
@@ -85,7 +86,7 @@ These components appear across screens. When implementing a screen, check if the
 ### Component Patterns
 
 | Pattern                            | Implementation                                                                               |
-| ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Card (`.ll-paper`)                 | `border: 2px solid var(--border)`, `box-shadow: 6px 6px 0 var(--shadow)`, bg: `var(--paper)` |
 | Input (`.ll-input`)                | `border: 1.5px dashed var(--dotted)`, radius 0, focus: `border-color: var(--accent)`         |
 | Button primary (`.ll-btn.primary`) | bg: `var(--ink)`, color: `var(--paper)`, hard shadow, translate on hover                     |
@@ -104,7 +105,7 @@ Motion is gated by `data-motion` attribute on `<html>`. Three levels:
 Always respect `prefers-reduced-motion: reduce`.
 
 | Moment           | Class                           | Behavior                                  | Tailwind/CSS                                        |
-| ---------------- | ------------------------------- | ----------------------------------------- | --------------------------------------------------- |
+| ---------------- | ------------------------------- | ----------------------------------------- | ----------------------------------------------------- |
 | Route change     | `.ll-view-enter`                | Page-turn: fade + 10px rise, 0.34s        | `animate-[fadeInRise_0.34s_ease-out]`               |
 | Section reveal   | `.ll-rule-anim`                 | Ink rule draws left→right                 | `animate-[ruleDraw_0.6s_ease-out]`                  |
 | Element entrance | `.ll-rise`                      | Subtle 8px rise + fade                    | `animate-[fadeInRise_0.3s_ease-out]`                |
@@ -119,7 +120,7 @@ Always respect `prefers-reduced-motion: reduce`.
 - `:active`: fully seats — `translate(3px, 3px)`, shadow becomes `0 0 0`
 - Transition: `transform 0.1s ease, box-shadow 0.1s ease`
 
-**Keyframes** (define in `globals.css` or component CSS):
+**Keyframes** (defined in `apps/web/app/globals.css` / component CSS):
 
 ```css
 @keyframes fadeInRise {

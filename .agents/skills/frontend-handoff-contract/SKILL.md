@@ -1,6 +1,6 @@
 ---
 name: frontend-handoff-contract
-description: 'Trigger: implementing frontend page, UI component, screen, or route. Mandatory handoff-first contract — read prototype, extract checklist, implement, adversarial self-review before completion.'
+description: 'Trigger: implementing frontend page, UI component, screen, or route. Mandatory handoff-first contract — read the shipped screen + `DESIGN.md`, extract checklist, implement, adversarial self-review before completion.'
 license: Apache-2.0
 metadata:
   author: gentleman-programming
@@ -12,14 +12,14 @@ metadata:
 Activate when ANY of these are true:
 
 - Implementing a page, screen, or route in `apps/web/`
-- Building or modifying a UI component that maps to a handoff prototype screen
+- Building or modifying a UI component that maps to a shipped screen or a new screen with a design precedent
 - Any SDD task that touches frontend rendering
 
 This skill is MANDATORY, not advisory. It defines a hard workflow that must be followed in order. Skipping steps is not permitted.
 
 ## Hard Rules
 
-1. **Handoff is the source of truth.** `DESIGN.md` + `handoff/app/` define what to build. If the spec says one thing but the handoff shows another, flag the conflict — do not silently deviate.
+1. **`DESIGN.md` + the shipped `apps/web/` screen define what to build.** For a screen with no shipped precedent, `DESIGN.md` + `PRODUCT.md` + the spec's handoff checklist are authoritative. If the spec contradicts the design system, flag the conflict — do not silently deviate.
 2. **Read before writing.** Never write a single line of implementation code before completing the Pre-Implementation phase below.
 3. **Self-review before declaring done.** Never report task completion before completing the Adversarial Self-Review phase below.
 4. **No copy placeholders.** Every field, label, state, and interaction from the handoff must exist in the implementation. "I'll add it later" is not acceptable.
@@ -31,11 +31,11 @@ This skill is MANDATORY, not advisory. It defines a hard workflow that must be f
 ### Phase 1: Pre-Implementation (BEFORE writing code)
 
 1. **Identify the route** being implemented (e.g., `/campaigns/new`).
-2. **Read `references/route-map.md`** to find the handoff file and component name.
-3. **Read the handoff component source** (e.g., `handoff/app/views-dashboard.jsx` lines containing the target component).
-4. **Read `handoff/app/ui.jsx`** to understand shared components used (Field, Loading, ErrorNotice, etc.).
+2. **Read `references/route-map.md`** to find the shipped screen file and component name (or confirm it is marked `— not shipped —`).
+3. **Read the shipped screen source** (the `page.tsx` + its presentational components under `apps/web/components/**`). If there is no shipped precedent, read the nearest shipped sibling screen instead and skip this step's exact-file requirement.
+4. **Read the shared production primitives** under `apps/web/components/**` referenced in `route-map.md`'s Shared Components table (Field, Notice, LoadingScribe, etc.).
 5. **Read `DESIGN.md`** sections relevant to the screen (tokens, typography, component patterns).
-6. **Extract a checklist** from the handoff. Write it down explicitly:
+6. **Extract a checklist** from the shipped screen (or, for a new screen, from `DESIGN.md` + `PRODUCT.md` + the spec's handoff checklist + the nearest shipped sibling). Write it down explicitly:
    - [ ] Every field (label, type, required/optional, placeholder, validation)
    - [ ] Layout structure (grid, columns, containers, cards)
    - [ ] Copy text (kicker, h1, subtitle, labels, button text — exact strings)
@@ -43,7 +43,7 @@ This skill is MANDATORY, not advisory. It defines a hard workflow that must be f
    - [ ] Interactions (navigation, form submission, validation timing)
    - [ ] Shared components used (Field, Loading, ErrorNotice, etc.)
    - [ ] Design tokens referenced (colors, shadows, typography)
-   - [ ] Motion requirements (entrance animations, action feedback, transitions — check if handoff uses `.ll-view-enter`, `.ll-rise`, `.ll-stamp`, `.ll-strike`, `.ll-quill`, button press physics)
+   - [ ] Motion requirements (entrance animations, action feedback, transitions — check if the reference substrate uses `.ll-view-enter`, `.ll-rise`, `.ll-stamp`, `.ll-strike`, `.ll-quill`, button press physics)
 
 ### Phase 2: Implementation
 
@@ -55,13 +55,13 @@ This skill is MANDATORY, not advisory. It defines a hard workflow that must be f
   - `.ll-label` → `font-mono text-[10px] font-semibold uppercase tracking-[0.1em]`
   - `.ll-kicker` → `font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]`
   - `.ll-btn.accent` → Button with `bg-[var(--accent)] text-white shadow-[4px_4px_0_var(--shadow)] hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[2px_2px_0_var(--shadow)]`
-- If a shared component from `ui.jsx` is needed (Loading, ErrorNotice, Field, etc.) and does not exist in the codebase yet, implement it as a reusable component first.
+- If a shared production primitive under `apps/web/components/**` is needed (LoadingScribe, Notice, Field, etc.) and does not exist in the codebase yet, implement it as a reusable component first.
 
 ### Phase 3: Adversarial Self-Review (MANDATORY before declaring done)
 
 After implementation, perform this review. Do NOT skip. Do NOT abbreviate.
 
-1. **Re-read the handoff component** (the same file from Phase 1).
+1. **Re-read the reference substrate** (the shipped sibling/precedent screen + `DESIGN.md` from Phase 1).
 2. **Re-read your implementation** side by side.
 3. **Check every checklist item** from Phase 1:
    - Is every field present? (name, type, placeholder, validation, required/optional)
@@ -110,12 +110,12 @@ After implementation, perform this review. Do NOT skip. Do NOT abbreviate.
 
 | Situation                                    | Action                                                                                                                                                                                                                                                                                          |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Handoff file not found for route             | Stop. Ask user which handoff file to use.                                                                                                                                                                                                                                                       |
+| No shipped precedent (new screen)            | Build from `DESIGN.md` + `PRODUCT.md` + the spec's handoff checklist; do not hard-stop.                                                                                                                                                                                                          |
 | Spec/tests contradict handoff                | HARD STOP. Surface both to the user and ask which wins. NEVER self-resolve in favor of the spec or of already-passing tests — passing tests that encode a non-handoff behavior are evidence of the gap, not authority over it. Existing green tests do not exempt a screen from handoff review. |
 | Approved bug/improvement contradicts handoff | HARD STOP. Tell the user the handoff would be contradicted, explain why the bug/improvement should win, and proceed only after the user-visible decision is recorded in the issue, PR, SDD artifact, or docs.                                                                                   |
 | Shared component missing                     | Build it as reusable component before the page.                                                                                                                                                                                                                                                 |
 | Self-review finds >2 CRITICAL gaps           | Fix all before reporting. Report the fixes made.                                                                                                                                                                                                                                                |
-| Unsure about a design detail                 | Check `DESIGN.md` first, then `handoff/app/chronicle.css` for the exact CSS.                                                                                                                                                                                                                    |
+| Unsure about a design detail                 | Check `DESIGN.md` first, then `route-map.md`'s quick-reference, then a shipped sibling screen.                                                                                                                                                                                                   |
 
 ## Output Contract
 
@@ -128,8 +128,8 @@ When reporting completion, include:
 
 ## References
 
-- `references/route-map.md` — Route-to-handoff file mapping, shared component catalog, design token quick reference.
+- `references/route-map.md` — Route-to-shipped-screen mapping, shared component catalog, design token quick reference.
 - `DESIGN.md` — Full design system specification (tokens, typography, components, motion).
-- `handoff/app/chronicle.css` — Source stylesheet encoding the complete prototype system.
-- `handoff/app/ui.jsx` — Shared prototype components (Field, Loading, ErrorNotice, Shell, etc.).
+- `apps/web/components/**` — Shared production primitives (Field, Notice, LoadingScribe, Modal, etc.).
+- `apps/web/app/[locale]/**` — Shipped screens (the reference substrate for regression/parity work).
 - `PRODUCT.md` — Product principles and entity model (for understanding what the screen does).
