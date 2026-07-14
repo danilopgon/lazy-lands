@@ -8,7 +8,9 @@
   --ink-soft: #2c2e29;
   --ink-2: #585c51;
   --ink-3: #8a8b7e;
-  --mute: #6b7066;
+  /* Darkened from #6b7066 to meet WCAG 2.2 AA (4.5:1) for the small mono labels
+     it drives on paper surfaces (was ~4.3:1 on --bg, ~4.0:1 on --paper-2). */
+  --mute: #5f6459;
   --line: #c9c0ac;
   --line-strong: #1a1c19;
   --dotted: #b7ae98;
