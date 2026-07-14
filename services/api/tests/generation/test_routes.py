@@ -13,7 +13,12 @@ from app.modules.generation.api.dependencies import provide_generate_next_sessio
 from app.modules.generation.application.contracts import GeneratedSessionOutput
 from app.modules.generation.application.errors import GenerationPersistenceError
 from app.shared.database import get_user_supabase_client
+from app.shared.generation_rate_limit import (
+    GenerationRateLimitError,
+    enforce_generation_rate_limit,
+)
 from app.shared.llm.dependencies import get_llm_provider
+from app.shared.llm.errors import ProviderRateLimitError
 from app.shared.llm.providers.fake import FakeLlmProvider
 from app.shared.security import AuthContext, get_auth_context
 
@@ -35,6 +40,7 @@ def client() -> TestClient:
 
 @pytest.fixture(autouse=True)
 def _clear_overrides():
+    app.dependency_overrides[enforce_generation_rate_limit] = lambda: None
     yield
     app.dependency_overrides.clear()
 
@@ -184,6 +190,45 @@ def test_generate_session_route_maps_persistence_error_to_retryable_409(
     assert response.status_code == 409
     assert response.json() == {
         "error": "Could not save the generated session. Please retry.",
+        "retryable": True,
+    }
+
+
+def test_generate_session_route_returns_429_when_rate_limited(
+    client: TestClient,
+) -> None:
+    def reject_generation() -> None:
+        raise GenerationRateLimitError()
+
+    app.dependency_overrides[enforce_generation_rate_limit] = reject_generation
+    _authenticate()
+
+    response = client.post(f"/campaigns/{CAMPAIGN_ID}/generate-session", json={})
+
+    assert response.status_code == 429
+    assert response.json() == {
+        "error": "Too many generation requests. Please try again shortly.",
+        "retryable": True,
+    }
+
+
+def test_generate_session_route_hides_provider_rate_limit_details(
+    client: TestClient,
+) -> None:
+    class ProviderLimitedUseCase:
+        async def execute(self, campaign_id: str, direction: object) -> object:
+            raise ProviderRateLimitError("provider details must not escape")
+
+    app.dependency_overrides[provide_generate_next_session] = lambda: (
+        ProviderLimitedUseCase()
+    )
+    _authenticate()
+
+    response = client.post(f"/campaigns/{CAMPAIGN_ID}/generate-session", json={})
+
+    assert response.status_code == 429
+    assert response.json() == {
+        "error": "The Scribe is busy. Please try again shortly.",
         "retryable": True,
     }
 

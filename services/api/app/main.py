@@ -62,10 +62,13 @@ from app.modules.sessions.application.errors import (
 from app.shared.config import settings
 from app.shared.errors import (
     AppError,
+    generation_rate_limit_error_handler,
     http_error_handler,
     llm_output_validation_error_handler,
+    provider_rate_limit_error_handler,
 )
-from app.shared.llm.errors import LlmOutputValidationError
+from app.shared.generation_rate_limit import GenerationRateLimitError
+from app.shared.llm.errors import LlmOutputValidationError, ProviderRateLimitError
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +82,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_exception_handler(AppError, http_error_handler)
+app.add_exception_handler(
+    GenerationRateLimitError,
+    generation_rate_limit_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    ProviderRateLimitError,
+    provider_rate_limit_error_handler,  # type: ignore[arg-type]
+)
 # Starlette's add_exception_handler signature is typed against the generic
 # Exception handler shape; these handlers narrow to their specific exception
 # type for clarity (mirrors FastAPI's own documented pattern).

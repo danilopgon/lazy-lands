@@ -20,6 +20,7 @@ from app.modules.sessions.application.commands.regenerate_section import (
     RegenerateSectionCommand,
 )
 from app.modules.sessions.application.errors import SessionNotFoundError
+from app.shared.generation_rate_limit import enforce_generation_rate_limit
 from app.shared.security import AuthContext, get_auth_context
 
 SESSION_ID = "11111111-1111-4111-8111-111111111111"
@@ -70,6 +71,7 @@ def client() -> TestClient:
 
 @pytest.fixture(autouse=True)
 def _clear_overrides():
+    app.dependency_overrides[enforce_generation_rate_limit] = lambda: None
     yield
     app.dependency_overrides.clear()
 

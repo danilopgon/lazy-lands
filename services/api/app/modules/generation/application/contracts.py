@@ -188,11 +188,11 @@ class GenerateSessionResponse(BaseModel):
 class DirectionInput(BaseModel):
     """Reusable validator for direction DTOs."""
 
-    goal: str | None = None
-    tone: str | None = DEFAULT_TONE
-    pace: str | None = DEFAULT_PACE
-    difficulty: str | None = DEFAULT_DIFFICULTY
-    additional_instructions: str | None = None
+    goal: str | None = Field(default=None, max_length=1_000)
+    tone: str | None = Field(default=DEFAULT_TONE, max_length=200)
+    pace: str | None = Field(default=DEFAULT_PACE, max_length=200)
+    difficulty: str | None = Field(default=DEFAULT_DIFFICULTY, max_length=200)
+    additional_instructions: str | None = Field(default=None, max_length=2_000)
 
     @field_validator("goal", "additional_instructions", mode="before")
     @classmethod

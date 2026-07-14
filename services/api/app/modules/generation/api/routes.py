@@ -12,6 +12,7 @@ from app.modules.generation.api.schemas import (
 from app.modules.generation.application.generate_session import (
     GenerateNextSessionUseCase,
 )
+from app.shared.generation_rate_limit import enforce_generation_rate_limit
 from app.shared.security import get_current_user
 
 router = APIRouter(prefix="/campaigns/{campaign_id}", tags=["generation"])
@@ -22,6 +23,7 @@ async def generate_session(
     campaign_id: str,
     payload: GenerateSessionRequest,
     _user_id: Annotated[str, Depends(get_current_user)],
+    _rate_limit: Annotated[None, Depends(enforce_generation_rate_limit)],
     handler: Annotated[
         GenerateNextSessionUseCase, Depends(provide_generate_next_session)
     ],

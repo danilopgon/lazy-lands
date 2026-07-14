@@ -57,3 +57,18 @@ def test_build_prompt_context_excludes_suggestions_and_private_notes() -> None:
     assert "memory_suggestions" not in prompt_context
     assert "private_notes" not in prompt_context
     assert prompt_context["goal"] == "Find core"
+
+
+def test_build_prompt_context_caps_content_deterministically() -> None:
+    raw = _raw_context()
+    raw["campaign"]["description"] = "x" * 5_000
+    raw["npcs"] = [
+        {"id": str(index), "name": "n", "description": "x" * 5_000}
+        for index in range(20)
+    ]
+
+    prompt_context = build_prompt_context(raw, GenerationDirection())
+
+    assert len(prompt_context["campaign"]["description"]) == 1_000
+    assert len(prompt_context["npcs"]) == 10
+    assert len(prompt_context["npcs"][0]["description"]) == 1_000

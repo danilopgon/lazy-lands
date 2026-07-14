@@ -51,6 +51,7 @@ from app.modules.sessions.application.read_models.session_detail import (
     SessionDetailResponse,
 )
 from app.modules.sessions.domain.ports import PdfRenderer
+from app.shared.generation_rate_limit import enforce_generation_rate_limit
 from app.shared.security import get_current_user
 
 router = APIRouter(prefix="/campaigns/{campaign_id}/sessions", tags=["sessions"])
@@ -151,6 +152,7 @@ async def regenerate_section(
     session_id: str,
     payload: RegenerateSectionRequest,
     _user_id: Annotated[str, Depends(get_current_user)],
+    _rate_limit: Annotated[None, Depends(enforce_generation_rate_limit)],
     handler: Annotated[RegenerateSectionUseCase, Depends(provide_regenerate_section)],
 ) -> SessionDetailResponse:
     """Rewrite one generated-session section, resetting its origin to scribe."""
