@@ -60,7 +60,7 @@ All MVP colors are CSS custom properties on `:root`.
 | `--ink-soft`                 | `#2C2E29`             | Long-form body text                     |
 | `--ink-2`                    | `#585C51`             | Secondary text                          |
 | `--ink-3`                    | `#8A8B7E`             | Tertiary / meta                         |
-| `--mute`                     | `#6B7066`             | Mono labels, muted UI                   |
+| `--mute`                     | `#5F6459`             | Mono labels, muted UI (WCAG AA on paper) |
 | `--line`                     | `#C9C0AC`             | Dashed hairlines                        |
 | `--line-strong`              | `#1A1C19`             | The structural “ink rule” (3px borders) |
 | `--dotted`                   | `#B7AE98`             | Dotted row separators, input borders    |
