@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import {
   Instrument_Sans,
   JetBrains_Mono,
@@ -13,6 +13,7 @@ import {
 import { notFound } from 'next/navigation'
 
 import { routing } from '@/i18n/routing'
+import { getSiteUrl } from '@/lib/site'
 import { Providers } from '@/providers'
 import '../globals.css'
 
@@ -62,11 +63,35 @@ export async function generateMetadata({
   }
 
   const t = await getTranslations({ locale, namespace: 'Root' })
+  const siteName = t('title')
 
   return {
-    title: t('title'),
+    metadataBase: new URL(getSiteUrl()),
+    applicationName: siteName,
+    title: {
+      default: siteName,
+      template: `%s · ${siteName}`,
+    },
     description: t('description'),
+    openGraph: {
+      type: 'website',
+      siteName,
+      title: siteName,
+      description: t('description'),
+      locale: locale === 'es' ? 'es_ES' : 'en_US',
+      alternateLocale: locale === 'es' ? 'en_US' : 'es_ES',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: siteName,
+      description: t('description'),
+    },
   }
+}
+
+/** Document-level viewport, including the browser theme color. */
+export const viewport: Viewport = {
+  themeColor: '#F2ECE0',
 }
 
 /**
