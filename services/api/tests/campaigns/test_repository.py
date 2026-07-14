@@ -228,7 +228,7 @@ def test_list_campaigns_normalizes_empty_count_lists_to_zero() -> None:
     assert rows[0]["arc_count"] == 0
 
 
-def test_list_campaigns_selects_session_count_and_computes_active_memory_count() -> None:
+def test_list_campaigns_adds_session_and_active_memory_counts() -> None:
     client = MagicMock()
     campaigns_execute_result = MagicMock()
     campaigns_execute_result.data = [
