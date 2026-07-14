@@ -196,6 +196,95 @@ def test_renderer_template_includes_only_selected_saved_section_content() -> Non
     assert "The villain is secretly the mayor." not in html
 
 
+def test_renderer_template_renders_markdown_section_body_as_formatted_html() -> None:
+    session = _persisted_session()
+    generated_content = session["generated_content"]
+    assert isinstance(generated_content, dict)
+    sections = generated_content["sections"]
+    assert isinstance(sections, list)
+    markdown_section = sections[0]
+    assert isinstance(markdown_section, dict)
+    markdown_section["body"] = "## Heading\n\n**bold** text"
+
+    document = ExportSession(_SessionRepository(session)).execute(
+        "session-1",
+        ExportSessionCommand(selected_section_ids=(FIRST_SECTION_ID,)),
+    )
+
+    html = WeasyPrintPdfRenderer().render_html(document)
+
+    assert "<h2>Heading</h2>" in html
+    assert "<strong>bold</strong>" in html
+    assert "##" not in html
+    assert "**" not in html
+
+
+def test_renderer_neutralizes_injection_payload_and_export_still_succeeds() -> None:
+    session = _persisted_session()
+    generated_content = session["generated_content"]
+    assert isinstance(generated_content, dict)
+    sections = generated_content["sections"]
+    assert isinstance(sections, list)
+    injected_section = sections[0]
+    assert isinstance(injected_section, dict)
+    injected_section["body"] = (
+        "**important** notice <script>alert('x')</script> "
+        '<img src=x onerror="alert(1)"> more text'
+    )
+
+    document = ExportSession(_SessionRepository(session)).execute(
+        "session-1",
+        ExportSessionCommand(selected_section_ids=(FIRST_SECTION_ID,)),
+    )
+
+    html = WeasyPrintPdfRenderer().render_html(document)
+
+    assert "<script>" not in html
+    assert "onerror" not in html
+    assert "javascript:" not in html
+    assert "<strong>important</strong>" in html
+
+    try:
+        pdf = WeasyPrintPdfRenderer().render(document)
+    except OSError as exc:
+        pytest.skip(f"WeasyPrint native libraries are unavailable locally: {exc}")
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1_000
+
+
+def test_renderer_renders_plain_text_body_as_identical_plain_paragraph() -> None:
+    document = ExportSession(_SessionRepository(_persisted_session())).execute(
+        "session-1",
+        ExportSessionCommand(selected_section_ids=(FIRST_SECTION_ID,)),
+    )
+
+    html = WeasyPrintPdfRenderer().render_html(document)
+
+    assert "<p>The mine gate is open.</p>" in html
+
+
+def test_renderer_only_escapes_html_body_and_still_escapes_other_fields() -> None:
+    session = _persisted_session()
+    generated_content = session["generated_content"]
+    assert isinstance(generated_content, dict)
+    sections = generated_content["sections"]
+    assert isinstance(sections, list)
+    unsafe_label_section = sections[0]
+    assert isinstance(unsafe_label_section, dict)
+    unsafe_label_section["label"] = "<b>Opening</b>"
+
+    document = ExportSession(_SessionRepository(session)).execute(
+        "session-1",
+        ExportSessionCommand(selected_section_ids=(FIRST_SECTION_ID,)),
+    )
+
+    html = WeasyPrintPdfRenderer().render_html(document)
+
+    assert "&lt;b&gt;Opening&lt;/b&gt;" in html
+    assert "<b>Opening</b>" not in html
+
+
 class _ExportHandler:
     def __init__(self, result: ExportDocument | Exception) -> None:
         self._result = result
