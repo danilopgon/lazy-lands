@@ -16,7 +16,7 @@ Keep this a frontend presentation change: derive bounded previews from existing 
 
 ## Data Flow
 
-```
+```text
 campaign detail query ─┬─ sessions → RecentSessions (unchanged)
                        ├─ active facts → newest 3 → memory preview → /memory/review
                        └─ arcs → active/dormant → stable rank → 3 → /arcs

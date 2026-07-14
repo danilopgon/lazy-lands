@@ -21,7 +21,7 @@ Existing responsive behavior is mostly the single `llg` breakpoint at `901px`. I
 | --- | --- | --- |
 | `AppHeader` | `/dashboard`, all `/campaigns/*` | Full-width header with `px-4 llg:px-10`; no private workspace rail or shared content frame. |
 | `EntityNav` | `/campaigns/:id/*` | Full-width horizontal contextual nav; six items and no large-screen alternate. |
-| Page frames | Route-local `max-w-[720|820|900|1100px]` | Repeated literals prevent a coherent `>=1440px` policy. |
+| Page frames | Route-local `max-w-[720\|820\|900\|1100px]` | Repeated literals prevent a coherent `>=1440px` policy. |
 | Editorial grids | Detail, prepare, generated session, export | Activate at `901px`; current sidebars are `340px`, 1/3, or `280px`, inside mostly `900px` frames. |
 | Landing bands | Hero and major sections | `max-w-[1420px]`, `llg` two-column compositions; already materially better at wide widths. |
 | Long-form controls | Creation, review, log-session, private notes | `720–820px` frames are deliberate reading/form measures and should not be widened merely to fill space. |

@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-import { installVisualRegressionFixtures } from './visual-regression-fixtures'
+import {
+  installVisualRegressionFixtures,
+  visualCampaignId,
+  visualSessionId,
+} from './visual-regression-fixtures'
 
 const viewports = [
   { width: 1440, height: 900 },
@@ -20,9 +24,9 @@ for (const locale of ['en', 'es']) {
         await installVisualRegressionFixtures(page)
         await page.setViewportSize(viewport)
         const memoryReviewQuery =
-          view === 'memory-review' ? '?session=visual-session' : ''
+          view === 'memory-review' ? `?session=${visualSessionId}` : ''
         await page.goto(
-          `/${locale === 'en' ? '' : `${locale}/`}visual-regression/visual-campaign/${view}${memoryReviewQuery}`
+          `/${locale === 'en' ? '' : `${locale}/`}visual-regression/${visualCampaignId}/${view}${memoryReviewQuery}`
         )
 
         await page.evaluate(async () => document.fonts.ready)

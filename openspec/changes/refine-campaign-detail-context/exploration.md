@@ -1,6 +1,6 @@
 # Exploration: refine-campaign-detail-context
 
-### Current State
+## Current State
 
 The frozen `large-screen-layout-audit` already adds CSS-only `>=1440px` workspace zones; this follow-up must not modify its review lineage. Campaign detail currently fetches campaign children, sessions, and active memories independently. Sessions are capped at three newest records but deliberately re-sorted ascending for display. Active memories are newest-first from the API and unbounded. Arcs are filtered to active/dormant and capped at three, but the campaign-child repository specifies no order and the preview does not prioritize high-priority arcs.
 

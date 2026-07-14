@@ -353,30 +353,33 @@ describe('MemoryReviewPage', () => {
       value: 900,
     })
 
-    renderPage()
+    try {
+      renderPage()
 
-    const accept = await screen.findByRole('button', {
-      name: /accept as memory/i,
-    })
-    const edit = screen.getByRole('button', { name: /edit & accept/i })
-    const dismiss = screen.getByRole('button', { name: /^dismiss$/i })
-    const retire = screen.getByRole('button', { name: /retire/i })
+      const accept = await screen.findByRole('button', {
+        name: /accept as memory/i,
+      })
+      const edit = screen.getByRole('button', { name: /edit & accept/i })
+      const dismiss = screen.getByRole('button', { name: /^dismiss$/i })
+      const retire = screen.getByRole('button', { name: /retire/i })
 
-    expect(
-      accept.compareDocumentPosition(retire) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy()
-    accept.focus()
-    await user.tab()
-    expect(edit).toHaveFocus()
-    await user.tab()
-    expect(dismiss).toHaveFocus()
-    await user.tab()
-    expect(retire).toHaveFocus()
-
-    Object.defineProperty(window, 'innerWidth', {
-      configurable: true,
-      value: initialWidth,
-    })
+      expect(
+        accept.compareDocumentPosition(retire) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy()
+      accept.focus()
+      await user.tab()
+      expect(edit).toHaveFocus()
+      await user.tab()
+      expect(dismiss).toHaveFocus()
+      await user.tab()
+      expect(retire).toHaveFocus()
+    } finally {
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        value: initialWidth,
+      })
+    }
   })
 
   it('keeps a failed accept retryable and shows feedback', async () => {
