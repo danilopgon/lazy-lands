@@ -48,12 +48,14 @@ class SupabaseCampaignRepository:
         except Exception as exc:
             raise RepositoryError("Failed to list campaigns") from exc
         rows = cast(list[dict[str, Any]], response.data or [])
-        campaign_ids = [row["id"] for row in rows if row.get("id")]
+        campaign_ids = [str(row["id"]) for row in rows if row.get("id")]
         memory_counts = self._active_memory_counts(campaign_ids)
-        return [
-            self._normalize_campaign_summary(row, memory_counts.get(row.get("id"), 0))
-            for row in rows
-        ]
+        summaries: list[dict] = []
+        for row in rows:
+            campaign_id = str(row.get("id", ""))
+            memory_count = memory_counts.get(campaign_id, 0)
+            summaries.append(self._normalize_campaign_summary(row, memory_count))
+        return summaries
 
     def _active_memory_counts(self, campaign_ids: list[str]) -> dict[str, int]:
         """Count active memory facts per campaign.
