@@ -48,6 +48,15 @@ def test_plain_text_renders_unchanged_as_a_single_paragraph() -> None:
     assert html.strip() == "<p>The party rested at the inn.</p>"
 
 
+def test_soft_line_breaks_are_preserved() -> None:
+    html = markdown_to_safe_html("Beat one\nBeat two")
+
+    # Single newlines survive as <br> so line-separated notes keep their
+    # structure in the PDF (matching the app preview), not collapsed to a space.
+    assert "<br" in html
+    assert "Beat one" in html and "Beat two" in html
+
+
 def test_script_tag_is_neutralized_as_literal_text() -> None:
     html = markdown_to_safe_html("Before <script>alert('x')</script> after")
 

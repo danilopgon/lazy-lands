@@ -8,7 +8,10 @@ from markdown_it import MarkdownIt
 # DM notes (e.g. ``Meet <Aldor> at dawn``, ``<villain>``) that sanitizing away
 # unknown tags would otherwise drop, and it keeps raw HTML from ever reaching the
 # sanitizer (defense in depth on top of the nh3 allowlist below).
-_markdown = MarkdownIt("commonmark", {"html": False})
+# ``breaks: True`` renders single newlines as ``<br>`` so line-separated notes
+# keep their line structure in the PDF, matching the app preview (a plain
+# CommonMark soft break would otherwise collapse to a space).
+_markdown = MarkdownIt("commonmark", {"html": False, "breaks": True})
 
 _ALLOWED_TAGS = {
     "h1",
@@ -27,6 +30,7 @@ _ALLOWED_TAGS = {
     "blockquote",
     "code",
     "pre",
+    "br",
 }
 _ALLOWED_ATTRIBUTES = {"a": {"href"}}
 _ALLOWED_URL_SCHEMES = {"http", "https", "mailto"}
