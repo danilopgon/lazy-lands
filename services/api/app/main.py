@@ -1,6 +1,8 @@
 """FastAPI application entry point — middleware, error handlers, and router wiring."""
 
-import logging
+import traceback
+from pathlib import Path
+from uuid import uuid4
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -69,10 +71,16 @@ from app.shared.errors import (
 )
 from app.shared.generation_rate_limit import GenerationRateLimitError
 from app.shared.llm.errors import LlmOutputValidationError, ProviderRateLimitError
+from app.shared.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
-app = FastAPI(title="lazy-lands-api")
+app = FastAPI(
+    title="lazy-lands-api",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -81,6 +89,42 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+_API_SECURITY_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'none'; base-uri 'none'; form-action 'none'; "
+        "frame-ancestors 'none'; object-src 'none'"
+    ),
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
+}
+
+
+def _set_security_headers(response: JSONResponse, request_id: str) -> None:
+    """Attach browser protections and the server-generated correlation ID."""
+    response.headers.update(_API_SECURITY_HEADERS)
+    response.headers["X-Request-ID"] = request_id
+
+
+@app.middleware("http")
+async def add_request_context(request: Request, call_next):  # type: ignore[no-untyped-def]
+    """Generate a request ID without reflecting potentially untrusted input."""
+    request_id = uuid4().hex
+    request.state.request_id = request_id
+    response = await call_next(request)
+    _set_security_headers(response, request_id)
+    logger.info(
+        "Request complete request_id=%s method=%s path=%s status_code=%d",
+        request_id,
+        request.method,
+        request.url.path,
+        response.status_code,
+    )
+    return response
+
+
 app.add_exception_handler(AppError, http_error_handler)
 app.add_exception_handler(
     GenerationRateLimitError,
@@ -173,15 +217,32 @@ def _error_cors_headers(request: Request) -> dict[str, str]:
     return {}
 
 
+def _exception_location(exc: Exception) -> str:
+    """Return the source location without rendering sensitive exception details."""
+    frames = traceback.extract_tb(exc.__traceback__)
+    if not frames:
+        return "unknown"
+    frame = frames[-1]
+    return f"{Path(frame.filename).name}:{frame.lineno}:{frame.name}"
+
+
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Catch-all handler that logs the traceback so silent 500s never happen again."""
-    logger.exception("Unhandled exception in request: %s", exc)
-    return JSONResponse(
+    """Return a generic 500 and retain safe diagnostics for triage."""
+    request_id = getattr(request.state, "request_id", uuid4().hex)
+    logger.error(
+        "Unhandled request error request_id=%s exception_type=%s exception_location=%s",
+        request_id,
+        type(exc).__name__,
+        _exception_location(exc),
+    )
+    response = JSONResponse(
         status_code=500,
-        content={"error": "Internal server error — check server logs for details."},
+        content={"error": "Internal server error."},
         headers=_error_cors_headers(request),
     )
+    _set_security_headers(response, request_id)
+    return response
 
 
 app.include_router(health.router)

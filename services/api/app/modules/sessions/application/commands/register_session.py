@@ -102,21 +102,25 @@ class RegisterSession:
 
         try:
             await self._summarize.execute(campaign, session)
-        except Exception:  # noqa: BLE001 - any summarize failure degrades, never re-raises
-            logger.exception(
-                "Summarize failed after session insert campaign_id=%s session_id=%s",
+        except Exception as exc:  # noqa: BLE001 - any summarize failure degrades, never re-raises
+            logger.error(
+                "Summarize failed after session insert "
+                "campaign_id=%s session_id=%s error_type=%s",
                 campaign_id,
                 session["id"],
+                type(exc).__name__,
             )
 
         suggestions: list[MemorySuggestion] = []
         try:
             suggestions = await self._suggest.execute(campaign_id, session)
-        except Exception:  # noqa: BLE001 - any suggest failure degrades to empty
-            logger.exception(
-                "Suggest failed after session insert campaign_id=%s session_id=%s",
+        except Exception as exc:  # noqa: BLE001 - any suggest failure degrades to empty
+            logger.error(
+                "Suggest failed after session insert "
+                "campaign_id=%s session_id=%s error_type=%s",
                 campaign_id,
                 session["id"],
+                type(exc).__name__,
             )
 
         return RegisterSessionResponse(

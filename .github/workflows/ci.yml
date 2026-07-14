@@ -25,6 +25,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Dependency audit
+        run: pnpm audit --audit-level=high
       - name: Lint
         run: pnpm lint
       - name: Typecheck
@@ -54,7 +56,13 @@ jobs:
         run: pip install uv
       - name: Install dependencies
         working-directory: services/api
-        run: uv sync
+        run: uv sync --locked
+      - name: Dependency audit
+        continue-on-error: true
+        working-directory: services/api
+        run: |
+          uv export --locked --format requirements-txt --output-file "$RUNNER_TEMP/lazy-lands-api-requirements.txt"
+          uvx --from pip-audit==2.10.0 pip-audit --requirement "$RUNNER_TEMP/lazy-lands-api-requirements.txt" --strict
       - name: Ruff check
         working-directory: services/api
         run: uv run ruff check app/ tests/

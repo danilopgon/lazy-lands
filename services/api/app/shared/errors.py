@@ -30,7 +30,11 @@ async def generation_rate_limit_error_handler(
 
 async def http_error_handler(_request: Request, exc: Exception) -> JSONResponse:
     """Convert an AppError into a 400 JSON response."""
-    return JSONResponse(status_code=400, content={"error": str(exc)})
+    _ = exc
+    return JSONResponse(
+        status_code=400,
+        content={"error": "The request could not be completed."},
+    )
 
 
 async def llm_output_validation_error_handler(
