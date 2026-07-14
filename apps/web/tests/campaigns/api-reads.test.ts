@@ -25,6 +25,8 @@ const VALID_SUMMARY = {
   npc_count: 3,
   faction_count: 1,
   arc_count: 2,
+  session_count: 5,
+  memory_count: 4,
 }
 
 const VALID_NPC = {

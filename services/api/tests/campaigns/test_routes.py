@@ -43,11 +43,21 @@ def test_get_campaigns_returns_owned_campaigns_with_counts(client: TestClient) -
                 "npc_count": 2,
                 "faction_count": 1,
                 "arc_count": 3,
+                "session_count": [{"count": 5}],
             }
         ]
     )
-    order_query = mock_client.table.return_value.select.return_value.order.return_value
+    select_rv = mock_client.table.return_value.select.return_value
+    order_query = select_rv.order.return_value
     order_query.execute.return_value = result
+    memory_query = select_rv.in_.return_value.eq.return_value.range.return_value
+    memory_query.execute.return_value = MagicMock(
+        data=[
+            {"campaign_id": "campaign-1"},
+            {"campaign_id": "campaign-1"},
+            {"campaign_id": "campaign-1"},
+        ]
+    )
     app.dependency_overrides[get_auth_context] = _auth
     app.dependency_overrides[get_user_supabase_client] = lambda: mock_client
 
@@ -65,6 +75,8 @@ def test_get_campaigns_returns_owned_campaigns_with_counts(client: TestClient) -
             "npc_count": 2,
             "faction_count": 1,
             "arc_count": 3,
+            "session_count": 5,
+            "memory_count": 3,
         }
     ]
 

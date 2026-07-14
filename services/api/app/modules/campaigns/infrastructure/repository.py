@@ -5,6 +5,7 @@ write here goes through the caller-scoped client injected at construction
 time (PU-003, NFR-CP-1).
 """
 
+import logging
 from typing import Any, cast
 
 from supabase import Client
@@ -15,9 +16,15 @@ from app.modules.campaigns.domain.faction import Faction
 from app.modules.campaigns.domain.npc import NPC
 from app.modules.campaigns.infrastructure.errors import RepositoryError
 
+logger = logging.getLogger(__name__)
+
 
 class SupabaseCampaignRepository:
     """``CampaignRepository`` implementation backed by a per-user Supabase client."""
+
+    # Page size for the paginated active-memory count. Matches the Supabase Data
+    # API ``max_rows`` cap (supabase/config.toml) so each page is a full fetch.
+    _MEMORY_COUNT_PAGE_SIZE = 1000
 
     def __init__(self, client: Client) -> None:
         """Initialize with a per-user (never service-role) Supabase client."""
@@ -32,7 +39,8 @@ class SupabaseCampaignRepository:
                     "id,title,description,updated_at,system,tone,"
                     "npc_count:npcs(count),"
                     "faction_count:factions(count),"
-                    "arc_count:arcs(count)"
+                    "arc_count:arcs(count),"
+                    "session_count:sessions(count)"
                 )
                 .order("updated_at", desc=True)
                 .execute()
@@ -40,7 +48,52 @@ class SupabaseCampaignRepository:
         except Exception as exc:
             raise RepositoryError("Failed to list campaigns") from exc
         rows = cast(list[dict[str, Any]], response.data or [])
-        return [self._normalize_campaign_summary(row) for row in rows]
+        campaign_ids = [str(row["id"]) for row in rows if row.get("id")]
+        memory_counts = self._active_memory_counts(campaign_ids)
+        summaries: list[dict] = []
+        for row in rows:
+            campaign_id = str(row.get("id", ""))
+            memory_count = memory_counts.get(campaign_id, 0)
+            summaries.append(self._normalize_campaign_summary(row, memory_count))
+        return summaries
+
+    def _active_memory_counts(self, campaign_ids: list[str]) -> dict[str, int]:
+        """Count active memory facts per campaign.
+
+        Paginates through the result set so the totals are not silently capped by
+        the Supabase Data API ``max_rows`` limit (a single unpaged fetch would
+        undercount once a caller has more than ``max_rows`` active memories).
+        Degrades gracefully: if the query fails, the campaign list still renders
+        (with ``memory_count`` 0 for the missing rows) instead of failing the
+        whole listing with a 500.
+        """
+        if not campaign_ids:
+            return {}
+        counts: dict[str, int] = {}
+        page_size = self._MEMORY_COUNT_PAGE_SIZE
+        offset = 0
+        try:
+            while True:
+                response = (
+                    self._client.table("memory_facts")
+                    .select("campaign_id")
+                    .in_("campaign_id", campaign_ids)
+                    .eq("status", "active")
+                    .range(offset, offset + page_size - 1)
+                    .execute()
+                )
+                rows = cast(list[dict[str, Any]], response.data or [])
+                for row in rows:
+                    campaign_id = row.get("campaign_id")
+                    if campaign_id:
+                        counts[campaign_id] = counts.get(campaign_id, 0) + 1
+                if len(rows) < page_size:
+                    break
+                offset += page_size
+        except Exception:
+            logger.warning("Failed to count active memory facts", exc_info=True)
+            return {}
+        return counts
 
     def get_campaign(self, campaign_id: str) -> dict | None:
         """Fetch a single caller-visible campaign, returning None on RLS miss."""
@@ -256,12 +309,15 @@ class SupabaseCampaignRepository:
             raise RepositoryError(f"Failed to insert into {table}") from exc
 
     @staticmethod
-    def _normalize_campaign_summary(row: dict[str, Any]) -> dict[str, Any]:
+    def _normalize_campaign_summary(
+        row: dict[str, Any], memory_count: int = 0
+    ) -> dict[str, Any]:
         normalized = dict(row)
-        for output_key in ("npc_count", "faction_count", "arc_count"):
+        for output_key in ("npc_count", "faction_count", "arc_count", "session_count"):
             value = normalized.get(output_key)
             if isinstance(value, list) and value and isinstance(value[0], dict):
                 normalized[output_key] = value[0].get("count", 0)
             elif value is None or value == []:
                 normalized[output_key] = 0
+        normalized["memory_count"] = memory_count
         return normalized

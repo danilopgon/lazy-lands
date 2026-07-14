@@ -22,15 +22,13 @@ type CampaignCardProps = {
 export function CampaignCard({ campaign }: CampaignCardProps) {
   const t = useTranslations('Dashboard')
   const locale = useAppLocale()
-  // Handoff shows five stat columns. Sessions and Memories have no backend data
-  // until Block 7, so they render as honest "—" placeholders (never fabricated
-  // counts) while NPCs/Factions/Arcs are live from `GET /campaigns`. The Arcs
+  // Handoff shows five stat columns, all live from `GET /campaigns`. The Arcs
   // count is the total (all statuses), matching the detail stat bar.
   const stats: { value: number | string; label: string }[] = [
-    { value: '—', label: t('stats.sessions') },
+    { value: campaign.session_count, label: t('stats.sessions') },
     { value: campaign.npc_count, label: t('stats.npcs') },
     { value: campaign.faction_count, label: t('stats.factions') },
-    { value: '—', label: t('stats.memories') },
+    { value: campaign.memory_count, label: t('stats.memories') },
     { value: campaign.arc_count, label: t('stats.arcs') },
   ]
 

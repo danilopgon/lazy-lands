@@ -22,6 +22,8 @@ def test_campaign_summary_includes_nullable_system_tone_and_entity_counts() -> N
         npc_count=2,
         faction_count=1,
         arc_count=3,
+        session_count=5,
+        memory_count=4,
     )
 
     assert summary.model_dump() == {
@@ -34,6 +36,8 @@ def test_campaign_summary_includes_nullable_system_tone_and_entity_counts() -> N
         "npc_count": 2,
         "faction_count": 1,
         "arc_count": 3,
+        "session_count": 5,
+        "memory_count": 4,
     }
 
 
