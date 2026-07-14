@@ -50,7 +50,7 @@ def test_get_campaigns_returns_owned_campaigns_with_counts(client: TestClient) -
     select_rv = mock_client.table.return_value.select.return_value
     order_query = select_rv.order.return_value
     order_query.execute.return_value = result
-    memory_query = select_rv.in_.return_value.eq.return_value
+    memory_query = select_rv.in_.return_value.eq.return_value.range.return_value
     memory_query.execute.return_value = MagicMock(
         data=[
             {"campaign_id": "campaign-1"},

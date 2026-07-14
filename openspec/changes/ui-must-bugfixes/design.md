@@ -2,8 +2,8 @@
 
 ## Technical Approach
 
-Two independent workstreams shipped as **two chained PRs** (PR1 = #40 dashboard
-counts, PR2 = #63 PDF markdown). They share no code; each stays well inside the
+Two independent workstreams split into **two chained PRs** (PR1 = #40 dashboard
+counts — done; PR2 = #63 PDF markdown — planned). They share no code; each stays well inside the
 400-line review budget. Both are pure read/render-path changes — no migrations,
 RLS/ownership unchanged. Strict TDD: RED tests first in each workstream.
 

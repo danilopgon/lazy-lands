@@ -46,7 +46,7 @@ separate workstreams throughout.
 - None.
 
 ### Modified Capabilities
-- `campaign-view`: dashboard cards MUST show real active-session and active-memory counts
+- `campaign-view`: dashboard cards MUST show real session and active-memory counts
   instead of placeholders.
 - `pdf-export`: exported section bodies MUST render Markdown as sanitized formatted HTML,
   not literal syntax.
@@ -77,7 +77,7 @@ Strict TDD applies to both: failing tests first.
 | `components/campaigns/campaign-card.tsx` | Modified | Wire counts into stat row; drop `'—'` |
 | `dashboard/__tests__/page.test.tsx` | Modified | Replace two-`—` assertion |
 | `sessions/infrastructure/pdf_renderer.py` | Modified | Markdown→HTML→sanitize step |
-| `templates/session_export.html.jinja` | Modified | Render sanitized `html_body` via `| safe` |
+| `templates/session_export.html.jinja` | Modified | Render sanitized `html_body` via `\| safe` |
 | `domain/pdf_export.py` | Modified | Possibly extend `ExportSection` |
 | `services/api/pyproject.toml` | Modified | Add markdown renderer + `nh3` |
 | `tests/sessions/test_pdf_export.py` | Modified | Markdown + injection cases |

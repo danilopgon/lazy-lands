@@ -77,7 +77,7 @@ States (each MUST be implemented individually, per contract skill):
 - **error**: fetch fails → `ErrorNotice` with retry action
 - **empty**: 0 campaigns → `EmptyState` with title "Your chronicle starts here", CTA
   "+ Create your first campaign" → `/campaigns/new`
-- **empty-search**: search yields 0 matches → `EmptyState` orn "✦", title "No campaigns
+- **empty-search**: search yields 0 matches → `EmptyState` ornament "✦", title "No campaigns
   match that search"
 - **success**: populated grid of `CampaignCard`
 

@@ -247,9 +247,8 @@ def test_list_campaigns_adds_session_and_active_memory_counts() -> None:
         {"campaign_id": "campaign-1"},
         {"campaign_id": "campaign-1"},
     ]
-    memory_query = (
-        client.table.return_value.select.return_value.in_.return_value.eq.return_value
-    )
+    memory_select_rv = client.table.return_value.select.return_value
+    memory_query = memory_select_rv.in_.return_value.eq.return_value.range.return_value
     memory_query.execute.return_value = memory_execute_result
 
     repo = SupabaseCampaignRepository(client)
@@ -263,9 +262,10 @@ def test_list_campaigns_adds_session_and_active_memory_counts() -> None:
     client.table.return_value.select.return_value.in_.assert_called_once_with(
         "campaign_id", ["campaign-1"]
     )
-    client.table.return_value.select.return_value.in_.return_value.eq.assert_called_once_with(
-        "status", "active"
-    )
+    memory_eq = client.table.return_value.select.return_value.in_.return_value.eq
+    memory_eq.assert_called_once_with("status", "active")
+    # Paginated (not a single capped fetch) so counts are not silently truncated.
+    memory_eq.return_value.range.assert_called_once_with(0, 999)
 
 
 def test_normalize_campaign_summary_unwraps_session_count_nested_shape() -> None:
@@ -297,6 +297,29 @@ def test_list_campaigns_skips_memory_query_when_no_campaigns() -> None:
 
     assert rows == []
     client.table.return_value.select.return_value.in_.assert_not_called()
+
+
+def test_list_campaigns_degrades_when_memory_count_query_fails() -> None:
+    client = MagicMock()
+    campaigns_execute_result = MagicMock()
+    campaigns_execute_result.data = [
+        {"id": "campaign-1", "title": "Sombras", "session_count": [{"count": 5}]}
+    ]
+    order_query = client.table.return_value.select.return_value.order.return_value
+    order_query.execute.return_value = campaigns_execute_result
+
+    memory_select_rv = client.table.return_value.select.return_value
+    memory_range = memory_select_rv.in_.return_value.eq.return_value.range.return_value
+    memory_range.execute.side_effect = RuntimeError("memory_facts timeout")
+
+    repo = SupabaseCampaignRepository(client)
+
+    rows = repo.list_campaigns()
+
+    # A memory-count failure must not fail the whole listing: campaigns still
+    # render, with memory_count degrading to 0.
+    assert rows[0]["session_count"] == 5
+    assert rows[0]["memory_count"] == 0
 
 
 def test_get_campaign_returns_first_row_or_none_on_rls_miss() -> None:
