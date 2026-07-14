@@ -119,7 +119,7 @@ async def add_request_context(request: Request, call_next):  # type: ignore[no-u
         "Request complete request_id=%s method=%s path=%s status_code=%d",
         request_id,
         request.method,
-        request.url.path,
+        request.url.path.replace("\r", "").replace("\n", ""),
         response.status_code,
     )
     return response

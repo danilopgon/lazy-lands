@@ -144,8 +144,10 @@ async def test_complete_text_maps_provider_rate_limit_without_response_body() ->
         http_client=client,
     )
 
-    with pytest.raises(ProviderRateLimitError):
+    with pytest.raises(ProviderRateLimitError) as exc_info:
         await provider.complete_text("prompt")
+
+    assert exc_info.value.__cause__ is None
 
 
 # LLM-SEAM-005f: httpx is the only HTTP dependency — no openai package import

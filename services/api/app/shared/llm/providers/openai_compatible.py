@@ -87,7 +87,7 @@ class OpenAiCompatibleProvider:
             response.raise_for_status()
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == 429:
-                raise ProviderRateLimitError("provider rate limit exceeded") from exc
+                raise ProviderRateLimitError("provider rate limit exceeded") from None
             raise
         data = response.json()
         return data["choices"][0]["message"]["content"]

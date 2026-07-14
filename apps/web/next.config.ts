@@ -4,6 +4,33 @@ import path from 'node:path'
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
+/**
+ * Return a CSP-safe HTTP(S) origin from a public service URL.
+ *
+ * @param {string | undefined} value - Public service URL.
+ * @returns {string | undefined} The normalized origin when valid and supported.
+ */
+function getCspConnectOrigin(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined
+  }
+
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:'
+      ? url.origin
+      : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const connectSources = [
+  "'self'",
+  getCspConnectOrigin(process.env.NEXT_PUBLIC_API_URL),
+  getCspConnectOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL),
+].filter((source): source is string => source !== undefined)
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${
@@ -12,7 +39,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self'",
-  "connect-src 'self' https: http: wss: ws:",
+  `connect-src ${connectSources.join(' ')}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

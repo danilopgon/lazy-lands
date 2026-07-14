@@ -4,11 +4,13 @@ import logging
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
+from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
-from app.main import app, logger
+from app.main import add_request_context, app, logger
 from app.shared.config import settings
 from app.shared.errors import AppError
 
@@ -85,6 +87,34 @@ def test_request_completion_log_is_safe_info_event(
         for record in caplog.records
     )
     assert "request-token" not in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_request_completion_log_removes_crlf_from_path(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger=logger.name)
+
+    async def call_next(_request: object) -> JSONResponse:
+        return JSONResponse(content={})
+
+    request = SimpleNamespace(
+        state=SimpleNamespace(),
+        method="GET",
+        url=SimpleNamespace(path="/health\r\nforged-log-entry"),
+    )
+    response = await add_request_context(request, call_next)
+
+    assert response.status_code == 200
+    completion_logs = [
+        record.getMessage()
+        for record in caplog.records
+        if record.getMessage().startswith("Request complete ")
+    ]
+    assert len(completion_logs) == 1
+    assert "\r" not in completion_logs[0]
+    assert "\n" not in completion_logs[0]
+    assert "path=/healthforged-log-entry" in completion_logs[0]
 
 
 def test_api_preflight_keeps_cors_and_security_headers() -> None:
