@@ -84,10 +84,12 @@ class GenerateNextSessionUseCase:
                 await run_in_threadpool(
                     self._repository.record_generation_trace, campaign_id, trace_json
                 )
-            except Exception:
-                logger.exception(
-                    "Failed to record generation validation trace campaign_id=%s",
+            except Exception as exc:
+                logger.error(
+                    "Failed to record generation validation trace "
+                    "campaign_id=%s error_type=%s",
                     campaign_id,
+                    type(exc).__name__,
                 )
             raise
         duration_ms = int((time.perf_counter() - started) * 1000)

@@ -78,3 +78,39 @@ def test_insert_generated_session_persists_full_generated_content() -> None:
     assert inserted["generated_content"]["continuity_links"] == [
         {"memory_fact_id": "mem-1", "relevance": "Payoff."}
     ]
+
+
+def test_generation_context_queries_active_arcs() -> None:
+    client = MagicMock()
+    campaign = MagicMock()
+    campaign.select.return_value.eq.return_value.execute.return_value = MagicMock(
+        data=[{"id": "campaign-1"}]
+    )
+    arcs = MagicMock()
+    arcs.select.return_value.eq.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[])
+    )
+    empty_table = MagicMock()
+    empty_table.select.return_value.eq.return_value.execute.return_value = MagicMock(
+        data=[]
+    )
+    active_memory_table = MagicMock()
+    active_memory_query = (
+        active_memory_table.select.return_value.eq.return_value.eq.return_value
+    )
+    active_memory_query.execute.return_value = MagicMock(data=[])
+    client.table.side_effect = {
+        "campaigns": campaign,
+        "npcs": empty_table,
+        "factions": empty_table,
+        "arcs": arcs,
+        "memory_facts": active_memory_table,
+    }.get
+    repo = SupabaseGenerationRepository(client)
+
+    repo.get_generation_context("campaign-1")
+
+    assert arcs.select.return_value.eq.return_value.eq.call_args.args == (
+        "status",
+        "active",
+    )

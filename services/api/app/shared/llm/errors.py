@@ -30,3 +30,7 @@ class LlmOutputValidationError(Exception):
             f"LLM output validation failed for schema '{schema_name}'. "
             f"Retryable: {retryable}"
         )
+
+
+class ProviderRateLimitError(Exception):
+    """Raised when an upstream AI provider reports quota exhaustion."""

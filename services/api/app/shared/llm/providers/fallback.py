@@ -17,7 +17,7 @@ from typing import Any, TypeVar
 import httpx
 from pydantic import BaseModel
 
-from app.shared.llm.errors import LlmOutputValidationError
+from app.shared.llm.errors import LlmOutputValidationError, ProviderRateLimitError
 from app.shared.llm.port import LlmProvider
 
 logger = logging.getLogger(__name__)
@@ -59,6 +59,7 @@ def _is_transient(exc: Exception) -> bool:
 
     Covers:
     * HTTP 429 / 5xx from the upstream API.
+    * ProviderRateLimitError after an OpenAI-compatible provider normalizes HTTP 429.
     * Network-level failures (timeout, connection refused, read/write errors).
     * httpx.DecodingError — the server responded but the body was unparseable
       (treated as a transient infrastructure hiccup, not a permanent auth/config
@@ -72,6 +73,8 @@ def _is_transient(exc: Exception) -> bool:
     """
     if isinstance(exc, httpx.HTTPStatusError):
         return exc.response.status_code in _TRANSIENT_STATUSES
+    if isinstance(exc, ProviderRateLimitError):
+        return True
     if isinstance(exc, _TRANSIENT_EXCEPTIONS):
         return True
     if isinstance(exc, httpx.DecodingError):
@@ -188,11 +191,10 @@ class FallbackLlmProvider:
                     self._unhealthy_until[i] = now + self._cooldown
                     remaining = len(self._providers) - (i + 1)
                     logger.warning(
-                        "Provider %r failed (%s) — %s. "
+                        "Provider %r failed error_type=%s. "
                         "Cooldown %ds, %d provider(s) remaining.",
                         self._names[i],
                         type(exc).__name__,
-                        str(exc)[:200],
                         int(self._cooldown),
                         max(0, remaining),
                     )

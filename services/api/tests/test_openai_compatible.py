@@ -6,7 +6,7 @@ import httpx
 import pytest
 from pydantic import BaseModel
 
-from app.shared.llm.errors import LlmOutputValidationError
+from app.shared.llm.errors import LlmOutputValidationError, ProviderRateLimitError
 from app.shared.llm.providers.openai_compatible import OpenAiCompatibleProvider
 
 
@@ -129,6 +129,25 @@ async def test_005e_injected_client_is_used() -> None:
     )
     await provider.complete_text("hello")
     assert call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_complete_text_maps_provider_rate_limit_without_response_body() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, text="provider details must not escape")
+
+    client = httpx.AsyncClient(transport=_mock_transport(handler))
+    provider = OpenAiCompatibleProvider(
+        base_url="https://fake.example.com/v1",
+        api_key="test-key",
+        model="test-model",
+        http_client=client,
+    )
+
+    with pytest.raises(ProviderRateLimitError) as exc_info:
+        await provider.complete_text("prompt")
+
+    assert exc_info.value.__cause__ is None
 
 
 # LLM-SEAM-005f: httpx is the only HTTP dependency — no openai package import

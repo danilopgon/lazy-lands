@@ -64,6 +64,20 @@ Backend follows a Modular Monolith with nested Clean/Hexagonal layers per module
 
 Full architecture reference: [docs/04-architecture.md](./docs/04-architecture.md).
 
+## Security Headers
+
+The web application and API send CSP, anti-framing, `nosniff`, referrer, and
+permissions-policy headers. The API generates a server-side `X-Request-ID` for
+safe correlation. HSTS is intentionally configured at the TLS ingress or hosting
+platform, not by the application: enabling it before HTTPS is enforced can lock
+users out of an HTTP development or misconfigured deployment.
+
+CI audits Node dependencies from `pnpm-lock.yaml` and the installed Python
+environment with `pip-audit==2.10.0`. Adding `pip-audit` to the API dependency
+group would add 304 transitive lockfile lines, exceeding the bounded security
+work unit; `uvx --from` keeps the audit tool version explicit while `uv sync
+--locked` remains the reproducible application dependency install.
+
 ---
 
 ## Repository Structure

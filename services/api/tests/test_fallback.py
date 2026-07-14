@@ -1,11 +1,13 @@
 """Unit tests for FallbackLlmProvider failover and health tracking."""
 
 import json
+import logging
 import time
 
 import httpx
 import pytest
 
+from app.shared.llm.errors import ProviderRateLimitError
 from app.shared.llm.providers.fallback import (
     AllProvidersExhaustedError,
     FallbackLlmProvider,
@@ -52,6 +54,10 @@ def test_transient_429() -> None:
 def test_transient_503() -> None:
     resp = httpx.Response(503, request=httpx.Request("POST", "https://x"))
     assert _is_transient(httpx.HTTPStatusError("", request=resp.request, response=resp))
+
+
+def test_transient_provider_rate_limit_error() -> None:
+    assert _is_transient(ProviderRateLimitError("provider rate limit exceeded"))
 
 
 def test_transient_connect_error() -> None:
@@ -144,6 +150,19 @@ async def test_first_fails_transient_second_succeeds() -> None:
 
 
 @pytest.mark.asyncio
+async def test_primary_provider_rate_limit_attempts_fallback() -> None:
+    primary = _StubProvider("primary")
+    primary._next_text = ProviderRateLimitError("provider rate limit exceeded")
+    fallback = _StubProvider("fallback")
+
+    result = await FallbackLlmProvider([primary, fallback]).complete_text("hi")
+
+    assert result == "ok"
+    assert primary._text_calls == ["hi"]
+    assert fallback._text_calls == ["hi"]
+
+
+@pytest.mark.asyncio
 async def test_all_fail_raises_all_providers_exhausted() -> None:
     a = _StubProvider("a")
     a._next_text = httpx.ConnectError("boom")
@@ -188,6 +207,20 @@ async def test_unhealthy_provider_skipped_within_cooldown() -> None:
     assert r2 == "ok"
     assert len(b._text_calls) == 2
     assert len(a._text_calls) == 1  # a was only tried once
+
+
+@pytest.mark.asyncio
+async def test_provider_failure_log_omits_upstream_error_content(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.WARNING)
+    a = _StubProvider("a")
+    a._next_text = httpx.ConnectError("upstream-token campaign-content")
+    b = _StubProvider("b")
+
+    assert await FallbackLlmProvider([a, b]).complete_text("private prompt") == "ok"
+    assert "upstream-token" not in caplog.text
+    assert "campaign-content" not in caplog.text
 
 
 @pytest.mark.asyncio

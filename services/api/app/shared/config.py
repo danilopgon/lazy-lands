@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     mistral_api_key: str | None = None
     cerebras_api_key: str | None = None
     llm_fallbacks: str = ""
+    ai_generation_rate_limit: int = Field(default=5, ge=1)
+    ai_generation_rate_window_seconds: int = Field(default=60, ge=1)
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
