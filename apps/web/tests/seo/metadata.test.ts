@@ -89,13 +89,15 @@ describe('robots', () => {
 })
 
 describe('sitemap', () => {
-  it('lists public pages with en/es alternates', () => {
+  it('lists only the indexable landing with en/es alternates', () => {
     process.env.NEXT_PUBLIC_APP_URL = 'https://lazylands.app'
 
     const entries = sitemap()
     const urls = entries.map((entry) => entry.url)
     expect(urls).toContain('https://lazylands.app/')
-    expect(urls).toContain('https://lazylands.app/privacy')
+    // Legal pages are noindex, so they must not appear in the sitemap.
+    expect(urls).not.toContain('https://lazylands.app/privacy')
+    expect(urls).not.toContain('https://lazylands.app/cookies')
 
     const home = entries.find((entry) => entry.url === 'https://lazylands.app/')
     expect(home?.alternates?.languages).toEqual({

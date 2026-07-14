@@ -4,7 +4,10 @@ import { getSiteUrl } from '@/lib/site'
 
 // Public, indexable content paths in their default (unprefixed, English) form.
 // The Spanish alternate is the same path under `/es` (`localePrefix` 'as-needed').
-const PUBLIC_PATHS = ['', '/privacy', '/cookies']
+// Only the landing is real indexable content: the legal pages set
+// `robots: { index: false }` (see their generateMetadata) and the auth screens
+// are utility, so neither belongs in the sitemap.
+const PUBLIC_PATHS = ['']
 
 /**
  * Sitemap of public, indexable pages with per-locale (`en`/`es`) alternates so
