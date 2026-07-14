@@ -17,17 +17,44 @@
       h2 { font-size: 14pt; margin: 8mm 0 3mm; page-break-after: avoid; }
       .origin { color: #585c51; font-size: 8pt; text-transform: uppercase; }
       .section { break-inside: avoid; }
+
+      .section-body h1 { font-size: 13pt; margin: 4mm 0 2mm; }
+      .section-body h2 { font-size: 12pt; margin: 4mm 0 2mm; }
+      .section-body h3 { font-size: 11.5pt; margin: 3mm 0 2mm; }
+      .section-body h4,
+      .section-body h5,
+      .section-body h6 { font-size: 11pt; margin: 3mm 0 2mm; }
+      .section-body p { margin: 0 0 3mm; }
+      .section-body ul,
+      .section-body ol { margin: 0 0 3mm; padding-left: 6mm; }
+      .section-body li { margin: 0 0 1mm; }
+      .section-body blockquote {
+        margin: 0 0 3mm;
+        padding-left: 4mm;
+        border-left: 2px solid #d8dad2;
+        color: #585c51;
+      }
+      .section-body code {
+        font-family: monospace;
+        background: #f1f2ee;
+        padding: 0 1mm;
+      }
+      .section-body pre {
+        font-family: monospace;
+        background: #f1f2ee;
+        padding: 2mm;
+        margin: 0 0 3mm;
+        white-space: pre-wrap;
+      }
     </style>
   </head>
   <body>
     <h1>{{ document.title }}</h1>
-    {% for section in document.sections %}
+    {% for section in sections %}
     <section class="section">
       <h2>{{ section.label }}</h2>
       <p class="origin">{{ section.origin }}</p>
-      {% for paragraph in section.body.split('\n') %}
-      <p>{{ paragraph }}</p>
-      {% endfor %}
+      <div class="section-body">{{ section.html_body | safe }}</div>
     </section>
     {% endfor %}
   </body>
