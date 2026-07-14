@@ -239,8 +239,10 @@ def test_renderer_neutralizes_injection_payload_and_export_still_succeeds() -> N
 
     html = WeasyPrintPdfRenderer().render_html(document)
 
-    assert "<script>" not in html
-    assert "onerror" not in html
+    # No active script/image element reaches the output; the raw HTML is escaped
+    # to inert literal text (autoescape preserved DM notes; so does this).
+    assert "<script" not in html
+    assert "<img" not in html
     assert "javascript:" not in html
     assert "<strong>important</strong>" in html
 

@@ -3,7 +3,12 @@
 import nh3
 from markdown_it import MarkdownIt
 
-_markdown = MarkdownIt("commonmark")
+# ``html: False`` makes the parser escape raw HTML in the source as literal text
+# instead of passing it through. This preserves literal angle-bracket content in
+# DM notes (e.g. ``Meet <Aldor> at dawn``, ``<villain>``) that sanitizing away
+# unknown tags would otherwise drop, and it keeps raw HTML from ever reaching the
+# sanitizer (defense in depth on top of the nh3 allowlist below).
+_markdown = MarkdownIt("commonmark", {"html": False})
 
 _ALLOWED_TAGS = {
     "h1",

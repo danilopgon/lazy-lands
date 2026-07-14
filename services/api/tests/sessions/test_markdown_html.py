@@ -48,18 +48,29 @@ def test_plain_text_renders_unchanged_as_a_single_paragraph() -> None:
     assert html.strip() == "<p>The party rested at the inn.</p>"
 
 
-def test_script_tag_is_stripped() -> None:
+def test_script_tag_is_neutralized_as_literal_text() -> None:
     html = markdown_to_safe_html("Before <script>alert('x')</script> after")
 
-    assert "<script>" not in html
-    assert "alert('x')" not in html
+    assert "<script>" not in html  # no executable element reaches the PDF
+    assert "&lt;script&gt;" in html  # preserved as escaped literal, not dropped
+    assert "Before" in html and "after" in html
 
 
-def test_img_onerror_attribute_is_stripped() -> None:
+def test_img_onerror_is_neutralized_as_literal_text() -> None:
     html = markdown_to_safe_html('<img src=x onerror="alert(1)">')
 
-    assert "onerror" not in html
-    assert "alert(1)" not in html
+    assert "<img" not in html  # no active image element → no onerror handler
+    assert "&lt;img" in html  # preserved as escaped literal, not dropped
+
+
+def test_literal_angle_bracket_text_is_preserved() -> None:
+    html = markdown_to_safe_html("Meet <Aldor> at dawn; beware the <villain>.")
+
+    # Angle-bracketed DM notes/placeholders must survive the export (escaped),
+    # not be silently dropped as unknown HTML tags.
+    assert "Aldor" in html
+    assert "villain" in html
+    assert "<aldor>" not in html.lower()
 
 
 def test_javascript_url_in_link_is_neutralized() -> None:
