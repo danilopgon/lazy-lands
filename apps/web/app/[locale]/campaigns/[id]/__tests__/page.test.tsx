@@ -382,47 +382,14 @@ describe('CampaignDetailPage', () => {
   })
 
   it.each([
-    [
-      'en',
-      [
-        'Consequence',
-        'Relationship',
-        'Secret',
-        'Promise',
-        'Tension',
-        'Revelation',
-        'Item',
-        'Arc progress',
-      ],
-    ],
-    [
-      'es',
-      [
-        'Consecuencia',
-        'Relación',
-        'Secreto',
-        'Promesa',
-        'Tensión',
-        'Revelación',
-        'Objeto',
-        'Avance de arco',
-      ],
-    ],
+    ['en', ['Consequence', 'Relationship', 'Secret']],
+    ['es', ['Consecuencia', 'Relación', 'Secreto']],
   ] as const)(
     'localizes canonical active-memory types in %s',
     async (locale, labels) => {
       mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
       mockGetMemoryFacts.mockResolvedValue(
-        [
-          'consequence',
-          'relationship',
-          'secret',
-          'promise',
-          'tension',
-          'revelation',
-          'item',
-          'arc_progress',
-        ].map((type, index) => ({
+        ['consequence', 'relationship', 'secret'].map((type, index) => ({
           id: `memory-${type}`,
           campaign_id: 'camp-1',
           source_session_id: null,
@@ -516,6 +483,91 @@ describe('CampaignDetailPage', () => {
     expect(
       screen.queryByText(/no sessions logged yet/i)
     ).not.toBeInTheDocument()
+  })
+
+  it('selects the newest three of more than three sessions, then renders that subset chronologically', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue(
+      [5, 1, 4, 2, 3].map((session_number) => ({
+        id: `sess-${session_number}`,
+        session_number,
+        summary: `Chronicle entry ${session_number}`,
+        consequences: null,
+        has_generated_content: false,
+        created_at: `2026-06-0${session_number}T10:00:00Z`,
+      }))
+    )
+
+    renderPage()
+
+    const third = await screen.findByText('Chronicle entry 3')
+    const fourth = screen.getByText('Chronicle entry 4')
+    const fifth = screen.getByText('Chronicle entry 5')
+
+    expect(screen.queryByText('Chronicle entry 1')).not.toBeInTheDocument()
+    expect(screen.queryByText('Chronicle entry 2')).not.toBeInTheDocument()
+    expect(
+      third.compareDocumentPosition(fourth) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    expect(
+      fourth.compareDocumentPosition(fifth) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+  })
+
+  it('keeps a resolved sessions panel visible when active memories fail', async () => {
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetSessions.mockResolvedValue([
+      {
+        id: 'sess-1',
+        session_number: 1,
+        summary: 'The party crossed the ruined bridge.',
+        consequences: null,
+        has_generated_content: false,
+        created_at: '2026-06-01T10:00:00Z',
+      },
+    ])
+    mockGetMemoryFacts.mockRejectedValue(new Error('network'))
+
+    renderPage()
+
+    expect(
+      await screen.findByText('The party crossed the ruined bridge.')
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText(/could not load active memories/i)
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /retry/i })).toBeEnabled()
+  })
+
+  it('renders no arc preview records when every arc is terminal', async () => {
+    mockGetCampaignDetail.mockResolvedValue(
+      buildCampaignDetail({
+        arcs: [
+          {
+            id: 'resolved',
+            title: 'Resolved terminal arc',
+            description: 'Closed chapter',
+            priority: 'high',
+            status: 'resolved',
+            content_source: 'manual',
+          },
+          {
+            id: 'discarded',
+            title: 'Discarded terminal arc',
+            description: 'Abandoned chapter',
+            priority: 'low',
+            status: 'discarded',
+            content_source: 'manual',
+          },
+        ],
+      })
+    )
+
+    renderPage()
+
+    await screen.findByRole('heading', { name: 'Shadows over Phandalin' })
+    expect(screen.queryByText('Resolved terminal arc')).not.toBeInTheDocument()
+    expect(screen.queryByText('Discarded terminal arc')).not.toBeInTheDocument()
   })
 
   it('does not link logged sessions without generated content to the generated draft route', async () => {
@@ -867,4 +919,164 @@ describe('CampaignDetailPage', () => {
     const allArcsLink = screen.getByRole('link', { name: /all arcs/i })
     expect(allArcsLink).toHaveAttribute('href', '/campaigns/camp-1/arcs')
   })
+
+  it('caps newest active memories and priority-orders eligible arcs without a session history link', async () => {
+    mockGetCampaignDetail.mockResolvedValue(
+      buildCampaignDetail({
+        arcs: [
+          {
+            id: 'low',
+            title: 'Low arc',
+            description: null,
+            priority: 'low',
+            status: 'active',
+            content_source: 'manual',
+          },
+          {
+            id: 'medium',
+            title: 'Medium arc',
+            description: null,
+            priority: 'medium',
+            status: 'dormant',
+            content_source: 'manual',
+          },
+          {
+            id: 'high-first',
+            title: 'First high arc',
+            description: null,
+            priority: 'high',
+            status: 'active',
+            content_source: 'manual',
+          },
+          {
+            id: 'high-second',
+            title: 'Second high arc',
+            description: null,
+            priority: 'high',
+            status: 'active',
+            content_source: 'manual',
+          },
+        ],
+      })
+    )
+    mockGetMemoryFacts.mockResolvedValue(
+      ['Newest memory', 'Second memory', 'Third memory', 'Hidden memory'].map(
+        (content, index) => ({
+          id: `memory-${index}`,
+          campaign_id: 'camp-1',
+          source_session_id: null,
+          content,
+          type: 'consequence',
+          importance: 'medium' as const,
+          status: 'active' as const,
+          created_at: '2026-07-09T00:00:00Z',
+          updated_at: '2026-07-09T00:00:00Z',
+        })
+      )
+    )
+
+    renderPage()
+
+    await screen.findByText('Newest memory')
+    expect(screen.getByText('Third memory')).toBeInTheDocument()
+    expect(screen.queryByText('Hidden memory')).not.toBeInTheDocument()
+
+    const firstHigh = screen.getByText('First high arc')
+    const secondHigh = screen.getByText('Second high arc')
+    const medium = screen.getByText('Medium arc')
+    expect(
+      firstHigh.compareDocumentPosition(secondHigh) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    expect(
+      secondHigh.compareDocumentPosition(medium) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    expect(screen.queryByText('Low arc')).not.toBeInTheDocument()
+
+    expect(
+      screen.getByRole('link', { name: /view all arcs/i })
+    ).toHaveAttribute('href', '/campaigns/camp-1/arcs')
+    expect(
+      screen.getByRole('link', { name: /view all memories/i })
+    ).toHaveAttribute('href', '/campaigns/camp-1/memory/review')
+    expect(
+      screen.queryByRole('link', { name: /view all sessions/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['en', 'Showing 3 of 4'],
+    ['es', 'Mostrando 3 de 4'],
+  ] as const)(
+    'places the localized active-memory preview cap with its list heading before standalone Memory Review navigation in %s',
+    async (locale, previewCount) => {
+      mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+      mockGetMemoryFacts.mockResolvedValue(
+        ['Newest memory', 'Second memory', 'Third memory', 'Hidden memory'].map(
+          (content, index) => ({
+            id: `memory-${index}`,
+            campaign_id: 'camp-1',
+            source_session_id: null,
+            content,
+            type: 'consequence',
+            importance: 'medium' as const,
+            status: 'active' as const,
+            created_at: '2026-07-09T00:00:00Z',
+            updated_at: '2026-07-09T00:00:00Z',
+          })
+        )
+      )
+
+      renderPage(locale)
+
+      await screen.findByText('Newest memory')
+      const activeMemoriesHeading = screen.getByRole('heading', {
+        name: /active memories|memorias activas/i,
+      })
+      const count = screen.getByText(previewCount)
+      const viewAllMemories = screen.getByRole('link', {
+        name: /view all memories|ver todas las memorias/i,
+      })
+
+      expect(
+        activeMemoriesHeading.compareDocumentPosition(count) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy()
+      expect(
+        count.compareDocumentPosition(viewAllMemories) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy()
+      expect(viewAllMemories).toHaveAccessibleDescription(previewCount)
+    }
+  )
+
+  it.each(['en', 'es'] as const)(
+    'does not announce a truncation count when %s has three or fewer active memories',
+    async (locale) => {
+      mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+      mockGetMemoryFacts.mockResolvedValue(
+        ['First memory', 'Second memory', 'Third memory'].map(
+          (content, index) => ({
+            id: `memory-${index}`,
+            campaign_id: 'camp-1',
+            source_session_id: null,
+            content,
+            type: 'consequence',
+            importance: 'medium' as const,
+            status: 'active' as const,
+            created_at: '2026-07-09T00:00:00Z',
+            updated_at: '2026-07-09T00:00:00Z',
+          })
+        )
+      )
+
+      renderPage(locale)
+
+      await screen.findByText('First memory')
+      expect(
+        screen.queryByText(/(Showing 3 of|Mostrando 3 de)/i)
+      ).not.toBeInTheDocument()
+    }
+  )
 })

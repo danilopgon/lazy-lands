@@ -291,6 +291,25 @@ Do not assert Tailwind class names in tests. Test user-visible behavior and acce
 - Use one main breakpoint at `900px` for editorial two-column collapse.
 - Prefer hard rules and bordered ledgers over floating cards. Visual hierarchy should feel printed, not glassy.
 
+### Selective large-screen workspaces
+
+At `>=1440px`, authenticated operational routes may opt into the CSS-only
+`ll-workspace` policy. It expands the route frame up to 1360px without changing
+the global shell. `ll-workspace-main` preserves a 75ch reading/editor lane, while
+`ll-workspace-context` receives existing, task-relevant collections or provenance.
+
+- Eligible: dashboard campaign collection, campaign detail, NPC/faction/arc collections,
+  and generated-session drafts.
+- Protected: landing, auth cards, focused create/review/log/prepare forms, legal pages, and
+  the 640px export preview remain intentionally bounded. Memory Review is the approved exception:
+  at `>=1440px` its full-width chrome precedes normal-flow pending-proposal and active-canon columns.
+  Pending remains first in DOM and focus order; no fixed or sticky rail is introduced.
+- Never introduce a global navigation rail, fixed/sticky notes bar, or reordered DOM/focus
+  path. Generated-session private notes are currently a noninteractive deferred context panel;
+  they remain excluded from generation and PDF export until persistence is explicitly scoped.
+- The policy is additive: all routes preserve their current layout and document-flow collapse
+  at `<=900px`; colors, tokens, motion gates, and existing controls do not change.
+
 ### Interaction and motion
 
 Motion follows the `data-motion` contract from §2:

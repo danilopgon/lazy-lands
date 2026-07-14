@@ -24,7 +24,10 @@ export default function CampaignDetailPage() {
 
   if (isLoading) {
     return (
-      <main id="main-content" className="mx-auto max-w-[1100px] px-6 py-16">
+      <main
+        id="main-content"
+        className="ll-workspace mx-auto max-w-[1100px] px-6 py-16"
+      >
         <LoadingScribe
           title={t('screen.loadingTitle')}
           caption={t('screen.openingChronicle')}
@@ -37,7 +40,10 @@ export default function CampaignDetailPage() {
     const isNotFound = error instanceof CampaignNotFoundError
 
     return (
-      <main id="main-content" className="mx-auto max-w-[1100px] px-6 py-16">
+      <main
+        id="main-content"
+        className="ll-workspace mx-auto max-w-[1100px] px-6 py-16"
+      >
         <Notice variant="error">
           <p>{isNotFound ? t('screen.notFound') : t('screen.loadError')}</p>
           <button
@@ -57,7 +63,10 @@ export default function CampaignDetailPage() {
   }
 
   return (
-    <main id="main-content" className="mx-auto max-w-[1100px] px-6 py-16">
+    <main
+      id="main-content"
+      className="ll-workspace mx-auto max-w-[1100px] px-6 py-16"
+    >
       <CampaignDetailView campaign={data} />
     </main>
   )

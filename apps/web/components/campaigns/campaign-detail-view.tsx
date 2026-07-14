@@ -34,12 +34,15 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
   const te = useTranslations('Entities')
   const locale = useAppLocale()
   const kicker = [campaign.system, campaign.tone].filter(Boolean).join(' · ')
-  // `active`/`dormant` arcs are the unresolved threads that need attention;
-  // `resolved`/`discarded` are terminal (design Decision 9).
-  const openArcs = campaign.arcs.filter(
-    (arc) => arc.status === 'active' || arc.status === 'dormant'
-  )
-  const visibleArcs = openArcs.slice(0, 3)
+  const priorityRank = { high: 0, medium: 1, low: 2 } as const
+  const visibleArcs = campaign.arcs
+    .filter((arc) => arc.status === 'active' || arc.status === 'dormant')
+    .toSorted(
+      (left, right) =>
+        (left.priority ? priorityRank[left.priority] : 3) -
+        (right.priority ? priorityRank[right.priority] : 3)
+    )
+    .slice(0, 3)
   const sessionsQuery = useQuery({
     queryKey: ['campaign', campaign.id, 'sessions'],
     queryFn: () => getSessions(campaign.id),
@@ -48,6 +51,8 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
     queryKey: ['campaign', campaign.id, 'memory-facts', 'active'],
     queryFn: () => getMemoryFacts(campaign.id, { status: 'active' }),
   })
+  const activeMemoryCount = memoriesQuery.data?.length ?? 0
+  const hasHiddenActiveMemories = activeMemoryCount > 3
 
   return (
     <div className="ll-view-enter">
@@ -137,8 +142,8 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
         </Link>
       </dl>
 
-      <div className="mt-7 grid gap-7 llg:grid-cols-[1fr_340px]">
-        <div>
+      <div className="mt-7 grid gap-7 llg:grid-cols-[1fr_340px] min-[1440px]:grid-cols-[minmax(0,75ch)_minmax(20rem,1fr)]">
+        <div className="ll-workspace-main">
           <div className="ll-rule-anim">
             <div className="flex items-baseline gap-2">
               <span className="font-mono text-[11px] text-[var(--ink-3)]">
@@ -186,7 +191,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           </div>
         </div>
 
-        <div>
+        <div className="ll-workspace-context">
           <div className="ll-rule-anim">
             <div className="flex items-baseline justify-between gap-2">
               <div className="flex items-baseline gap-2">
@@ -201,7 +206,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                 href={`/campaigns/${campaign.id}/arcs`}
                 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
-                {t('detail.allArcs')}
+                {t('detail.viewAllArcs')}
               </Link>
             </div>
           </div>
@@ -237,12 +242,28 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                 <h3 className="font-serif text-[16px] font-semibold text-[var(--ink)]">
                   {t('detail.activeMemories')}
                 </h3>
+                {hasHiddenActiveMemories ? (
+                  <span
+                    id="active-memories-preview-count"
+                    className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-3)]"
+                  >
+                    {t('detail.activeMemoriesPreviewCount', {
+                      shown: 3,
+                      total: activeMemoryCount,
+                    })}
+                  </span>
+                ) : null}
               </div>
               <Link
                 href={`/campaigns/${campaign.id}/memory/review`}
+                aria-describedby={
+                  hasHiddenActiveMemories
+                    ? 'active-memories-preview-count'
+                    : undefined
+                }
                 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
-                {t('detail.memoryReview')}
+                {t('detail.viewAllMemories')}
               </Link>
             </div>
           </div>
@@ -252,7 +273,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
               (memoriesQuery.data === undefined && !memoriesQuery.isError)
             }
             isError={memoriesQuery.isError}
-            memories={memoriesQuery.data ?? []}
+            memories={(memoriesQuery.data ?? []).slice(0, 3)}
             retryLabel={t('screen.retry')}
             onRetry={() => memoriesQuery.refetch()}
           />
