@@ -99,9 +99,18 @@
         }
       ],
       "stats": [
-        { "value": "5", "label": "NPCs in play" },
-        { "value": "4", "label": "Faction threads" },
-        { "value": "3", "label": "Open arcs" }
+        {
+          "value": "5",
+          "label": "NPCs in play"
+        },
+        {
+          "value": "4",
+          "label": "Faction threads"
+        },
+        {
+          "value": "3",
+          "label": "Open arcs"
+        }
       ],
       "memoryPlayTitle": "Memory in play",
       "memoryPlayBody": "Two party members earned Halia's favor; two damaged it. The next briefing must account for the split trust at the Miner's Exchange.",
@@ -113,10 +122,22 @@
       "title": "A briefing that reads like your own prep, only faster.",
       "body": "Not a data dump. An ordered draft you can read five minutes before the session. Always a <em>draft</em>: you edit it, you decide what happens.",
       "specs": [
-        { "k": "Accepted", "v": "memories feed the briefing" },
-        { "k": "Dismissed", "v": "suggestions stay out" },
-        { "k": "Private", "v": "notes never export" },
-        { "k": "Editable", "v": "draft first, canon later" }
+        {
+          "k": "Accepted",
+          "v": "memories feed the briefing"
+        },
+        {
+          "k": "Dismissed",
+          "v": "suggestions stay out"
+        },
+        {
+          "k": "Private",
+          "v": "notes never export"
+        },
+        {
+          "k": "Editable",
+          "v": "draft first, canon later"
+        }
       ]
     },
     "mock": {
@@ -791,5 +812,29 @@
   },
   "Dates": {
     "locale": "en-US"
+  },
+  "Demo": {
+    "badge": "Demo",
+    "exit": "Exit demo",
+    "breadcrumbRoot": "Demo campaign",
+    "sessionLabel": "Session {number}",
+    "tour": {
+      "replay": "Take the guided tour",
+      "next": "Next",
+      "prev": "Back",
+      "done": "Done",
+      "welcomeTitle": "Welcome to the Scribe",
+      "welcomeBody": "This is a live demo of a real campaign — nothing here is saved to an account. Edit freely; a refresh resets everything.",
+      "worldStateTitle": "The world state",
+      "worldStateBody": "The running summary of where the campaign stands. Edit it inline — your change persists locally for this session.",
+      "statsTitle": "Your campaign at a glance",
+      "statsBody": "NPCs, factions, arcs and active memories. Each card opens its own screen, where you can create and edit entries.",
+      "memoryTitle": "Reviewable memory",
+      "memoryBody": "The Scribe proposes memories after each session. You accept, edit or dismiss every one — only accepted memories feed future prep.",
+      "prepareTitle": "Prepare the next session",
+      "prepareBody": "The Scribe reads your accepted context and drafts an editable session proposal. You always have the last word.",
+      "outroTitle": "That's the loop",
+      "outroBody": "Log a session, review the memories, and prepare the next one. Explore at your own pace — everything you see is editable."
+    }
   }
 }

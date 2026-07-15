@@ -37,6 +37,10 @@ type PrepareSessionViewProps = {
   sessions?: SessionResponse[]
   generateSessionFn?: typeof generateSession
   navigate?: (href: string) => void
+  /** Breadcrumb root href. Defaults to the authenticated dashboard. */
+  dashboardHref?: string
+  /** Breadcrumb campaign href. Defaults to the authenticated campaign detail. */
+  campaignHref?: string
 }
 
 const toneOptions = [
@@ -74,6 +78,8 @@ export function PrepareSessionView({
   sessions: providedSessions,
   generateSessionFn = generateSession,
   navigate,
+  dashboardHref = '/dashboard',
+  campaignHref,
 }: PrepareSessionViewProps) {
   const t = useTranslations('SessionGeneration.prepare')
   const tc = useTranslations('Campaigns')
@@ -195,12 +201,12 @@ export function PrepareSessionView({
       className="ll-view-enter mx-auto max-w-[900px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        <Link href="/dashboard" className="hover:text-[var(--ink)]">
+        <Link href={dashboardHref} className="hover:text-[var(--ink)]">
           {tc('breadcrumbRoot')}
         </Link>{' '}
         /{' '}
         <Link
-          href={`/campaigns/${campaignId}`}
+          href={campaignHref ?? `/campaigns/${campaignId}`}
           className="hover:text-[var(--ink)]"
         >
           {campaign.title}

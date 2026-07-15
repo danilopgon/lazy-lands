@@ -4,7 +4,6 @@ import { Link } from '@/i18n/navigation'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
-import { ComingSoonButton } from './coming-soon-button'
 import { ViewEnter } from './motion'
 
 /**
@@ -76,9 +75,13 @@ export function LandCTA() {
             >
               <Link href="/register">{t('cta.cta')}</Link>
             </Button>
-            <ComingSoonButton variant="secondary">
-              {t('cta.demoCta')}
-            </ComingSoonButton>
+            <Button
+              asChild
+              variant="secondary"
+              style={{ fontSize: 14.5, padding: '11px 22px' }}
+            >
+              <Link href="/demo">{t('cta.demoCta')}</Link>
+            </Button>
           </div>
         </ViewEnter>
       </div>

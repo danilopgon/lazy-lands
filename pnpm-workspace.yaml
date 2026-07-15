@@ -2,6 +2,12 @@ packages:
   - 'apps/*'
   - 'services/*'
   - 'supabase'
+# Pin TypeScript to the version the committed lockfile resolved. The web app
+# depends on `typescript: latest`, which now floats to 7.x — a major that
+# @typescript-eslint 8.x cannot parse (ESLint crashes). Pin it here so installs
+# stay reproducible and lint keeps working.
+overrides:
+  typescript: '6.0.3'
 # pnpm 11 fails installs on dependencies with un-decided build scripts. These
 # native optional deps already ran un-built under pnpm 10 (CI was green without
 # them), so keep them un-built and record the decision explicitly to satisfy the

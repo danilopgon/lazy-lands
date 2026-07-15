@@ -12,6 +12,13 @@ import { updateCampaign, CampaignApiError } from '@/lib/campaigns/api'
 type WorldStateEditorProps = {
   campaignId: string
   initialValue: string | null
+  /**
+   * Optional save adapter. When provided it fully replaces the default
+   * `PATCH /campaigns/{id}` write path (and its query invalidation) and must
+   * resolve with the persisted world-state text. The public demo passes a
+   * local persister here so no request is made.
+   */
+  onSave?: (worldState: string) => Promise<string>
 }
 
 /**
@@ -24,11 +31,13 @@ type WorldStateEditorProps = {
  * @param {object} root0 - The world state editor props.
  * @param {string} root0.campaignId - The campaign whose world state is edited.
  * @param {string | null} root0.initialValue - The initial world state text.
+ * @param {(worldState: string) => Promise<string>} [root0.onSave] - Optional local save adapter.
  * @returns {React.ReactElement} The world state editor element.
  */
 export function WorldStateEditor({
   campaignId,
   initialValue,
+  onSave,
 }: WorldStateEditorProps) {
   const t = useTranslations('Campaigns')
   const errorT = useTranslations('Errors')
@@ -41,13 +50,19 @@ export function WorldStateEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const mutation = useMutation({
-    mutationFn: (world_state: string) =>
-      updateCampaign(campaignId, { world_state }),
-    onSuccess: (result) => {
-      setDisplayValue(result.world_state ?? '')
+    mutationFn: (world_state: string): Promise<string> =>
+      onSave
+        ? onSave(world_state)
+        : updateCampaign(campaignId, { world_state }).then(
+            (result) => result.world_state ?? ''
+          ),
+    onSuccess: (savedValue) => {
+      setDisplayValue(savedValue)
       setIsEditing(false)
       setError(null)
-      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] })
+      if (!onSave) {
+        queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] })
+      }
     },
     onError: (err: unknown) => {
       setError(

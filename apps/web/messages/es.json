@@ -99,9 +99,18 @@
         }
       ],
       "stats": [
-        { "value": "5", "label": "PNJ en juego" },
-        { "value": "4", "label": "Tramas de facción" },
-        { "value": "3", "label": "Arcos abiertos" }
+        {
+          "value": "5",
+          "label": "PNJ en juego"
+        },
+        {
+          "value": "4",
+          "label": "Tramas de facción"
+        },
+        {
+          "value": "3",
+          "label": "Arcos abiertos"
+        }
       ],
       "memoryPlayTitle": "Memoria en juego",
       "memoryPlayBody": "Dos miembros del grupo se ganaron el favor de Halia; dos lo dañaron. El próximo informe debe tener en cuenta la confianza dividida en la Lonja de los Mineros.",
@@ -113,10 +122,22 @@
       "title": "Un informe que se lee como tu propia preparación, solo que más rápido.",
       "body": "No es un volcado de datos. Un borrador ordenado que puedes leer cinco minutos antes de la sesión. Siempre un <em>borrador</em>: tú lo editas, tú decides qué pasa.",
       "specs": [
-        { "k": "Aceptadas", "v": "las memorias alimentan el informe" },
-        { "k": "Descartadas", "v": "las sugerencias quedan fuera" },
-        { "k": "Privadas", "v": "las notas nunca se exportan" },
-        { "k": "Editable", "v": "primero borrador, luego canon" }
+        {
+          "k": "Aceptadas",
+          "v": "las memorias alimentan el informe"
+        },
+        {
+          "k": "Descartadas",
+          "v": "las sugerencias quedan fuera"
+        },
+        {
+          "k": "Privadas",
+          "v": "las notas nunca se exportan"
+        },
+        {
+          "k": "Editable",
+          "v": "primero borrador, luego canon"
+        }
       ]
     },
     "mock": {
@@ -791,5 +812,29 @@
   },
   "Dates": {
     "locale": "es-ES"
+  },
+  "Demo": {
+    "badge": "Demo",
+    "exit": "Salir de la demo",
+    "breadcrumbRoot": "Campaña de demostración",
+    "sessionLabel": "Sesión {number}",
+    "tour": {
+      "replay": "Hacer el tour guiado",
+      "next": "Siguiente",
+      "prev": "Atrás",
+      "done": "Listo",
+      "welcomeTitle": "Bienvenido al Escriba",
+      "welcomeBody": "Esta es una demo en vivo de una campaña real: aquí no se guarda nada en ninguna cuenta. Edita con libertad; al recargar, todo vuelve a empezar.",
+      "worldStateTitle": "El estado del mundo",
+      "worldStateBody": "El resumen vivo de cómo está la campaña. Edítalo en línea: tu cambio se guarda localmente durante esta sesión.",
+      "statsTitle": "Tu campaña de un vistazo",
+      "statsBody": "PNJ, facciones, arcos y memorias activas. Cada tarjeta abre su propia pantalla, donde puedes crear y editar entradas.",
+      "memoryTitle": "Memoria revisable",
+      "memoryBody": "El Escriba propone memorias tras cada sesión. Aceptas, editas o descartas cada una; solo las aceptadas alimentan la preparación futura.",
+      "prepareTitle": "Prepara la siguiente sesión",
+      "prepareBody": "El Escriba lee el contexto que aceptaste y redacta una propuesta de sesión editable. Tú siempre tienes la última palabra.",
+      "outroTitle": "Ese es el ciclo",
+      "outroBody": "Registra una sesión, revisa las memorias y prepara la siguiente. Explora a tu ritmo: todo lo que ves es editable."
+    }
   }
 }

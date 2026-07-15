@@ -1,0 +1,238 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
+
+import { Link } from '@/i18n/navigation'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Notice } from '@/components/ui/notice'
+import { DemoBreadcrumb } from '@/components/demo/demo-breadcrumb'
+import {
+  ActiveMemories,
+  SuggestionCard,
+  SuggestionEditor,
+  type PendingSuggestion,
+} from '@/components/sessions/memory-review-parts'
+import { demoHrefs } from '@/lib/demo/hrefs'
+import { useDemoStore } from '@/lib/demo/store'
+import type { MemorySuggestion } from '@/lib/sessions/schemas'
+
+type Feedback = 'accepted' | 'edited' | 'dismissed' | 'retired' | null
+
+/**
+ * Stable render key for a transient suggestion.
+ *
+ * @param {MemorySuggestion} suggestion - The suggestion to identify.
+ * @param {number} index - Position within the pending list.
+ * @returns {string} A stable composite key.
+ */
+function suggestionId(suggestion: MemorySuggestion, index: number): string {
+  return `${suggestion.type}:${suggestion.content}:${index}`
+}
+
+/**
+ * `/demo/memory` — the memory review screen. Reuses the exact production
+ * suggestion and active-memory components; accept/dismiss/retire all run
+ * against the in-memory demo store. Suggestions appear only after the DM logs
+ * the sample session on `/demo/sessions/new`.
+ *
+ * @returns {React.ReactElement} The demo memory review page element.
+ */
+export default function DemoMemoryReviewPage() {
+  const t = useTranslations('MemoryReview')
+  const te = useTranslations('Entities')
+  const store = useDemoStore()
+
+  const initialPending = useMemo(
+    () =>
+      store.suggestions.map((suggestion, index) => ({
+        ...suggestion,
+        id: suggestionId(suggestion, index),
+      })),
+    [store.suggestions]
+  )
+
+  const [pending, setPending] = useState<PendingSuggestion[]>(initialPending)
+  const [editing, setEditing] = useState<string | null>(null)
+  const [isBusy, setIsBusy] = useState(false)
+  const [fx, setFx] = useState<Record<string, 'stamping' | 'discarding'>>({})
+  const [feedback, setFeedback] = useState<Feedback>(null)
+
+  const activeMemories = store.memoryFacts.filter(
+    (fact) => fact.status === 'active'
+  )
+  const sessionDisplay = store.loggedSession
+    ? String(store.loggedSession.sessionNumber)
+    : t('sessionUnknown')
+
+  /**
+   * Remove a processed suggestion from the pending list.
+   *
+   * @param {string} id - The render key of the suggestion to drop.
+   */
+  function removePending(id: string) {
+    setPending((items) => items.filter((item) => item.id !== id))
+  }
+
+  /**
+   * Accept a suggestion (optionally edited) as a canonical memory fact.
+   *
+   * @param {PendingSuggestion} suggestion - The suggestion being accepted.
+   * @param {string} content - The final memory text.
+   */
+  async function accept(suggestion: PendingSuggestion, content: string) {
+    setIsBusy(true)
+    await store.acceptSuggestion({ suggestion, content })
+    setIsBusy(false)
+    setEditing(null)
+    setFeedback(content === suggestion.content ? 'accepted' : 'edited')
+    setFx((current) => ({ ...current, [suggestion.id]: 'stamping' }))
+    window.setTimeout(() => {
+      removePending(suggestion.id)
+      setFx((current) => {
+        const next = { ...current }
+        delete next[suggestion.id]
+        return next
+      })
+    }, 400)
+  }
+
+  /**
+   * Dismiss a suggestion so it never becomes a memory.
+   *
+   * @param {PendingSuggestion} suggestion - The suggestion being dismissed.
+   */
+  function dismiss(suggestion: PendingSuggestion) {
+    setFx((current) => ({ ...current, [suggestion.id]: 'discarding' }))
+    window.setTimeout(() => {
+      removePending(suggestion.id)
+      setFx((current) => {
+        const next = { ...current }
+        delete next[suggestion.id]
+        return next
+      })
+      setFeedback('dismissed')
+    }, 400)
+  }
+
+  return (
+    <main
+      id="main-content"
+      className="ll-view-enter ll-workspace mx-auto max-w-[900px] px-6 py-16"
+    >
+      <DemoBreadcrumb title={t('breadcrumb')} />
+
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
+            {t('kicker', { session: sessionDisplay })}
+          </p>
+          <h1 className="mt-3 font-serif text-[38px] font-semibold leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
+            {t('title')}
+          </h1>
+          <p className="mt-3 max-w-[620px] text-base leading-relaxed text-[var(--ink-2)]">
+            {pending.length > 0
+              ? t('subtitleWithCount', { count: pending.length })
+              : t('subtitleEmpty')}
+          </p>
+        </div>
+      </div>
+
+      {pending.length > 0 ? (
+        <Notice className="mt-5" variant="scribe" role="status">
+          {t('notPersistedNotice')}
+        </Notice>
+      ) : null}
+
+      {feedback ? (
+        <Notice className="mt-5" variant="plain" role="status">
+          {t(`feedback.${feedback}`)}
+        </Notice>
+      ) : null}
+
+      <div className="ll-memory-review-lanes mt-6">
+        <section className="grid gap-4" aria-label={t('pendingSection')}>
+          {pending.length === 0 ? (
+            <EmptyState
+              className="border-dashed bg-transparent shadow-none"
+              title={t('emptyPendingTitle')}
+              description={t('emptyPendingDescription')}
+              action={
+                <Button asChild type="button">
+                  <Link href={demoHrefs.logSession}>{t('backToCampaign')}</Link>
+                </Button>
+              }
+            />
+          ) : (
+            pending.map((suggestion) =>
+              editing === suggestion.id ? (
+                <SuggestionEditor
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  isBusy={isBusy}
+                  onCancel={() => setEditing(null)}
+                  onSave={(content) => void accept(suggestion, content)}
+                />
+              ) : (
+                <SuggestionCard
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  fx={fx[suggestion.id]}
+                  isBusy={isBusy || Boolean(fx[suggestion.id])}
+                  onAccept={() => void accept(suggestion, suggestion.content)}
+                  onEdit={() => setEditing(suggestion.id)}
+                  onDismiss={() => dismiss(suggestion)}
+                />
+              )
+            )
+          )}
+        </section>
+
+        <section
+          className="ll-memory-review-canon mt-7 border-t-2 border-[var(--line-strong)] pt-6"
+          aria-label={t('activeSection')}
+        >
+          <div className="ll-rule-anim flex items-baseline justify-between gap-4">
+            <h2 className="font-serif text-[19px] font-semibold text-[var(--ink)]">
+              {t('activeTitle', { count: activeMemories.length })}
+            </h2>
+            <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--ink-3)]">
+              {t('activeHelp')}
+            </p>
+          </div>
+
+          <div className="mt-3 border-2 border-[var(--border)] bg-[var(--paper)] px-5 shadow-[6px_6px_0_var(--shadow)]">
+            <ActiveMemories
+              memories={activeMemories}
+              isLoading={false}
+              isError={false}
+              isBusy={isBusy}
+              retryLabel={te('retry')}
+              sourceLabelFor={(sourceSessionId) =>
+                sourceSessionId ? t('sessionSource') : t('manualSource')
+              }
+              onRetry={() => undefined}
+              onRetire={(memory) => {
+                setIsBusy(true)
+                void store.retireMemory(memory.id).then(() => {
+                  setIsBusy(false)
+                  setFeedback('retired')
+                })
+              }}
+            />
+          </div>
+        </section>
+      </div>
+
+      <div className="mt-6 flex justify-end gap-3">
+        <Button asChild type="button">
+          <Link href={demoHrefs.campaign}>{t('backToCampaign')}</Link>
+        </Button>
+        <Button asChild type="button" variant="accent">
+          <Link href={demoHrefs.prepare}>{t('prepareNext')}</Link>
+        </Button>
+      </div>
+    </main>
+  )
+}

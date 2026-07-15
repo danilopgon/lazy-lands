@@ -18,11 +18,25 @@ import {
 
 import type { FactionResponse } from '@/lib/campaigns/schemas'
 
+/** The editable faction fields a save receives, with cleared optionals as `null`. */
+export type FactionDraft = {
+  name: string
+  description: string | null
+  current_stance: string | null
+  goals: string | null
+}
+
 type FactionModalProps = {
   campaignId: string
   /** The faction to edit, or null to create a new one. */
   faction: FactionResponse | null
   onClose: () => void
+  /**
+   * Optional save adapter. When provided it fully replaces the default
+   * `POST /factions` / `PATCH /factions/{id}` write path (and its query
+   * invalidation), letting the public demo persist to local state instead.
+   */
+  onSubmit?: (draft: FactionDraft) => Promise<void>
 }
 
 /**
@@ -36,12 +50,14 @@ type FactionModalProps = {
  * @param {string} root0.campaignId - The owning campaign id.
  * @param {FactionResponse | null} root0.faction - The faction being edited, or null to add.
  * @param {() => void} root0.onClose - Invoked to close the modal.
+ * @param {(draft: FactionDraft) => Promise<void>} [root0.onSubmit] - Optional local save adapter.
  * @returns {React.ReactElement} The faction modal element.
  */
 export function FactionModal({
   campaignId,
   faction,
   onClose,
+  onSubmit,
 }: FactionModalProps) {
   const isEdit = faction !== null
   const t = useTranslations('Campaigns')
@@ -57,20 +73,28 @@ export function FactionModal({
   const [error, setError] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async (): Promise<void> => {
       // Empty optionals sent as null so an edit can clear a set value.
-      const fields = {
+      const fields: FactionDraft = {
         name: name.trim(),
         description: description.trim() || null,
         current_stance: currentStance.trim() || null,
         goals: goals.trim() || null,
       }
-      return isEdit
-        ? updateFaction(faction.id, fields)
-        : createFaction({ campaign_id: campaignId, ...fields })
+      if (onSubmit) {
+        await onSubmit(fields)
+        return
+      }
+      if (isEdit) {
+        await updateFaction(faction.id, fields)
+      } else {
+        await createFaction({ campaign_id: campaignId, ...fields })
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] })
+      if (!onSubmit) {
+        queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] })
+      }
       onClose()
     },
     onError: (err: unknown) => {
