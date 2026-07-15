@@ -115,6 +115,6 @@ The repository MUST preserve product and design source-of-truth documents while 
 #### Scenario: Prototype remains reference-only
 
 - GIVEN design guidance is updated
-- WHEN `DESIGN.md` references `handoff/`
-- THEN it MUST treat prototypes as visual references only
+- WHEN `DESIGN.md` and the shipped `apps/web/` screens are used as design references
+- THEN they MUST be treated as visual references only
 - AND production UI MUST be rebuilt with React, TailwindCSS, and shadcn/ui rather than copied wholesale.

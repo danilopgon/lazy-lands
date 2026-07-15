@@ -114,10 +114,10 @@ today, so Block-5 extraction behavior and its tests are unchanged, AND additiona
 
 ### Requirement: Dashboard campaign list screen
 
-The system MUST render `/dashboard` per the `Dashboard` handoff prototype
-(`handoff/app/views-dashboard.jsx`), replacing the current placeholder.
+The system MUST render `/dashboard` per the shipped screen
+(`apps/web/app/[locale]/dashboard/page.tsx`), replacing the current placeholder.
 
-Field-by-field checklist (source of truth: handoff):
+Field-by-field checklist (source of truth: shipped screen + `DESIGN.md`):
 - Breadcrumb: "Your chronicles" (`ll-crumb`)
 - Header: `Kicker` "Campaigns", H1 "Your chronicles", subtitle summarizing campaign count
 - Primary action: "+ New campaign" button → navigates to `/campaigns/new`
@@ -176,8 +176,8 @@ cards use `.ll-rise` entrance; buttons follow standard press physics. Respect
 
 ### Requirement: Campaign detail screen
 
-The system MUST render `/campaigns/:id` per the `CampaignDetail` handoff prototype
-(`handoff/app/views-detail.jsx`), showing system/tone, world state (view + edit), and arcs
+The system MUST render `/campaigns/:id` per the shipped screen
+(`apps/web/app/[locale]/campaigns/[id]/page.tsx`), showing system/tone, world state (view + edit), and arcs
 needing attention as live sections, with recent sessions and active memories rendered as
 static, dimmed "coming in a later chapter" placeholder cards (Block 7) that preserve the
 two-column layout rhythm (do not collapse to a single column).
@@ -239,8 +239,8 @@ physics on Save/Cancel/Edit links.
 
 ### Requirement: NPC list screen
 
-The system MUST render `/campaigns/:id/npcs` per the `NpcsView` handoff prototype
-(`handoff/app/views-entities.jsx`), listing NPCs with name, status pill, description, and
+The system MUST render `/campaigns/:id/npcs` per the shipped screen
+(`apps/web/app/[locale]/campaigns/[id]/npcs/page.tsx`), listing NPCs with name, status pill, description, and
 motivation, with "+ New NPC", per-row "Edit", and per-row "Delete" actions (mutation
 behavior specified in `entity-management`).
 
@@ -283,8 +283,8 @@ States:
 
 ### Requirement: Faction list screen
 
-The system MUST render `/campaigns/:id/factions` per the `FactionsView` handoff
-prototype, listing factions with name, posture, description, and objective, with
+The system MUST render `/campaigns/:id/factions` per the shipped screen
+(`apps/web/app/[locale]/campaigns/[id]/factions/page.tsx`), listing factions with name, posture, description, and objective, with
 "+ New faction", per-row "Edit", and per-row "Delete" actions (mutation behavior
 specified in `entity-management`).
 
@@ -326,8 +326,8 @@ States:
 
 ### Requirement: Arc list screen (NEW)
 
-The system MUST render `/campaigns/:id/arcs` per the `ArcsView` handoff prototype
-(`handoff/app/views-arcs.jsx`), listing arcs with title, status pill, priority flag, and
+The system MUST render `/campaigns/:id/arcs` per the shipped screen
+(`apps/web/app/[locale]/campaigns/[id]/arcs/page.tsx`), listing arcs with title, status pill, priority flag, and
 description, with "+ New arc", per-row "Edit", and per-row "Delete" actions (mutation
 behavior specified in `entity-management`).
 
