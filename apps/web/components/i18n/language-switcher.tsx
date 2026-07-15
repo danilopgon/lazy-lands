@@ -40,6 +40,20 @@ const optionClassName =
   'block px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--ink)] focus-visible:bg-[var(--bg)] focus-visible:text-[var(--ink)] focus-visible:outline-none data-[active=true]:bg-[var(--accent)] data-[active=true]:text-white'
 
 /**
+ * Persist the chosen locale as next-intl's `NEXT_LOCALE` cookie so it overrides
+ * `accept-language` detection on the next request. Without this a detected
+ * browser locale would trap the user (e.g. a Spanish browser could never reach
+ * English via the unprefixed `/` links), which is why locale detection was
+ * previously disabled.
+ *
+ * @param {AppLocale} locale - The locale the user explicitly chose.
+ * @returns {void}
+ */
+function rememberLocale(locale: AppLocale): void {
+  document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; samesite=lax`
+}
+
+/**
  * Render one locale-switching link per supported locale.
  *
  * Each link is a real per-locale `<a>` with `hrefLang` and `aria-current`, so
@@ -85,7 +99,15 @@ function LocaleLinks({
   ) {
     onNavigate?.()
 
-    if (!persistUserLanguage || nextLocale === locale) {
+    if (nextLocale === locale) {
+      return
+    }
+
+    // Record the explicit choice for every switch — public + authed — so a
+    // detected browser locale can't trap the user on the wrong language.
+    rememberLocale(nextLocale)
+
+    if (!persistUserLanguage) {
       return
     }
 

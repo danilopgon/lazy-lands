@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
 
-import { routing } from '@/i18n/routing'
+import { isAppLocale, routing } from '@/i18n/routing'
 import { decideAuth } from '@/lib/auth/decide'
 import { buildLocalizedPath, stripLocaleFromPathname } from '@/lib/format'
 import { updateSession } from '@/lib/supabase/middleware'
@@ -55,6 +55,25 @@ function copySetCookieHeaders(source: Headers, target: Headers) {
 export async function proxy(request: NextRequest) {
   const i18nResponse = handleI18nRouting(request)
   const { response, user } = await updateSession(request, i18nResponse)
+
+  // Seed next-intl's `NEXT_LOCALE` cookie from the authenticated user's saved
+  // language the first time we see them without one (e.g. a fresh sign-in on a
+  // new device), so the authenticated experience starts in their preferred
+  // language. Letting the cookie drive next-intl's own detection avoids both
+  // redirect loops and the stale-read race of redirecting on async-written
+  // `user_metadata`. An explicit URL locale prefix still wins over the cookie.
+  const savedLanguage = user?.user_metadata?.language
+  if (
+    !request.cookies.has('NEXT_LOCALE') &&
+    typeof savedLanguage === 'string' &&
+    isAppLocale(savedLanguage)
+  ) {
+    response.cookies.set('NEXT_LOCALE', savedLanguage, {
+      path: '/',
+      maxAge: 31536000,
+      sameSite: 'lax',
+    })
+  }
 
   const url = new URL(request.url)
   const { locale, pathname } = stripLocaleFromPathname(url.pathname)
