@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-[var(--accent)] text-[var(--bg-contrast)]',
         accent: 'bg-[var(--accent)] text-[var(--bg-contrast)]',
-        ink: 'bg-[var(--ink)] text-[var(--bg-contrast)]',
+        ink: 'bg-[var(--ink)] text-[var(--bg-contrast)] shadow-[3px_3px_0_var(--shadow-raised)] hover:shadow-[1.5px_1.5px_0_var(--shadow-raised)]',
         'ink-inverted':
           'bg-[var(--ink)] text-[var(--bg-contrast)] border-[var(--bg-contrast)] shadow-[3px_3px_0_var(--bg-contrast)] hover:shadow-[1.5px_1.5px_0_var(--bg-contrast)]',
         secondary: 'bg-[var(--paper)] text-[var(--ink)]',
