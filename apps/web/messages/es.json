@@ -453,6 +453,7 @@
   },
   "MemoryReview": {
     "breadcrumb": "Memoria",
+    "notPersistedNotice": "Por ahora, estas sugerencias no se guardan en tu cuenta: viven solo en esta sesión del navegador y desaparecen si cierras la pestaña o cambias de dispositivo. Acepta las que quieras conservar antes de salir. Guardarlas para más tarde llegará en una versión futura.",
     "kicker": "Sesión {session} · Revisión de memoria",
     "sessionLabel": "Sesión {number}",
     "sessionSource": "Sesión vinculada",

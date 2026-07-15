@@ -347,6 +347,12 @@ export default function MemoryReviewPage() {
         </div>
       </div>
 
+      {pending.length > 0 ? (
+        <Notice className="mt-5" variant="scribe" role="status">
+          {t('notPersistedNotice')}
+        </Notice>
+      ) : null}
+
       {feedback ? (
         <Notice className="mt-5" variant="plain" role="status">
           {t(`feedback.${feedback}`)}
