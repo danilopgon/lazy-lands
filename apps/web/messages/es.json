@@ -56,6 +56,19 @@
       "metaScribe": "El Escriba propone, tú decides",
       "metaFree": "Gratis durante el acceso anticipado"
     },
+    "heroGraph": {
+      "nodeParty": "Grupo",
+      "annotationFavorSplit": "favor dividido",
+      "annotationOwesFavor": "debe un favor",
+      "annotationCirclingCloser": "cerrando el cerco",
+      "briefingKicker": "Informe · Sesión VIII",
+      "briefingTitle": "El Registro Silencioso",
+      "briefingSpecs": "5 PNJs · 4 facciones · 1 rencor resurgiendo",
+      "briefingBody": "Halia llama al grupo. Sabe que ellos provocaron el incendio del almacén.",
+      "memoryInPlay": "memoria en juego",
+      "noteKicker": "No olvides",
+      "noteBody": "Halia favorece a dos de ellos y desconfía de los otros dos."
+    },
     "marquee": [
       "Sesión VII aceptada: Halia favorece a dos miembros del grupo",
       "Arco abierto: los planes antidragón necesitan un núcleo estable",
