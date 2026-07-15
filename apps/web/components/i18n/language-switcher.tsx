@@ -134,14 +134,6 @@ function LocaleLinks({
             key={code}
             href={href}
             hrefLang={code}
-            // Never prefetch the switcher targets. With `localeDetection` on and
-            // `as-needed` prefixing, prefetching the default-locale link (`/…`)
-            // caches a 307 to the detected locale (e.g. a Spanish visitor's
-            // unprefixed `/` redirects to `/es`). The click writes NEXT_LOCALE
-            // too late to beat that cached redirect, so the soft navigation
-            // bounces back and the switch silently no-ops. Without the prefetch,
-            // the click makes a fresh request that carries the just-written
-            // cookie and resolves to the chosen locale.
             prefetch={false}
             data-active={active}
             aria-current={active ? 'true' : undefined}
