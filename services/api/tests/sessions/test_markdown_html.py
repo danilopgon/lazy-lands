@@ -54,7 +54,8 @@ def test_soft_line_breaks_are_preserved() -> None:
     # Single newlines survive as <br> so line-separated notes keep their
     # structure in the PDF (matching the app preview), not collapsed to a space.
     assert "<br" in html
-    assert "Beat one" in html and "Beat two" in html
+    assert "Beat one" in html
+    assert "Beat two" in html
 
 
 def test_script_tag_is_neutralized_as_literal_text() -> None:
@@ -62,7 +63,8 @@ def test_script_tag_is_neutralized_as_literal_text() -> None:
 
     assert "<script>" not in html  # no executable element reaches the PDF
     assert "&lt;script&gt;" in html  # preserved as escaped literal, not dropped
-    assert "Before" in html and "after" in html
+    assert "Before" in html
+    assert "after" in html
 
 
 def test_img_onerror_is_neutralized_as_literal_text() -> None:

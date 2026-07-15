@@ -85,7 +85,7 @@ def client():
 def test_happy_path_returns_200_with_content_source_llm(
     client, auth_header, fake_provider
 ) -> None:
-    from app.modules.campaigns.application.contracts import (  # noqa: PLC0415
+    from app.modules.campaigns.application.contracts import (
         ExtractCampaignOutput,
     )
 
@@ -158,7 +158,7 @@ def test_statelessness_no_db_writes_on_any_path(
     client, auth_header, fake_provider
 ) -> None:
     """No repository/client is constructed on the extract path at all."""
-    import app.modules.campaigns.api.dependencies as dependencies_module  # noqa: PLC0415
+    import app.modules.campaigns.api.dependencies as dependencies_module
 
     with pytest.MonkeyPatch.context() as mp:
         called = {"n": 0}
@@ -174,7 +174,7 @@ def test_statelessness_no_db_writes_on_any_path(
             raising=True,
         )
 
-        from app.modules.campaigns.application.contracts import (  # noqa: PLC0415
+        from app.modules.campaigns.application.contracts import (
             ExtractCampaignOutput,
         )
 
@@ -191,7 +191,7 @@ def test_statelessness_no_db_writes_on_any_path(
 def test_malformed_llm_output_maps_to_retryable_error_no_raw_leak(
     client, auth_header, fake_provider
 ) -> None:
-    from app.modules.campaigns.application.contracts import (  # noqa: PLC0415
+    from app.modules.campaigns.application.contracts import (
         ExtractCampaignOutput,
     )
 
@@ -222,7 +222,7 @@ def test_malformed_llm_output_maps_to_retryable_error_no_raw_leak(
 @pytest.mark.asyncio
 async def test_llm_output_validation_error_never_leaks_raw_output_in_handler() -> None:
     """Direct handler-level guard: the response body has no raw_output key."""
-    from app.shared.errors import llm_output_validation_error_handler  # noqa: PLC0415
+    from app.shared.errors import llm_output_validation_error_handler
 
     exc = LlmOutputValidationError(
         schema_name="ExtractCampaignOutput",

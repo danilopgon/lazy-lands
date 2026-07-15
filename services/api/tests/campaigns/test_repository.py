@@ -161,7 +161,7 @@ def test_delete_campaign_wraps_postgrest_exception() -> None:
         repo.delete_campaign("campaign-1")
 
 
-def test_delete_campaign_calls_eq_id(client=None) -> None:
+def test_delete_campaign_calls_eq_id() -> None:
     client = MagicMock()
     repo = SupabaseCampaignRepository(client)
 

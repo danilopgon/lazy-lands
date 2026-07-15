@@ -7,7 +7,7 @@ from jinja2.exceptions import UndefinedError
 
 
 def test_render_prompt_renders_a_variable(tmp_path, monkeypatch) -> None:
-    from app.shared import prompts as prompts_module  # noqa: PLC0415
+    from app.shared import prompts as prompts_module
 
     fixture_dir = tmp_path / "prompts"
     fixture_dir.mkdir()
@@ -21,7 +21,7 @@ def test_render_prompt_renders_a_variable(tmp_path, monkeypatch) -> None:
 
 
 def test_render_prompt_raises_on_missing_variable(tmp_path, monkeypatch) -> None:
-    from app.shared import prompts as prompts_module  # noqa: PLC0415
+    from app.shared import prompts as prompts_module
 
     fixture_dir = tmp_path / "prompts"
     fixture_dir.mkdir()

@@ -333,7 +333,7 @@ def test_ja_t14_missing_exp_claim_returns_401(ec_keypair, mock_jwks_client, clie
 
 
 def test_database_factory_is_importable():
-    from app.shared.database import get_supabase_client  # noqa: PLC0415
+    from app.shared.database import get_supabase_client
 
     assert callable(get_supabase_client)
 
@@ -341,10 +341,10 @@ def test_database_factory_is_importable():
 def test_database_factory_does_not_init_at_import():
     # Importing the module must not instantiate the Supabase client (no network
     # at import). Patch create_client and assert it is never called on reload.
-    import importlib  # noqa: PLC0415
-    from unittest.mock import patch  # noqa: PLC0415
+    import importlib
+    from unittest.mock import patch
 
-    import app.shared.database  # noqa: PLC0415
+    import app.shared.database
 
     try:
         with patch("supabase.create_client") as mock_create:

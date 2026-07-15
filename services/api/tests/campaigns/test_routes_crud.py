@@ -107,7 +107,7 @@ ENTITIES = [
 ]
 
 
-@pytest.mark.parametrize("prefix,create_body,_patch,row", ENTITIES)
+@pytest.mark.parametrize(("prefix", "create_body", "_patch", "row"), ENTITIES)
 def test_create_entity_returns_201_when_parent_visible(
     client, prefix, create_body, _patch, row
 ) -> None:
@@ -117,7 +117,7 @@ def test_create_entity_returns_201_when_parent_visible(
     assert response.json()["id"] == row["id"]
 
 
-@pytest.mark.parametrize("prefix,create_body,_patch,row", ENTITIES)
+@pytest.mark.parametrize(("prefix", "create_body", "_patch", "row"), ENTITIES)
 def test_create_entity_forged_parent_returns_404_via_precheck(
     client, prefix, create_body, _patch, row
 ) -> None:
@@ -128,14 +128,14 @@ def test_create_entity_forged_parent_returns_404_via_precheck(
     assert response.status_code == 404
 
 
-@pytest.mark.parametrize("prefix,_create,patch_body,row", ENTITIES)
+@pytest.mark.parametrize(("prefix", "_create", "patch_body", "row"), ENTITIES)
 def test_patch_entity_returns_200(client, prefix, _create, patch_body, row) -> None:
     _use(_mock_client(write_data=[row]))
     response = client.patch(f"{prefix}/{row['id']}", json=patch_body)
     assert response.status_code == 200
 
 
-@pytest.mark.parametrize("prefix,_create,_patch,row", ENTITIES)
+@pytest.mark.parametrize(("prefix", "_create", "_patch", "row"), ENTITIES)
 def test_patch_entity_empty_body_returns_422(
     client, prefix, _create, _patch, row
 ) -> None:
@@ -144,7 +144,7 @@ def test_patch_entity_empty_body_returns_422(
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize("prefix,_create,patch_body,row", ENTITIES)
+@pytest.mark.parametrize(("prefix", "_create", "patch_body", "row"), ENTITIES)
 def test_patch_entity_rls_miss_returns_404(
     client, prefix, _create, patch_body, row
 ) -> None:
@@ -153,14 +153,14 @@ def test_patch_entity_rls_miss_returns_404(
     assert response.status_code == 404
 
 
-@pytest.mark.parametrize("prefix,_create,_patch,row", ENTITIES)
+@pytest.mark.parametrize(("prefix", "_create", "_patch", "row"), ENTITIES)
 def test_delete_entity_returns_204(client, prefix, _create, _patch, row) -> None:
     _use(_mock_client(write_data=[row]))
     response = client.delete(f"{prefix}/{row['id']}")
     assert response.status_code == 204
 
 
-@pytest.mark.parametrize("prefix,_create,_patch,row", ENTITIES)
+@pytest.mark.parametrize(("prefix", "_create", "_patch", "row"), ENTITIES)
 def test_delete_entity_rls_miss_returns_404(
     client, prefix, _create, _patch, row
 ) -> None:
@@ -170,7 +170,7 @@ def test_delete_entity_rls_miss_returns_404(
 
 
 @pytest.mark.parametrize(
-    "prefix,field",
+    ("prefix", "field"),
     [("/npcs", "name"), ("/factions", "name"), ("/arcs", "title")],
 )
 def test_patch_entity_null_required_field_returns_422(client, prefix, field) -> None:
@@ -191,7 +191,7 @@ def test_patch_arc_null_status_or_priority_returns_422(client, field) -> None:
 
 
 @pytest.mark.parametrize(
-    "prefix,body,row",
+    ("prefix", "body", "row"),
     [
         ("/npcs", {"name": "New"}, {"id": "npc-1", "name": "New"}),
         ("/factions", {"name": "New"}, {"id": "fac-1", "name": "New"}),
