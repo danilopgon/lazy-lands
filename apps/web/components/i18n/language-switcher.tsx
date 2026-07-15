@@ -134,6 +134,7 @@ function LocaleLinks({
             key={code}
             href={href}
             hrefLang={code}
+            prefetch={false}
             data-active={active}
             aria-current={active ? 'true' : undefined}
             onClick={(event) => handleClick(event, code, href)}
