@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
+import { useTranslations } from 'next-intl'
 
 import { edges, nodes } from './data'
 import type { EdgeDef, NodeKind } from './types'
@@ -85,6 +86,7 @@ const CARD_RIGHT_DELAY = 1.1
  * @returns {React.ReactElement} The animated hero graph scene element.
  */
 export function HeroGraphScene() {
+  const t = useTranslations('Landing.heroGraph')
   const reduce = useReducedMotion()
   const { scrollY } = useScroll()
 
@@ -207,7 +209,7 @@ export function HeroGraphScene() {
                 fontFamily='"Instrument Sans", sans-serif'
                 fill={nodeTextFill(node.kind)}
               >
-                {node.label}
+                {node.id === 'party' ? t('nodeParty') : node.label}
               </text>
             </motion.g>
           ))}
@@ -222,13 +224,13 @@ export function HeroGraphScene() {
             transition={{ delay: ANNOT_DELAY, duration: 0.5, ease: EASE }}
           >
             <text x="30" y="22">
-              favor split
+              {t('annotationFavorSplit')}
             </text>
             <text x="64" y="20">
-              owes a favor
+              {t('annotationOwesFavor')}
             </text>
             <text x="28" y="92">
-              circling closer
+              {t('annotationCirclingCloser')}
             </text>
           </motion.g>
         </svg>
@@ -256,19 +258,19 @@ export function HeroGraphScene() {
           }}
         >
           <div className="mb-[1cqmin] font-mono text-[1.9cqmin] uppercase tracking-[0.08em] text-[var(--accent)]">
-            Briefing · Session VIII
+            {t('briefingKicker')}
           </div>
           <div className="mb-[1.8cqmin] font-serif text-[4.2cqmin] font-semibold leading-[1.05]">
-            The Quiet Ledger
+            {t('briefingTitle')}
           </div>
           <div className="mb-[1.8cqmin] font-mono text-[2cqmin] text-[var(--mute)]">
-            5 NPCs · 4 factions · 1 grudge resurfacing
+            {t('briefingSpecs')}
           </div>
           <div className="mb-[1.8cqmin] h-[0.4cqmin] bg-[var(--ink)]" />
           <div className="font-serif text-[2.5cqmin] leading-[1.4]">
-            Halia calls in the party. She knows they started the warehouse fire.
+            {t('briefingBody')}
             <span className="ml-[0.8cqmin] bg-[var(--accent-wash)] px-[0.8cqmin] font-semibold text-[var(--accent-deep)]">
-              memory in play
+              {t('memoryInPlay')}
             </span>
           </div>
         </motion.div>
@@ -300,10 +302,10 @@ export function HeroGraphScene() {
           }}
         >
           <div className="mb-[1cqmin] font-mono text-[1.8cqmin] uppercase tracking-[0.1em] opacity-85">
-            Don&apos;t forget
+            {t('noteKicker')}
           </div>
           <div className="font-serif text-[2.5cqmin] leading-[1.3]">
-            Halia favors two of them, and distrusts the other two.
+            {t('noteBody')}
           </div>
         </motion.div>
       </motion.div>

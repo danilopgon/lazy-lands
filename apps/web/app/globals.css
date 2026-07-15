@@ -25,6 +25,11 @@
   --danger: #8a2515;
   --danger-wash: #f1d8d1;
   --shadow: #1a1c19;
+  /* Raised shadow for near-black (`ink`) button faces. A pure --shadow (#1a1c19)
+     matches the ink surface, so the hard offset reads as one flat block instead
+     of button + shadow. This warm mid-tone stays dark enough to read as a hard
+     shadow on light surfaces while separating from the black face (issue #62). */
+  --shadow-raised: #585c51;
   --paper-rgb: 248 243 235;
   --ink-rgb: 26 28 25;
   --bg-contrast: #fbf4ec;

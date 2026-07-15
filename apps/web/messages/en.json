@@ -56,6 +56,19 @@
       "metaScribe": "The Scribe proposes, you decide",
       "metaFree": "Free while in early access"
     },
+    "heroGraph": {
+      "nodeParty": "Party",
+      "annotationFavorSplit": "favor split",
+      "annotationOwesFavor": "owes a favor",
+      "annotationCirclingCloser": "circling closer",
+      "briefingKicker": "Briefing · Session VIII",
+      "briefingTitle": "The Quiet Ledger",
+      "briefingSpecs": "5 NPCs · 4 factions · 1 grudge resurfacing",
+      "briefingBody": "Halia calls in the party. She knows they started the warehouse fire.",
+      "memoryInPlay": "memory in play",
+      "noteKicker": "Don't forget",
+      "noteBody": "Halia favors two of them, and distrusts the other two."
+    },
     "marquee": [
       "Session VII accepted: Halia favors two party members",
       "Open arc: anti-dragon plans need a stable core",
@@ -440,6 +453,7 @@
   },
   "MemoryReview": {
     "breadcrumb": "Memory",
+    "notPersistedNotice": "For now, these suggestions aren't saved to your account — they live only in this browser session and disappear if you close the tab or switch devices. Accept the ones worth keeping before you leave. Saving them for later is coming in a future version.",
     "kicker": "Session {session} · Memory review",
     "sessionLabel": "Session {number}",
     "sessionSource": "Linked session",
