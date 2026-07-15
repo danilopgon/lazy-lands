@@ -2,3 +2,13 @@ packages:
   - 'apps/*'
   - 'services/*'
   - 'supabase'
+# pnpm 11 fails installs on dependencies with un-decided build scripts. These
+# native optional deps already ran un-built under pnpm 10 (CI was green without
+# them), so keep them un-built and record the decision explicitly to satisfy the
+# strict gate. Flip an entry to `true` only if its native build becomes needed.
+allowBuilds:
+  '@parcel/watcher': false
+  '@swc/core': false
+  esbuild: false
+  sharp: false
+  unrs-resolver: false
