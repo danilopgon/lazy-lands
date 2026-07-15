@@ -26,11 +26,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Dependency audit
-        # Non-blocking: npm retired the `pnpm audit` endpoint
-        # (/-/npm/v1/security/audits now returns HTTP 410), so this step cannot
-        # complete until pnpm ships bulk-advisory support. Mirrors the backend
-        # pip-audit step, which is already advisory-only.
-        continue-on-error: true
         run: pnpm audit --audit-level=high
       - name: Lint
         run: pnpm lint

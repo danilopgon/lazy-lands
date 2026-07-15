@@ -109,7 +109,7 @@ lazy-lands/
 
 ### Prerequisites
 
-- Node.js 20+ and pnpm 10+
+- Node.js 22+ and pnpm 11+
 - Python 3.12 and uv
 - Docker Desktop + WSL2 (required for supabase start)
 

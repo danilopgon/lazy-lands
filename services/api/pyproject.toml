@@ -36,10 +36,17 @@ line-length = 88
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "D"]
+select = ["E", "F", "I", "UP", "B", "D", "SIM", "C4", "PIE", "RET", "TID", "PT", "RUF"]
+# `×` (U+00D7) is deliberate multiplication notation in a couple of docstrings
+# (e.g. "SELECT/INSERT/UPDATE/DELETE × 6 tables"); don't flag it as a confusable.
+allowed-confusables = ["×"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["D"]
+# D: docstrings aren't required in tests.
+# SIM117: nested `with as_user(...)` / `with pytest.raises(...)` blocks read
+# clearer than a combined context manager in the RLS tests (which also need a
+# live Postgres, so they aren't exercised by CI).
+"tests/**/*.py" = ["D", "SIM117"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

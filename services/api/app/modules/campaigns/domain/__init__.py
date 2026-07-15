@@ -7,12 +7,12 @@ from app.modules.campaigns.domain.faction import Faction
 from app.modules.campaigns.domain.npc import NPC
 
 __all__ = [
+    "NPC",
     "Arc",
     "ArcStatus",
     "Campaign",
     "ContentSource",
     "Faction",
-    "NPC",
     "NewArc",
     "Priority",
 ]

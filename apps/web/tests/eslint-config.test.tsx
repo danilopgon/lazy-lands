@@ -11,7 +11,15 @@ describe('web ESLint configuration', () => {
       readFileSync(join(appRoot, 'package.json'), 'utf8')
     ) as { scripts: Record<string, string> }
 
-    expect(packageJson.scripts.lint).toBe('eslint .')
+    expect(packageJson.scripts.lint).toContain('eslint .')
+  })
+
+  it('fails the lint gate on any warning', () => {
+    const packageJson = JSON.parse(
+      readFileSync(join(appRoot, 'package.json'), 'utf8')
+    ) as { scripts: Record<string, string> }
+
+    expect(packageJson.scripts.lint).toContain('--max-warnings 0')
   })
 
   it('uses a flat ESLint config for Next.js 16 and ESLint 9', () => {

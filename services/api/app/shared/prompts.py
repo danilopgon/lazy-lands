@@ -22,7 +22,7 @@ _env = Environment(
     loader=FileSystemLoader(_prompt_search_paths()),
     # Prompts are plain text sent to an LLM, not HTML — escaping would
     # corrupt the DM's premise (quotes, ampersands, etc.).
-    autoescape=False,  # noqa: S701
+    autoescape=False,
     # A typo'd template variable must fail loudly at render time rather than
     # silently rendering a blank prompt.
     undefined=StrictUndefined,

@@ -85,9 +85,8 @@ def test_008d_missing_key_raises(monkeypatch, tmp_path) -> None:
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(ValueError, match="GEMINI_API_KEY"):
         build_provider()
-    assert "GEMINI_API_KEY" in str(exc_info.value)
 
 
 # LLM-SEAM-008d2: fake provider returns FakeLlmProvider (no API key needed)
@@ -101,9 +100,7 @@ def test_008d2_fake_provider(monkeypatch) -> None:
 def test_008e_base_urls_are_openai_compatible() -> None:
     for name, entry in PROVIDERS.items():
         url = entry["base_url"]
-        assert (
-            url.endswith("/v1") or url.endswith("/openai/") or url.endswith("/v1/")
-        ), (
+        assert url.endswith(("/v1", "/openai/", "/v1/")), (
             f"Provider '{name}' base_url '{url}' "
             f"does not end with /v1, /openai/, or /v1/"
         )

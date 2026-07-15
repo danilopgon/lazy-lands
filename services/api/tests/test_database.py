@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 def test_create_user_supabase_client_authenticates_with_token() -> None:
     """The returned client MUST have .postgrest.auth() invoked with the token."""
-    from app.shared.database import create_user_supabase_client  # noqa: PLC0415
+    from app.shared.database import create_user_supabase_client
 
     with patch("app.shared.database.create_client") as mock_create:
         mock_client = MagicMock()
@@ -29,7 +29,7 @@ def test_create_user_supabase_client_is_fresh_per_call_no_lru_cache() -> None:
     Contrast with get_supabase_client()'s @lru_cache singleton — that pattern
     is forbidden here because the client carries a request-scoped credential.
     """
-    from app.shared.database import create_user_supabase_client  # noqa: PLC0415
+    from app.shared.database import create_user_supabase_client
 
     with patch("app.shared.database.create_client") as mock_create:
         mock_create.side_effect = [MagicMock(), MagicMock()]
@@ -43,7 +43,7 @@ def test_create_user_supabase_client_is_fresh_per_call_no_lru_cache() -> None:
 
 def test_client_isolation_different_tokens_no_shared_state_leak() -> None:
     """Two requests with different tokens MUST get independent client instances."""
-    from app.shared.database import create_user_supabase_client  # noqa: PLC0415
+    from app.shared.database import create_user_supabase_client
 
     with patch("app.shared.database.create_client") as mock_create:
         client_a = MagicMock()
@@ -60,6 +60,6 @@ def test_client_isolation_different_tokens_no_shared_state_leak() -> None:
 
 
 def test_get_user_supabase_client_is_importable() -> None:
-    from app.shared.database import get_user_supabase_client  # noqa: PLC0415
+    from app.shared.database import get_user_supabase_client
 
     assert callable(get_user_supabase_client)

@@ -14,7 +14,7 @@ const eslintConfig = [
     plugins: { jsdoc },
     rules: {
       'jsdoc/require-jsdoc': [
-        'warn',
+        'error',
         {
           require: {
             FunctionDeclaration: true,
@@ -24,13 +24,13 @@ const eslintConfig = [
           },
         },
       ],
-      'jsdoc/require-param': 'warn',
+      'jsdoc/require-param': 'error',
       'jsdoc/require-param-type': 'error',
-      'jsdoc/require-param-description': 'warn',
-      'jsdoc/require-returns': 'warn',
+      'jsdoc/require-param-description': 'error',
+      'jsdoc/require-returns': 'error',
       'jsdoc/require-returns-type': 'error',
-      'jsdoc/require-returns-description': 'warn',
-      'jsdoc/require-description': 'warn',
+      'jsdoc/require-returns-description': 'error',
+      'jsdoc/require-description': 'error',
       'jsdoc/check-types': 'error',
     },
   },

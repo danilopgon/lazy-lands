@@ -345,7 +345,7 @@ def test_export_route_requires_authentication() -> None:
     assert response.content != b"%PDF-test-bytes"
 
 
-@pytest.mark.parametrize("error", [SessionNotFoundError(), SessionNotFoundError()])
+@pytest.mark.parametrize("error", [SessionNotFoundError()])
 def test_export_route_returns_uniform_404_for_foreign_or_unknown_session(
     error: Exception,
 ) -> None:
@@ -369,7 +369,7 @@ def test_export_route_returns_404_for_malformed_session_id_without_bytes() -> No
 
 
 @pytest.mark.parametrize(
-    "params,error",
+    ("params", "error"),
     [
         ([], ExportSelectionError()),
         ([("section_id", "not-a-uuid")], ExportSelectionError()),

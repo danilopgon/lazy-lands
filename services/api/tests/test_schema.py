@@ -167,10 +167,10 @@ def test_all_expected_tables_exist(db_conn) -> None:
             "where table_schema = 'public'"
         )
         present = {row[0] for row in cur.fetchall()}
-    assert EXPECTED_TABLES <= present, f"missing tables: {EXPECTED_TABLES - present}"
+    assert present >= EXPECTED_TABLES, f"missing tables: {EXPECTED_TABLES - present}"
 
 
-@pytest.mark.parametrize("enum_name,expected_values", list(EXPECTED_ENUMS.items()))
+@pytest.mark.parametrize(("enum_name", "expected_values"), list(EXPECTED_ENUMS.items()))
 def test_enum_has_expected_values(
     db_conn, enum_name: str, expected_values: set[str]
 ) -> None:
@@ -263,7 +263,10 @@ def test_timestamps_not_null_default_now(db_conn, table_name: str) -> None:
         assert col in rows, f"{table_name}.{col} missing"
         nullable, default = rows[col]
         assert nullable == "NO", f"{table_name}.{col} must be NOT NULL"
-        assert default is not None and "now()" in default, (
+        assert default is not None, (
+            f"{table_name}.{col} default must be now(), got {default!r}"
+        )
+        assert "now()" in default, (
             f"{table_name}.{col} default must be now(), got {default!r}"
         )
 
@@ -375,10 +378,9 @@ def test_memory_fact_cannot_reference_session_from_another_campaign(db_conn) -> 
     campaign_b = "10000000-0000-0000-0000-00000000bbb1"
     session_b = "20000000-0000-0000-0000-00000000bbb1"
 
-    with db_conn.transaction(force_rollback=True):
-        with db_conn.cursor() as cur:
-            cur.execute(
-                """
+    with db_conn.transaction(force_rollback=True), db_conn.cursor() as cur:
+        cur.execute(
+            """
                 insert into auth.users (
                     id,
                     aud,
@@ -405,28 +407,27 @@ def test_memory_fact_cannot_reference_session_from_another_campaign(db_conn) -> 
                 )
                 on conflict (id) do nothing
                 """,
-                (TEST_AUTH_USER_ID,),
-            )
-            cur.execute(
-                "insert into campaigns (id, user_id, title) values (%s, %s, %s)",
-                (campaign_a, TEST_AUTH_USER_ID, "Campaign A"),
-            )
-            cur.execute(
-                "insert into campaigns (id, user_id, title) values (%s, %s, %s)",
-                (campaign_b, TEST_AUTH_USER_ID, "Campaign B"),
-            )
-            cur.execute(
-                "insert into sessions (id, campaign_id, session_number) "
-                "values (%s, %s, 1)",
-                (session_b, campaign_b),
-            )
+            (TEST_AUTH_USER_ID,),
+        )
+        cur.execute(
+            "insert into campaigns (id, user_id, title) values (%s, %s, %s)",
+            (campaign_a, TEST_AUTH_USER_ID, "Campaign A"),
+        )
+        cur.execute(
+            "insert into campaigns (id, user_id, title) values (%s, %s, %s)",
+            (campaign_b, TEST_AUTH_USER_ID, "Campaign B"),
+        )
+        cur.execute(
+            "insert into sessions (id, campaign_id, session_number) values (%s, %s, 1)",
+            (session_b, campaign_b),
+        )
 
-            with pytest.raises(psycopg.errors.ForeignKeyViolation):
-                cur.execute(
-                    "insert into memory_facts "
-                    "(campaign_id, source_session_id, content) values (%s, %s, %s)",
-                    (campaign_a, session_b, "Cross-campaign fact"),
-                )
+        with pytest.raises(psycopg.errors.ForeignKeyViolation):
+            cur.execute(
+                "insert into memory_facts "
+                "(campaign_id, source_session_id, content) values (%s, %s, %s)",
+                (campaign_a, session_b, "Cross-campaign fact"),
+            )
 
 
 @pytest.mark.parametrize("table_name", sorted(EXPECTED_TABLES))

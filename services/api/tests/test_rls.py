@@ -66,17 +66,14 @@ def as_user(conn: psycopg.Connection, role: str, sub: str | None) -> Iterator[Cu
     """
     if role not in _ALLOWED_ROLES:
         raise ValueError(f"unsupported role {role!r}; expected one of {_ALLOWED_ROLES}")
-    with conn.transaction(force_rollback=True):
-        with conn.cursor() as cur:
-            # role is validated against a fixed internal whitelist, so it is
-            # safe to interpolate into the SET LOCAL ROLE identifier slot.
-            cur.execute(f"set local role {role}")
-            if sub is not None:
-                claims = f'{{"sub":"{sub}"}}'
-                cur.execute(
-                    "select set_config('request.jwt.claims', %s, true)", (claims,)
-                )
-            yield cur
+    with conn.transaction(force_rollback=True), conn.cursor() as cur:
+        # role is validated against a fixed internal whitelist, so it is
+        # safe to interpolate into the SET LOCAL ROLE identifier slot.
+        cur.execute(f"set local role {role}")
+        if sub is not None:
+            claims = f'{{"sub":"{sub}"}}'
+            cur.execute("select set_config('request.jwt.claims', %s, true)", (claims,))
+        yield cur
 
 
 @contextlib.contextmanager
@@ -95,21 +92,20 @@ def as_owner_then_non_owner(
     Yields the shared cursor and a ``switch_to_user_b`` callback the caller
     invokes after seeding. ``force_rollback=True`` discards the seed afterwards.
     """
-    with conn.transaction(force_rollback=True):
-        with conn.cursor() as cur:
-            cur.execute("set local role authenticated")
+    with conn.transaction(force_rollback=True), conn.cursor() as cur:
+        cur.execute("set local role authenticated")
+        cur.execute(
+            "select set_config('request.jwt.claims', %s, true)",
+            (f'{{"sub":"{USER_A}"}}',),
+        )
+
+        def switch_to_user_b() -> None:
             cur.execute(
                 "select set_config('request.jwt.claims', %s, true)",
-                (f'{{"sub":"{USER_A}"}}',),
+                (f'{{"sub":"{USER_B}"}}',),
             )
 
-            def switch_to_user_b() -> None:
-                cur.execute(
-                    "select set_config('request.jwt.claims', %s, true)",
-                    (f'{{"sub":"{USER_B}"}}',),
-                )
-
-            yield cur, switch_to_user_b
+        yield cur, switch_to_user_b
 
 
 # --- FR-2.2 / Scenario 1: Owner reads own campaign ---------------------------
@@ -393,28 +389,27 @@ def as_user_with_cross_campaign_session(
     """Create a temporary second campaign/session before switching to USER_A."""
     other_campaign = "20000000-0000-0000-0000-0000000000b7"
     other_session = "20000000-0000-0000-0000-000000000007"
-    with conn.transaction(force_rollback=True):
-        with conn.cursor() as cur:
-            cur.execute(
-                """
+    with conn.transaction(force_rollback=True), conn.cursor() as cur:
+        cur.execute(
+            """
                 insert into campaigns (id, user_id, title)
                 values (%s, %s, 'Temporary other campaign')
                 on conflict (id) do nothing
                 """,
-                (other_campaign, USER_A),
-            )
-            cur.execute(
-                """
+            (other_campaign, USER_A),
+        )
+        cur.execute(
+            """
                 insert into sessions (id, campaign_id, session_number)
                 values (%s, %s, 777)
                 on conflict (id) do nothing
                 """,
-                (other_session, other_campaign),
-            )
-            cur.execute("set local role authenticated")
-            claims = f'{{"sub":"{USER_A}"}}'
-            cur.execute("select set_config('request.jwt.claims', %s, true)", (claims,))
-            yield cur, other_session
+            (other_session, other_campaign),
+        )
+        cur.execute("set local role authenticated")
+        claims = f'{{"sub":"{USER_A}"}}'
+        cur.execute("select set_config('request.jwt.claims', %s, true)", (claims,))
+        yield cur, other_session
 
 
 def test_memory_fact_rejects_cross_campaign_source_session(db_conn) -> None:
