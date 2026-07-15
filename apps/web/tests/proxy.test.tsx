@@ -249,6 +249,25 @@ describe('proxy — session-management (Phase 2B)', () => {
     expect(result.cookies.get('NEXT_LOCALE')?.value).toBe('es')
   })
 
+  it('does not seed over an explicit locale prefix in the URL', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const response = new NextResponse(null, { status: 200 })
+    const mockUser = {
+      id: 'user-123',
+      user_metadata: { language: 'es' },
+    } as unknown as User
+    vi.mocked(updateSession).mockResolvedValue({ response, user: mockUser })
+
+    const { proxy } = await import('../proxy')
+    // Deliberate English URL for a Spanish-preference user must win, so the
+    // saved language must not be seeded here (it would bounce back to /es).
+    const result = await proxy(
+      makeRequest('http://localhost:3000/en/dashboard')
+    )
+
+    expect(result.cookies.get('NEXT_LOCALE')).toBeUndefined()
+  })
+
   it('does not overwrite an existing NEXT_LOCALE cookie', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
     const response = new NextResponse(null, { status: 200 })
