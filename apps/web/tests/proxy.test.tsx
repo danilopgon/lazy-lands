@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js'
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock updateSession to return the { response, user } contract
@@ -13,17 +13,17 @@ vi.mock('next-intl/middleware', () => ({
   default: () => () => NextResponse.next(),
 }))
 
-// Helper: build a minimal NextRequest-like object from a URL string.
-// proxy.ts uses `new URL(request.url).pathname` and `request.url`, so a plain
-// Request cast satisfies that contract without needing nextUrl.
+// Helper: build a real NextRequest from a URL string. A real NextRequest is
+// needed (not a plain `Request` cast) because proxy.ts reads `request.cookies`
+// to seed the locale cookie; NextRequest provides the `cookies` accessor.
 /**
- * Build a minimal NextRequest-compatible object from a URL string for proxy tests.
+ * Build a NextRequest from a URL string for proxy tests.
  *
  * @param {string} url - The URL string to create the request from.
- * @returns {NextRequest} A NextRequest-compatible object for use in proxy tests.
+ * @returns {NextRequest} A NextRequest for use in proxy tests.
  */
 function makeRequest(url: string): NextRequest {
-  return new Request(url) as unknown as NextRequest
+  return new NextRequest(url)
 }
 
 describe('proxy — session-management (Phase 2B)', () => {
@@ -232,5 +232,83 @@ describe('proxy — session-management (Phase 2B)', () => {
     expect(vi.mocked(updateSession).mock.calls[0][1]).toBeInstanceOf(
       NextResponse
     )
+  })
+
+  it('seeds NEXT_LOCALE from the saved user language when the cookie is absent', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const response = new NextResponse(null, { status: 200 })
+    const mockUser = {
+      id: 'user-123',
+      user_metadata: { language: 'es' },
+    } as unknown as User
+    vi.mocked(updateSession).mockResolvedValue({ response, user: mockUser })
+
+    const { proxy } = await import('../proxy')
+    const result = await proxy(makeRequest('http://localhost:3000/dashboard'))
+
+    expect(result.cookies.get('NEXT_LOCALE')?.value).toBe('es')
+  })
+
+  it('does not seed over an explicit locale prefix in the URL', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const response = new NextResponse(null, { status: 200 })
+    const mockUser = {
+      id: 'user-123',
+      user_metadata: { language: 'es' },
+    } as unknown as User
+    vi.mocked(updateSession).mockResolvedValue({ response, user: mockUser })
+
+    const { proxy } = await import('../proxy')
+    // Deliberate English URL for a Spanish-preference user must win, so the
+    // saved language must not be seeded here (it would bounce back to /es).
+    const result = await proxy(
+      makeRequest('http://localhost:3000/en/dashboard')
+    )
+
+    expect(result.cookies.get('NEXT_LOCALE')).toBeUndefined()
+  })
+
+  it('does not overwrite an existing NEXT_LOCALE cookie', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const response = new NextResponse(null, { status: 200 })
+    const mockUser = {
+      id: 'user-123',
+      user_metadata: { language: 'es' },
+    } as unknown as User
+    vi.mocked(updateSession).mockResolvedValue({ response, user: mockUser })
+
+    const { proxy } = await import('../proxy')
+    const request = new NextRequest('http://localhost:3000/dashboard', {
+      headers: { cookie: 'NEXT_LOCALE=en' },
+    })
+    const result = await proxy(request)
+
+    expect(result.cookies.get('NEXT_LOCALE')).toBeUndefined()
+  })
+
+  it('does not seed a locale cookie for anonymous visitors', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const response = new NextResponse(null, { status: 200 })
+    vi.mocked(updateSession).mockResolvedValue({ response, user: null })
+
+    const { proxy } = await import('../proxy')
+    const result = await proxy(makeRequest('http://localhost:3000/'))
+
+    expect(result.cookies.get('NEXT_LOCALE')).toBeUndefined()
+  })
+
+  it('ignores an unsupported saved language value', async () => {
+    const { updateSession } = await import('@/lib/supabase/middleware')
+    const response = new NextResponse(null, { status: 200 })
+    const mockUser = {
+      id: 'user-123',
+      user_metadata: { language: 'fr' },
+    } as unknown as User
+    vi.mocked(updateSession).mockResolvedValue({ response, user: mockUser })
+
+    const { proxy } = await import('../proxy')
+    const result = await proxy(makeRequest('http://localhost:3000/dashboard'))
+
+    expect(result.cookies.get('NEXT_LOCALE')).toBeUndefined()
   })
 })

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
 
-import { routing } from '@/i18n/routing'
+import { isAppLocale, routing } from '@/i18n/routing'
 import { decideAuth } from '@/lib/auth/decide'
 import { buildLocalizedPath, stripLocaleFromPathname } from '@/lib/format'
 import { updateSession } from '@/lib/supabase/middleware'
@@ -58,6 +58,30 @@ export async function proxy(request: NextRequest) {
 
   const url = new URL(request.url)
   const { locale, pathname } = stripLocaleFromPathname(url.pathname)
+
+  // Seed next-intl's `NEXT_LOCALE` cookie from the authenticated user's saved
+  // language the first time we see them without one (e.g. a fresh sign-in on a
+  // new device), so the authenticated experience starts in their preferred
+  // language. Letting the cookie drive next-intl's own detection avoids both
+  // redirect loops and the stale-read race of redirecting on async-written
+  // `user_metadata`. Skip when the URL already carries an explicit locale
+  // prefix (`pathname` differs from the raw path) — that is a deliberate
+  // per-request choice that must win over the saved preference, so seeding the
+  // cookie there would bounce e.g. `/en/dashboard` back to `/es/dashboard`.
+  const hasExplicitLocalePrefix = url.pathname !== pathname
+  const savedLanguage = user?.user_metadata?.language
+  if (
+    !hasExplicitLocalePrefix &&
+    !request.cookies.has('NEXT_LOCALE') &&
+    typeof savedLanguage === 'string' &&
+    isAppLocale(savedLanguage)
+  ) {
+    response.cookies.set('NEXT_LOCALE', savedLanguage, {
+      path: '/',
+      maxAge: 31536000,
+      sameSite: 'lax',
+    })
+  }
 
   const decision = decideAuth(user, pathname)
 

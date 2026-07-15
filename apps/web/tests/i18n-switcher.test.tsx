@@ -188,4 +188,22 @@ describe('LanguageSwitcher', () => {
       expect(mockRouterPush).toHaveBeenCalledWith('/es/dashboard?x=1')
     })
   })
+
+  it('records the chosen locale in the NEXT_LOCALE cookie so detection is overridden', async () => {
+    const user = userEvent.setup()
+    window.history.pushState(null, '', '/dashboard?x=1')
+
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <LanguageSwitcher />
+      </NextIntlClientProvider>
+    )
+
+    const spanishLink = screen.getByRole('link', { name: /español/i })
+    spanishLink.addEventListener('click', (event) => event.preventDefault())
+
+    await user.click(spanishLink)
+
+    expect(document.cookie).toContain('NEXT_LOCALE=es')
+  })
 })
