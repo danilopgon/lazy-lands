@@ -86,6 +86,29 @@ describe('robots', () => {
     expect(result.sitemap).toBe('https://lazylands.app/sitemap.xml')
     expect(result.host).toBe('https://lazylands.app')
   })
+
+  it('blocks the GPTBot training crawler while allowing search crawlers', () => {
+    process.env.VERCEL_ENV = 'production'
+    process.env.NEXT_PUBLIC_APP_URL = 'https://lazylands.app'
+
+    const rules = robots().rules
+    const list = Array.isArray(rules) ? rules : [rules]
+
+    const asAgents = (ua: string | string[] | undefined) =>
+      Array.isArray(ua) ? ua : ua ? [ua] : []
+
+    const searchRule = list.find((rule) =>
+      asAgents(rule.userAgent).includes('OAI-SearchBot')
+    )
+    expect(searchRule?.allow).toBe('/')
+
+    const gptBotRule = list.find((rule) =>
+      asAgents(rule.userAgent).includes('GPTBot')
+    )
+    expect(gptBotRule?.disallow).toBe('/')
+    // GPTBot must not appear in an allow group.
+    expect(asAgents(searchRule?.userAgent)).not.toContain('GPTBot')
+  })
 })
 
 describe('sitemap', () => {

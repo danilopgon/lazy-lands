@@ -31,12 +31,32 @@ export default function robots(): MetadataRoute.Robots {
     return { rules: { userAgent: '*', disallow: '/' } }
   }
 
+  const disallow = disallowedPaths()
+
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: disallowedPaths(),
-    },
+    rules: [
+      {
+        // Search and AI-search crawlers may index public pages but never the
+        // private/authenticated areas. `*` applies the same policy to any other
+        // well-behaved crawler; the named agents make the intent explicit.
+        userAgent: [
+          '*',
+          'Googlebot',
+          'Bingbot',
+          'OAI-SearchBot',
+          'PerplexityBot',
+        ],
+        allow: '/',
+        disallow,
+      },
+      {
+        // GPTBot is OpenAI's model-TRAINING crawler — distinct from
+        // OAI-SearchBot, which powers ChatGPT Search citations. Opt out of
+        // training while still allowing search/citation. Reversible.
+        userAgent: 'GPTBot',
+        disallow: '/',
+      },
+    ],
     sitemap: `${siteUrl}/sitemap.xml`,
     host: siteUrl,
   }
