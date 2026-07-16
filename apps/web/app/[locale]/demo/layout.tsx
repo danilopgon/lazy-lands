@@ -25,7 +25,12 @@ export default async function DemoLayout({
   const initialFixtures = getDemoFixtures(locale)
 
   return (
-    <DemoProvider initialFixtures={initialFixtures}>
+    // `key={locale}` forces a fresh DemoProvider on a locale switch. The store
+    // seeds its state once (lazy `useState` + a `useRef`), so a soft navigation
+    // that preserves the client component instance would otherwise keep the
+    // previous locale's sample content even though the URL and chrome changed.
+    // Re-keying guarantees the demo content re-seeds in the new language.
+    <DemoProvider key={locale} initialFixtures={initialFixtures}>
       <DemoHeader />
       {children}
     </DemoProvider>
