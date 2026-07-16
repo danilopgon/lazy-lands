@@ -92,6 +92,37 @@ describe('demo memory review — remount does not resurrect suggestions', () => 
     })
   })
 
+  it('accept then IMMEDIATELY return (within the async accept latency): no resurrection', async () => {
+    // Regression guard for the accept-path resurrection WINDOW. `acceptSuggestion`
+    // adds the fact synchronously but its promise only settles after the demo
+    // latency; if the resolved suggestion is dropped only AFTER that await, a
+    // remount during the window re-seeds the still-present suggestion and lets
+    // it be accepted twice (duplicate fact). This test remounts right after the
+    // click — before the latency settles — so it fails unless the suggestion is
+    // dropped synchronously on accept. The other cases wait for the flow to
+    // settle first and therefore cannot observe this window.
+    const user = userEvent.setup()
+    const { rerender } = await logThenMountPage()
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('article').length).toBeGreaterThan(0)
+    })
+    const total = screen.getAllByRole('article').length
+
+    const firstCard = screen.getAllByRole('article')[0]
+    await user.click(
+      within(firstCard).getByRole('button', { name: /^accept as memory$/i })
+    )
+
+    // Remount immediately, WITHOUT waiting for the accept latency to settle.
+    rerender(<></>)
+    rerender(<DemoMemoryReviewPage />)
+
+    await waitFor(() => {
+      expect(screen.queryAllByRole('article').length).toBe(total - 1)
+    })
+  })
+
   it('dismiss then return: dismissed suggestion never reappears', async () => {
     const user = userEvent.setup()
     const { rerender } = await logThenMountPage()

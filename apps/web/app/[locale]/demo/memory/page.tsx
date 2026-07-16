@@ -77,8 +77,13 @@ export default function DemoMemoryReviewPage() {
    */
   async function accept(suggestion: PendingSuggestion, content: string) {
     setIsBusy(true)
-    await store.acceptSuggestion({ suggestion, content })
+    // Drop the suggestion synchronously, BEFORE awaiting the simulated latency:
+    // `acceptSuggestion` stores the fact immediately but its promise settles
+    // after a delay, so resolving only after the await would leave a window in
+    // which a remount could resurrect the already-accepted suggestion and let
+    // it be accepted twice.
     store.resolveSuggestion(suggestion.id)
+    await store.acceptSuggestion({ suggestion, content })
     setIsBusy(false)
     setEditing(null)
     setFeedback(content === suggestion.content ? 'accepted' : 'edited')
