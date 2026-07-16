@@ -6,11 +6,19 @@ import { describe, expect, it } from 'vitest'
 
 import { DemoProvider, useDemoStore } from '@/lib/demo/store'
 import { fixturesByLocale } from '@/lib/demo/fixtures'
+import { CARD_EXIT_MS, STAMP_LIFETIME_MS } from '@/lib/motion/timings'
 
 import DemoMemoryReviewPage from '../page'
 
 /** The demo store seeds suggestions from the en bundle by default. */
 const enSuggestions = fixturesByLocale.en.suggestions
+
+/**
+ * An accepted card outlives its own stamp on purpose: the demo latency, then
+ * the stamp pop + hold, then the exit animation. That is well past `waitFor`'s
+ * 1s default, so every "card left the screen" wait must be given room.
+ */
+const ACCEPT_TIMEOUT_MS = 1000 + STAMP_LIFETIME_MS + CARD_EXIT_MS + 1500
 
 /**
  * Wraps children in a single, persistent {@link DemoProvider} instance so the
@@ -69,6 +77,46 @@ async function logThenMountPage() {
   return handle
 }
 
+describe('demo memory review — accept feedback choreography', () => {
+  it('holds the stamp readable and only busies the card being accepted', async () => {
+    const user = userEvent.setup()
+    await logThenMountPage()
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('article').length).toBeGreaterThan(1)
+    })
+
+    const cards = screen.getAllByRole('article')
+    await user.click(
+      within(cards[0]).getByRole('button', { name: /^accept as memory$/i })
+    )
+
+    // An unrelated accept must never freeze the rest of the margins.
+    await waitFor(() => {
+      expect(within(cards[0]).getByRole('status')).toHaveTextContent(
+        /stamping/i
+      )
+    })
+    expect(
+      within(cards[1]).getByRole('button', { name: /^accept as memory$/i })
+    ).toBeEnabled()
+
+    // The stamp must survive its own 260ms pop rather than being torn down at
+    // ~46% of the way through it.
+    const stamp = await within(cards[0]).findByText(/★ accepted/i)
+    expect(stamp).toBeInTheDocument()
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    expect(within(cards[0]).getByText(/★ accepted/i)).toBeInTheDocument()
+
+    await waitFor(
+      () => {
+        expect(screen.getAllByRole('article').length).toBe(cards.length - 1)
+      },
+      { timeout: ACCEPT_TIMEOUT_MS }
+    )
+  }, 15000)
+})
+
 describe('demo memory review — remount does not resurrect suggestions', () => {
   it('accept then return: accepted suggestion never reappears, no duplicate fact', async () => {
     const user = userEvent.setup()
@@ -83,9 +131,12 @@ describe('demo memory review — remount does not resurrect suggestions', () => 
       within(firstCard).getByRole('button', { name: /^accept as memory$/i })
     )
 
-    await waitFor(() => {
-      expect(screen.queryAllByRole('article').length).toBe(2)
-    })
+    await waitFor(
+      () => {
+        expect(screen.queryAllByRole('article').length).toBe(2)
+      },
+      { timeout: ACCEPT_TIMEOUT_MS }
+    )
 
     // Unmount + remount ONLY the page, on the SAME persistent provider.
     rerender(<></>)
@@ -172,9 +223,12 @@ describe('demo memory review — remount does not resurrect suggestions', () => 
       await user.click(
         within(cards[0]).getByRole('button', { name: /^accept as memory$/i })
       )
-      await waitFor(() => {
-        expect(screen.queryAllByRole('article').length).toBe(total - i - 1)
-      })
+      await waitFor(
+        () => {
+          expect(screen.queryAllByRole('article').length).toBe(total - i - 1)
+        },
+        { timeout: ACCEPT_TIMEOUT_MS }
+      )
     }
 
     rerender(<></>)
@@ -194,5 +248,7 @@ describe('demo memory review — remount does not resurrect suggestions', () => 
     for (const suggestion of enSuggestions) {
       expect(screen.getAllByText(suggestion.content)).toHaveLength(1)
     }
-  })
+    // Every accept waits out a full stamp lifetime, so this walk needs more
+    // than the default 5s test budget.
+  }, 30000)
 })

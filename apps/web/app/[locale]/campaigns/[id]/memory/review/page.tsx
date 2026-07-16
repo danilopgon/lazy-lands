@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -17,7 +17,9 @@ import {
   SuggestionCard,
   SuggestionEditor,
   type PendingSuggestion,
+  type SuggestionFx,
 } from '@/components/sessions/memory-review-parts'
+import { CARD_EXIT_MS, STAMP_LIFETIME_MS } from '@/lib/motion/timings'
 import { getCampaignDetail, CampaignNotFoundError } from '@/lib/campaigns/api'
 import {
   createMemoryFact,
@@ -99,7 +101,11 @@ export default function MemoryReviewPage() {
   const [isDraftLoaded, setIsDraftLoaded] = useState(false)
   const [loadedDraftKey, setLoadedDraftKey] = useState<string | null>(null)
   const [editing, setEditing] = useState<string | null>(null)
-  const [fx, setFx] = useState<Record<string, 'stamping' | 'discarding'>>({})
+  const [fx, setFx] = useState<Record<string, SuggestionFx>>({})
+  // Accepts are per-card, so several can be in flight at once. A single slot
+  // would let a later accept clear an earlier card's busy state and re-enable
+  // its Accept button mid-request, stamping the same suggestion twice.
+  const [submittingIds, setSubmittingIds] = useState<Record<string, true>>({})
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [actionError, setActionError] = useState<ActionError>(null)
 
@@ -153,23 +159,63 @@ export default function MemoryReviewPage() {
     }
   }, [campaignId, isDraftLoaded, loadedDraftKey, pending.length, sessionId])
 
+  const pendingRef = useRef<PendingSuggestion[]>([])
+  useEffect(() => {
+    pendingRef.current = pending
+  }, [pending])
+
   /**
    * Removes a processed suggestion from UI state and the scoped transient draft.
+   *
+   * The draft rewrite deliberately runs OUTSIDE the `setPending` updater. A card
+   * is removed on a timer once its stamp has been read, and if the DM leaves
+   * during that window React drops the updater for the unmounted component — so
+   * a rewrite living inside it would silently never happen, resurrecting an
+   * already-accepted suggestion on the next visit.
    *
    * @param {string} suggestionIdToRemove - The render-only id of the suggestion to remove.
    * @returns {void}
    */
   function removePendingSuggestion(suggestionIdToRemove: string) {
-    setPending((items) => {
-      const remaining = items.filter((item) => item.id !== suggestionIdToRemove)
-      if (sessionId) {
-        rewriteMemoryReviewDraftSuggestions(
-          campaignId,
-          sessionId,
-          remaining.map(toMemorySuggestion)
-        )
-      }
-      return remaining
+    const remaining = pendingRef.current.filter(
+      (item) => item.id !== suggestionIdToRemove
+    )
+    pendingRef.current = remaining
+    if (sessionId) {
+      rewriteMemoryReviewDraftSuggestions(
+        campaignId,
+        sessionId,
+        remaining.map(toMemorySuggestion)
+      )
+    }
+    setPending(remaining)
+  }
+
+  /**
+   * Releases only this card's in-flight slot, leaving concurrent accepts busy.
+   *
+   * @param {string} suggestionIdToClear - The render-only id to release.
+   * @returns {void}
+   */
+  function clearSubmitting(suggestionIdToClear: string) {
+    setSubmittingIds((current) => {
+      const next = { ...current }
+      delete next[suggestionIdToClear]
+      return next
+    })
+  }
+
+  /**
+   * Clears a card's transient feedback phase once it has left the screen.
+   *
+   * @param {string} suggestionIdToClear - The render-only id to clear.
+   * @returns {void}
+   */
+  function clearFx(suggestionIdToClear: string) {
+    setFx((current) => {
+      const next = { ...current }
+      delete next[suggestionIdToClear]
+      return next
     })
   }
 
@@ -187,9 +233,16 @@ export default function MemoryReviewPage() {
         type: suggestion.type,
         importance: suggestion.importance,
       }),
+    onMutate: (variables) => {
+      setSubmittingIds((current) => ({
+        ...current,
+        [variables.suggestion.id]: true,
+      }))
+    },
     onSuccess: (_fact, variables) => {
       setEditing(null)
       setActionError(null)
+      clearSubmitting(variables.suggestion.id)
       setFeedback(
         variables.content === variables.suggestion.content
           ? 'accepted'
@@ -199,19 +252,28 @@ export default function MemoryReviewPage() {
         ...current,
         [variables.suggestion.id]: 'stamping',
       }))
+      void queryClient.invalidateQueries({
+        queryKey: ['campaign', campaignId, 'memory-facts', 'active'],
+      })
+
+      // Pop, then hold the stamp readable, then file the card away. Both delays
+      // are timer-driven on purpose: under subtle/off/reduced motion the stamp
+      // is a static badge, so an `animationend` listener would never fire and
+      // the card would never leave.
       window.setTimeout(() => {
-        removePendingSuggestion(variables.suggestion.id)
-        setFx((current) => {
-          const next = { ...current }
-          delete next[variables.suggestion.id]
-          return next
-        })
-        void queryClient.invalidateQueries({
-          queryKey: ['campaign', campaignId, 'memory-facts', 'active'],
-        })
-      }, 120)
+        setFx((current) =>
+          current[variables.suggestion.id] === 'stamping'
+            ? { ...current, [variables.suggestion.id]: 'accepting' }
+            : current
+        )
+        window.setTimeout(() => {
+          removePendingSuggestion(variables.suggestion.id)
+          clearFx(variables.suggestion.id)
+        }, CARD_EXIT_MS)
+      }, STAMP_LIFETIME_MS)
     },
-    onError: () => {
+    onError: (_error, variables) => {
+      clearSubmitting(variables.suggestion.id)
       setActionError('create')
     },
   })
@@ -239,19 +301,20 @@ export default function MemoryReviewPage() {
    */
   function dismissSuggestion(suggestion: PendingSuggestion) {
     setFx((current) => ({ ...current, [suggestion.id]: 'discarding' }))
+    // The strike + slide must finish before the card is torn down.
     window.setTimeout(() => {
       removePendingSuggestion(suggestion.id)
-      setFx((current) => {
-        const next = { ...current }
-        delete next[suggestion.id]
-        return next
-      })
+      clearFx(suggestion.id)
       setActionError(null)
       setFeedback('dismissed')
-    }, 120)
+    }, CARD_EXIT_MS)
   }
 
-  if (campaignQuery.isLoading) {
+  // The draft read is deferred to an effect (never a state initializer, which
+  // would break hydration), so the first paint has no draft yet. Gate it on the
+  // read itself — NOT on `campaignQuery`, whose key is already warm from the
+  // log-session screen and therefore masks nothing.
+  if (campaignQuery.isLoading || !isDraftLoaded) {
     return (
       <main id="main-content" className="mx-auto max-w-[900px] px-6 py-16">
         <LoadingScribe
@@ -365,7 +428,7 @@ export default function MemoryReviewPage() {
                 <SuggestionEditor
                   key={suggestion.id}
                   suggestion={suggestion}
-                  isBusy={createMutation.isPending}
+                  isBusy={submittingIds[suggestion.id] === true}
                   onCancel={() => setEditing(null)}
                   onSave={(content) =>
                     createMutation.mutate({ suggestion, content })
@@ -376,9 +439,7 @@ export default function MemoryReviewPage() {
                   key={suggestion.id}
                   suggestion={suggestion}
                   fx={fx[suggestion.id]}
-                  isBusy={
-                    createMutation.isPending || Boolean(fx[suggestion.id])
-                  }
+                  isSubmitting={submittingIds[suggestion.id] === true}
                   onAccept={() =>
                     createMutation.mutate({
                       suggestion,
