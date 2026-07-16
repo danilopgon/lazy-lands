@@ -44,17 +44,17 @@ Full flow: [PRODUCT.md](./PRODUCT.md) section 4.
 
 ## Tech Stack
 
-| Layer       | Technology                                                 |
-| ----------- | ---------------------------------------------------------- |
-| Frontend    | Next.js 15 (App Router), React, TypeScript, TailwindCSS    |
-| UI          | shadcn/ui, Lucide, React Hook Form, Zod                    |
-| Backend     | FastAPI, Python 3.12, Pydantic, pydantic-settings          |
-| Package mgr | uv (backend), pnpm + Turborepo (monorepo)                  |
-| Database    | Supabase (PostgreSQL + Auth + Row Level Security)          |
-| AI          | LLM Provider abstraction (OpenRouter in prod, fake in dev) |
-| Testing     | Vitest + React Testing Library, Playwright, pytest         |
-| Quality     | ESLint, Prettier, Ruff, mypy, Husky, lint-staged           |
-| Deployment  | Vercel (frontend), Railway (backend)                       |
+| Layer       | Technology                                                                |
+| ----------- | ------------------------------------------------------------------------- |
+| Frontend    | Next.js 16 (App Router), React, TypeScript, TailwindCSS                   |
+| UI          | shadcn/ui, Lucide, React Hook Form, Zod                                   |
+| Backend     | FastAPI, Python 3.12, Pydantic, pydantic-settings                         |
+| Package mgr | uv (backend), pnpm + Turborepo (monorepo)                                 |
+| Database    | Supabase (PostgreSQL + Auth + Row Level Security)                         |
+| AI          | LLM Provider abstraction (Gemini, Groq, Mistral or Cerebras; fake in dev) |
+| Testing     | Vitest + React Testing Library, Playwright, pytest                        |
+| Quality     | ESLint, Prettier, Ruff, mypy, Husky, lint-staged                          |
+| Deployment  | Vercel (frontend), Railway (backend)                                      |
 
 ---
 
@@ -63,6 +63,17 @@ Full flow: [PRODUCT.md](./PRODUCT.md) section 4.
 Backend follows a Modular Monolith with nested Clean/Hexagonal layers per module (see ADR-05). Feature modules live under `services/api/app/modules/` and encapsulate their own `domain/`, `application/`, `infrastructure/`, routes, schemas, and prompts. Transversal concerns live in the `shared/` kernel.
 
 Full architecture reference: [docs/04-architecture.md](./docs/04-architecture.md).
+
+## Public Demo
+
+Try the complete campaign flow without creating an account at
+[lazy-lands.com/demo](https://lazy-lands.com/demo). The guided tour runs entirely in the
+browser with seeded, in-memory data: it does not require credentials and does not affect
+production campaigns.
+
+## Product Snapshot
+
+![Generated-session draft in Lazy Lands](./apps/web/tests/e2e/visual-regression.spec.ts-snapshots/en-generated-session-1440x900-chromium-win32.png)
 
 ## Security Headers
 
@@ -168,21 +179,25 @@ pnpm dev
 
 Copy .env.example to .env and fill in your values.
 
-| Variable                             | Description                        | Default               |
-| ------------------------------------ | ---------------------------------- | --------------------- |
-| NEXT_PUBLIC_SUPABASE_URL             | Supabase project URL               |                       |
-| NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | Supabase publishable key           |                       |
-| NEXT_PUBLIC_APP_URL                  | Public frontend URL for auth links | http://localhost:3000 |
-| NEXT_PUBLIC_API_URL                  | Backend API URL                    | http://localhost:8000 |
-| APP_ENV                              | Backend environment                | development           |
-| API_CORS_ORIGINS                     | Allowed CORS origins               | http://localhost:3000 |
-| SUPABASE_URL                         | Supabase URL (backend)             |                       |
-| SUPABASE_PUBLISHABLE_KEY             | Supabase publishable key (backend) |                       |
-| SUPABASE_SERVICE_ROLE_KEY            | Supabase service role key          |                       |
-| SUPABASE_JWT_SECRET                  | JWT secret (for verification)      |                       |
-| LLM_PROVIDER                         | LLM provider: fake or openrouter   | fake                  |
-| OPENROUTER_API_KEY                   | OpenRouter API key (production)    |                       |
-| OPENROUTER_MODEL                     | OpenRouter model string            |                       |
+| Variable                             | Description                                                   | Default               |
+| ------------------------------------ | ------------------------------------------------------------- | --------------------- |
+| NEXT_PUBLIC_SUPABASE_URL             | Supabase project URL for the web app                          |                       |
+| NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | Supabase publishable key for the web app                      |                       |
+| NEXT_PUBLIC_APP_URL                  | Public frontend URL for auth redirects                        | http://localhost:3000 |
+| NEXT_PUBLIC_API_URL                  | Backend API URL                                               | http://localhost:8000 |
+| APP_ENV                              | Backend environment                                           | development           |
+| API_CORS_ORIGINS                     | Allowed origins; accepts a comma-separated list or JSON array | http://localhost:3000 |
+| SUPABASE_URL                         | Supabase URL for the backend                                  |                       |
+| SUPABASE_PUBLISHABLE_KEY             | Supabase publishable key for the backend                      |                       |
+| SUPABASE_SERVICE_ROLE_KEY            | Supabase service role key for backend data access             |                       |
+| LLM_PROVIDER                         | `fake`, `gemini`, `groq`, `mistral`, or `cerebras`            | fake                  |
+| GEMINI_API_KEY                       | Required when Gemini is the primary or fallback provider      |                       |
+| GROQ_API_KEY                         | Required when Groq is the primary or fallback provider        |                       |
+| MISTRAL_API_KEY                      | Required when Mistral is the primary or fallback provider     |                       |
+| CEREBRAS_API_KEY                     | Required when Cerebras is the primary or fallback provider    |                       |
+| LLM_FALLBACKS                        | Optional comma- or space-separated fallback providers         |                       |
+| AI_GENERATION_RATE_LIMIT             | Maximum AI-generation requests in the configured window       | 5                     |
+| AI_GENERATION_RATE_WINDOW_SECONDS    | Duration of the AI-generation rate-limit window, in seconds   | 60                    |
 
 ---
 
@@ -196,7 +211,6 @@ pnpm supabase start
 # API URL           -> NEXT_PUBLIC_SUPABASE_URL and SUPABASE_URL
 # publishable key   -> NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY and SUPABASE_PUBLISHABLE_KEY
 # service_role      -> SUPABASE_SERVICE_ROLE_KEY
-# JWT secret        -> SUPABASE_JWT_SECRET
 ```
 
 Docker Desktop must be running before `pnpm supabase start`.
@@ -341,10 +355,10 @@ Pre-commit hooks (Husky + lint-staged) run Prettier on staged files automaticall
 
 1. Connect the GitHub repository to Vercel.
 2. Set apps/web as root directory.
-3. Add all NEXT*PUBLIC*\* environment variables.
+3. Add all required `NEXT_PUBLIC_*` environment variables.
 4. Set NEXT_PUBLIC_API_URL to the production backend URL.
 
-Deployment URL: _Pending_
+Deployment URL: [lazy-lands.com](https://lazy-lands.com/)
 
 ### Backend -- Railway
 
@@ -361,26 +375,20 @@ Note: Dockerfiles are structurally correct but not verified locally (WSL2 + Dock
 
 - The backend abstracts the LLM behind an LlmProvider port.
 - In dev/test: FakeLlmProvider returns deterministic JSON without API calls.
-- In production: OpenRouterProvider calls the configured model.
+- In production: a configured Gemini, Groq, Mistral, or Cerebras provider calls its model.
 - All LLM outputs are validated with Pydantic before storage or return.
 - Prompts are versioned inside their owning feature module when implemented.
 
 ---
 
-## Demo User
-
-Demo user: _Pending_
-Demo password: _Pending_
-
----
-
 ## Project URLs
 
-| Resource   | URL       |
-| ---------- | --------- |
-| Deployment | _Pending_ |
-| Slides     | _Pending_ |
-| Video      | _Pending_ |
+| Resource               | URL                                                |
+| ---------------------- | -------------------------------------------------- |
+| Production application | [lazy-lands.com](https://lazy-lands.com/)          |
+| Public demo            | [lazy-lands.com/demo](https://lazy-lands.com/demo) |
+| Slides                 | To be published                                    |
+| Video                  | To be published                                    |
 
 ---
 
@@ -397,13 +405,15 @@ Demo password: _Pending_
 
 ## Post-MVP Roadmap
 
-Features explicitly deferred after the TFM MVP:
+The MVP includes PDF export; its generated-session export deliberately excludes private notes.
+The following opportunities remain deferred:
 
-- PDF export with privacy controls.
-- Billing and free/premium plans.
-- Advanced filtering: NPC/faction/arc filters, timeline view.
-- RAG / vector search across campaign history.
-- Multi-user collaboration and shared campaigns.
-- Mobile app (native or PWA).
-- Obsidian sync (two-way markdown export).
-- Advanced relationship graph.
+- Richer session logging, including private notes and additional entity-change fields.
+- Timeline and advanced filtering for larger campaigns.
+- A conversational Scribe that still proposes rather than changing canon automatically.
+- RAG, embeddings, and vector search across campaign history.
+- Advanced relationship graphs and memory compilation.
+- Dark theme and theme settings.
+
+Billing, shared campaigns, a mobile app, and Obsidian sync are not currently planned. See
+[docs/11-backlog.md](./docs/11-backlog.md) for rationale and implementation constraints.

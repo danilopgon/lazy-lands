@@ -21,15 +21,15 @@ output is an editable proposal; the DM always has the last word.
 
 ## Stack
 
-| Layer       | Technology                                                         |
-| ----------- | ------------------------------------------------------------------ |
-| Frontend    | Next.js 16 (App Router), React, TypeScript, TailwindCSS, shadcn/ui |
-| Backend     | FastAPI, Python 3.12, Pydantic, uv                                 |
-| Database    | Supabase (PostgreSQL + Auth + RLS)                                 |
-| AI          | LLM Provider abstraction (OpenRouter in production, fake in dev)   |
-| Monorepo    | pnpm + Turborepo                                                   |
-| Frontend QA | Vitest, React Testing Library, Playwright                          |
-| Backend QA  | pytest, Ruff, mypy                                                 |
+| Layer       | Technology                                                                               |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| Frontend    | Next.js 16 (App Router), React, TypeScript, TailwindCSS, shadcn/ui                       |
+| Backend     | FastAPI, Python 3.12, Pydantic, uv                                                       |
+| Database    | Supabase (PostgreSQL + Auth + RLS)                                                       |
+| AI          | LLM Provider abstraction (Gemini, Groq, Mistral, or Cerebras in production; fake in dev) |
+| Monorepo    | pnpm + Turborepo                                                                         |
+| Frontend QA | Vitest, React Testing Library, Playwright                                                |
+| Backend QA  | pytest, Ruff, mypy                                                                       |
 
 ---
 

@@ -1,6 +1,7 @@
 # Lazy Lands API
 
-FastAPI scaffold for the Lazy Lands backend. Block 0 provides Clean Architecture boundaries and smoke-testable entry points only; campaign, memory, and generation features are implemented in later blocks.
+FastAPI backend for Lazy Lands. It implements the campaign, session, memory, generation, and PDF
+export flows behind modular Clean Architecture boundaries.
 
 ## Requirements
 
@@ -9,15 +10,14 @@ FastAPI scaffold for the Lazy Lands backend. Block 0 provides Clean Architecture
 
 ## Environment
 
-Use fake local values for Block 0:
+For local development, use the values from the root `.env.example` and local Supabase status:
 
 ```env
 APP_ENV=development
 API_CORS_ORIGINS=http://localhost:3000
 SUPABASE_URL=http://localhost:54321
-SUPABASE_ANON_KEY=fake-key
+SUPABASE_PUBLISHABLE_KEY=<local publishable key>
 SUPABASE_SERVICE_ROLE_KEY=
-SUPABASE_JWT_SECRET=
 LLM_PROVIDER=fake
 ```
 
@@ -42,7 +42,7 @@ uv run ruff format --check app/ tests/
 uv run mypy app/
 ```
 
-`mypy` is currently non-blocking for Block 0; record findings and keep the scaffold runnable.
+`mypy` is non-blocking in the current quality gate; record findings before changing that policy.
 
 ## Endpoints (campaigns module)
 
