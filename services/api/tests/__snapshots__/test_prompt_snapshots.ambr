@@ -29,6 +29,14 @@
   }
   
   Rules:
+  - Language rule: write EVERY string value — "title", "description",
+    "world_state", and every field of each npc, faction, and arc — in the SAME
+    LANGUAGE as the campaign premise above. If the premise is in Spanish, every
+    value must be in Spanish; if in English, in English. Never translate the DM's
+    premise into another language.
+  - The language rule does NOT apply to "priority": emit it as one of the literal
+    English keywords "high", "medium", or "low", in every language. A translated
+    priority makes the scaffold invalid.
   - "npcs", "factions", and "arcs" MAY be empty lists if the premise does not
     clearly describe any.
   - Do NOT include a "status" field on arcs.
@@ -49,6 +57,8 @@
   - Emit EXACTLY these 7 sections, in this exact order, using these exact ids: synopsis, goal, opening, beats, encounters, factions, arcs.
   - Every section origin must be exactly "scribe".
   - There is no separate "twist" field. Weave a twist into the "beats" section (and, if it changes the opening moment, into "opening" too) instead of a standalone field.
+  - Language rule: write the free-text values — "title", every section's "body", and every continuity_links[].relevance — in the SAME LANGUAGE as the campaign description and accumulated summary below. If the campaign is in Spanish, they must be in Spanish; if in English, in English. Never translate the DM's campaign into another language.
+  - The language rule does NOT apply to "id", "label", or "origin": emit those three as the literal English keywords shown in the schema, in every language. Translating an "id" or "origin" makes the draft invalid.
   - Use an array for continuity_links, even when empty.
   - continuity_links[].memory_fact_id must reference an accepted memory id from the context. If no memory applies, return an empty array.
   
