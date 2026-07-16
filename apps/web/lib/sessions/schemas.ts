@@ -11,6 +11,17 @@ export type RegisterSessionRequest = z.infer<
   typeof registerSessionRequestSchema
 >
 
+// Mirrors `CompleteSessionRequest` in the same module — the played-outcome
+// counterpart for a session the Scribe already generated. Same fields as
+// register; no session_number, because completing a row never renumbers it.
+export const completeSessionRequestSchema = z.object({
+  summary: z.string().trim().min(1).max(8000),
+  consequences: z.string().trim().max(8000).optional(),
+})
+export type CompleteSessionRequest = z.infer<
+  typeof completeSessionRequestSchema
+>
+
 // Mirrors services/api/app/modules/sessions/domain/enums.py `Importance`.
 export const importanceSchema = z.enum(['high', 'medium', 'low'])
 export type Importance = z.infer<typeof importanceSchema>
@@ -52,6 +63,12 @@ export type RegisterSessionResponse = z.infer<
   typeof registerSessionResponseSchema
 >
 
+// Mirrors services/api/app/modules/sessions/domain — the `session_status` enum.
+// A session is a 'draft' only while the Scribe's plan has not been played yet;
+// recording the played outcome flips it to 'registered', permanently.
+export const sessionStatusSchema = z.enum(['draft', 'registered'])
+export type SessionStatus = z.infer<typeof sessionStatusSchema>
+
 // Mirrors `SessionResponse` read model — one row of `GET /campaigns/{id}/sessions`.
 export const sessionResponseSchema = z.object({
   id: z.string(),
@@ -59,6 +76,13 @@ export const sessionResponseSchema = z.object({
   summary: z.string().nullable(),
   consequences: z.string().nullable(),
   has_generated_content: z.boolean().default(false),
+  // Absent or unrecognized status falls back to 'registered', never 'draft' —
+  // the same fail-safe invariant as the column default. Treating an unknown
+  // status as a draft would offer an already-played session for completion and
+  // overwrite the DM's real record; treating a draft as registered merely
+  // hides the resume CTA. `.catch()` keeps a future enum member from throwing
+  // and blanking the whole history list (cf. `memoryTypeSchema`'s leniency).
+  status: sessionStatusSchema.catch('registered').default('registered'),
   created_at: z.string().nullable(),
 })
 export type SessionResponse = z.infer<typeof sessionResponseSchema>

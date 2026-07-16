@@ -40,6 +40,7 @@ def _session_data() -> dict[str, object]:
             ],
             "continuity_links": [{"memory_fact_id": "mem-1", "relevance": "Payoff."}],
         },
+        "status": "draft",
         "trace_json": {"error_code": None},
     }
 
@@ -78,6 +79,8 @@ def test_insert_generated_session_persists_full_generated_content() -> None:
     assert inserted["generated_content"]["continuity_links"] == [
         {"memory_fact_id": "mem-1", "relevance": "Payoff."}
     ]
+    # A generated plan is persisted as a draft, never as a played chronicle.
+    assert inserted["status"] == "draft"
 
 
 def test_generation_context_queries_active_arcs() -> None:

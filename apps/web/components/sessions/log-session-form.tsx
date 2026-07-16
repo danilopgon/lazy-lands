@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslations } from 'next-intl'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
 import { useRouter } from '@/i18n/navigation'
 
@@ -14,7 +14,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
 import { Notice } from '@/components/ui/notice'
 import { registerSessionRequestSchema } from '@/lib/sessions/schemas'
-import { registerSession } from '@/lib/sessions/api'
+import type { SessionResponse } from '@/lib/sessions/schemas'
+import {
+  completeSession,
+  getSessions,
+  registerSession,
+} from '@/lib/sessions/api'
 import { writeMemoryReviewDraft } from '@/lib/sessions/memory-review-draft'
 
 import { z } from 'zod'
@@ -22,6 +27,30 @@ import { z } from 'zod'
 type LogSessionFormValues = {
   summary: string
   consequences?: string
+}
+
+/**
+ * The campaign's open generated draft, if any — the highest-numbered session
+ * the Scribe generated and whose persisted lifecycle is still `draft`.
+ *
+ * @param {SessionResponse[] | undefined} sessions - The campaign's session history, if loaded.
+ * @returns {SessionResponse | null} The open draft, or `null` when there is none.
+ */
+function findOpenDraft(
+  sessions: SessionResponse[] | undefined
+): SessionResponse | null {
+  if (!sessions) return null
+  return sessions
+    .filter(
+      (session) => session.has_generated_content && session.status === 'draft'
+    )
+    .reduce<SessionResponse | null>(
+      (latest, session) =>
+        !latest || session.session_number > latest.session_number
+          ? session
+          : latest,
+      null
+    )
 }
 
 type LogSessionFormProps = {
@@ -32,6 +61,17 @@ type LogSessionFormProps = {
    * memory suggestions without any request.
    */
   registerSessionFn?: typeof registerSession
+  /**
+   * Complete adapter for `POST /sessions/{id}/complete` — used instead of
+   * `registerSessionFn` when the DM links this record to an open draft.
+   * The demo injects a local implementation.
+   */
+  completeSessionFn?: typeof completeSession
+  /**
+   * Session-history source, used only to detect an open generated draft.
+   * The demo injects its in-memory list so no request is ever made.
+   */
+  getSessionsFn?: typeof getSessions
   /** Navigation override. Defaults to the localized router push. */
   navigate?: (href: string) => void
   /**
@@ -47,12 +87,21 @@ type LogSessionFormProps = {
 /**
  * `/campaigns/:id/sessions/new` form island — the two in-scope fields
  * (`summary` required, `consequences` optional). On success the DM is routed
- * to the campaign detail page; the 0-5 memory suggestions the backend
- * returns have no 7a UI consumer (7b consumes this exact response shape).
+ * to the memory review screen with the returned suggestions.
+ *
+ * Draft-aware: when the campaign has an open generated draft, this record
+ * defaults to COMPLETING that draft (`POST /sessions/{id}/complete`) rather
+ * than inserting a second row for a session the DM already prepared. The
+ * choice is always visible and reversible — only the DM knows whether the
+ * session they played was the prepared one. With no draft (or if the history
+ * cannot be loaded) the form behaves exactly as before and registers a new
+ * session.
  *
  * @param {object} root0 - The log-session form props.
  * @param {string} root0.campaignId - The owning campaign's id.
  * @param {typeof registerSession} [root0.registerSessionFn] - Optional register adapter.
+ * @param {typeof completeSession} [root0.completeSessionFn] - Optional complete adapter.
+ * @param {typeof getSessions} [root0.getSessionsFn] - Optional session-history source.
  * @param {(href: string) => void} [root0.navigate] - Optional navigation override.
  * @param {boolean} [root0.persistDraft] - Whether to stash suggestions in session storage.
  * @param {(response: { campaignId: string; sessionId: string }) => string} [root0.reviewHref] - Optional review href builder.
@@ -61,6 +110,8 @@ type LogSessionFormProps = {
 export function LogSessionForm({
   campaignId,
   registerSessionFn = registerSession,
+  completeSessionFn = completeSession,
+  getSessionsFn = getSessions,
   navigate,
   persistDraft = true,
   reviewHref,
@@ -69,6 +120,19 @@ export function LogSessionForm({
   const te = useTranslations('Entities')
   const router = useRouter()
   const [hasSubmitError, setHasSubmitError] = useState(false)
+  // The DM's explicit opt-out of the draft. Kept as "prefer new" rather than
+  // "link to draft" so the default needs no syncing once the draft resolves.
+  const [prefersNewSession, setPrefersNewSession] = useState(false)
+
+  // Detecting the draft must never block or fail the register path: the form
+  // renders immediately in register mode and reveals the choice once (and if)
+  // the history arrives. A failed history query simply leaves `draft` null.
+  const { data: sessions } = useQuery({
+    queryKey: ['sessions', campaignId],
+    queryFn: () => getSessionsFn(campaignId),
+  })
+  const draft = useMemo(() => findOpenDraft(sessions), [sessions])
+  const isLinkedToDraft = Boolean(draft) && !prefersNewSession
   const [isNavigating, setIsNavigating] = useState(false)
 
   const formSchema = useMemo(
@@ -89,11 +153,15 @@ export function LogSessionForm({
   })
 
   const mutation = useMutation({
-    mutationFn: (data: LogSessionFormValues) =>
-      registerSessionFn(campaignId, {
+    mutationFn: (data: LogSessionFormValues) => {
+      const payload = {
         summary: data.summary,
         consequences: data.consequences?.trim() ? data.consequences : undefined,
-      }),
+      }
+      return draft && isLinkedToDraft
+        ? completeSessionFn(draft.id, payload)
+        : registerSessionFn(campaignId, payload)
+    },
     onSuccess: (response) => {
       // Hold the takeover across the route swap. `isPending` flips to false the
       // moment the mutation resolves, but the review frame only paints once the
@@ -154,6 +222,25 @@ export function LogSessionForm({
       {hasSubmitError && (
         <Notice className="mb-5" variant="error" ornament="⚠" role="alert">
           {t('errorMessage')}
+        </Notice>
+      )}
+
+      {draft && (
+        <Notice className="mb-5" variant="plain" ornament="✦">
+          <p>
+            {isLinkedToDraft
+              ? t('draftLink.linkedMessage', { number: draft.session_number })
+              : t('draftLink.newMessage', { number: draft.session_number })}
+          </p>
+          <button
+            type="button"
+            className="mt-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] underline"
+            onClick={() => setPrefersNewSession((prefers) => !prefers)}
+          >
+            {isLinkedToDraft
+              ? t('draftLink.switchToNew')
+              : t('draftLink.switchToDraft', { number: draft.session_number })}
+          </button>
         </Notice>
       )}
 

@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from app.modules.sessions.application.errors import (
     ExportSelectionError,
     NonExportableSessionError,
+    SessionAlreadyRegisteredError,
     SessionNotFoundError,
     SessionPersistenceError,
     SessionValidationError,
@@ -49,6 +50,23 @@ async def session_persistence_error_handler(
     return JSONResponse(
         status_code=409,
         content={"error": message, "retryable": exc.retryable},
+    )
+
+
+async def session_already_registered_error_handler(
+    _request: Request, _exc: SessionAlreadyRegisteredError
+) -> JSONResponse:
+    """Map a repeat completion of an already-registered session to 409.
+
+    Non-retryable, unlike ``SessionPersistenceError``'s 409: the played
+    outcome is already recorded, so replaying the request can never succeed.
+    """
+    return JSONResponse(
+        status_code=409,
+        content={
+            "error": "This session is already recorded.",
+            "retryable": False,
+        },
     )
 
 

@@ -9,6 +9,7 @@ from typing import Annotated
 from fastapi import Depends
 from supabase import Client
 
+from app.modules.sessions.application.commands.complete_session import CompleteSession
 from app.modules.sessions.application.commands.export_session import ExportSession
 from app.modules.sessions.application.commands.regenerate_section import (
     RegenerateSectionUseCase,
@@ -40,6 +41,17 @@ def provide_register_session(
     summarize = SummarizeCampaign(llm_provider=llm_provider, repository=repository)
     suggest = SuggestMemories(llm_provider=llm_provider, repository=repository)
     return RegisterSession(repository, summarize, suggest)
+
+
+def provide_complete_session(
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+    llm_provider: Annotated[LlmProvider, Depends(get_llm_provider)],
+) -> CompleteSession:
+    """Build the CompleteSession handler with RegisterSession's collaborators."""
+    repository = SupabaseSessionRepository(client)
+    summarize = SummarizeCampaign(llm_provider=llm_provider, repository=repository)
+    suggest = SuggestMemories(llm_provider=llm_provider, repository=repository)
+    return CompleteSession(repository, summarize, suggest)
 
 
 def provide_get_sessions(

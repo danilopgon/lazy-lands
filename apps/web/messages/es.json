@@ -463,6 +463,12 @@
     "savingTitle": "Registrando la sesión",
     "savingCaption": "Guardando tu registro y preguntándole al Escriba qué vale la pena recordar",
     "errorMessage": "Algo salió mal al procesar la sesión. Tu texto está a salvo, no se perdió nada de lo que escribiste. Inténtalo de nuevo.",
+    "draftLink": {
+      "linkedMessage": "Esto completará la Sesión {number}, el borrador que preparaste con el Escriba. Solo se registra lo que escribas aquí; el material preparado no se modifica.",
+      "switchToNew": "Registrar como una sesión nueva",
+      "newMessage": "Esto se registrará como una sesión nueva y tu Sesión {number} preparada seguirá abierta como borrador.",
+      "switchToDraft": "Completar la Sesión {number}"
+    },
     "history": {
       "emptyTitle": "Aún no hay sesiones registradas",
       "emptyDescription": "Registra tu primera sesión y el Escriba empezará a llevar la crónica.",

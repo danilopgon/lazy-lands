@@ -36,6 +36,7 @@ EXPECTED_ENUMS: dict[str, set[str]] = {
     "priority": {"high", "medium", "low"},
     "importance": {"high", "medium", "low"},
     "memory_status": {"active", "archived"},
+    "session_status": {"draft", "registered"},
 }
 
 # Expected column data_types per docs/07. Enum columns are intentionally
@@ -118,6 +119,7 @@ EXPECTED_ENUM_COLUMNS: dict[tuple[str, str], str] = {
     ("arcs", "content_source"): "content_source",
     ("memory_facts", "importance"): "importance",
     ("memory_facts", "status"): "memory_status",
+    ("sessions", "status"): "session_status",
 }
 
 # ALL expected single-column FK constraints with ON DELETE CASCADE.
@@ -174,7 +176,7 @@ def test_all_expected_tables_exist(db_conn) -> None:
 def test_enum_has_expected_values(
     db_conn, enum_name: str, expected_values: set[str]
 ) -> None:
-    """Each of the 5 enum types MUST exist with the exact member values."""
+    """Each enum type MUST exist with the exact member values."""
     with db_conn.cursor() as cur:
         cur.execute(
             "select e.enumlabel from pg_type t "

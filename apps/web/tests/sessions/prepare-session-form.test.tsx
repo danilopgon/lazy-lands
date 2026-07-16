@@ -85,6 +85,7 @@ describe('PrepareSessionView', () => {
             summary: 'The tower fell.',
             consequences: null,
             has_generated_content: false,
+            status: 'registered',
             created_at: null,
           },
           {
@@ -93,6 +94,7 @@ describe('PrepareSessionView', () => {
             summary: 'The guild answered.',
             consequences: null,
             has_generated_content: false,
+            status: 'registered',
             created_at: null,
           },
         ]}

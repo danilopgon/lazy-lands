@@ -219,6 +219,7 @@ export async function installVisualRegressionFixtures(page: Page) {
           summary: 'The party found the map.',
           consequences: 'Herman watched from the crowd.',
           has_generated_content: true,
+          status: 'registered',
           created_at: '2026-06-21T12:00:00Z',
         },
       ])

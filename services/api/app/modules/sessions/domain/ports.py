@@ -62,7 +62,11 @@ class SessionRepository(Protocol):
         summary: str,
         consequences: str | None,
     ) -> dict:
-        """Insert the session row; return the inserted row."""
+        """Insert an ad-hoc, already-played session row; return the inserted row.
+
+        Persists ``status='registered'``: this path records a session the DM
+        already played, so it must never be offered as a resumable draft.
+        """
         ...
 
     def insert_session_with_next_number(
@@ -91,6 +95,12 @@ class SessionRepository(Protocol):
 
     def update_session(self, session_id: str, data: dict) -> dict:
         """Patch one caller-visible session and return the updated row."""
+        ...
+
+    def complete_draft(
+        self, session_id: str, summary: str, consequences: str | None
+    ) -> dict | None:
+        """Atomically record a draft's outcome, or None if it is no longer a draft."""
         ...
 
     def get_sessions_since(

@@ -107,6 +107,10 @@ class GenerateNextSessionUseCase:
             "summary": synopsis_section.body,
             "consequences": None,
             "generated_content": content.model_dump(mode="json"),
+            # A generated session is a plan, not a played chronicle: it stays a
+            # draft until the DM records what actually happened via
+            # `POST /sessions/{id}/complete`.
+            "status": "draft",
             "trace_json": trace_json,
         }
         try:

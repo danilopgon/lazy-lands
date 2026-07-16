@@ -4,6 +4,7 @@ import type { AppLocale } from '@/i18n/routing'
 import { z } from 'zod'
 
 import {
+  completeSessionRequestSchema,
   registerSessionResponseSchema,
   sessionResponseSchema,
   generateSessionRequestSchema,
@@ -11,6 +12,7 @@ import {
   regenerateSectionRequestSchema,
   sessionDetailSchema,
   updateSessionContentSchema,
+  type CompleteSessionRequest,
   type RegisterSessionRequest,
   type RegisterSessionResponse,
   type SessionResponse,
@@ -93,6 +95,47 @@ export async function registerSession(
   if (!response.ok) {
     if (response.status === 404) {
       throw new SessionCampaignNotFoundError(`Campaign ${campaignId} not found`)
+    }
+    throw new SessionApiError(await extractErrorMessage(response))
+  }
+
+  return registerSessionResponseSchema.parse(await response.json())
+}
+
+/**
+ * `POST /sessions/{sessionId}/complete` — record the played outcome onto a
+ * session the Scribe already generated, instead of inserting a second row.
+ *
+ * The generate/complete pair are two phases of the SAME session row: this
+ * writes only `summary`/`consequences`, so the prepared `generated_content`
+ * survives untouched. The caller (not the backend) chooses between this and
+ * {@link registerSession} — only the DM knows whether the session they played
+ * was the one they prepared.
+ *
+ * @param {string} sessionId - The generated session to complete.
+ * @param {CompleteSessionRequest} payload - The `{ summary, consequences? }` body.
+ * @returns {Promise<RegisterSessionResponse>} The completed session plus 0-5 transient memory suggestions.
+ * @throws {SessionCampaignNotFoundError} When the session is not found (404).
+ * @throws {SessionValidationError} When the body fails validation (422).
+ * @throws {SessionApiError} When the backend returns another non-2xx response.
+ */
+export async function completeSession(
+  sessionId: string,
+  payload: CompleteSessionRequest
+): Promise<RegisterSessionResponse> {
+  const body = completeSessionRequestSchema.parse(payload)
+  const response = await apiFetch(`/sessions/${sessionId}/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new SessionCampaignNotFoundError(`Session ${sessionId} not found`)
+    }
+    if (response.status === 422) {
+      throw new SessionValidationError(await extractErrorMessage(response))
     }
     throw new SessionApiError(await extractErrorMessage(response))
   }

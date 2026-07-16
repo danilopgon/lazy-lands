@@ -28,6 +28,19 @@ class SessionPersistenceError(Exception):
         super().__init__("Session persistence failed")
 
 
+class SessionAlreadyRegisteredError(Exception):
+    """Raised when completing a session whose ``status`` is already 'registered'.
+
+    A second complete on the same row is always a bug: it would overwrite the
+    played account the DM already recorded. Editing an already-registered
+    session is what ``PATCH /sessions/{id}`` is for, so this is NOT retryable —
+    replaying the same request can never succeed.
+
+    Defense in depth: this holds even when the frontend's draft predicate is
+    wrong, which is the entire point of storing ``status`` explicitly.
+    """
+
+
 class SessionValidationError(Exception):
     """Raised when a direct session application command violates its contract."""
 

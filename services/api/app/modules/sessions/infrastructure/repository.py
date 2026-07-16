@@ -90,7 +90,12 @@ class SupabaseSessionRepository:
         summary: str,
         consequences: str | None,
     ) -> dict:
-        """Insert the session row; return the inserted row.
+        """Insert an ad-hoc, already-played session row; return the inserted row.
+
+        Writes ``status='registered'`` explicitly rather than leaning on the
+        column default: this path records a session the DM already played, and
+        the marker that keeps it from being mistaken for a resumable draft is
+        too load-bearing to leave implicit.
 
         Raises:
             SessionNumberConflictError: The ``(campaign_id, session_number)``
@@ -109,6 +114,7 @@ class SupabaseSessionRepository:
                         "session_number": session_number,
                         "summary": summary,
                         "consequences": consequences,
+                        "status": "registered",
                     }
                 )
                 .execute()
@@ -167,7 +173,8 @@ class SupabaseSessionRepository:
             response = (
                 self._client.table("sessions")
                 .select(
-                    "id,session_number,summary,consequences,generated_content,created_at"
+                    "id,session_number,summary,consequences,generated_content,"
+                    "status,created_at"
                 )
                 .eq("campaign_id", campaign_id)
                 .order("session_number", desc=False)
@@ -194,7 +201,7 @@ class SupabaseSessionRepository:
                 self._client.table("sessions")
                 .select(
                     "id,campaign_id,session_number,summary,consequences,"
-                    "generated_content,trace_json,created_at,updated_at"
+                    "generated_content,status,trace_json,created_at,updated_at"
                 )
                 .eq("id", session_id)
                 .execute()
@@ -219,6 +226,34 @@ class SupabaseSessionRepository:
         if not rows:
             raise RepositoryError("Session update returned no rows")
         return rows[0]
+
+    def complete_draft(
+        self, session_id: str, summary: str, consequences: str | None
+    ) -> dict | None:
+        """Atomically transition a caller-visible draft to a registered session.
+
+        The status predicate belongs in the database update rather than the
+        use case's prior read. That conditional write permits exactly one
+        concurrent completer to persist the DM's account.
+        """
+        try:
+            response = (
+                self._client.table("sessions")
+                .update(
+                    {
+                        "summary": summary,
+                        "consequences": consequences,
+                        "status": "registered",
+                    }
+                )
+                .eq("id", session_id)
+                .eq("status", "draft")
+                .execute()
+            )
+        except Exception as exc:
+            raise RepositoryError("Failed to complete draft session") from exc
+        rows = cast(list[dict[str, Any]], response.data or [])
+        return rows[0] if rows else None
 
     def get_sessions_since(
         self, campaign_id: str, since_session_number: int
