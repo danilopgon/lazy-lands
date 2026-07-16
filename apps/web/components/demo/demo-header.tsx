@@ -27,7 +27,7 @@ export function DemoHeader() {
         >
           Lazy <span className="text-[var(--accent)]">Lands</span>
         </Link>
-        <span className="border-2 border-[var(--border)] bg-[var(--accent)] px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bg-contrast)]">
+        <span className="inline-flex h-9 items-center border-2 border-[var(--border)] bg-[var(--accent)] px-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bg-contrast)]">
           {t('badge')}
         </span>
       </div>
@@ -36,7 +36,7 @@ export function DemoHeader() {
         <LanguageSwitcher compact />
         <Link
           href={demoHrefs.home}
-          className="border-2 border-[var(--border)] bg-[var(--paper)] px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+          className="inline-flex h-9 items-center whitespace-nowrap border-2 border-[var(--border)] bg-[var(--paper)] px-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
         >
           {t('exit')}
         </Link>

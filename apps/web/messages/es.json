@@ -201,7 +201,7 @@
       "title": "Comienza tu primera crónica.",
       "body": "Gratis durante el acceso anticipado. Empieza con una campaña y mantén cada memoria aceptada revisable desde la primera sesión.",
       "cta": "Comenzar crónica →",
-      "demoCta": "Recorrer una campaña de demostración"
+      "demoCta": "Recorrer una campaña demo"
     },
     "footer": {
       "madeBy": "© 2026 · hecho por un DM cansado de olvidar"
@@ -815,7 +815,7 @@
   },
   "Demo": {
     "badge": "Demo",
-    "exit": "Salir de la demo",
+    "exit": "Salir",
     "breadcrumbRoot": "Campaña de demostración",
     "sessionLabel": "Sesión {number}",
     "tour": {

@@ -815,7 +815,7 @@
   },
   "Demo": {
     "badge": "Demo",
-    "exit": "Exit demo",
+    "exit": "Exit",
     "breadcrumbRoot": "Demo campaign",
     "sessionLabel": "Session {number}",
     "tour": {
