@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { render, screen } from '@/tests/intl'
+import { render, within } from '@/tests/intl'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 
@@ -28,12 +28,18 @@ function Wrapper({ children }: { children: ReactNode }) {
 
 describe('DemoMemoryReviewPage — empty state', () => {
   it('links the primary empty-state action to the demo campaign, not log-session', () => {
-    render(<DemoMemoryReviewPage />, { wrapper: Wrapper })
+    const { container } = render(<DemoMemoryReviewPage />, { wrapper: Wrapper })
 
-    const links = screen.getAllByRole('link', { name: /campaign/i })
-    expect(links.length).toBeGreaterThan(0)
-    for (const link of links) {
-      expect(link.getAttribute('href')).toBe(demoHrefs.campaign)
-    }
+    // Scope to the pending-suggestions section: the page footer also carries a
+    // "back to campaign" link, so a page-wide query would still pass even if the
+    // empty-state action disappeared entirely.
+    const pendingSection = container.querySelector('[data-tour="suggestions"]')
+    expect(pendingSection).not.toBeNull()
+
+    const emptyStateLink = within(pendingSection as HTMLElement).getByRole(
+      'link',
+      { name: /campaign/i }
+    )
+    expect(emptyStateLink.getAttribute('href')).toBe(demoHrefs.campaign)
   })
 })

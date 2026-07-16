@@ -5,8 +5,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 
 import { DemoProvider, useDemoStore } from '@/lib/demo/store'
+import { fixturesByLocale } from '@/lib/demo/fixtures'
 
 import DemoMemoryReviewPage from '../page'
+
+/** The demo store seeds suggestions from the en bundle by default. */
+const enSuggestions = fixturesByLocale.en.suggestions
 
 /**
  * Wraps children in a single, persistent {@link DemoProvider} instance so the
@@ -90,6 +94,10 @@ describe('demo memory review — remount does not resurrect suggestions', () => 
     await waitFor(() => {
       expect(screen.getAllByRole('article').length).toBe(2)
     })
+
+    // The accepted suggestion's fact must appear exactly once in canon — a
+    // duplicate insertion would slip past the article-count check above.
+    expect(screen.getAllByText(enSuggestions[0].content)).toHaveLength(1)
   })
 
   it('accept then IMMEDIATELY return (within the async accept latency): no resurrection', async () => {
@@ -180,5 +188,11 @@ describe('demo memory review — remount does not resurrect suggestions', () => 
       /The party reached the keep|accepted/i
     )
     expect(activeItems.length).toBeGreaterThan(0)
+
+    // Every accepted suggestion must land in canon exactly once — no duplicate
+    // facts hiding behind the empty-state / article-count assertions.
+    for (const suggestion of enSuggestions) {
+      expect(screen.getAllByText(suggestion.content)).toHaveLength(1)
+    }
   })
 })

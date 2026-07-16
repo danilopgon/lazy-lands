@@ -83,19 +83,24 @@ export default function DemoMemoryReviewPage() {
     // which a remount could resurrect the already-accepted suggestion and let
     // it be accepted twice.
     store.resolveSuggestion(suggestion.id)
-    await store.acceptSuggestion({ suggestion, content })
-    setIsBusy(false)
-    setEditing(null)
-    setFeedback(content === suggestion.content ? 'accepted' : 'edited')
-    setFx((current) => ({ ...current, [suggestion.id]: 'stamping' }))
-    window.setTimeout(() => {
-      removePending(suggestion.id)
-      setFx((current) => {
-        const next = { ...current }
-        delete next[suggestion.id]
-        return next
-      })
-    }, 400)
+    try {
+      await store.acceptSuggestion({ suggestion, content })
+      setEditing(null)
+      setFeedback(content === suggestion.content ? 'accepted' : 'edited')
+      setFx((current) => ({ ...current, [suggestion.id]: 'stamping' }))
+      window.setTimeout(() => {
+        removePending(suggestion.id)
+        setFx((current) => {
+          const next = { ...current }
+          delete next[suggestion.id]
+          return next
+        })
+      }, 400)
+    } finally {
+      // Always re-enable the controls; the demo store never rejects, but a
+      // rejection must never leave every button disabled forever.
+      setIsBusy(false)
+    }
   }
 
   /**
@@ -222,10 +227,15 @@ export default function DemoMemoryReviewPage() {
               onRetry={() => undefined}
               onRetire={(memory) => {
                 setIsBusy(true)
-                void store.retireMemory(memory.id).then(() => {
-                  setIsBusy(false)
-                  setFeedback('retired')
-                })
+                void store
+                  .retireMemory(memory.id)
+                  .then(() => {
+                    setFeedback('retired')
+                  })
+                  .finally(() => {
+                    // Always re-enable the controls, even on rejection.
+                    setIsBusy(false)
+                  })
               }}
             />
           </div>
