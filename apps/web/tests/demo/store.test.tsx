@@ -142,6 +142,106 @@ describe('demo store', () => {
     )
   })
 
+  it('creates, edits and deletes a faction locally', async () => {
+    const { result } = renderStore()
+    const startCount = result.current.campaign.factions.length
+
+    await act(async () => {
+      await result.current.createFaction({
+        name: 'The Silver Hand',
+        description: null,
+        current_stance: null,
+        goals: null,
+      })
+    })
+    expect(result.current.campaign.factions.length).toBe(startCount + 1)
+    const created = result.current.campaign.factions[0]
+    expect(created.name).toBe('The Silver Hand')
+    expect(created.content_source).toBe('manual')
+
+    await act(async () => {
+      await result.current.updateFaction(created.id, {
+        name: 'The Silver Hand (Reformed)',
+        description: null,
+        current_stance: null,
+        goals: null,
+      })
+    })
+    expect(
+      result.current.campaign.factions.find(
+        (faction) => faction.id === created.id
+      )?.name
+    ).toBe('The Silver Hand (Reformed)')
+    expect(
+      result.current.campaign.factions.find(
+        (faction) => faction.id === created.id
+      )?.content_source
+    ).toBe('edited')
+
+    await act(async () => {
+      await result.current.deleteFaction(created.id)
+    })
+    expect(result.current.campaign.factions.length).toBe(startCount)
+  })
+
+  it('creates, edits and deletes an arc locally', async () => {
+    const { result } = renderStore()
+    const startCount = result.current.campaign.arcs.length
+
+    await act(async () => {
+      await result.current.createArc({
+        title: 'The Lost Caravan',
+        description: null,
+        priority: 'medium',
+        status: 'active',
+      })
+    })
+    expect(result.current.campaign.arcs.length).toBe(startCount + 1)
+    const created = result.current.campaign.arcs[0]
+    expect(created.title).toBe('The Lost Caravan')
+    expect(created.content_source).toBe('manual')
+
+    await act(async () => {
+      await result.current.updateArc(created.id, {
+        title: 'The Lost Caravan (Found)',
+        description: null,
+        priority: 'medium',
+        status: 'resolved',
+      })
+    })
+    const updated = result.current.campaign.arcs.find(
+      (arc) => arc.id === created.id
+    )
+    expect(updated?.title).toBe('The Lost Caravan (Found)')
+    expect(updated?.status).toBe('resolved')
+    expect(updated?.content_source).toBe('edited')
+
+    await act(async () => {
+      await result.current.deleteArc(created.id)
+    })
+    expect(result.current.campaign.arcs.length).toBe(startCount)
+  })
+
+  it('saves session content in isolation', async () => {
+    const { result } = renderStore()
+
+    let updated
+    await act(async () => {
+      updated = await result.current.saveSession({
+        summary: 'A revised summary of the session.',
+        consequences: 'The party now owes the guild a favor.',
+      })
+    })
+
+    expect(updated).toBeDefined()
+    expect(result.current.generated.summary).toBe(
+      'A revised summary of the session.'
+    )
+    expect(result.current.generated.consequences).toBe(
+      'The party now owes the guild a favor.'
+    )
+  })
+
   it('generates a draft and regenerates one of its sections', async () => {
     const { result } = renderStore()
 
