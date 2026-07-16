@@ -31,11 +31,7 @@ type LogSessionFormValues = {
 
 /**
  * The campaign's open generated draft, if any — the highest-numbered session
- * the Scribe generated whose played outcome is not yet recorded.
- *
- * The draft test mirrors `RecentSessions`: `summary` is auto-filled from the
- * synopsis at generation time, so only recorded `consequences` mark a
- * generated session as logged.
+ * the Scribe generated and whose persisted lifecycle is still `draft`.
  *
  * @param {SessionResponse[] | undefined} sessions - The campaign's session history, if loaded.
  * @returns {SessionResponse | null} The open draft, or `null` when there is none.
@@ -45,7 +41,9 @@ function findOpenDraft(
 ): SessionResponse | null {
   if (!sessions) return null
   return sessions
-    .filter((session) => session.has_generated_content && !session.consequences)
+    .filter(
+      (session) => session.has_generated_content && session.status === 'draft'
+    )
     .reduce<SessionResponse | null>(
       (latest, session) =>
         !latest || session.session_number > latest.session_number
@@ -135,6 +133,7 @@ export function LogSessionForm({
   })
   const draft = useMemo(() => findOpenDraft(sessions), [sessions])
   const isLinkedToDraft = Boolean(draft) && !prefersNewSession
+  const [isNavigating, setIsNavigating] = useState(false)
 
   const formSchema = useMemo(
     () =>
@@ -164,6 +163,11 @@ export function LogSessionForm({
         : registerSessionFn(campaignId, payload)
     },
     onSuccess: (response) => {
+      // Hold the takeover across the route swap. `isPending` flips to false the
+      // moment the mutation resolves, but the review frame only paints once the
+      // router has navigated — repainting the filled-in form in that gap reads
+      // as the save having failed.
+      setIsNavigating(true)
       if (persistDraft) {
         try {
           writeMemoryReviewDraft({
@@ -187,6 +191,7 @@ export function LogSessionForm({
       // reset on mutation error), so the copy is the fixed reassurance from
       // the handoff rather than the raw backend message — the point of this
       // state is "nothing was lost", not the failure's technical detail.
+      setIsNavigating(false)
       setHasSubmitError(true)
     },
   })
@@ -202,10 +207,11 @@ export function LogSessionForm({
     mutation.mutate(data)
   }
 
-  // While saving, replace the whole form with the quill loading takeover —
-  // the register + summarize + suggest round trip is synchronous on the
-  // backend, so a static disabled form would read as a frozen page.
-  if (mutation.isPending) {
+  // While saving — and onwards through the navigation to the review screen —
+  // replace the whole form with the quill loading takeover. The register +
+  // summarize + suggest round trip is synchronous on the backend, so a static
+  // disabled form would read as a frozen page.
+  if (mutation.isPending || isNavigating) {
     return (
       <LoadingScribe title={t('savingTitle')} caption={t('savingCaption')} />
     )

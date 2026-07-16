@@ -389,6 +389,14 @@ body {
   }
 }
 
+/* The accepted card is filed away upwards — the mirror of the discard slide. */
+@keyframes ll-accept-file {
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+}
+
 [data-motion='full'] .ll-stamp {
   position: absolute;
   top: 48%;
@@ -415,6 +423,10 @@ body {
 
 [data-motion='full'] .ll-discarding {
   animation: ll-discard-slide 220ms ease-in both;
+}
+
+[data-motion='full'] .ll-accepting {
+  animation: ll-accept-file 220ms ease-in both;
 }
 
 [data-motion='subtle'] .ll-stamp,
@@ -444,6 +456,11 @@ body {
   opacity: 0.6;
 }
 
+[data-motion='subtle'] .ll-accepting,
+[data-motion='off'] .ll-accepting {
+  opacity: 0.6;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -463,6 +480,7 @@ body {
   .ll-view-enter,
   .ll-rule-anim,
   .ll-discarding,
+  .ll-accepting,
   .ll-stamp {
     opacity: 1 !important;
     transform: none !important;

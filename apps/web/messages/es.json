@@ -496,6 +496,7 @@
     "backToCampaign": "Volver a la campaña",
     "scribeProposes": "❧ El Escriba propone...",
     "acceptedStamp": "★ Aceptada",
+    "stamping": "Sellando",
     "importance": "Importancia · {importance}",
     "importanceValue": {
       "high": "Alta",

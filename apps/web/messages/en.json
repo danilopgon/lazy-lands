@@ -496,6 +496,7 @@
     "backToCampaign": "Back to campaign",
     "scribeProposes": "❧ The Scribe proposes...",
     "acceptedStamp": "★ Accepted",
+    "stamping": "Stamping",
     "importance": "Importance · {importance}",
     "importanceValue": {
       "high": "High",

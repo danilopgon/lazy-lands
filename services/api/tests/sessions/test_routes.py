@@ -2,16 +2,23 @@
 
 from __future__ import annotations
 
+import json
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.modules.sessions.api.dependencies import provide_complete_session
+from app.modules.sessions.api.exception_handlers import (
+    session_already_registered_error_handler,
+)
+from app.modules.sessions.application.commands.complete_session import CompleteSession
 from app.modules.sessions.application.contracts import (
     CampaignSummaryOutput,
     MemorySuggestionsOutput,
 )
+from app.modules.sessions.application.errors import SessionAlreadyRegisteredError
 from app.shared.database import get_user_supabase_client
 from app.shared.llm.dependencies import get_llm_provider
 from app.shared.llm.providers.fake import FakeLlmProvider
@@ -286,3 +293,65 @@ def test_list_sessions_empty_campaign_returns_empty_array(client) -> None:
 
     assert response.status_code == 200
     assert response.json() == []
+
+
+@pytest.mark.asyncio
+async def test_already_registered_error_maps_to_a_non_retryable_409() -> None:
+    """A second complete on the same row is a bug, not a transient failure.
+
+    Unlike SessionPersistenceError's retryable 409, replaying this request can
+    never succeed — the played outcome is already recorded.
+    """
+    response = await session_already_registered_error_handler(
+        MagicMock(), SessionAlreadyRegisteredError()
+    )
+
+    assert response.status_code == 409
+    assert json.loads(response.body)["retryable"] is False
+
+
+def test_already_registered_error_handler_is_wired_into_the_app() -> None:
+    """The guard is inert unless the error actually reaches the API as a 409."""
+    assert (
+        app.exception_handlers[SessionAlreadyRegisteredError]
+        is session_already_registered_error_handler
+    )
+
+
+def test_complete_route_returns_409_when_atomic_draft_transition_loses_race(
+    client,
+) -> None:
+    session_id = "00000000-0000-4000-8000-000000000001"
+    repository = MagicMock()
+    repository.get_session.side_effect = [
+        {
+            "id": session_id,
+            "campaign_id": "campaign-1",
+            "session_number": 3,
+            "status": "draft",
+        },
+        {
+            "id": session_id,
+            "campaign_id": "campaign-1",
+            "session_number": 3,
+            "status": "registered",
+        },
+    ]
+    repository.complete_draft.return_value = None
+    handler = CompleteSession(repository, MagicMock(), MagicMock())
+    app.dependency_overrides[provide_complete_session] = lambda: handler
+    _authenticate()
+
+    response = client.post(
+        f"/sessions/{session_id}/complete",
+        json={"summary": "The party resolved the raid."},
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "error": "This session is already recorded.",
+        "retryable": False,
+    }
+    repository.complete_draft.assert_called_once_with(
+        session_id, "The party resolved the raid.", None
+    )

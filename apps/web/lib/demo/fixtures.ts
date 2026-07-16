@@ -292,6 +292,7 @@ function buildFixtures(prose: LocaleProse): DemoFixtures {
       summary: prose.sessions.s5.summary,
       consequences: prose.sessions.s5.consequences,
       has_generated_content: false,
+      status: 'registered',
       created_at: DATES.session5,
     },
     {
@@ -300,6 +301,7 @@ function buildFixtures(prose: LocaleProse): DemoFixtures {
       summary: prose.sessions.s6.summary,
       consequences: prose.sessions.s6.consequences,
       has_generated_content: false,
+      status: 'registered',
       created_at: DATES.session6,
     },
     {
@@ -308,6 +310,7 @@ function buildFixtures(prose: LocaleProse): DemoFixtures {
       summary: prose.sessions.s7.summary,
       consequences: prose.sessions.s7.consequences,
       has_generated_content: false,
+      status: 'registered',
       created_at: DATES.session7,
     },
   ]

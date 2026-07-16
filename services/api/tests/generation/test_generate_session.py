@@ -120,6 +120,8 @@ async def test_generate_session_persists_valid_output_with_trace() -> None:
     assert result.id == "session-1"
     assert result.title == "Threads in the Mine"
     assert result.trace_id == "session-1"
+    # A generated session is a plan the DM has not played yet.
+    assert repo.created[0]["status"] == "draft"
     assert repo.created[0]["summary"] == "The party follows the arcane core clue."
     assert repo.created[0]["generated_content"]["title"] == "Threads in the Mine"
     # Regression guard: all 7 sections must persist 1:1, not the earlier 3.

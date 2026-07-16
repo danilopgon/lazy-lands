@@ -63,6 +63,12 @@ export type RegisterSessionResponse = z.infer<
   typeof registerSessionResponseSchema
 >
 
+// Mirrors services/api/app/modules/sessions/domain — the `session_status` enum.
+// A session is a 'draft' only while the Scribe's plan has not been played yet;
+// recording the played outcome flips it to 'registered', permanently.
+export const sessionStatusSchema = z.enum(['draft', 'registered'])
+export type SessionStatus = z.infer<typeof sessionStatusSchema>
+
 // Mirrors `SessionResponse` read model — one row of `GET /campaigns/{id}/sessions`.
 export const sessionResponseSchema = z.object({
   id: z.string(),
@@ -70,6 +76,13 @@ export const sessionResponseSchema = z.object({
   summary: z.string().nullable(),
   consequences: z.string().nullable(),
   has_generated_content: z.boolean().default(false),
+  // Absent or unrecognized status falls back to 'registered', never 'draft' —
+  // the same fail-safe invariant as the column default. Treating an unknown
+  // status as a draft would offer an already-played session for completion and
+  // overwrite the DM's real record; treating a draft as registered merely
+  // hides the resume CTA. `.catch()` keeps a future enum member from throwing
+  // and blanking the whole history list (cf. `memoryTypeSchema`'s leniency).
+  status: sessionStatusSchema.catch('registered').default('registered'),
   created_at: z.string().nullable(),
 })
 export type SessionResponse = z.infer<typeof sessionResponseSchema>

@@ -28,6 +28,7 @@ from app.modules.sessions.application.contracts import (
     RegisterSessionResponse,
 )
 from app.modules.sessions.application.errors import (
+    SessionAlreadyRegisteredError,
     SessionNotFoundError,
     SessionPersistenceError,
 )
@@ -74,20 +75,35 @@ class CompleteSession:
 
         Raises:
             SessionNotFoundError: Forged/foreign/unknown ``session_id``.
+            SessionAlreadyRegisteredError: The session's played outcome is
+                already recorded — completing it again would overwrite it.
             SessionPersistenceError: The session update itself failed.
         """
         existing = await run_in_threadpool(self._repository.get_session, session_id)
         if existing is None:
             raise SessionNotFoundError()
 
+        if existing.get("status") != "draft":
+            raise SessionAlreadyRegisteredError()
+
         try:
             session = await run_in_threadpool(
-                self._repository.update_session,
+                self._repository.complete_draft,
                 session_id,
-                {"summary": command.summary, "consequences": command.consequences},
+                command.summary,
+                command.consequences,
             )
         except RepositoryError as exc:
             raise SessionPersistenceError(retryable=True) from exc
+
+        if session is None:
+            # The conditional update lost a concurrent completion race. Re-read
+            # through RLS to distinguish a now-registered row from a deleted or
+            # inaccessible one without ever issuing an unconditional overwrite.
+            current = await run_in_threadpool(self._repository.get_session, session_id)
+            if current is None:
+                raise SessionNotFoundError()
+            raise SessionAlreadyRegisteredError()
 
         campaign_id = existing["campaign_id"]
 

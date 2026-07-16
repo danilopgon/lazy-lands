@@ -105,6 +105,7 @@ class SupabaseGenerationRepository:
                         "summary": session_data["summary"],
                         "consequences": session_data.get("consequences"),
                         "generated_content": session_data["generated_content"],
+                        "status": session_data["status"],
                         "trace_json": session_data["trace_json"],
                     }
                 )

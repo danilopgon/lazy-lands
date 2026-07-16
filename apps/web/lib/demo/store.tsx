@@ -331,6 +331,7 @@ export function DemoProvider({
           ? payload.consequences
           : null,
         has_generated_content: false,
+        status: 'registered',
         created_at: new Date().toISOString(),
       }
       const localeSuggestions = fixturesRef.current.suggestions
@@ -396,7 +397,12 @@ export function DemoProvider({
         ...current,
         sessions: current.sessions.map((session) =>
           session.id === sessionId
-            ? { ...session, summary: payload.summary, consequences }
+            ? {
+                ...session,
+                summary: payload.summary,
+                consequences,
+                status: 'registered',
+              }
             : session
         ),
         suggestions: pendingSuggestions,

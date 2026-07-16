@@ -63,6 +63,7 @@ function session(overrides: Partial<SessionResponse> = {}): SessionResponse {
     summary: 'A logged session.',
     consequences: 'The keep fell.',
     has_generated_content: false,
+    status: 'registered',
     created_at: '2026-01-01T00:00:00Z',
     ...overrides,
   }
@@ -75,6 +76,7 @@ const OPEN_DRAFT = session({
   summary: 'The Scribe proposed a raid on the docks.',
   consequences: null,
   has_generated_content: true,
+  status: 'draft',
 })
 
 describe('LogSessionForm — default (real) path', () => {
@@ -280,6 +282,27 @@ describe('LogSessionForm — open generated draft', () => {
     expect(mockCompleteSession).not.toHaveBeenCalled()
   })
 
+  it('does not offer a summary-only completed generated session as an open draft', async () => {
+    const user = userEvent.setup()
+    mockGetSessions.mockResolvedValue([
+      session({
+        id: 'completed-generated',
+        session_number: 8,
+        summary: 'The party resolved the raid.',
+        consequences: null,
+        has_generated_content: true,
+        status: 'registered',
+      }),
+    ])
+    renderForm()
+
+    await submit(user)
+
+    await waitFor(() => expect(mockRegisterSession).toHaveBeenCalled())
+    expect(mockCompleteSession).not.toHaveBeenCalled()
+    expect(screen.queryByText(/Session 8/)).not.toBeInTheDocument()
+  })
+
   it('targets the highest-numbered open draft when several exist', async () => {
     const user = userEvent.setup()
     mockGetSessions.mockResolvedValue([
@@ -289,6 +312,7 @@ describe('LogSessionForm — open generated draft', () => {
         session_number: 5,
         consequences: null,
         has_generated_content: true,
+        status: 'draft',
       }),
     ])
     renderForm()
@@ -360,5 +384,60 @@ describe('LogSessionForm — injected draft seam (demo)', () => {
     expect(mockGetSessions).not.toHaveBeenCalled()
     expect(mockCompleteSession).not.toHaveBeenCalled()
     expect(mockRegisterSession).not.toHaveBeenCalled()
+  })
+})
+
+describe('LogSessionForm — navigation takeover', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('keeps the loading takeover on screen after the mutation resolves', async () => {
+    const user = userEvent.setup()
+    const registerSessionFn = vi.fn().mockResolvedValue(RESPONSE)
+    const navigate = vi.fn()
+
+    renderForm({ registerSessionFn, navigate, persistDraft: false })
+    await user.type(
+      screen.getByLabelText(/what happened/i),
+      'The party reached the keep.'
+    )
+    await user.click(
+      screen.getByRole('button', { name: /save session & review memories/i })
+    )
+
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalled()
+    })
+
+    // `navigate` only asks for the route swap; the new frame paints later. The
+    // form must never flash back in that gap.
+    expect(screen.getByText(/chronicling the session/i)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /save session & review memories/i })
+    ).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/what happened/i)).not.toBeInTheDocument()
+  })
+
+  it('restores the form when the register fails so the DM can retry', async () => {
+    const user = userEvent.setup()
+    const registerSessionFn = vi.fn().mockRejectedValue(new Error('network'))
+    const navigate = vi.fn()
+
+    renderForm({ registerSessionFn, navigate, persistDraft: false })
+
+    await user.type(
+      screen.getByLabelText(/what happened/i),
+      'The party reached the keep.'
+    )
+    await user.click(
+      screen.getByRole('button', { name: /save session & review memories/i })
+    )
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /save session & review memories/i })
+    ).toBeEnabled()
+    expect(navigate).not.toHaveBeenCalled()
   })
 })

@@ -81,6 +81,71 @@ def test_insert_session_returns_inserted_row() -> None:
     assert insert_arg["session_number"] == 1
     assert insert_arg["summary"] == "The party arrived."
     assert insert_arg["consequences"] is None
+    # An ad-hoc session is already played — never a resumable draft.
+    assert insert_arg["status"] == "registered"
+
+
+def test_list_sessions_selects_status_for_the_draft_predicate() -> None:
+    """The UI reads `status` off this list; omitting it from the select would
+    silently classify every session as registered and break resume-draft."""
+    client = MagicMock()
+    query = client.table.return_value.select.return_value.eq.return_value
+    query.order.return_value.execute.return_value = MagicMock(data=[])
+    repo = SupabaseSessionRepository(client)
+
+    repo.list_sessions("campaign-1")
+
+    assert "status" in client.table.return_value.select.call_args[0][0]
+
+
+def test_get_session_selects_status_for_the_complete_guard() -> None:
+    """CompleteSession reads `status` off this row to refuse a second complete;
+    omitting it from the select would disable the guard entirely."""
+    client = MagicMock()
+    query = client.table.return_value.select.return_value.eq.return_value
+    query.execute.return_value = MagicMock(data=[])
+    repo = SupabaseSessionRepository(client)
+
+    repo.get_session("session-1")
+
+    assert "status" in client.table.return_value.select.call_args[0][0]
+
+
+def test_complete_draft_updates_only_a_persisted_draft() -> None:
+    client = MagicMock()
+    completed = {
+        "id": "session-1",
+        "session_number": 3,
+        "summary": "The party resolved the raid.",
+        "consequences": None,
+        "status": "registered",
+    }
+    update_query = client.table.return_value.update.return_value.eq.return_value
+    update_query.eq.return_value.execute.return_value = MagicMock(data=[completed])
+    repo = SupabaseSessionRepository(client)
+
+    result = repo.complete_draft("session-1", "The party resolved the raid.", None)
+
+    assert result == completed
+    client.table.return_value.update.assert_called_once_with(
+        {
+            "summary": "The party resolved the raid.",
+            "consequences": None,
+            "status": "registered",
+        }
+    )
+    assert update_query.eq.call_args.args == ("status", "draft")
+
+
+def test_complete_draft_returns_none_when_the_row_is_not_still_a_draft() -> None:
+    client = MagicMock()
+    update_query = client.table.return_value.update.return_value.eq.return_value
+    update_query.eq.return_value.execute.return_value = MagicMock(data=[])
+    repo = SupabaseSessionRepository(client)
+
+    result = repo.complete_draft("session-1", "The party resolved the raid.", None)
+
+    assert result is None
 
 
 def test_insert_session_raises_repository_error_when_no_rows_returned() -> None:

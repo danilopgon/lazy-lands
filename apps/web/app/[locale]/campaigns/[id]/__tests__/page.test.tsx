@@ -329,6 +329,7 @@ describe('CampaignDetailPage', () => {
         summary: string
         consequences: string | null
         has_generated_content: boolean
+        status: 'draft' | 'registered'
         created_at: string
       }>
     >()
@@ -347,6 +348,7 @@ describe('CampaignDetailPage', () => {
         summary: 'The warehouse burned down.',
         consequences: 'The guild lost its cache.',
         has_generated_content: false,
+        status: 'registered',
         created_at: '2026-06-08T10:00:00Z',
       },
       {
@@ -355,6 +357,7 @@ describe('CampaignDetailPage', () => {
         summary: 'The party arrived in town.',
         consequences: null,
         has_generated_content: true,
+        status: 'draft',
         created_at: '2026-06-01T10:00:00Z',
       },
     ])
@@ -494,6 +497,7 @@ describe('CampaignDetailPage', () => {
         summary: `Chronicle entry ${session_number}`,
         consequences: null,
         has_generated_content: false,
+        status: 'registered',
         created_at: `2026-06-0${session_number}T10:00:00Z`,
       }))
     )
@@ -523,6 +527,7 @@ describe('CampaignDetailPage', () => {
         summary: 'The party crossed the ruined bridge.',
         consequences: null,
         has_generated_content: false,
+        status: 'registered',
         created_at: '2026-06-01T10:00:00Z',
       },
     ])
@@ -579,6 +584,7 @@ describe('CampaignDetailPage', () => {
         summary: 'The party arrived in town.',
         consequences: null,
         has_generated_content: false,
+        status: 'registered',
         created_at: '2026-06-01T10:00:00Z',
       },
       {
@@ -587,6 +593,7 @@ describe('CampaignDetailPage', () => {
         summary: 'The Scribe draft summary.',
         consequences: null,
         has_generated_content: true,
+        status: 'draft',
         created_at: '2026-06-08T10:00:00Z',
       },
     ])
@@ -737,6 +744,7 @@ describe('CampaignDetailPage', () => {
         summary: null,
         consequences: null,
         has_generated_content: true,
+        status: 'draft',
         created_at: '2026-07-10T10:00:00Z',
       },
       {
@@ -745,6 +753,7 @@ describe('CampaignDetailPage', () => {
         summary: 'The warehouse burned down.',
         consequences: 'The guild lost its cache.',
         has_generated_content: false,
+        status: 'registered',
         created_at: '2026-06-08T10:00:00Z',
       },
     ])
@@ -779,6 +788,7 @@ describe('CampaignDetailPage', () => {
         summary: 'The Scribe drafted a synopsis.',
         consequences: null,
         has_generated_content: true,
+        status: 'draft',
         created_at: '2026-07-10T10:00:00Z',
       },
     ])
