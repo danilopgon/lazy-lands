@@ -11,6 +11,17 @@ export type RegisterSessionRequest = z.infer<
   typeof registerSessionRequestSchema
 >
 
+// Mirrors `CompleteSessionRequest` in the same module — the played-outcome
+// counterpart for a session the Scribe already generated. Same fields as
+// register; no session_number, because completing a row never renumbers it.
+export const completeSessionRequestSchema = z.object({
+  summary: z.string().trim().min(1).max(8000),
+  consequences: z.string().trim().max(8000).optional(),
+})
+export type CompleteSessionRequest = z.infer<
+  typeof completeSessionRequestSchema
+>
+
 // Mirrors services/api/app/modules/sessions/domain/enums.py `Importance`.
 export const importanceSchema = z.enum(['high', 'medium', 'low'])
 export type Importance = z.infer<typeof importanceSchema>

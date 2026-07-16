@@ -74,6 +74,10 @@ type DemoStore = DemoState & {
     summary: string
     consequences?: string
   }) => Promise<RegisterSessionResponse>
+  completeSession: (
+    sessionId: string,
+    payload: { summary: string; consequences?: string }
+  ) => Promise<RegisterSessionResponse>
   acceptSuggestion: (payload: {
     suggestion: MemorySuggestion
     content: string
@@ -359,6 +363,54 @@ export function DemoProvider({
     [nextId, state.sessions]
   )
 
+  /**
+   * Record the played outcome onto an existing session row — the local mirror
+   * of `POST /sessions/{id}/complete`. Updates the row in place (never inserts
+   * a second one) and leaves any generated content untouched, so the demo
+   * models the same generate-then-complete lifecycle as production.
+   *
+   * @param {string} sessionId - The session to complete.
+   * @param {{ summary: string; consequences?: string }} payload - The DM's account of the played session.
+   * @returns {Promise<RegisterSessionResponse>} The completed session plus fixture suggestions.
+   */
+  const completeSession = useCallback(
+    async (
+      sessionId: string,
+      payload: { summary: string; consequences?: string }
+    ) => {
+      const consequences = payload.consequences?.trim()
+        ? payload.consequences
+        : null
+      const existing = state.sessions.find(
+        (session) => session.id === sessionId
+      )
+      const sessionNumber = existing?.session_number ?? 0
+      const localeSuggestions = fixturesRef.current.suggestions
+      const pendingSuggestions: PendingSuggestion[] = localeSuggestions.map(
+        (suggestion, index) => ({
+          ...suggestion,
+          id: suggestionId(suggestion, index),
+        })
+      )
+      setState((current) => ({
+        ...current,
+        sessions: current.sessions.map((session) =>
+          session.id === sessionId
+            ? { ...session, summary: payload.summary, consequences }
+            : session
+        ),
+        suggestions: pendingSuggestions,
+        loggedSession: { sessionId, sessionNumber },
+      }))
+      return settle({
+        session_id: sessionId,
+        session_number: sessionNumber,
+        memory_suggestions: localeSuggestions,
+      })
+    },
+    [state.sessions]
+  )
+
   const acceptSuggestion = useCallback(
     async (payload: { suggestion: MemorySuggestion; content: string }) => {
       const fact: MemoryFactResponse = {
@@ -489,6 +541,7 @@ export function DemoProvider({
       updateArc,
       deleteArc,
       logSession,
+      completeSession,
       acceptSuggestion,
       resolveSuggestion,
       retireMemory,
@@ -509,6 +562,7 @@ export function DemoProvider({
       updateArc,
       deleteArc,
       logSession,
+      completeSession,
       acceptSuggestion,
       resolveSuggestion,
       retireMemory,

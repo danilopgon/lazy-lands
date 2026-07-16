@@ -30,6 +30,18 @@ class RegisterSessionRequest(BaseModel):
     consequences: str | None = Field(default=None, max_length=8000)
 
 
+class CompleteSessionRequest(BaseModel):
+    """``POST /sessions/{id}/complete`` request body.
+
+    The played-outcome counterpart of ``RegisterSessionRequest``, for a
+    session the Scribe already generated. No ``session_number`` — the row
+    already has one and completing it never renumbers it.
+    """
+
+    summary: str = Field(min_length=1, max_length=8000)
+    consequences: str | None = Field(default=None, max_length=8000)
+
+
 class UpdateSessionRequest(BaseModel):
     """``PATCH /sessions/{id}`` request body.
 

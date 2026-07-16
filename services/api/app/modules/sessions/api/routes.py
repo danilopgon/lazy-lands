@@ -12,6 +12,7 @@ from fastapi.responses import Response
 from starlette.concurrency import run_in_threadpool
 
 from app.modules.sessions.api.dependencies import (
+    provide_complete_session,
     provide_export_session,
     provide_get_session,
     provide_get_sessions,
@@ -22,9 +23,14 @@ from app.modules.sessions.api.dependencies import (
 )
 from app.modules.sessions.api.schemas.session.export import ExportSessionQuery
 from app.modules.sessions.api.schemas.session.requests import (
+    CompleteSessionRequest,
     RegenerateSectionRequest,
     RegisterSessionRequest,
     UpdateSessionRequest,
+)
+from app.modules.sessions.application.commands.complete_session import (
+    CompleteSession,
+    CompleteSessionCommand,
 )
 from app.modules.sessions.application.commands.export_session import (
     ExportSession,
@@ -108,6 +114,21 @@ async def register_session(
         summary=payload.summary, consequences=payload.consequences
     )
     return await handler.execute(campaign_id, command)
+
+
+@detail_router.post("/{session_id}/complete", response_model=RegisterSessionResponse)
+async def complete_session(
+    session_id: str,
+    payload: CompleteSessionRequest,
+    _user_id: Annotated[str, Depends(get_current_user)],
+    handler: Annotated[CompleteSession, Depends(provide_complete_session)],
+) -> RegisterSessionResponse:
+    """Record the played outcome onto an already-generated session row."""
+    _validate_session_id(session_id)
+    command = CompleteSessionCommand(
+        summary=payload.summary, consequences=payload.consequences
+    )
+    return await handler.execute(session_id, command)
 
 
 @router.get("", response_model=list[SessionResponse])

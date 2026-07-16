@@ -463,6 +463,12 @@
     "savingTitle": "Chronicling the session",
     "savingCaption": "Saving your record and asking the Scribe what's worth remembering",
     "errorMessage": "Something went wrong while processing the session. Your text is safe; nothing you wrote was lost. Try again.",
+    "draftLink": {
+      "linkedMessage": "This will complete Session {number}, the draft you prepared with the Scribe. Only what you write here is recorded; the prepared material stays untouched.",
+      "switchToNew": "Register as a new session instead",
+      "newMessage": "This will be registered as a new session, leaving your prepared Session {number} open as a draft.",
+      "switchToDraft": "Complete Session {number} instead"
+    },
     "history": {
       "emptyTitle": "No sessions logged yet",
       "emptyDescription": "Log your first session and the Scribe will start keeping the chronicle.",

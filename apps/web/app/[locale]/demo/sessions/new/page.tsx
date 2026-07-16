@@ -44,6 +44,10 @@ export default function DemoLogSessionPage() {
           registerSessionFn={(_campaignId, payload) =>
             store.logSession(payload)
           }
+          completeSessionFn={(sessionId, payload) =>
+            store.completeSession(sessionId, payload)
+          }
+          getSessionsFn={async () => store.sessions}
           persistDraft={false}
           navigate={() => router.push(demoHrefs.memory)}
         />

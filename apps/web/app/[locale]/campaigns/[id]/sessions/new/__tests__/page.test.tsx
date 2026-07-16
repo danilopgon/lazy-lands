@@ -6,11 +6,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const {
   mockGetCampaignDetail,
   mockRegisterSession,
+  mockCompleteSession,
+  mockGetSessions,
   mockPush,
   mockWriteMemoryReviewDraft,
 } = vi.hoisted(() => ({
   mockGetCampaignDetail: vi.fn(),
   mockRegisterSession: vi.fn(),
+  mockCompleteSession: vi.fn(),
+  mockGetSessions: vi.fn(),
   mockPush: vi.fn(),
   mockWriteMemoryReviewDraft: vi.fn(),
 }))
@@ -23,6 +27,8 @@ vi.mock('@/lib/campaigns/api', () => ({
 
 vi.mock('@/lib/sessions/api', () => ({
   registerSession: mockRegisterSession,
+  completeSession: mockCompleteSession,
+  getSessions: mockGetSessions,
   SessionApiError: class SessionApiError extends Error {},
   SessionCampaignNotFoundError: class SessionCampaignNotFoundError extends Error {},
 }))
@@ -85,6 +91,8 @@ describe('LogSessionPage (Block 7a session-log-ui)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    // No open draft: this screen's contract is the plain register path.
+    mockGetSessions.mockResolvedValue([])
   })
 
   afterEach(() => {
