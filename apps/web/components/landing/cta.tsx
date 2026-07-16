@@ -71,14 +71,14 @@ export function LandCTA() {
             <Button
               asChild
               variant="ink-inverted"
-              style={{ fontSize: 14.5, padding: '11px 22px' }}
+              className="px-[22px] py-[11px] text-[14.5px]"
             >
               <Link href="/register">{t('cta.cta')}</Link>
             </Button>
             <Button
               asChild
               variant="secondary"
-              style={{ fontSize: 14.5, padding: '11px 22px' }}
+              className="px-[22px] py-[11px] text-[14.5px]"
             >
               <Link href="/demo">{t('cta.demoCta')}</Link>
             </Button>

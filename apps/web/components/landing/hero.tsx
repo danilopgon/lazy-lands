@@ -67,14 +67,14 @@ export function LandHero() {
             <Button
               asChild
               variant="accent"
-              style={{ fontSize: 14.5, padding: '11px 22px' }}
+              className="px-[22px] py-[11px] text-[14.5px]"
             >
               <Link href="/register">{t('hero.cta')}</Link>
             </Button>
             <Button
               asChild
               variant="secondary"
-              style={{ fontSize: 14.5, padding: '11px 22px' }}
+              className="px-[22px] py-[11px] text-[14.5px]"
             >
               <Link href="/demo">{t('hero.demoCta')}</Link>
             </Button>
