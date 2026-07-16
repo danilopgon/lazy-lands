@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl'
 
 import { Link } from '@/i18n/navigation'
 import { demoHrefs } from '@/lib/demo/hrefs'
-import { demoCampaign } from '@/lib/demo/fixtures'
+import { useDemoStore } from '@/lib/demo/store'
 
 type DemoBreadcrumbProps = {
   /** The current (leaf) segment label. */
@@ -22,6 +22,7 @@ type DemoBreadcrumbProps = {
  */
 export function DemoBreadcrumb({ title }: DemoBreadcrumbProps) {
   const t = useTranslations('Demo')
+  const store = useDemoStore()
 
   return (
     <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
@@ -30,7 +31,7 @@ export function DemoBreadcrumb({ title }: DemoBreadcrumbProps) {
       </Link>{' '}
       /{' '}
       <Link href={demoHrefs.campaign} className="hover:text-[var(--ink)]">
-        {demoCampaign.title}
+        {store.campaign.title}
       </Link>{' '}
       / <b className="text-[var(--ink)]">{title}</b>
     </nav>

@@ -37,11 +37,8 @@ import type {
 import {
   DEMO_CAMPAIGN_ID,
   DEMO_GENERATED_SESSION_ID,
-  demoCampaign,
-  demoGeneratedSession,
-  demoMemoryFacts,
-  demoMemorySuggestions,
-  demoSessions,
+  fixturesByLocale,
+  type DemoFixtures,
 } from './fixtures'
 
 /**
@@ -122,16 +119,17 @@ function settle<T>(value: T): Promise<T> {
 /**
  * Build the pristine starting state from the (schema-validated) fixtures.
  *
+ * @param {DemoFixtures} fixtures - The locale-selected fixture bundle to seed from.
  * @returns {DemoState} A fresh demo state seeded from the fixtures.
  */
-function initialState(): DemoState {
+function initialState(fixtures: DemoFixtures): DemoState {
   return {
-    campaign: demoCampaign,
-    sessions: demoSessions,
-    memoryFacts: demoMemoryFacts,
+    campaign: fixtures.campaign,
+    sessions: fixtures.sessions,
+    memoryFacts: fixtures.memoryFacts,
     suggestions: [],
     loggedSession: null,
-    generated: demoGeneratedSession,
+    generated: fixtures.generated,
   }
 }
 
@@ -142,11 +140,28 @@ function initialState(): DemoState {
  *
  * @param {object} root0 - Provider props.
  * @param {ReactNode} root0.children - The demo subtree that consumes the store.
+ * @param {DemoFixtures} [root0.initialFixtures] - The locale-selected fixture
+ *   bundle to seed from. Defaults to the English bundle for callers (tests,
+ *   and any locale-agnostic embedding) that don't select a locale.
  * @returns {React.ReactElement} The provider wrapping the demo subtree.
  */
-export function DemoProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<DemoState>(initialState)
+export function DemoProvider({
+  children,
+  initialFixtures = fixturesByLocale.en,
+}: {
+  children: ReactNode
+  initialFixtures?: DemoFixtures
+}) {
+  const [state, setState] = useState<DemoState>(() =>
+    initialState(initialFixtures)
+  )
   const idCounter = useRef(0)
+  // `logSession` reads suggestions from the locale-seeded bundle via this
+  // ref, not a module-level constant — otherwise /es/demo would surface
+  // English suggestions after logging a session. `initialFixtures` is only
+  // read once per mount (a locale switch remounts the provider via the
+  // route's [locale] segment), so the ref is seeded and never reassigned.
+  const fixturesRef = useRef(initialFixtures)
 
   /**
    * Mint a stable, unique id for a locally-created demo entity.
@@ -317,12 +332,13 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         has_generated_content: false,
         created_at: new Date().toISOString(),
       }
+      const localeSuggestions = fixturesRef.current.suggestions
       const response: RegisterSessionResponse = {
         session_id: sessionId,
         session_number: sessionNumber,
-        memory_suggestions: demoMemorySuggestions,
+        memory_suggestions: localeSuggestions,
       }
-      const pendingSuggestions: PendingSuggestion[] = demoMemorySuggestions.map(
+      const pendingSuggestions: PendingSuggestion[] = localeSuggestions.map(
         (suggestion, index) => ({
           ...suggestion,
           id: suggestionId(suggestion, index),
