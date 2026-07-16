@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ document.locale }}">
   <head>
     <meta charset="utf-8">
     <style>
@@ -7,7 +7,7 @@
         size: A4 portrait;
         margin: 18mm 16mm 20mm;
         @bottom-center {
-          content: "Lazy Lands · DM-edited session {{ document.session_number }}";
+          content: "{{ footer }}";
           font-size: 9pt;
         }
       }
@@ -52,8 +52,8 @@
     <h1>{{ document.title }}</h1>
     {% for section in sections %}
     <section class="section">
-      <h2>{{ section.label }}</h2>
-      <p class="origin">{{ section.origin }}</p>
+      <h2>{{ section.heading }}</h2>
+      <p class="origin">{{ section.origin_text }}</p>
       <div class="section-body">{{ section.html_body | safe }}</div>
     </section>
     {% endfor %}
