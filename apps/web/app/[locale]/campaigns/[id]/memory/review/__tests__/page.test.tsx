@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@/tests/intl'
+import { render, screen, waitFor, within } from '@/tests/intl'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NextIntlClientProvider } from 'next-intl'
@@ -7,6 +7,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import en from '@/messages/en.json'
 import es from '@/messages/es.json'
+import {
+  CARD_EXIT_MS,
+  STAMP_LIFETIME_MS,
+  STAMP_POP_MS,
+} from '@/lib/motion/timings'
+
+/** Generous ceiling for waiting out a full stamp → hold → exit lifetime. */
+const LIFETIME_TIMEOUT_MS = STAMP_LIFETIME_MS + CARD_EXIT_MS + 1500
 
 const {
   mockGetCampaignDetail,
@@ -287,22 +295,212 @@ describe('MemoryReviewPage', () => {
       screen.getAllByRole('button', { name: /accept as memory/i })[0]
     )
 
+    await waitFor(
+      () => {
+        expect(mockRewriteMemoryReviewDraftSuggestions).toHaveBeenCalledWith(
+          'camp-1',
+          'sess-1',
+          [
+            {
+              content: 'The warehouse fire exposed guild ledgers.',
+              type: 'consequence',
+              importance: 'medium',
+              reason: 'Future faction pressure depends on this evidence.',
+              related: ['Black Bear Guild'],
+            },
+          ]
+        )
+      },
+      { timeout: LIFETIME_TIMEOUT_MS }
+    )
+    expect(mockCompleteMemoryReviewDraft).not.toHaveBeenCalled()
+  })
+
+  it('drops an accepted suggestion from the draft even if the DM leaves mid-stamp', async () => {
+    const user = userEvent.setup()
+    mockReadMemoryReviewDraft.mockReturnValue(twoSuggestionDraft)
+    mockCreateMemoryFact.mockResolvedValue({ ...activeMemory, id: 'memory-2' })
+
+    const { unmount } = renderPage()
+
+    await screen.findByText(/2 suggestions await/i)
+    await user.click(
+      screen.getAllByRole('button', { name: /accept as memory/i })[0]
+    )
+    await screen.findByText(/★ accepted/i)
+
+    // The stamp now holds for over a second. Leaving during that hold must not
+    // resurrect an already-accepted suggestion on the DM's next visit.
+    unmount()
+
+    await waitFor(
+      () => {
+        expect(mockRewriteMemoryReviewDraftSuggestions).toHaveBeenCalledWith(
+          'camp-1',
+          'sess-1',
+          [
+            {
+              content: 'The warehouse fire exposed guild ledgers.',
+              type: 'consequence',
+              importance: 'medium',
+              reason: 'Future faction pressure depends on this evidence.',
+              related: ['Black Bear Guild'],
+            },
+          ]
+        )
+      },
+      { timeout: LIFETIME_TIMEOUT_MS }
+    )
+  })
+
+  it('shows the loading takeover instead of the empty state until the draft read completes', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    })
+    // The DM arrives here from `/sessions/new`, which already primed this exact
+    // query key — so `campaignQuery.isLoading` is false on the first paint and
+    // only the draft gate can keep the empty state off the screen.
+    queryClient.setQueryData(['campaign', 'camp-1'], buildCampaignDetail())
+    queryClient.setQueryData(
+      ['campaign', 'camp-1', 'memory-facts', 'active'],
+      [activeMemory]
+    )
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryReviewPage />
+      </QueryClientProvider>
+    )
+
+    expect(screen.getByText(/opening the margins/i)).toBeInTheDocument()
+    expect(screen.queryByText(/the margins are clean/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/nothing awaits review/i)).not.toBeInTheDocument()
+
+    expect(await screen.findByText(/captain vess owes/i)).toBeInTheDocument()
+    expect(mockCompleteMemoryReviewDraft).not.toHaveBeenCalled()
+  })
+
+  it('keeps the accepted card and its stamp readable before the card leaves', async () => {
+    const user = userEvent.setup()
+    mockCreateMemoryFact.mockResolvedValue({ ...activeMemory, id: 'memory-2' })
+
+    const { container } = renderPage()
+
+    await user.click(
+      await screen.findByRole('button', { name: /accept as memory/i })
+    )
+
+    expect(await screen.findByText(/★ accepted/i)).toBeInTheDocument()
+
+    // The stamp pop keyframe must be allowed to finish; the card used to be
+    // destroyed at 120ms, well before the 260ms pop reached full opacity.
+    await new Promise((resolve) => setTimeout(resolve, STAMP_POP_MS + 40))
+    expect(screen.getByText(/captain vess owes/i)).toBeInTheDocument()
+    expect(container.querySelector('.ll-stamp')).not.toBeNull()
+
+    // Then the exit animation plays before the card is torn down.
+    await waitFor(
+      () => {
+        expect(container.querySelector('.ll-accepting')).not.toBeNull()
+      },
+      { timeout: LIFETIME_TIMEOUT_MS }
+    )
+    await waitFor(
+      () => {
+        expect(screen.queryByText(/captain vess owes/i)).not.toBeInTheDocument()
+      },
+      { timeout: LIFETIME_TIMEOUT_MS }
+    )
+  })
+
+  it('scopes the busy indicator to the card being accepted', async () => {
+    const user = userEvent.setup()
+    mockReadMemoryReviewDraft.mockReturnValue(twoSuggestionDraft)
+    const create = deferred<typeof activeMemory>()
+    mockCreateMemoryFact.mockReturnValue(create.promise)
+
+    renderPage()
+
+    await screen.findByText(/2 suggestions await/i)
+    const cards = screen.getAllByRole('article')
+    await user.click(
+      within(cards[0]).getByRole('button', { name: /accept as memory/i })
+    )
+
     await waitFor(() => {
-      expect(mockRewriteMemoryReviewDraftSuggestions).toHaveBeenCalledWith(
-        'camp-1',
-        'sess-1',
-        [
-          {
-            content: 'The warehouse fire exposed guild ledgers.',
-            type: 'consequence',
-            importance: 'medium',
-            reason: 'Future faction pressure depends on this evidence.',
-            related: ['Black Bear Guild'],
-          },
-        ]
+      expect(within(cards[0]).getByRole('status')).toHaveTextContent(
+        /stamping/i
       )
     })
-    expect(mockCompleteMemoryReviewDraft).not.toHaveBeenCalled()
+    expect(
+      within(cards[0]).getByRole('button', { name: /accept as memory/i })
+    ).toBeDisabled()
+
+    // An unrelated accept must never freeze the rest of the margins.
+    expect(within(cards[1]).queryByRole('status')).not.toBeInTheDocument()
+    expect(
+      within(cards[1]).getByRole('button', { name: /accept as memory/i })
+    ).toBeEnabled()
+    expect(
+      within(cards[1]).getByRole('button', { name: /edit & accept/i })
+    ).toBeEnabled()
+    expect(
+      within(cards[1]).getByRole('button', { name: /^dismiss$/i })
+    ).toBeEnabled()
+
+    create.resolve({ ...activeMemory, id: 'memory-2' })
+    await waitFor(
+      () => {
+        expect(screen.getAllByRole('article')).toHaveLength(1)
+      },
+      { timeout: LIFETIME_TIMEOUT_MS }
+    )
+  })
+
+  it('keeps a card disabled while its own accept is in flight after a sibling accept starts', async () => {
+    const user = userEvent.setup()
+    mockReadMemoryReviewDraft.mockReturnValue(twoSuggestionDraft)
+    const create = deferred<typeof activeMemory>()
+    mockCreateMemoryFact.mockReturnValue(create.promise)
+
+    renderPage()
+
+    await screen.findByText(/2 suggestions await/i)
+    const cards = screen.getAllByRole('article')
+
+    await user.click(
+      within(cards[0]).getByRole('button', { name: /accept as memory/i })
+    )
+    await waitFor(() => {
+      expect(within(cards[0]).getByRole('status')).toHaveTextContent(
+        /stamping/i
+      )
+    })
+
+    // Per-card busy state means the DM can start a second accept before the
+    // first resolves. That must never re-enable the first card's controls —
+    // a re-click would fire a duplicate createMemoryFact for the same
+    // suggestion and stamp the same memory twice.
+    await user.click(
+      within(cards[1]).getByRole('button', { name: /accept as memory/i })
+    )
+    await waitFor(() => {
+      expect(within(cards[1]).getByRole('status')).toHaveTextContent(
+        /stamping/i
+      )
+    })
+
+    expect(
+      within(cards[0]).getByRole('button', { name: /accept as memory/i })
+    ).toBeDisabled()
+    expect(
+      within(cards[0]).getByRole('button', { name: /edit & accept/i })
+    ).toBeDisabled()
+    expect(within(cards[0]).getByRole('status')).toHaveTextContent(/stamping/i)
+    expect(mockCreateMemoryFact).toHaveBeenCalledTimes(2)
   })
 
   it('accepts, edits, dismisses, and retires with busy-safe calls', async () => {
@@ -459,6 +657,15 @@ describe('MemoryReviewPage', () => {
         importance: 'high',
       })
     })
+
+    // The stamped card holds its stamp readable before filing itself away, so
+    // wait it out rather than racing the second card's controls.
+    await waitFor(
+      () => {
+        expect(screen.getAllByRole('article')).toHaveLength(1)
+      },
+      { timeout: LIFETIME_TIMEOUT_MS }
+    )
 
     const dismiss = await screen.findByRole('button', { name: /^descartar$/i })
     await user.click(dismiss)

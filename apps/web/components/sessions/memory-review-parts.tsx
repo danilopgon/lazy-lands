@@ -26,6 +26,37 @@ export type PendingSuggestion = MemorySuggestion & {
 export type Feedback = 'accepted' | 'edited' | 'dismissed' | 'retired' | null
 
 /**
+ * Transient feedback phase of a card on its way out.
+ *
+ * `stamping` pops the accepted stamp and holds it readable; `accepting` then
+ * files the card away; `discarding` strikes it through and slides it off.
+ */
+export type SuggestionFx = 'stamping' | 'accepting' | 'discarding'
+
+/**
+ * Inline "the Scribe is working on this card" indicator — the compact sibling
+ * of {@link LoadingScribe}, reusing the same quill and ellipsis primitives.
+ *
+ * @param {object} root0 - The inline busy props.
+ * @param {string} root0.label - The mono status label.
+ * @returns {React.ReactElement} The inline busy indicator element.
+ */
+function InlineScribeBusy({ label }: { label: string }) {
+  return (
+    <span
+      role="status"
+      className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-2)]"
+    >
+      <span aria-hidden="true" className="ll-quill inline-block">
+        ✒
+      </span>
+      {label}
+      <span className="ll-ellip" />
+    </span>
+  )
+}
+
+/**
  * Build a stable, deterministic key for a transient suggestion.
  *
  * @param {MemorySuggestion} suggestion - The suggestion to identify.
@@ -85,10 +116,13 @@ export function RetryButton({
 /**
  * Renders a single Scribe proposal with accept, edit, and dismiss affordances.
  *
+ * Only this card's own in-flight accept may disable it — an accept elsewhere in
+ * the margins must leave every other proposal actionable.
+ *
  * @param {object} root0 - The suggestion card props.
  * @param {PendingSuggestion} root0.suggestion - The pending suggestion to render.
- * @param {'stamping' | 'discarding' | undefined} root0.fx - Optional transient feedback state.
- * @param {boolean} root0.isBusy - Whether a mutation is in flight.
+ * @param {SuggestionFx | undefined} root0.fx - Optional transient feedback phase.
+ * @param {boolean} root0.isSubmitting - Whether THIS card's accept is in flight.
  * @param {() => void} root0.onAccept - Accept the suggestion as-is.
  * @param {() => void} root0.onEdit - Switch to the inline editor.
  * @param {() => void} root0.onDismiss - Remove the suggestion from the draft.
@@ -97,30 +131,34 @@ export function RetryButton({
 export function SuggestionCard({
   suggestion,
   fx,
-  isBusy,
+  isSubmitting,
   onAccept,
   onEdit,
   onDismiss,
 }: {
   suggestion: PendingSuggestion
-  fx?: 'stamping' | 'discarding'
-  isBusy: boolean
+  fx?: SuggestionFx
+  isSubmitting: boolean
   onAccept: () => void
   onEdit: () => void
   onDismiss: () => void
 }) {
   const t = useTranslations('MemoryReview')
-  const stamping = fx === 'stamping'
+  const stamped = fx === 'stamping' || fx === 'accepting'
   const discarding = fx === 'discarding'
+  const isBusy = isSubmitting || Boolean(fx)
 
   return (
     <article
       className={cn(
         'relative overflow-hidden border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)]',
-        discarding && 'll-discarding'
+        discarding && 'll-discarding',
+        fx === 'accepting' && 'll-accepting'
       )}
     >
-      {stamping ? <span className="ll-stamp">{t('acceptedStamp')}</span> : null}
+      {/* The stamp stays mounted through the exit phase so it never blinks out
+          mid-animation. */}
+      {stamped ? <span className="ll-stamp">{t('acceptedStamp')}</span> : null}
       <div className="flex items-baseline gap-3 px-5 pt-4">
         <p className="font-serif text-[15px] italic text-[var(--accent-deep)]">
           {t('scribeProposes')}
@@ -164,6 +202,7 @@ export function SuggestionCard({
         <Button type="button" onClick={onEdit} disabled={isBusy}>
           {t('editAccept')}
         </Button>
+        {isSubmitting ? <InlineScribeBusy label={t('stamping')} /> : null}
         <button
           type="button"
           className="ml-auto font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-2)] underline disabled:opacity-50"

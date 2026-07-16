@@ -123,3 +123,59 @@ describe('LogSessionForm — injected adapter props', () => {
     expect(mockPush).not.toHaveBeenCalled()
   })
 })
+
+describe('LogSessionForm — navigation takeover', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('keeps the loading takeover on screen after the mutation resolves', async () => {
+    const user = userEvent.setup()
+    const registerSessionFn = vi.fn().mockResolvedValue(RESPONSE)
+    const navigate = vi.fn()
+
+    renderForm({ registerSessionFn, navigate, persistDraft: false })
+
+    await user.type(
+      screen.getByLabelText(/what happened/i),
+      'The party reached the keep.'
+    )
+    await user.click(
+      screen.getByRole('button', { name: /save session & review memories/i })
+    )
+
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalled()
+    })
+
+    // `navigate` only asks for the route swap; the new frame paints later. The
+    // form must never flash back in that gap.
+    expect(screen.getByText(/chronicling the session/i)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /save session & review memories/i })
+    ).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/what happened/i)).not.toBeInTheDocument()
+  })
+
+  it('restores the form when the register fails so the DM can retry', async () => {
+    const user = userEvent.setup()
+    const registerSessionFn = vi.fn().mockRejectedValue(new Error('network'))
+    const navigate = vi.fn()
+
+    renderForm({ registerSessionFn, navigate, persistDraft: false })
+
+    await user.type(
+      screen.getByLabelText(/what happened/i),
+      'The party reached the keep.'
+    )
+    await user.click(
+      screen.getByRole('button', { name: /save session & review memories/i })
+    )
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /save session & review memories/i })
+    ).toBeEnabled()
+    expect(navigate).not.toHaveBeenCalled()
+  })
+})

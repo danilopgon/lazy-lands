@@ -15,9 +15,11 @@ import {
   SuggestionEditor,
   type Feedback,
   type PendingSuggestion,
+  type SuggestionFx,
 } from '@/components/sessions/memory-review-parts'
 import { demoHrefs } from '@/lib/demo/hrefs'
 import { useDemoStore } from '@/lib/demo/store'
+import { CARD_EXIT_MS, STAMP_LIFETIME_MS } from '@/lib/motion/timings'
 
 /**
  * `/demo/memory` — the memory review screen. Reuses the exact production
@@ -49,8 +51,9 @@ export default function DemoMemoryReviewPage() {
 
   const [pending, setPending] = useState<PendingSuggestion[]>(initialPending)
   const [editing, setEditing] = useState<string | null>(null)
-  const [isBusy, setIsBusy] = useState(false)
-  const [fx, setFx] = useState<Record<string, 'stamping' | 'discarding'>>({})
+  const [submittingId, setSubmittingId] = useState<string | null>(null)
+  const [isRetiring, setIsRetiring] = useState(false)
+  const [fx, setFx] = useState<Record<string, SuggestionFx>>({})
   const [feedback, setFeedback] = useState<Feedback>(null)
 
   const activeMemories = store.memoryFacts.filter(
@@ -70,13 +73,26 @@ export default function DemoMemoryReviewPage() {
   }
 
   /**
+   * Clear a card's transient feedback phase once it has left the screen.
+   *
+   * @param {string} id - The render key to clear.
+   */
+  function clearFx(id: string) {
+    setFx((current) => {
+      const next = { ...current }
+      delete next[id]
+      return next
+    })
+  }
+
+  /**
    * Accept a suggestion (optionally edited) as a canonical memory fact.
    *
    * @param {PendingSuggestion} suggestion - The suggestion being accepted.
    * @param {string} content - The final memory text.
    */
   async function accept(suggestion: PendingSuggestion, content: string) {
-    setIsBusy(true)
+    setSubmittingId(suggestion.id)
     // Drop the suggestion synchronously, BEFORE awaiting the simulated latency:
     // `acceptSuggestion` stores the fact immediately but its promise settles
     // after a delay, so resolving only after the await would leave a window in
@@ -88,18 +104,24 @@ export default function DemoMemoryReviewPage() {
       setEditing(null)
       setFeedback(content === suggestion.content ? 'accepted' : 'edited')
       setFx((current) => ({ ...current, [suggestion.id]: 'stamping' }))
+      // Pop, hold the stamp readable, then file the card away. Timer-driven so
+      // it behaves identically under every `data-motion` mode, where the stamp
+      // is a static badge that fires no animation events.
       window.setTimeout(() => {
-        removePending(suggestion.id)
-        setFx((current) => {
-          const next = { ...current }
-          delete next[suggestion.id]
-          return next
-        })
-      }, 400)
+        setFx((current) =>
+          current[suggestion.id] === 'stamping'
+            ? { ...current, [suggestion.id]: 'accepting' }
+            : current
+        )
+        window.setTimeout(() => {
+          removePending(suggestion.id)
+          clearFx(suggestion.id)
+        }, CARD_EXIT_MS)
+      }, STAMP_LIFETIME_MS)
     } finally {
       // Always re-enable the controls; the demo store never rejects, but a
-      // rejection must never leave every button disabled forever.
-      setIsBusy(false)
+      // rejection must never leave the card disabled forever.
+      setSubmittingId(null)
     }
   }
 
@@ -111,15 +133,12 @@ export default function DemoMemoryReviewPage() {
   function dismiss(suggestion: PendingSuggestion) {
     store.resolveSuggestion(suggestion.id)
     setFx((current) => ({ ...current, [suggestion.id]: 'discarding' }))
+    // The strike + slide must finish before the card is torn down.
     window.setTimeout(() => {
       removePending(suggestion.id)
-      setFx((current) => {
-        const next = { ...current }
-        delete next[suggestion.id]
-        return next
-      })
+      clearFx(suggestion.id)
       setFeedback('dismissed')
-    }, 400)
+    }, CARD_EXIT_MS)
   }
 
   return (
@@ -182,7 +201,7 @@ export default function DemoMemoryReviewPage() {
                 <SuggestionEditor
                   key={suggestion.id}
                   suggestion={suggestion}
-                  isBusy={isBusy}
+                  isBusy={submittingId === suggestion.id}
                   onCancel={() => setEditing(null)}
                   onSave={(content) => void accept(suggestion, content)}
                 />
@@ -191,7 +210,7 @@ export default function DemoMemoryReviewPage() {
                   key={suggestion.id}
                   suggestion={suggestion}
                   fx={fx[suggestion.id]}
-                  isBusy={isBusy || Boolean(fx[suggestion.id])}
+                  isSubmitting={submittingId === suggestion.id}
                   onAccept={() => void accept(suggestion, suggestion.content)}
                   onEdit={() => setEditing(suggestion.id)}
                   onDismiss={() => dismiss(suggestion)}
@@ -219,14 +238,14 @@ export default function DemoMemoryReviewPage() {
               memories={activeMemories}
               isLoading={false}
               isError={false}
-              isBusy={isBusy}
+              isBusy={isRetiring}
               retryLabel={te('retry')}
               sourceLabelFor={(sourceSessionId) =>
                 sourceSessionId ? t('sessionSource') : t('manualSource')
               }
               onRetry={() => undefined}
               onRetire={(memory) => {
-                setIsBusy(true)
+                setIsRetiring(true)
                 void store
                   .retireMemory(memory.id)
                   .then(() => {
@@ -234,7 +253,7 @@ export default function DemoMemoryReviewPage() {
                   })
                   .finally(() => {
                     // Always re-enable the controls, even on rejection.
-                    setIsBusy(false)
+                    setIsRetiring(false)
                   })
               }}
             />
