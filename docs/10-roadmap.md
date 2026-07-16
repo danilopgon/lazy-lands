@@ -34,6 +34,21 @@ complex relationship graphs, visual timeline, and advanced memory compiler.
 | 10 | Testing and quality | done |
 | 11 | Handoff cleanup and docs update | done |
 
+## Post-MVP roadmap
+
+The MVP is complete, including PDF export. Future work is intentionally sequenced to preserve
+the reviewable-memory model:
+
+1. Enrich session logging with private notes and additional entity-change fields.
+2. Improve campaign navigation with timeline and advanced filtering views.
+3. Explore a conversational Scribe that preserves the rule: it proposes, the DM decides.
+4. Evaluate richer retrieval only after the existing rolling-summary and accepted-memory model is
+   measured against real campaign history.
+
+RAG, embeddings, vector search, relationship graphs, dark-theme settings, and PDF export polish
+remain post-MVP opportunities. Billing, shared campaigns, a mobile app, and Obsidian sync are not
+currently planned. See [11-backlog.md](./11-backlog.md) for the detailed backlog.
+
 ---
 
 ## Block 0 — Infra and repo

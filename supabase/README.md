@@ -1,6 +1,7 @@
 # Supabase Local Development
 
-This folder contains the Block 0 Supabase scaffold for local Auth and PostgreSQL. Real schema migrations, RLS policies, and seed data start in Block 1.
+This folder contains the local Supabase configuration, schema migrations, row-level security
+policies, and seed utilities used by Lazy Lands.
 
 ## CLI
 
@@ -28,7 +29,6 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable key from supabase status>
 SUPABASE_URL=<API URL from supabase status>
 SUPABASE_PUBLISHABLE_KEY=<publishable key from supabase status>
 SUPABASE_SERVICE_ROLE_KEY=<service_role key from supabase status>
-SUPABASE_JWT_SECRET=<JWT secret for local verification>
 ```
 
 If `pnpm supabase start` fails with `failed to read signing keys`, generate them
@@ -70,5 +70,5 @@ is available at <http://127.0.0.1:54324>.
 
 ## Migrations and seed
 
-- `migrations/.gitkeep` keeps the migrations directory in version control until Block 1 adds real SQL.
-- `seed.sql` is intentionally a placeholder for local development seed data.
+- `migrations/` contains the versioned schema and RLS migrations.
+- `seed.sql` provides local development seed data where required.

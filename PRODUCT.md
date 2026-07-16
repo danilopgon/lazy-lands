@@ -80,14 +80,15 @@ The landing page is **part of the product and the entry point of the flow** — 
 
 ## 5. Screen inventory (MVP)
 
-Route map as implemented in the prototype (hash-router; real build should use real routes):
+Target MVP screen inventory. The shipped production routes and their current implementation status
+are recorded in section 10; deferred fields and screens below are not implied to be shipped.
 
 | Route                                   | Screen               | Key criteria                                                                                                                                                                                             |
 | --------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/`                                     | Landing              | Explains what/who/why + the flow; hero, how-it-works, benefits, app preview, final CTA.                                                                                                                  |
 | `/login`                                | Login                | Email + password; link to register; **error state** for bad credentials.                                                                                                                                 |
 | `/register`                             | Register             | Email + password + confirm; min-length validation; → onboarding (create campaign).                                                                                                                       |
-| `/campaigns`                            | Dashboard            | Campaign cards (name, system, #sessions/NPCs/factions/memories/arcs, last update, status); search; create; **empty state**.                                                                              |
+| `/dashboard`                             | Dashboard            | Campaign cards (name, system, #sessions/NPCs/factions/memories/arcs, last update, status); search; create; **empty state**.                                                                              |
 | `/campaigns/new`                        | Create campaign      | Name, system, tone, free-text premise, optional details; **char counter + 100-char min**; “Analyze”; loading.                                                                                            |
 | `/campaigns/new/review`                 | Extraction review    | Summary, world state, NPCs, factions, arcs — each **editable / removable / addable**; AI-vs-edited marked; confirm to create.                                                                            |
 | `/campaigns/[id]`                       | Campaign detail      | World state, metrics, recent sessions, recent active memories, arcs needing attention, primary actions.                                                                                                  |
@@ -143,21 +144,28 @@ This is illustrative sample data for reference, not a stored fixture in the ship
 
 ---
 
-## 9. Demo / build intent
+## 9. Public demo
 
-This package is a **visual + behavioral base for development**, realistic enough to validate the MVP flow and hand to engineering. The prototype’s React-in-browser setup is a fidelity reference, **not** the production stack — rebuild against your real framework using `DESIGN.md` tokens. UI copy is in **English**; the system is bilingual-friendly but ship copy in English unless decided otherwise.
+The production application includes a public, no-login guided tour at `/demo` (and `/es/demo`).
+It uses seeded in-memory data and is isolated from authenticated campaigns. The demo exists to let
+reviewers explore the complete flow without credentials; it must never persist data or call the
+production API.
 
 ---
 
 ## 10. Current frontend implementation status
 
-`apps/web` is the production Next.js target. Through Block 6 it implements:
+`apps/web` is the production Next.js target. All MVP blocks are complete:
 
-- `/` — the product landing page (Print Chronicle palette, fonts, hard borders, ink shadows).
-- `/login`, `/register`, auth confirmation and password reset — real Supabase auth flows (Block 4).
-- `/campaigns/new` and `/campaigns/new/review` — free-text premise → AI extraction → reviewed create (Block 5).
+- `/` — the localized product landing page and entry point.
+- `/login`, `/register`, auth confirmation, password reset, and protected routes — Supabase auth.
 - `/dashboard` — the DM's campaign list.
-- `/campaigns/[id]` — detail: system/tone, world state (view + inline edit), stat bar, arcs needing attention. Recent sessions and active memories are dimmed "coming in a later chapter" placeholders (Block 7).
-- `/campaigns/[id]/npcs`, `/factions`, `/arcs` — entity lists with full create / edit / delete via modals.
+- `/campaigns/new` and `/campaigns/new/review` — free-text premise, AI extraction, and DM review before saving.
+- `/campaigns/[id]`, `/npcs`, `/factions`, and `/arcs` — campaign context and entity CRUD.
+- `/campaigns/[id]/sessions/new` and `/memory/review` — session registration and reviewable memory suggestions.
+- `/campaigns/[id]/prepare` and `/sessions/[sessionId]` — structured next-session generation, editing, and per-section regeneration.
+- `/campaigns/[id]/sessions/[sessionId]/export` — PDF export of the generated session.
+- `/demo` and `/es/demo` — a no-login, in-memory guided tour that mirrors the campaign workflow.
 
-Sessions, memory review and session generation remain governed by the MVP screen inventory above and the SDD docs under `docs/` (Blocks 7–8). Their placeholder slots are intentional and are not product behavior yet.
+Campaign settings and the richer session/private-note fields listed in the screen inventory are not
+currently shipped. They remain deferred work, not placeholders in the current product flow.
