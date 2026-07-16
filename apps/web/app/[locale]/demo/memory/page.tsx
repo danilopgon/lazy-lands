@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Notice } from '@/components/ui/notice'
 import { DemoBreadcrumb } from '@/components/demo/demo-breadcrumb'
+import { DemoTour, type DemoTourStep } from '@/components/demo/demo-tour'
 import {
   ActiveMemories,
   SuggestionCard,
@@ -29,7 +30,16 @@ import { useDemoStore } from '@/lib/demo/store'
 export default function DemoMemoryReviewPage() {
   const t = useTranslations('MemoryReview')
   const te = useTranslations('Entities')
+  const tt = useTranslations('Demo.tour')
   const store = useDemoStore()
+
+  const tourSteps: DemoTourStep[] = [
+    {
+      element: '[data-tour="suggestions"]',
+      title: tt('memorySuggestionsTitle'),
+      description: tt('memorySuggestionsBody'),
+    },
+  ]
 
   // Seeded once from the store's pre-keyed suggestions; local `pending` then
   // drives the accept/dismiss exit animation without re-keying (the store's
@@ -107,6 +117,8 @@ export default function DemoMemoryReviewPage() {
       id="main-content"
       className="ll-view-enter ll-workspace mx-auto max-w-[900px] px-6 py-16"
     >
+      <DemoTour tourKey="memory" steps={tourSteps} />
+
       <DemoBreadcrumb title={t('breadcrumb')} />
 
       <div className="flex items-start justify-between gap-4">
@@ -138,7 +150,11 @@ export default function DemoMemoryReviewPage() {
       ) : null}
 
       <div className="ll-memory-review-lanes mt-6">
-        <section className="grid gap-4" aria-label={t('pendingSection')}>
+        <section
+          className="grid gap-4"
+          aria-label={t('pendingSection')}
+          data-tour="suggestions"
+        >
           {pending.length === 0 ? (
             <EmptyState
               className="border-dashed bg-transparent shadow-none"

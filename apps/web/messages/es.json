@@ -834,7 +834,11 @@
       "prepareTitle": "Prepara la siguiente sesión",
       "prepareBody": "El Escriba lee el contexto que aceptaste y redacta una propuesta de sesión editable. Tú siempre tienes la última palabra.",
       "outroTitle": "Ese es el ciclo",
-      "outroBody": "Registra una sesión, revisa las memorias y prepara la siguiente. Explora a tu ritmo: todo lo que ves es editable."
+      "outroBody": "Registra una sesión, revisa las memorias y prepara la siguiente. Explora a tu ritmo: todo lo que ves es editable.",
+      "memorySuggestionsTitle": "Las propuestas del Escriba",
+      "memorySuggestionsBody": "Cada sugerencia aquí espera tu decisión. Acepta, edita o descarta cada una: solo lo que aceptas se convierte en memoria.",
+      "generatedDraftTitle": "Un borrador editable, no una respuesta final",
+      "generatedDraftBody": "El Escriba redactó esto a partir de tu memoria aceptada. Edita cualquier sección, regenera la que no te convenza y exporta cuando esté lista."
     }
   }
 }

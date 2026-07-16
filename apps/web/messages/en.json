@@ -834,7 +834,11 @@
       "prepareTitle": "Prepare the next session",
       "prepareBody": "The Scribe reads your accepted context and drafts an editable session proposal. You always have the last word.",
       "outroTitle": "That's the loop",
-      "outroBody": "Log a session, review the memories, and prepare the next one. Explore at your own pace — everything you see is editable."
+      "outroBody": "Log a session, review the memories, and prepare the next one. Explore at your own pace — everything you see is editable.",
+      "memorySuggestionsTitle": "The Scribe's proposals",
+      "memorySuggestionsBody": "Every suggestion here waits for your decision. Accept, edit, or dismiss each one — only what you accept becomes memory.",
+      "generatedDraftTitle": "An editable draft, not a final answer",
+      "generatedDraftBody": "The Scribe drafted this from your accepted memory. Edit any section, regenerate one you don't like, then export when it's ready."
     }
   }
 }

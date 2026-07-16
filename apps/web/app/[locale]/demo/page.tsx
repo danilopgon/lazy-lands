@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl'
 
 import { Link } from '@/i18n/navigation'
 import { WorldStateEditor } from '@/components/campaigns/world-state-editor'
-import { DemoTour } from '@/components/demo/demo-tour'
+import { DemoTour, type DemoTourStep } from '@/components/demo/demo-tour'
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { formatShortDate } from '@/lib/format'
 import { demoHrefs } from '@/lib/demo/hrefs'
@@ -27,9 +27,35 @@ export default function DemoCampaignPage() {
   const te = useTranslations('Entities')
   const tm = useTranslations('MemoryReview')
   const td = useTranslations('Demo')
+  const tt = useTranslations('Demo.tour')
   const locale = useAppLocale()
   const store = useDemoStore()
   const { campaign, sessions, memoryFacts } = store
+
+  const tourSteps: DemoTourStep[] = [
+    { title: tt('welcomeTitle'), description: tt('welcomeBody') },
+    {
+      element: '[data-tour="world-state"]',
+      title: tt('worldStateTitle'),
+      description: tt('worldStateBody'),
+    },
+    {
+      element: '[data-tour="stats"]',
+      title: tt('statsTitle'),
+      description: tt('statsBody'),
+    },
+    {
+      element: '[data-tour="memory"]',
+      title: tt('memoryTitle'),
+      description: tt('memoryBody'),
+    },
+    {
+      element: '[data-tour="prepare"]',
+      title: tt('prepareTitle'),
+      description: tt('prepareBody'),
+    },
+    { title: tt('outroTitle'), description: tt('outroBody') },
+  ]
 
   const kicker = [campaign.system, campaign.tone].filter(Boolean).join(' · ')
   const priorityRank = { high: 0, medium: 1, low: 2 } as const
@@ -65,7 +91,7 @@ export default function DemoCampaignPage() {
       id="main-content"
       className="ll-view-enter ll-workspace mx-auto max-w-[1100px] px-6 py-16"
     >
-      <DemoTour />
+      <DemoTour tourKey="campaign" steps={tourSteps} />
 
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
         <span className="text-[var(--ink-3)]">{td('breadcrumbRoot')}</span> /{' '}
