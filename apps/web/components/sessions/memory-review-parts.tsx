@@ -22,6 +22,23 @@ export type PendingSuggestion = MemorySuggestion & {
   id: string
 }
 
+/** Post-decision feedback shown after a suggestion or memory is acted on. */
+export type Feedback = 'accepted' | 'edited' | 'dismissed' | 'retired' | null
+
+/**
+ * Build a stable, deterministic key for a transient suggestion.
+ *
+ * @param {MemorySuggestion} suggestion - The suggestion to identify.
+ * @param {number} index - Position within the pending list.
+ * @returns {string} A stable composite key.
+ */
+export function suggestionId(
+  suggestion: MemorySuggestion,
+  index: number
+): string {
+  return `${suggestion.type}:${suggestion.content}:${index}`
+}
+
 /**
  * Resolve a memory type into a localized label or a humanized fallback.
  *

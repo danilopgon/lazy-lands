@@ -102,6 +102,46 @@ describe('demo store', () => {
     ).toBe(false)
   })
 
+  it('logs a session with suggestions pre-keyed with stable ids', async () => {
+    const { result } = renderStore()
+
+    await act(async () => {
+      await result.current.logSession({
+        summary: 'The party reached the keep.',
+      })
+    })
+
+    expect(result.current.suggestions.length).toBeGreaterThan(0)
+    for (const suggestion of result.current.suggestions) {
+      expect(typeof suggestion.id).toBe('string')
+      expect(suggestion.id.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('resolveSuggestion synchronously removes the entry from state.suggestions', async () => {
+    const { result } = renderStore()
+
+    await act(async () => {
+      await result.current.logSession({
+        summary: 'The party reached the keep.',
+      })
+    })
+
+    const [first, ...rest] = result.current.suggestions
+    expect(first).toBeDefined()
+
+    act(() => {
+      result.current.resolveSuggestion(first.id)
+    })
+
+    expect(result.current.suggestions.map((s) => s.id)).toEqual(
+      rest.map((s) => s.id)
+    )
+    expect(result.current.suggestions.some((s) => s.id === first.id)).toBe(
+      false
+    )
+  })
+
   it('generates a draft and regenerates one of its sections', async () => {
     const { result } = renderStore()
 

@@ -19,6 +19,10 @@ import type {
   FactionResponse,
   NpcResponse,
 } from '@/lib/campaigns/schemas'
+import {
+  suggestionId,
+  type PendingSuggestion,
+} from '@/components/sessions/memory-review-parts'
 import type { MemoryFactResponse } from '@/lib/memory/schemas'
 import type {
   GenerateSessionResponse,
@@ -68,7 +72,7 @@ type DemoState = {
   campaign: CampaignDetailResponse
   sessions: SessionResponse[]
   memoryFacts: MemoryFactResponse[]
-  suggestions: MemorySuggestion[]
+  suggestions: PendingSuggestion[]
   loggedSession: { sessionId: string; sessionNumber: number } | null
   generated: SessionDetail
 }
@@ -93,6 +97,7 @@ type DemoStore = DemoState & {
     suggestion: MemorySuggestion
     content: string
   }) => Promise<void>
+  resolveSuggestion: (id: string) => void
   retireMemory: (id: string) => Promise<void>
   generateSession: () => Promise<GenerateSessionResponse>
   saveSession: (payload: UpdateSessionContent) => Promise<SessionDetail>
@@ -317,10 +322,16 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         session_number: sessionNumber,
         memory_suggestions: demoMemorySuggestions,
       }
+      const pendingSuggestions: PendingSuggestion[] = demoMemorySuggestions.map(
+        (suggestion, index) => ({
+          ...suggestion,
+          id: suggestionId(suggestion, index),
+        })
+      )
       setState((current) => ({
         ...current,
         sessions: [...current.sessions, session],
-        suggestions: demoMemorySuggestions,
+        suggestions: pendingSuggestions,
         loggedSession: { sessionId, sessionNumber },
       }))
       return settle(response)
@@ -349,6 +360,22 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     },
     [nextId, state.loggedSession]
   )
+
+  /**
+   * Synchronously drop a resolved (accepted or dismissed) suggestion from
+   * state so it cannot resurface as a duplicate on remount. This is UI-state
+   * cleanup, not a simulated mutation — no `settle()` delay.
+   *
+   * @param {string} id - The store-assigned id of the suggestion to remove.
+   */
+  const resolveSuggestion = useCallback((id: string) => {
+    setState((current) => ({
+      ...current,
+      suggestions: current.suggestions.filter(
+        (suggestion) => suggestion.id !== id
+      ),
+    }))
+  }, [])
 
   const retireMemory = useCallback(async (id: string) => {
     setState((current) => ({
@@ -438,6 +465,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       deleteArc,
       logSession,
       acceptSuggestion,
+      resolveSuggestion,
       retireMemory,
       generateSession,
       saveSession,
@@ -457,6 +485,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       deleteArc,
       logSession,
       acceptSuggestion,
+      resolveSuggestion,
       retireMemory,
       generateSession,
       saveSession,

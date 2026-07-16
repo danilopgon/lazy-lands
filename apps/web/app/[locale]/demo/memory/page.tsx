@@ -12,24 +12,11 @@ import {
   ActiveMemories,
   SuggestionCard,
   SuggestionEditor,
+  type Feedback,
   type PendingSuggestion,
 } from '@/components/sessions/memory-review-parts'
 import { demoHrefs } from '@/lib/demo/hrefs'
 import { useDemoStore } from '@/lib/demo/store'
-import type { MemorySuggestion } from '@/lib/sessions/schemas'
-
-type Feedback = 'accepted' | 'edited' | 'dismissed' | 'retired' | null
-
-/**
- * Stable render key for a transient suggestion.
- *
- * @param {MemorySuggestion} suggestion - The suggestion to identify.
- * @param {number} index - Position within the pending list.
- * @returns {string} A stable composite key.
- */
-function suggestionId(suggestion: MemorySuggestion, index: number): string {
-  return `${suggestion.type}:${suggestion.content}:${index}`
-}
 
 /**
  * `/demo/memory` — the memory review screen. Reuses the exact production
@@ -44,14 +31,11 @@ export default function DemoMemoryReviewPage() {
   const te = useTranslations('Entities')
   const store = useDemoStore()
 
-  const initialPending = useMemo(
-    () =>
-      store.suggestions.map((suggestion, index) => ({
-        ...suggestion,
-        id: suggestionId(suggestion, index),
-      })),
-    [store.suggestions]
-  )
+  // Seeded once from the store's pre-keyed suggestions; local `pending` then
+  // drives the accept/dismiss exit animation without re-keying (the store's
+  // ids are the source of truth `resolveSuggestion` filters against).
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- seed once on mount only
+  const initialPending = useMemo(() => store.suggestions, [])
 
   const [pending, setPending] = useState<PendingSuggestion[]>(initialPending)
   const [editing, setEditing] = useState<string | null>(null)
@@ -84,6 +68,7 @@ export default function DemoMemoryReviewPage() {
   async function accept(suggestion: PendingSuggestion, content: string) {
     setIsBusy(true)
     await store.acceptSuggestion({ suggestion, content })
+    store.resolveSuggestion(suggestion.id)
     setIsBusy(false)
     setEditing(null)
     setFeedback(content === suggestion.content ? 'accepted' : 'edited')
@@ -104,6 +89,7 @@ export default function DemoMemoryReviewPage() {
    * @param {PendingSuggestion} suggestion - The suggestion being dismissed.
    */
   function dismiss(suggestion: PendingSuggestion) {
+    store.resolveSuggestion(suggestion.id)
     setFx((current) => ({ ...current, [suggestion.id]: 'discarding' }))
     window.setTimeout(() => {
       removePending(suggestion.id)
@@ -160,7 +146,7 @@ export default function DemoMemoryReviewPage() {
               description={t('emptyPendingDescription')}
               action={
                 <Button asChild type="button">
-                  <Link href={demoHrefs.logSession}>{t('backToCampaign')}</Link>
+                  <Link href={demoHrefs.campaign}>{t('backToCampaign')}</Link>
                 </Button>
               }
             />
