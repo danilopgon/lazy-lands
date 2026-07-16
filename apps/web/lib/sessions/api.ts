@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/api'
+import type { AppLocale } from '@/i18n/routing'
 
 import { z } from 'zod'
 
@@ -269,8 +270,14 @@ function triggerBlobDownload(blob: Blob, filename: string): void {
  * (create + revoke object URL) and the resolved filename is returned so the
  * caller can surface it in a success notice.
  *
+ * Section headings and origin are stored as English keys, so the backend needs
+ * `locale` to render them in the DM's language. It is required rather than
+ * defaulted: an omitted locale would silently produce an English PDF from a
+ * Spanish screen, which is the exact defect this parameter exists to prevent.
+ *
  * @param {string} sessionId - The session id whose saved draft is exported.
  * @param {readonly string[]} sectionIds - Selected persisted section ids, in order.
+ * @param {AppLocale} locale - The DM's active reading language.
  * @returns {Promise<string>} The downloaded attachment filename.
  * @throws {SessionValidationError} Empty, duplicate, or unknown selection (422).
  * @throws {SessionNotExportableError} Missing or non-exportable saved draft (409).
@@ -279,10 +286,12 @@ function triggerBlobDownload(blob: Blob, filename: string): void {
  */
 export async function downloadSessionPdf(
   sessionId: string,
-  sectionIds: readonly string[]
+  sectionIds: readonly string[],
+  locale: AppLocale
 ): Promise<string> {
   const params = new URLSearchParams()
   for (const id of sectionIds) params.append('section_id', id)
+  params.append('locale', locale)
 
   const response = await apiFetch(
     `/sessions/${sessionId}/export.pdf?${params.toString()}`

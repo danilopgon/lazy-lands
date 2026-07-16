@@ -174,11 +174,11 @@ describe('SessionExportView', () => {
     await user.click(screen.getByRole('button', { name: 'Download PDF' }))
 
     // Only persisted section ids travel to the backend — never a notes token.
-    expect(downloadFn).toHaveBeenCalledWith('session-8', [
-      'synopsis',
-      'goal',
-      'beats',
-    ])
+    expect(downloadFn).toHaveBeenCalledWith(
+      'session-8',
+      ['synopsis', 'goal', 'beats'],
+      'en'
+    )
   })
 
   it('requests only the selected section ids, in persisted order', async () => {
@@ -197,7 +197,34 @@ describe('SessionExportView', () => {
     await user.click(screen.getByRole('checkbox', { name: /Session goal/ }))
     await user.click(screen.getByRole('button', { name: 'Download PDF' }))
 
-    expect(downloadFn).toHaveBeenCalledWith('session-8', ['synopsis', 'beats'])
+    expect(downloadFn).toHaveBeenCalledWith(
+      'session-8',
+      ['synopsis', 'beats'],
+      'en'
+    )
+  })
+
+  it('sends the active locale, so a Spanish screen never yields an English PDF', async () => {
+    const user = userEvent.setup()
+    const downloadFn = vi.fn().mockResolvedValue('session-8.pdf')
+    render(
+      <SessionExportView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        downloadFn={downloadFn}
+      />,
+      { wrapper: withQueryClient, locale: 'es' }
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Descargar PDF' }))
+
+    expect(downloadFn).toHaveBeenCalledWith(
+      'session-8',
+      expect.any(Array),
+      'es'
+    )
   })
 
   it('shows the quill loading and prevents duplicate requests while exporting', async () => {

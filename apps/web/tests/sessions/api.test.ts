@@ -153,15 +153,26 @@ describe('downloadSessionPdf (PDF export download client)', () => {
     })
   }
 
+  it('sends the active locale so the PDF headings match the on-screen language', async () => {
+    mockApiFetch.mockResolvedValue(pdfResponse())
+
+    await downloadSessionPdf('sess-8', ['synopsis'], 'es')
+
+    const [path] = mockApiFetch.mock.calls[0]
+    expect(path).toBe(
+      '/sessions/sess-8/export.pdf?section_id=synopsis&locale=es'
+    )
+  })
+
   it('requests the export endpoint with repeated section_id params and no body', async () => {
     mockApiFetch.mockResolvedValue(pdfResponse())
 
-    await downloadSessionPdf('sess-8', ['synopsis', 'beats'])
+    await downloadSessionPdf('sess-8', ['synopsis', 'beats'], 'en')
 
     expect(mockApiFetch).toHaveBeenCalledTimes(1)
     const [path, init] = mockApiFetch.mock.calls[0]
     expect(path).toBe(
-      '/sessions/sess-8/export.pdf?section_id=synopsis&section_id=beats'
+      '/sessions/sess-8/export.pdf?section_id=synopsis&section_id=beats&locale=en'
     )
     // IDs-only: a plain GET with no request body carrying prose.
     expect(init).toBeUndefined()
@@ -170,7 +181,7 @@ describe('downloadSessionPdf (PDF export download client)', () => {
   it('creates and revokes an object URL and returns the attachment filename on success', async () => {
     mockApiFetch.mockResolvedValue(pdfResponse())
 
-    const filename = await downloadSessionPdf('sess-8', ['synopsis'])
+    const filename = await downloadSessionPdf('sess-8', ['synopsis'], 'en')
 
     expect(createObjectURL).toHaveBeenCalledTimes(1)
     // Duck-type the argument instead of `toBeInstanceOf(Blob)`: `response.blob()`
@@ -197,7 +208,7 @@ describe('downloadSessionPdf (PDF export download client)', () => {
       })
     )
 
-    const filename = await downloadSessionPdf('sess-8', ['synopsis'])
+    const filename = await downloadSessionPdf('sess-8', ['synopsis'], 'en')
 
     expect(filename).toBe('100% Loot.pdf')
   })
@@ -214,7 +225,7 @@ describe('downloadSessionPdf (PDF export download client)', () => {
       })
     )
 
-    const filename = await downloadSessionPdf('sess-8', ['synopsis'])
+    const filename = await downloadSessionPdf('sess-8', ['synopsis'], 'en')
 
     expect(filename).toBe('café.pdf')
   })
@@ -230,7 +241,7 @@ describe('downloadSessionPdf (PDF export download client)', () => {
     )
 
     await expect(
-      downloadSessionPdf('sess-8', ['synopsis', 'synopsis'])
+      downloadSessionPdf('sess-8', ['synopsis', 'synopsis'], 'en')
     ).rejects.toBeInstanceOf(SessionValidationError)
     expect(createObjectURL).not.toHaveBeenCalled()
   })
@@ -248,7 +259,7 @@ describe('downloadSessionPdf (PDF export download client)', () => {
     )
 
     await expect(
-      downloadSessionPdf('sess-8', ['synopsis'])
+      downloadSessionPdf('sess-8', ['synopsis'], 'en')
     ).rejects.toBeInstanceOf(SessionNotExportableError)
     expect(createObjectURL).not.toHaveBeenCalled()
   })
@@ -259,7 +270,7 @@ describe('downloadSessionPdf (PDF export download client)', () => {
     )
 
     await expect(
-      downloadSessionPdf('forged', ['synopsis'])
+      downloadSessionPdf('forged', ['synopsis'], 'en')
     ).rejects.toBeInstanceOf(SessionCampaignNotFoundError)
     expect(createObjectURL).not.toHaveBeenCalled()
   })

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 
 import { Link, useRouter } from '@/i18n/navigation'
+import { useAppLocale } from '@/i18n/use-app-locale'
 
 import { Button } from '@/components/ui/button'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
@@ -58,6 +59,7 @@ export function SessionExportView({
 }: SessionExportViewProps) {
   const t = useTranslations('SessionGeneration.export')
   const tg = useTranslations('SessionGeneration.generated')
+  const locale = useAppLocale()
   const router = useRouter()
   const campaignTarget = campaignHref ?? `/campaigns/${campaignId}`
   const draftTarget =
@@ -229,7 +231,7 @@ export function SessionExportView({
     if (isExporting || selectedIds.length === 0) return
     setPhase('exporting')
     try {
-      const name = await downloadFn(sessionId, selectedIds)
+      const name = await downloadFn(sessionId, selectedIds, locale)
       setFilename(name)
       setPhase('done')
     } catch {

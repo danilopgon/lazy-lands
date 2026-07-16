@@ -79,7 +79,9 @@ async def export_session_pdf(
     document = await run_in_threadpool(
         handler.execute,
         session_id,
-        ExportSessionCommand(selected_section_ids=tuple(query.section_id)),
+        ExportSessionCommand(
+            selected_section_ids=tuple(query.section_id), locale=query.locale
+        ),
     )
     pdf = await run_in_threadpool(renderer.render, document)
     return Response(

@@ -11,15 +11,21 @@ from app.modules.sessions.application.errors import (
     NonExportableSessionError,
     SessionNotFoundError,
 )
-from app.modules.sessions.domain.pdf_export import ExportDocument, ExportSection
+from app.modules.sessions.domain.pdf_export import (
+    DEFAULT_EXPORT_LOCALE,
+    ExportDocument,
+    ExportLocale,
+    ExportSection,
+)
 from app.modules.sessions.domain.ports import SessionRepository
 
 
 @dataclass(frozen=True)
 class ExportSessionCommand:
-    """The selected persisted section IDs supplied by the query boundary."""
+    """The selection and reading language supplied by the query boundary."""
 
     selected_section_ids: tuple[str, ...]
+    locale: ExportLocale = DEFAULT_EXPORT_LOCALE
 
 
 class ExportSession:
@@ -53,6 +59,7 @@ class ExportSession:
                 for section in draft.sections
                 if section.id in selected
             ),
+            locale=command.locale,
         )
 
 
