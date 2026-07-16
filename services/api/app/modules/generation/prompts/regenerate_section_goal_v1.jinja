@@ -7,6 +7,7 @@ Rules:
 - Do not invent private notes or hidden facts outside the context.
 - Return ONLY valid JSON. Do not wrap it in markdown fences. Do not include commentary.
 - Return exactly one field: "body" — the rewritten section text. Do not return "id", "label", or "origin"; the caller already knows them.
+- Language rule: write "body" in the SAME LANGUAGE as the campaign description and accumulated summary in the context below. If the campaign is in Spanish, "body" must be in Spanish; if in English, in English. Anchor to the campaign description, NOT to the existing draft sections — an earlier draft may be in the wrong language, and you must not perpetuate it. Never translate the DM's campaign into another language.
 
 Rewrite the Session goal — the concrete objective that drives the session forward.
 
