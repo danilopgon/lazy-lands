@@ -68,4 +68,30 @@ describe('DemoTour — per-screen tourKey and steps', () => {
 
     vi.useRealTimers()
   })
+
+  it('does not auto-run again once the seen flag is set, even after a remount', async () => {
+    vi.useFakeTimers()
+
+    const first = render(
+      <DemoTour tourKey="memory" steps={[{ title: 'a', description: 'b' }]} />
+    )
+
+    await vi.advanceTimersByTimeAsync(500)
+    expect(window.localStorage.getItem('lazylands-demo-tour-seen-memory')).toBe(
+      '1'
+    )
+    expect(mockDriver).toHaveBeenCalledTimes(1)
+
+    // Remount the SAME tourKey: the persisted seen flag must suppress a second
+    // auto-run, so the driver is never constructed again.
+    first.unmount()
+    render(
+      <DemoTour tourKey="memory" steps={[{ title: 'a', description: 'b' }]} />
+    )
+    await vi.advanceTimersByTimeAsync(500)
+
+    expect(mockDriver).toHaveBeenCalledTimes(1)
+
+    vi.useRealTimers()
+  })
 })

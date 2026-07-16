@@ -60,7 +60,6 @@ export function DemoTour({ tourKey, steps }: DemoTourProps) {
 
   useEffect(() => {
     if (autoStarted.current) return
-    autoStarted.current = true
 
     let seen = false
     try {
@@ -71,6 +70,11 @@ export function DemoTour({ tourKey, steps }: DemoTourProps) {
     if (seen) return
 
     const timer = window.setTimeout(() => {
+      // Mark auto-run as done only once the timer actually fires. Setting it on
+      // mount would let React Strict Mode's dev mount→unmount→remount (refs are
+      // preserved, but the timer is cancelled on unmount) return early forever,
+      // so the tour would never auto-run in development.
+      autoStarted.current = true
       try {
         window.localStorage.setItem(seenKey, '1')
       } catch {

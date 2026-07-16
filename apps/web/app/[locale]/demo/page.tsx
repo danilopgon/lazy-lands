@@ -134,7 +134,7 @@ export default function DemoCampaignPage() {
         </div>
       </div>
 
-      <dl
+      <div
         data-tour="stats"
         className="mt-6 grid border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)] llg:grid-flow-col llg:auto-cols-fr"
       >
@@ -142,47 +142,47 @@ export default function DemoCampaignPage() {
           href={demoHrefs.npcs}
           className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
-          <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
+          <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statNpcs')}
-          </dt>
-          <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
+          </div>
+          <div className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.npcs.length}
-          </dd>
+          </div>
         </Link>
         <Link
           href={demoHrefs.factions}
           className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
-          <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
+          <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statFactions')}
-          </dt>
-          <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
+          </div>
+          <div className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.factions.length}
-          </dd>
+          </div>
         </Link>
         <Link
           href={demoHrefs.arcs}
           className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
-          <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
+          <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statArcs')}
-          </dt>
-          <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
+          </div>
+          <div className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.arcs.length}
-          </dd>
+          </div>
         </Link>
         <Link
           href={demoHrefs.memory}
           className="border-b-2 border-[var(--border)] p-4 last:border-b-0 hover:bg-[var(--paper-2)] transition-colors"
         >
-          <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
+          <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statMemory')}
-          </dt>
-          <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
+          </div>
+          <div className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {activeMemories.length}
-          </dd>
+          </div>
         </Link>
-      </dl>
+      </div>
 
       <div className="mt-7 grid gap-7 llg:grid-cols-[1fr_340px] min-[1440px]:grid-cols-[minmax(0,75ch)_minmax(20rem,1fr)]">
         <div className="ll-workspace-main">
