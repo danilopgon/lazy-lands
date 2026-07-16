@@ -1,7 +1,9 @@
+import type { ReactNode } from 'react'
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { DemoProvider, useDemoStore } from '@/lib/demo/store'
+import { fixturesByLocale } from '@/lib/demo/fixtures'
 
 /**
  * Render the demo store hook wrapped in its provider.
@@ -264,5 +266,54 @@ describe('demo store', () => {
       (section) => section.id === 'synopsis'
     )?.body
     expect(after).not.toBe(before)
+  })
+
+  it('regenerates a section with the locale-specific body under the es fixtures', async () => {
+    const EsWrapper = ({ children }: { children: ReactNode }) => (
+      <DemoProvider initialFixtures={fixturesByLocale.es}>
+        {children}
+      </DemoProvider>
+    )
+    const { result } = renderHook(() => useDemoStore(), { wrapper: EsWrapper })
+
+    const before = result.current.generated.generated_content?.sections.find(
+      (section) => section.id === 'synopsis'
+    )?.body
+
+    await act(async () => {
+      await result.current.regenerateSection('synopsis')
+    })
+
+    const after = result.current.generated.generated_content?.sections.find(
+      (section) => section.id === 'synopsis'
+    )?.body
+    expect(after).not.toBe(before)
+    expect(after).toBe(fixturesByLocale.es.regeneratedSections.synopsis)
+    // The Spanish draft must never be regenerated with the English variant.
+    expect(after).not.toBe(fixturesByLocale.en.regeneratedSections.synopsis)
+  })
+
+  it('derives the generated draft session number sequentially after logging', async () => {
+    const { result } = renderStore()
+
+    let loggedNumber = 0
+    await act(async () => {
+      const logged = await result.current.logSession({
+        summary: 'The party reached the keep.',
+      })
+      loggedNumber = logged.session_number
+    })
+
+    // A later render (mirroring log → navigate → prepare → generate) reads the
+    // committed session history, so the draft number stays sequential.
+    let generatedNumber = 0
+    await act(async () => {
+      const generated = await result.current.generateSession()
+      generatedNumber = generated.session_number
+    })
+
+    // Logging creates session N; the next generated draft must be N + 1.
+    expect(generatedNumber).toBe(loggedNumber + 1)
+    expect(result.current.generated.session_number).toBe(loggedNumber + 1)
   })
 })

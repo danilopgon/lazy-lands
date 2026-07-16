@@ -48,22 +48,6 @@ import {
  */
 const DEMO_LATENCY_MS = 450
 
-/** Alternate section bodies the demo "regenerate" swaps in, keyed by section id. */
-const REGENERATED_SECTION_BODIES: Partial<Record<SectionId, string>> = {
-  synopsis:
-    'The truce was never meant to hold. As the party arrives at the Miners Exchange, they realize both guilds expected them to pick a side today — and Cryovain’s shadow makes neutrality a luxury no one can afford.',
-  goal: 'Make the party choose who they empower with the anti-dragon plans, knowing every option closes a door somewhere else in Phandalin.',
-  opening:
-    'Snow ticks against the Exchange windows. Halia’s smile does not reach her eyes; across the room, a Crimson Blade cracks his knuckles. Someone has already decided how this ends.',
-  beats:
-    '- A forged ledger surfaces, implicating whichever faction the party trusts least.\n- Fibblestib’s warning turns out to be minutes, not days, ahead of disaster.\n- The north-road rider arrives wounded — Cryovain is closer than anyone feared.',
-  encounters:
-    'The parley itself is the encounter: a web of social checks where a single misread of Herman’s informant tips the room into drawn steel.',
-  factions:
-    'The Black Bear Guild overplays its hand; the Crimson Blades feign retreat to bait pursuit; the Zhentarim simply watch, tallying debts to call in later.',
-  arcs: 'The stolen-plans arc forces a decision the party cannot walk back, while Cryovain’s pressure jumps from background threat to the reason the room can’t simply wait.',
-}
-
 /** The mutable slice of demo state that the reused views read and write. */
 type DemoState = {
   campaign: CampaignDetailResponse
@@ -114,6 +98,23 @@ function settle<T>(value: T): Promise<T> {
   return new Promise((resolve) => {
     setTimeout(() => resolve(value), DEMO_LATENCY_MS)
   })
+}
+
+/**
+ * The next session number in a campaign's chronology: one past the highest
+ * existing session (or 1 when there are none). Shared so the logged session,
+ * the generated draft, and `/demo/prepare` never drift out of sequence.
+ *
+ * @param {SessionResponse[]} sessions - The current session history.
+ * @returns {number} The next sequential session number.
+ */
+function nextSessionNumber(sessions: SessionResponse[]): number {
+  return (
+    sessions.reduce(
+      (max, session) => Math.max(max, session.session_number),
+      0
+    ) + 1
+  )
 }
 
 /**
@@ -316,11 +317,7 @@ export function DemoProvider({
 
   const logSession = useCallback(
     async (payload: { summary: string; consequences?: string }) => {
-      const sessionNumber =
-        state.sessions.reduce(
-          (max, session) => Math.max(max, session.session_number),
-          0
-        ) + 1
+      const sessionNumber = nextSessionNumber(state.sessions)
       const sessionId = nextId('session')
       const session: SessionResponse = {
         id: sessionId,
@@ -349,6 +346,13 @@ export function DemoProvider({
         sessions: [...current.sessions, session],
         suggestions: pendingSuggestions,
         loggedSession: { sessionId, sessionNumber },
+        // Keep the pre-generated draft's number one past the freshly logged
+        // session so log → prepare → generate stays sequential (the static
+        // fixture value would otherwise leave the draft stuck behind).
+        generated: {
+          ...current.generated,
+          session_number: sessionNumber + 1,
+        },
       }))
       return settle(response)
     },
@@ -405,14 +409,16 @@ export function DemoProvider({
     const content = state.generated.generated_content
     const response: GenerateSessionResponse = {
       id: DEMO_GENERATED_SESSION_ID,
-      session_number: state.generated.session_number,
+      // Derive from the live session history rather than the static fixture
+      // value, so a log → prepare → generate flow stays in sequence.
+      session_number: nextSessionNumber(state.sessions),
       title: content?.title ?? 'The Scribe’s Proposal',
       sections: content?.sections ?? [],
       continuity_links: content?.continuity_links ?? [],
       trace_id: 'demo-trace',
     }
     return settle(response)
-  }, [state.generated])
+  }, [state.generated, state.sessions])
 
   const saveSession = useCallback(
     async (payload: UpdateSessionContent) => {
@@ -448,7 +454,10 @@ export function DemoProvider({
           updated = current.generated
           return current
         }
-        const variant = REGENERATED_SECTION_BODIES[sectionId]
+        // Locale-aware: read the alternate body from the locale-seeded bundle
+        // (via `fixturesRef`), not a module constant, so `/es/demo` never
+        // regenerates a Spanish draft with English prose.
+        const variant = fixturesRef.current.regeneratedSections[sectionId]
         const sections = content.sections.map((section) =>
           section.id === sectionId && variant
             ? { ...section, body: variant, origin: 'scribe' as const }

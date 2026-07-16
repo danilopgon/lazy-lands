@@ -105,12 +105,9 @@ describe('demo fixtures — locale parity', () => {
     expect(esIds).toEqual(enIds)
   })
 
-  it('keeps stable non-prose fields (content_source, system, tone, enums) identical across locales', () => {
+  it('keeps stable non-prose fields (content_source, system, enums) identical across locales', () => {
     expect(fixturesByLocale.es.campaign.system).toBe(
       fixturesByLocale.en.campaign.system
-    )
-    expect(fixturesByLocale.es.campaign.tone).toBe(
-      fixturesByLocale.en.campaign.tone
     )
     for (let i = 0; i < fixturesByLocale.en.campaign.npcs.length; i += 1) {
       expect(fixturesByLocale.es.campaign.npcs[i]?.content_source).toBe(
@@ -167,8 +164,20 @@ describe('demo fixtures — locale parity', () => {
     )
   })
 
+  it('translates the user-visible campaign tone per locale', () => {
+    expect(fixturesByLocale.es.campaign.tone).not.toBe(
+      fixturesByLocale.en.campaign.tone
+    )
+    expect(fixturesByLocale.es.campaign.tone).toBe('Intriga de baja magia')
+  })
+
   it('falls back to en for an unknown locale', () => {
     expect(getDemoFixtures('fr')).toBe(fixturesByLocale.en)
+  })
+
+  it('falls back to en for inherited Object property names (e.g. "constructor")', () => {
+    expect(getDemoFixtures('constructor')).toBe(fixturesByLocale.en)
+    expect(getDemoFixtures('hasOwnProperty')).toBe(fixturesByLocale.en)
   })
 
   it('getDemoFixtures resolves the matching locale bundle', () => {

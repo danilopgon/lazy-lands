@@ -11,6 +11,7 @@ import {
   sessionDetailSchema,
   sessionResponseSchema,
   type MemorySuggestion,
+  type SectionId,
   type SessionDetail,
   type SessionResponse,
 } from '@/lib/sessions/schemas'
@@ -29,10 +30,10 @@ import {
  * _Shadows over Phandalin_ (D&D 5e, low-magic intrigue).
  *
  * Stable, non-prose values (entity ids, dates, and enum-like fields —
- * `content_source`, `system`, `tone`, memory `type`/`importance`, arc
+ * `content_source`, `system`, memory `type`/`importance`, arc
  * `priority`/`status`, section `origin`) are declared ONCE below and shared
  * by both locale bundles so they can never diverge. Only human-readable
- * prose is translated per locale.
+ * prose — including the user-visible campaign `tone` — is translated per locale.
  */
 
 /** Stable identifier for the single demo campaign. */
@@ -104,6 +105,12 @@ export type DemoFixtures = {
   memoryFacts: MemoryFactResponse[]
   suggestions: MemorySuggestion[]
   generated: SessionDetail
+  /**
+   * Alternate, locale-specific section bodies the demo "regenerate" action
+   * swaps in, keyed by section id. Per-locale so `/es/demo` never injects
+   * English prose into the Spanish draft.
+   */
+  regeneratedSections: Partial<Record<SectionId, string>>
 }
 
 /**
@@ -148,6 +155,7 @@ type LocaleProse = {
       'herman' | 'halia' | 'core'
     >
   }
+  regeneratedSections: Partial<Record<SectionId, string>>
 }
 
 /**
@@ -456,6 +464,7 @@ function buildFixtures(prose: LocaleProse): DemoFixtures {
       memorySuggestionSchema.parse(suggestion)
     ),
     generated: sessionDetailSchema.parse(generatedSession),
+    regeneratedSections: prose.regeneratedSections,
   }
 }
 
@@ -673,6 +682,20 @@ const en = buildFixtures({
       core: 'The need for a stable arcane core is why the schematic fragment matters.',
     },
   },
+  regeneratedSections: {
+    synopsis:
+      'The truce was never meant to hold. As the party arrives at the Miners Exchange, they realize both guilds expected them to pick a side today — and Cryovain’s shadow makes neutrality a luxury no one can afford.',
+    goal: 'Make the party choose who they empower with the anti-dragon plans, knowing every option closes a door somewhere else in Phandalin.',
+    opening:
+      'Snow ticks against the Exchange windows. Halia’s smile does not reach her eyes; across the room, a Crimson Blade cracks his knuckles. Someone has already decided how this ends.',
+    beats:
+      '- A forged ledger surfaces, implicating whichever faction the party trusts least.\n- Fibblestib’s warning turns out to be minutes, not days, ahead of disaster.\n- The north-road rider arrives wounded — Cryovain is closer than anyone feared.',
+    encounters:
+      'The parley itself is the encounter: a web of social checks where a single misread of Herman’s informant tips the room into drawn steel.',
+    factions:
+      'The Black Bear Guild overplays its hand; the Crimson Blades feign retreat to bait pursuit; the Zhentarim simply watch, tallying debts to call in later.',
+    arcs: 'The stolen-plans arc forces a decision the party cannot walk back, while Cryovain’s pressure jumps from background threat to the reason the room can’t simply wait.',
+  },
 })
 
 const es = buildFixtures({
@@ -684,7 +707,7 @@ const es = buildFixtures({
       'Phandalin vive con inquietud. El robo de los planos del arma antidragón ha puesto al Gremio del Oso Negro y a las Hojas Carmesí a acecharse mutuamente, y un joven dragón blanco, Cryovain, ha empezado a tantear los caminos del norte. La partida cuenta con la confianza de algunos y la vigilancia de todos.',
   },
   system: 'D&D 5e',
-  tone: 'Low-magic intrigue',
+  tone: 'Intriga de baja magia',
   npcs: {
     ander: {
       name: 'Ander Margaster',
@@ -891,6 +914,20 @@ const es = buildFixtures({
       core: 'La necesidad de un núcleo arcano estable es la razón por la que importa el fragmento del esquema.',
     },
   },
+  regeneratedSections: {
+    synopsis:
+      'La tregua nunca estuvo destinada a sostenerse. Cuando la partida llega a la Lonja de Mineros, comprende que ambos gremios esperaban que eligiera bando ese mismo día, y la sombra de Cryovain convierte la neutralidad en un lujo que nadie puede permitirse.',
+    goal: 'Obligar a la partida a decidir a quién otorga los planos antidragón, sabiendo que cada opción cierra una puerta en algún otro lugar de Phandalin.',
+    opening:
+      'La nieve repiquetea contra las ventanas de la Lonja. La sonrisa de Halia no le llega a los ojos; al otro lado de la sala, una Hoja Carmesí hace crujir sus nudillos. Alguien ya ha decidido cómo termina esto.',
+    beats:
+      '- Sale a la luz un libro de cuentas falsificado que incrimina al gremio en el que menos confía la partida.\n- La advertencia de Fibblestib resulta ir minutos, no días, por delante del desastre.\n- El jinete del camino del norte llega herido: Cryovain está más cerca de lo que nadie temía.',
+    encounters:
+      'La propia negociación es el encuentro: una red de tiradas sociales donde un solo malentendido con el informante de Herman lleva a la sala a desenvainar el acero.',
+    factions:
+      'El Gremio del Oso Negro se excede en su jugada; las Hojas Carmesí fingen retirarse para tender una trampa; los Zhentarim se limitan a observar, anotando las deudas que reclamarán más tarde.',
+    arcs: 'El arco de los planos robados fuerza una decisión que la partida no podrá deshacer, mientras la presión de Cryovain salta de amenaza de fondo a la razón por la que la sala no puede simplemente esperar.',
+  },
 })
 
 /** Every demo locale's fully validated fixture bundle. */
@@ -904,7 +941,10 @@ export const fixturesByLocale: Record<DemoLocale, DemoFixtures> = { en, es }
  * @returns {DemoFixtures} The matching (or fallback) fixture bundle.
  */
 export function getDemoFixtures(locale: string): DemoFixtures {
-  return locale in fixturesByLocale
+  // Own-property check only: `locale in fixturesByLocale` would treat inherited
+  // Object.prototype members ("constructor", "hasOwnProperty", …) as present and
+  // return a non-fixture value, so a hostile/typo locale could crash the demo.
+  return Object.prototype.hasOwnProperty.call(fixturesByLocale, locale)
     ? fixturesByLocale[locale as DemoLocale]
     : fixturesByLocale[DEFAULT_DEMO_LOCALE]
 }
