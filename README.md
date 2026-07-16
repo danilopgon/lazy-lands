@@ -383,12 +383,12 @@ Note: Dockerfiles are structurally correct but not verified locally (WSL2 + Dock
 
 ## Project URLs
 
-| Resource               | URL                                                |
-| ---------------------- | -------------------------------------------------- |
-| Production application | [lazy-lands.com](https://lazy-lands.com/)          |
-| Public demo            | [lazy-lands.com/demo](https://lazy-lands.com/demo) |
-| Slides                 | [Presentación en Canva](https://canva.link/wrg7k5sahexzf2r)|
-| Video                  | To be published                                    |
+| Resource               | URL                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| Production application | [lazy-lands.com](https://lazy-lands.com/)                                                              |
+| Public demo            | [lazy-lands.com/demo](https://lazy-lands.com/demo)                                                     |
+| Slides                 | [Presentation PDF](https://drive.google.com/file/d/1w2AocxSQL1UK5Usq2BQWyIXzU9rSpQ5d/view?usp=sharing) |
+| Video                  | To be published                                                                                        |
 
 ---
 
