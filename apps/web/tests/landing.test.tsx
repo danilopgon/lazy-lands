@@ -57,19 +57,21 @@ describe('LandingPage', () => {
       expect(links[0]).toHaveAttribute('href', '/register')
     })
 
-    it('LAND-003d: secondary CTA has aria-disabled="true"', () => {
+    it('LAND-003d: secondary CTA links to /demo', () => {
       render(<LandingPage />)
-      // There may be two ComingSoonButtons; find the hero one by text
-      const buttons = screen.getAllByRole('button', {
+      // There may be two demo CTAs (hero + final); find the hero one by text.
+      const links = screen.getAllByRole('link', {
         name: /see it on a real campaign/i,
       })
-      expect(buttons[0]).toHaveAttribute('aria-disabled', 'true')
+      expect(links[0]).toHaveAttribute('href', '/demo')
     })
 
-    it('LAND-003e: secondary CTA tooltip text is "Coming soon"', () => {
+    it('LAND-003e: secondary CTA is an enabled link, not a disabled button', () => {
       render(<LandingPage />)
-      const tooltips = screen.getAllByRole('tooltip', { hidden: true })
-      expect(tooltips.some((t) => t.textContent === 'Coming soon')).toBe(true)
+      const links = screen.getAllByRole('link', {
+        name: /see it on a real campaign/i,
+      })
+      expect(links[0]).not.toHaveAttribute('aria-disabled')
     })
   })
 
@@ -195,10 +197,10 @@ describe('LandingPage', () => {
       expect(links.at(-1)).toHaveAttribute('href', '/register')
     })
 
-    it('LAND-009d: secondary CTA has aria-disabled="true" and tooltip', () => {
+    it('LAND-009d: secondary CTA links to /demo', () => {
       render(<LandingPage />)
-      const btn = screen.getByRole('button', { name: /tour a demo campaign/i })
-      expect(btn).toHaveAttribute('aria-disabled', 'true')
+      const link = screen.getByRole('link', { name: /tour a demo campaign/i })
+      expect(link).toHaveAttribute('href', '/demo')
     })
   })
 
@@ -257,14 +259,24 @@ describe('LandingPage', () => {
 
   // ─── LAND-013: Accessibility ──────────────────────────────────
   describe('Accessibility (LAND-013)', () => {
-    it('LAND-013b: disabled CTAs carry aria-disabled="true" not native disabled', () => {
+    it('LAND-013b: any aria-disabled CTA is never natively disabled', () => {
       render(<LandingPage />)
+      // The landing no longer ships disabled CTAs (the demo buttons are live
+      // links now), but if any aria-disabled control returns, it must use
+      // aria-disabled rather than the native disabled attribute so it stays
+      // focusable and announced.
       const disabledButtons = screen
         .getAllByRole('button')
         .filter((b) => b.hasAttribute('aria-disabled'))
-      expect(disabledButtons.length).toBeGreaterThan(0)
-      // None should be natively disabled
       disabledButtons.forEach((b) => expect(b).not.toBeDisabled())
+    })
+
+    it('LAND-013c: both demo CTAs are reachable links to /demo', () => {
+      render(<LandingPage />)
+      const demoLinks = screen
+        .getAllByRole('link')
+        .filter((link) => link.getAttribute('href') === '/demo')
+      expect(demoLinks.length).toBeGreaterThanOrEqual(2)
     })
   })
 })

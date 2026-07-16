@@ -14,11 +14,25 @@ import { createArc, updateArc, CampaignApiError } from '@/lib/campaigns/api'
 
 import type { ArcResponse, ArcStatus, Priority } from '@/lib/campaigns/schemas'
 
+/** The editable arc fields a save receives, with the enum codes as stored. */
+export type ArcDraft = {
+  title: string
+  description: string | null
+  priority: Priority
+  status: ArcStatus
+}
+
 type ArcModalProps = {
   campaignId: string
   /** The arc to edit, or null to create a new one. */
   arc: ArcResponse | null
   onClose: () => void
+  /**
+   * Optional save adapter. When provided it fully replaces the default
+   * `POST /arcs` / `PATCH /arcs/{id}` write path (and its query invalidation),
+   * letting the public demo persist to local state instead.
+   */
+  onSubmit?: (draft: ArcDraft) => Promise<void>
 }
 
 const PRIORITIES: Priority[] = ['high', 'medium', 'low']
@@ -40,9 +54,15 @@ const selectClass =
  * @param {string} root0.campaignId - The owning campaign id.
  * @param {ArcResponse | null} root0.arc - The arc being edited, or null to add.
  * @param {() => void} root0.onClose - Invoked to close the modal.
+ * @param {(draft: ArcDraft) => Promise<void>} [root0.onSubmit] - Optional local save adapter.
  * @returns {React.ReactElement} The arc modal element.
  */
-export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
+export function ArcModal({
+  campaignId,
+  arc,
+  onClose,
+  onSubmit,
+}: ArcModalProps) {
   const isEdit = arc !== null
   const t = useTranslations('Campaigns')
   const errorT = useTranslations('Errors')
@@ -55,20 +75,28 @@ export function ArcModal({ campaignId, arc, onClose }: ArcModalProps) {
   const [error, setError] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async (): Promise<void> => {
       // Empty description sent as null so an edit can clear a set value.
-      const fields = {
+      const fields: ArcDraft = {
         title: title.trim(),
         description: description.trim() || null,
         priority,
         status,
       }
-      return isEdit
-        ? updateArc(arc.id, fields)
-        : createArc({ campaign_id: campaignId, ...fields })
+      if (onSubmit) {
+        await onSubmit(fields)
+        return
+      }
+      if (isEdit) {
+        await updateArc(arc.id, fields)
+      } else {
+        await createArc({ campaign_id: campaignId, ...fields })
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] })
+      if (!onSubmit) {
+        queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] })
+      }
       onClose()
     },
     onError: (err: unknown) => {

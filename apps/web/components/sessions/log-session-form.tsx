@@ -26,6 +26,22 @@ type LogSessionFormValues = {
 
 type LogSessionFormProps = {
   campaignId: string
+  /**
+   * Register adapter. Defaults to the real `POST /campaigns/{id}/sessions`
+   * client; the public demo injects a local implementation that returns fixture
+   * memory suggestions without any request.
+   */
+  registerSessionFn?: typeof registerSession
+  /** Navigation override. Defaults to the localized router push. */
+  navigate?: (href: string) => void
+  /**
+   * Whether to stash the returned suggestions in session storage for the memory
+   * review screen. The demo turns this off because it carries suggestions in
+   * its own in-memory store instead.
+   */
+  persistDraft?: boolean
+  /** Href to navigate to after a successful register. */
+  reviewHref?: (response: { campaignId: string; sessionId: string }) => string
 }
 
 /**
@@ -36,9 +52,19 @@ type LogSessionFormProps = {
  *
  * @param {object} root0 - The log-session form props.
  * @param {string} root0.campaignId - The owning campaign's id.
+ * @param {typeof registerSession} [root0.registerSessionFn] - Optional register adapter.
+ * @param {(href: string) => void} [root0.navigate] - Optional navigation override.
+ * @param {boolean} [root0.persistDraft] - Whether to stash suggestions in session storage.
+ * @param {(response: { campaignId: string; sessionId: string }) => string} [root0.reviewHref] - Optional review href builder.
  * @returns {React.ReactElement} The log-session form element.
  */
-export function LogSessionForm({ campaignId }: LogSessionFormProps) {
+export function LogSessionForm({
+  campaignId,
+  registerSessionFn = registerSession,
+  navigate,
+  persistDraft = true,
+  reviewHref,
+}: LogSessionFormProps) {
   const t = useTranslations('Sessions')
   const te = useTranslations('Entities')
   const router = useRouter()
@@ -63,25 +89,28 @@ export function LogSessionForm({ campaignId }: LogSessionFormProps) {
 
   const mutation = useMutation({
     mutationFn: (data: LogSessionFormValues) =>
-      registerSession(campaignId, {
+      registerSessionFn(campaignId, {
         summary: data.summary,
         consequences: data.consequences?.trim() ? data.consequences : undefined,
       }),
     onSuccess: (response) => {
-      try {
-        writeMemoryReviewDraft({
-          campaign_id: campaignId,
-          session_id: response.session_id,
-          session_number: response.session_number,
-          memory_suggestions: response.memory_suggestions,
-        })
-      } catch {
-        // Draft storage is best-effort. Navigation still lets the DM continue
-        // to the safe empty review state if sessionStorage is unavailable.
+      if (persistDraft) {
+        try {
+          writeMemoryReviewDraft({
+            campaign_id: campaignId,
+            session_id: response.session_id,
+            session_number: response.session_number,
+            memory_suggestions: response.memory_suggestions,
+          })
+        } catch {
+          // Draft storage is best-effort. Navigation still lets the DM continue
+          // to the safe empty review state if sessionStorage is unavailable.
+        }
       }
-      router.push(
-        `/campaigns/${campaignId}/memory/review?session=${response.session_id}`
-      )
+      const href = reviewHref
+        ? reviewHref({ campaignId, sessionId: response.session_id })
+        : `/campaigns/${campaignId}/memory/review?session=${response.session_id}`
+      ;(navigate ?? router.push)(href)
     },
     onError: () => {
       // The DM's exact typed text stays in the form (react-hook-form does not

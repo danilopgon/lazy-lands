@@ -14,11 +14,25 @@ import { createNpc, updateNpc, CampaignApiError } from '@/lib/campaigns/api'
 
 import type { NpcResponse } from '@/lib/campaigns/schemas'
 
+/** The editable NPC fields a save receives, with cleared optionals as `null`. */
+export type NpcDraft = {
+  name: string
+  description: string | null
+  current_state: string | null
+  motivation: string | null
+}
+
 type NpcModalProps = {
   campaignId: string
   /** The NPC to edit, or null to create a new one. */
   npc: NpcResponse | null
   onClose: () => void
+  /**
+   * Optional save adapter. When provided it fully replaces the default
+   * `POST /npcs` / `PATCH /npcs/{id}` write path (and its query invalidation),
+   * letting a caller — e.g. the public demo — persist to local state instead.
+   */
+  onSubmit?: (draft: NpcDraft) => Promise<void>
 }
 
 /**
@@ -33,9 +47,15 @@ type NpcModalProps = {
  * @param {string} root0.campaignId - The owning campaign id.
  * @param {NpcResponse | null} root0.npc - The NPC being edited, or null to add.
  * @param {() => void} root0.onClose - Invoked to close the modal.
+ * @param {(draft: NpcDraft) => Promise<void>} [root0.onSubmit] - Optional local save adapter.
  * @returns {React.ReactElement} The NPC modal element.
  */
-export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
+export function NpcModal({
+  campaignId,
+  npc,
+  onClose,
+  onSubmit,
+}: NpcModalProps) {
   const isEdit = npc !== null
   const t = useTranslations('Campaigns')
   const errorT = useTranslations('Errors')
@@ -48,21 +68,29 @@ export function NpcModal({ campaignId, npc, onClose }: NpcModalProps) {
   const [error, setError] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async (): Promise<void> => {
       // Empty optional fields are sent as null so an edit can clear a
       // previously-set value (the PATCH route keeps explicit nulls).
-      const fields = {
+      const fields: NpcDraft = {
         name: name.trim(),
         description: description.trim() || null,
         current_state: currentState.trim() || null,
         motivation: motivation.trim() || null,
       }
-      return isEdit
-        ? updateNpc(npc.id, fields)
-        : createNpc({ campaign_id: campaignId, ...fields })
+      if (onSubmit) {
+        await onSubmit(fields)
+        return
+      }
+      if (isEdit) {
+        await updateNpc(npc.id, fields)
+      } else {
+        await createNpc({ campaign_id: campaignId, ...fields })
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] })
+      if (!onSubmit) {
+        queryClient.invalidateQueries({ queryKey: ['campaign', campaignId] })
+      }
       onClose()
     },
     onError: (err: unknown) => {

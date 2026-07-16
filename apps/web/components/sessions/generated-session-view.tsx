@@ -43,6 +43,14 @@ type GeneratedSessionViewProps = {
   memories?: MemoryFactResponse[]
   updateSessionFn?: typeof updateSessionContent
   regenerateSectionFn?: typeof regenerateSection
+  /** Navigation override for the header actions. Defaults to the localized router push. */
+  navigate?: (href: string) => void
+  /** Breadcrumb root href. Defaults to the authenticated dashboard. */
+  dashboardHref?: string
+  /** Breadcrumb + "back" campaign href. Defaults to the authenticated campaign detail. */
+  campaignHref?: string
+  /** "Export PDF" target. Defaults to the authenticated export route. */
+  exportHref?: string
 }
 
 /**
@@ -61,11 +69,19 @@ export function GeneratedSessionView({
   memories: providedMemories,
   updateSessionFn = updateSessionContent,
   regenerateSectionFn = regenerateSection,
+  navigate,
+  dashboardHref = '/dashboard',
+  campaignHref,
+  exportHref,
 }: GeneratedSessionViewProps) {
   const t = useTranslations('SessionGeneration.generated')
   const te = useTranslations('Entities')
   const tm = useTranslations('MemoryReview')
   const router = useRouter()
+  const go = navigate ?? router.push
+  const campaignTarget = campaignHref ?? `/campaigns/${campaignId}`
+  const exportTarget =
+    exportHref ?? `/campaigns/${campaignId}/sessions/${sessionId}/export`
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
@@ -340,8 +356,8 @@ export function GeneratedSessionView({
       className="ll-view-enter ll-workspace mx-auto max-w-[900px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        <Link href="/dashboard">{t('breadcrumbs.campaigns')}</Link> /{' '}
-        <Link href={`/campaigns/${campaignId}`}>{campaign.title}</Link> /{' '}
+        <Link href={dashboardHref}>{t('breadcrumbs.campaigns')}</Link> /{' '}
+        <Link href={campaignTarget}>{campaign.title}</Link> /{' '}
         <b className="text-[var(--ink)]">
           {t('breadcrumbs.draft', { number: session.session_number })}
         </b>
@@ -368,7 +384,7 @@ export function GeneratedSessionView({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => router.push(`/campaigns/${campaignId}`)}
+            onClick={() => go(campaignTarget)}
           >
             {t('backCampaign')}
           </Button>
@@ -385,11 +401,7 @@ export function GeneratedSessionView({
           <Button
             type="button"
             variant="accent"
-            onClick={() =>
-              router.push(
-                `/campaigns/${campaignId}/sessions/${sessionId}/export`
-              )
-            }
+            onClick={() => go(exportTarget)}
           >
             {t('exportPdf')}
           </Button>

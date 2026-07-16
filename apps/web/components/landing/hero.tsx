@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ComingSoonButton } from './coming-soon-button'
 import { HeroGraphSlot } from './hero-graph-slot'
 
 /**
@@ -68,11 +67,17 @@ export function LandHero() {
             <Button
               asChild
               variant="accent"
-              style={{ fontSize: 14.5, padding: '11px 22px' }}
+              className="px-[22px] py-[11px] text-[14.5px]"
             >
               <Link href="/register">{t('hero.cta')}</Link>
             </Button>
-            <ComingSoonButton>{t('hero.demoCta')}</ComingSoonButton>
+            <Button
+              asChild
+              variant="secondary"
+              className="px-[22px] py-[11px] text-[14.5px]"
+            >
+              <Link href="/demo">{t('hero.demoCta')}</Link>
+            </Button>
           </div>
 
           <div className="ll-enter-5 mt-[30px] flex flex-wrap gap-[22px] font-mono text-[11px] uppercase tracking-[0.04em] text-[var(--mute)]">

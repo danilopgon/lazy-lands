@@ -24,6 +24,14 @@ type SessionExportViewProps = {
   campaign?: ExportCampaign
   session?: SessionDetail
   downloadFn?: typeof downloadSessionPdf
+  /** Navigation override for "back to editing". Defaults to the localized router push. */
+  navigate?: (href: string) => void
+  /** Breadcrumb root href. Defaults to the authenticated dashboard. */
+  dashboardHref?: string
+  /** Breadcrumb campaign href. Defaults to the authenticated campaign detail. */
+  campaignHref?: string
+  /** Breadcrumb + "back to editing" draft href. Defaults to the authenticated draft route. */
+  draftHref?: string
 }
 
 /** Export lifecycle: idle preview, in-flight render, success, or retryable failure. */
@@ -43,10 +51,17 @@ export function SessionExportView({
   campaign: providedCampaign,
   session: providedSession,
   downloadFn = downloadSessionPdf,
+  navigate,
+  dashboardHref = '/dashboard',
+  campaignHref,
+  draftHref,
 }: SessionExportViewProps) {
   const t = useTranslations('SessionGeneration.export')
   const tg = useTranslations('SessionGeneration.generated')
   const router = useRouter()
+  const campaignTarget = campaignHref ?? `/campaigns/${campaignId}`
+  const draftTarget =
+    draftHref ?? `/campaigns/${campaignId}/sessions/${sessionId}`
 
   const [excluded, setExcluded] = useState<Set<string>>(new Set())
   const [phase, setPhase] = useState<ExportPhase>('idle')
@@ -127,14 +142,14 @@ export function SessionExportView({
 
   /** Navigate back to the editable generated-session draft. */
   function backToEditing() {
-    router.push(`/campaigns/${campaignId}/sessions/${sessionId}`)
+    ;(navigate ?? router.push)(draftTarget)
   }
 
   const breadcrumb = (
     <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-      <Link href="/dashboard">{tg('breadcrumbs.campaigns')}</Link> /{' '}
-      <Link href={`/campaigns/${campaignId}`}>{campaign.title}</Link> /{' '}
-      <Link href={`/campaigns/${campaignId}/sessions/${sessionId}`}>
+      <Link href={dashboardHref}>{tg('breadcrumbs.campaigns')}</Link> /{' '}
+      <Link href={campaignTarget}>{campaign.title}</Link> /{' '}
+      <Link href={draftTarget}>
         {tg('breadcrumbs.draft', { number: session.session_number })}
       </Link>{' '}
       / <b className="text-[var(--ink)]">{t('breadcrumbExport')}</b>
