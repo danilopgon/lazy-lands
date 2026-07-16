@@ -69,6 +69,7 @@ export function LogSessionForm({
   const te = useTranslations('Entities')
   const router = useRouter()
   const [hasSubmitError, setHasSubmitError] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
 
   const formSchema = useMemo(
     () =>
@@ -94,6 +95,11 @@ export function LogSessionForm({
         consequences: data.consequences?.trim() ? data.consequences : undefined,
       }),
     onSuccess: (response) => {
+      // Hold the takeover across the route swap. `isPending` flips to false the
+      // moment the mutation resolves, but the review frame only paints once the
+      // router has navigated — repainting the filled-in form in that gap reads
+      // as the save having failed.
+      setIsNavigating(true)
       if (persistDraft) {
         try {
           writeMemoryReviewDraft({
@@ -117,6 +123,7 @@ export function LogSessionForm({
       // reset on mutation error), so the copy is the fixed reassurance from
       // the handoff rather than the raw backend message — the point of this
       // state is "nothing was lost", not the failure's technical detail.
+      setIsNavigating(false)
       setHasSubmitError(true)
     },
   })
@@ -132,10 +139,11 @@ export function LogSessionForm({
     mutation.mutate(data)
   }
 
-  // While saving, replace the whole form with the quill loading takeover —
-  // the register + summarize + suggest round trip is synchronous on the
-  // backend, so a static disabled form would read as a frozen page.
-  if (mutation.isPending) {
+  // While saving — and onwards through the navigation to the review screen —
+  // replace the whole form with the quill loading takeover. The register +
+  // summarize + suggest round trip is synchronous on the backend, so a static
+  // disabled form would read as a frozen page.
+  if (mutation.isPending || isNavigating) {
     return (
       <LoadingScribe title={t('savingTitle')} caption={t('savingCaption')} />
     )
