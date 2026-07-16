@@ -818,6 +818,7 @@
     "exit": "Salir",
     "breadcrumbRoot": "Campaña de demostración",
     "sessionLabel": "Sesión {number}",
+    "sessionWord": "sesión",
     "tour": {
       "replay": "Hacer el tour guiado",
       "next": "Siguiente",

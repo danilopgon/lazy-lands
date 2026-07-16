@@ -1,7 +1,10 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 import { useRouter } from '@/i18n/navigation'
 import { SessionExportView } from '@/components/sessions/session-export-view'
+import { demoExportFilename } from '@/lib/demo/export-filename'
 import { DEMO_GENERATED_SESSION_ID } from '@/lib/demo/fixtures'
 import { demoHrefs } from '@/lib/demo/hrefs'
 import { useDemoStore } from '@/lib/demo/store'
@@ -20,6 +23,16 @@ const DEMO_EXPORT_MS = 700
 export default function DemoExportPage() {
   const store = useDemoStore()
   const router = useRouter()
+  const t = useTranslations('Demo')
+
+  // Derive the simulated download name from live state so it tracks the
+  // advanced session number (log → prepare → generate) and the active locale,
+  // instead of a stale hard-coded English "session-8" filename.
+  const filename = demoExportFilename(
+    store.campaign.title,
+    store.generated.session_number,
+    t('sessionWord')
+  )
 
   return (
     <SessionExportView
@@ -29,10 +42,7 @@ export default function DemoExportPage() {
       session={store.generated}
       downloadFn={() =>
         new Promise((resolve) =>
-          setTimeout(
-            () => resolve('shadows-over-phandalin-session-8.pdf'),
-            DEMO_EXPORT_MS
-          )
+          setTimeout(() => resolve(filename), DEMO_EXPORT_MS)
         )
       }
       navigate={(href) => router.push(href)}
