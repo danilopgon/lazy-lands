@@ -31,6 +31,10 @@ from app.modules.sessions.domain.ports import PdfRenderer
 from app.modules.sessions.infrastructure.pdf_renderer import WeasyPrintPdfRenderer
 from app.modules.sessions.infrastructure.repository import SupabaseSessionRepository
 from app.shared.database import get_user_supabase_client
+from app.shared.generation_rate_limit import (
+    UserGenerationBudget,
+    provide_generation_budget,
+)
 from app.shared.llm.dependencies import get_llm_provider
 from app.shared.llm.port import LlmProvider
 
@@ -60,11 +64,12 @@ def provide_complete_session(
 def provide_recover_memory_suggestions(
     client: Annotated[Client, Depends(get_user_supabase_client)],
     llm_provider: Annotated[LlmProvider, Depends(get_llm_provider)],
+    budget: Annotated[UserGenerationBudget, Depends(provide_generation_budget)],
 ) -> RecoverMemorySuggestions:
     """Build the read-only memory-suggestion recovery handler."""
     repository = SupabaseSessionRepository(client)
     suggest = SuggestMemories(llm_provider=llm_provider, repository=repository)
-    return RecoverMemorySuggestions(repository, suggest)
+    return RecoverMemorySuggestions(repository, suggest, budget)
 
 
 def provide_get_sessions(

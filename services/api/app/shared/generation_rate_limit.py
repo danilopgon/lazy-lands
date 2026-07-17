@@ -5,6 +5,7 @@ from collections.abc import Callable
 from heapq import heappop, heappush
 from threading import Lock
 from time import monotonic
+from typing import Annotated
 
 from fastapi import Depends
 
@@ -75,3 +76,36 @@ async def enforce_generation_rate_limit(
 ) -> None:
     """Apply the configured per-user budget to an AI generation endpoint."""
     _generation_rate_limiter.check(user_id)
+
+
+class UserGenerationBudget:
+    """One caller's generation budget, charged on demand rather than up front.
+
+    A route dependency is resolved before the handler body runs, so it can only
+    charge a request whose eligibility is still unknown. This binds the user to
+    the shared limiter and leaves the timing of the charge to the use case,
+    which is the only layer that knows whether the Scribe will actually be
+    called.
+    """
+
+    def __init__(
+        self, user_id: str, limiter: GenerationRateLimiter = _generation_rate_limiter
+    ) -> None:
+        """Bind a caller to the limiter that holds their budget."""
+        self._user_id = user_id
+        self._limiter = limiter
+
+    def charge(self) -> None:
+        """Consume one generation from this caller's budget.
+
+        Raises:
+            GenerationRateLimitError: The caller's window is already full.
+        """
+        self._limiter.check(self._user_id)
+
+
+def provide_generation_budget(
+    user_id: Annotated[str, Depends(get_current_user)],
+) -> UserGenerationBudget:
+    """Provide the authenticated caller's generation budget."""
+    return UserGenerationBudget(user_id)

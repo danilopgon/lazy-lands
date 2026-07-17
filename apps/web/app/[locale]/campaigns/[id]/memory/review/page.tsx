@@ -30,6 +30,7 @@ import {
 import {
   recoverMemorySuggestions,
   SessionCampaignNotFoundError,
+  SessionNotPlayedError,
   SessionRateLimitError,
 } from '@/lib/sessions/api'
 import {
@@ -43,7 +44,7 @@ import type { MemorySuggestion } from '@/lib/sessions/schemas'
 
 type Feedback = 'accepted' | 'edited' | 'dismissed' | 'retired' | null
 type ActionError = 'create' | 'retire' | null
-type RecoverErrorKey = 'notFound' | 'rateLimit' | 'generic'
+type RecoverErrorKey = 'notFound' | 'rateLimit' | 'notPlayed' | 'generic'
 
 /**
  * Maps a failed recovery attempt onto the copy that tells the DM what to do next.
@@ -58,6 +59,7 @@ type RecoverErrorKey = 'notFound' | 'rateLimit' | 'generic'
 function recoverErrorKey(error: unknown): RecoverErrorKey {
   if (error instanceof SessionCampaignNotFoundError) return 'notFound'
   if (error instanceof SessionRateLimitError) return 'rateLimit'
+  if (error instanceof SessionNotPlayedError) return 'notPlayed'
   return 'generic'
 }
 
@@ -420,7 +422,12 @@ export default function MemoryReviewPage() {
   const campaign = campaignQuery.data
   if (!campaign) return null
   // Without `?session=` there is no session to re-read, so no action is offered.
-  const canRecover = Boolean(sessionId)
+  // An unplayed session can never become recoverable by asking again, so the
+  // trigger is withdrawn rather than left inviting a retry that cannot work.
+  const recoverIsFutile =
+    recoverMutation.isError &&
+    recoverErrorKey(recoverMutation.error) === 'notPlayed'
+  const canRecover = Boolean(sessionId) && !recoverIsFutile
   // A 200 carrying no proposals: the Scribe was asked and had nothing to say.
   // Distinct from `isError` on purpose — this is a success and must never read
   // as a failure.

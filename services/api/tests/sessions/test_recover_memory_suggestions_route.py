@@ -10,8 +10,8 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 
 from app.main import app
 from app.modules.sessions.api.dependencies import (
@@ -25,14 +25,16 @@ from app.modules.sessions.application.errors import (
     SessionNotPlayedError,
 )
 from app.shared.database import get_user_supabase_client
-from app.shared.generation_rate_limit import enforce_generation_rate_limit
+from app.shared.generation_rate_limit import (
+    GenerationRateLimitError,
+    provide_generation_budget,
+)
 from app.shared.llm.dependencies import get_llm_provider
 from app.shared.llm.errors import ProviderRateLimitError
 from app.shared.llm.providers.fake import FakeLlmProvider
 from app.shared.security import AuthContext, get_auth_context
 
 SESSION_ID = "11111111-1111-4111-8111-111111111111"
-ROUTE_PATH = "/sessions/{session_id}/memory-suggestions"
 
 SUGGESTION_PAYLOAD = {
     "content": "Captain Vess is hiding in the harbor district.",
@@ -54,6 +56,37 @@ class _FakeUseCase:
         if self.error is not None:
             raise self.error
         return self.result
+
+
+class _RecordingBudget:
+    """A generation budget that counts charges instead of touching the limiter.
+
+    Charging is asserted through this fake rather than the module-global
+    limiter: the real singleton would carry ``user-1``'s spend across tests in
+    this module, coupling assertions to execution order and to the configured
+    limit.
+    """
+
+    def __init__(self, error: Exception | None = None) -> None:
+        self.charges = 0
+        self.error = error
+
+    def charge(self) -> None:
+        self.charges += 1
+        if self.error is not None:
+            raise self.error
+
+
+class _RecordingProvider(FakeLlmProvider):
+    """A fake provider that records whether the Scribe was actually invoked."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.json_calls = 0
+
+    async def complete_json[T: BaseModel](self, prompt: str, schema: type[T]) -> T:
+        self.json_calls += 1
+        return await super().complete_json(prompt, schema)
 
 
 class _FakeSupabaseClient:
@@ -106,9 +139,11 @@ def client() -> TestClient:
 
 
 @pytest.fixture(autouse=True)
-def _clear_overrides():
-    app.dependency_overrides[enforce_generation_rate_limit] = lambda: None
-    yield
+def budget() -> _RecordingBudget:
+    """Install a counting budget for every test and reset overrides after."""
+    recorder = _RecordingBudget()
+    app.dependency_overrides[provide_generation_budget] = lambda: recorder
+    yield recorder
     app.dependency_overrides.clear()
 
 
@@ -304,35 +339,95 @@ def test_repeated_recovery_calls_stay_successful_and_read_only(
     fake_client.table("sessions").insert.assert_not_called()
 
 
-def _api_routes(routes) -> list[APIRoute]:
-    """Flatten the app's route tree.
+def test_an_eligible_request_charges_the_generation_budget_exactly_once(
+    client: TestClient, budget: _RecordingBudget
+) -> None:
+    """The metered LLM call must still sit behind the per-user budget."""
+    fake_client = _wired_client(_session_row())
+    provider = _RecordingProvider()
+    provider.register(MemorySuggestionsOutput, {"suggestions": [SUGGESTION_PAYLOAD]})
+    app.dependency_overrides[get_user_supabase_client] = lambda: fake_client
+    app.dependency_overrides[get_llm_provider] = lambda: provider
+    _authenticate()
 
-    FastAPI wraps each ``include_router`` call in an ``_IncludedRouter`` node
-    exposing its router as ``original_router``, so ``app.routes`` is a tree
-    rather than a flat list of ``APIRoute``.
-    """
-    flattened: list[APIRoute] = []
-    for route in routes:
-        if isinstance(route, APIRoute):
-            flattened.append(route)
-            continue
-        nested = getattr(route, "original_router", None)
-        flattened.extend(_api_routes(getattr(nested, "routes", [])))
-    return flattened
+    response = client.post(f"/sessions/{SESSION_ID}/memory-suggestions")
+
+    assert response.status_code == 200
+    assert budget.charges == 1
+    assert provider.json_calls == 1
 
 
-def test_recovery_route_enforces_the_generation_rate_limit() -> None:
-    """The metered LLM call must sit behind the same budget as regeneration."""
-    route = next(route for route in _api_routes(app.routes) if route.path == ROUTE_PATH)
+def test_an_exhausted_budget_rejects_an_eligible_request_with_429(
+    client: TestClient, budget: _RecordingBudget
+) -> None:
+    budget.error = GenerationRateLimitError("generation rate limit exceeded")
+    fake_client = _wired_client(_session_row())
+    provider = _RecordingProvider()
+    provider.register(MemorySuggestionsOutput, {"suggestions": [SUGGESTION_PAYLOAD]})
+    app.dependency_overrides[get_user_supabase_client] = lambda: fake_client
+    app.dependency_overrides[get_llm_provider] = lambda: provider
+    _authenticate()
 
-    assert "POST" in route.methods
-    assert any(
-        dependency.call is enforce_generation_rate_limit
-        for dependency in route.dependant.dependencies
-    )
+    response = client.post(f"/sessions/{SESSION_ID}/memory-suggestions")
+
+    assert response.status_code == 429
+    assert provider.json_calls == 0
+
+
+def test_a_malformed_session_id_does_not_consume_the_generation_budget(
+    client: TestClient, budget: _RecordingBudget
+) -> None:
+    """A budget spent before eligibility is known turns a 404 into a 429."""
+    fake_client = _wired_client(_session_row())
+    provider = _RecordingProvider()
+    app.dependency_overrides[get_user_supabase_client] = lambda: fake_client
+    app.dependency_overrides[get_llm_provider] = lambda: provider
+    _authenticate()
+
+    response = client.post("/sessions/not-a-uuid/memory-suggestions")
+
+    assert response.status_code == 404
+    assert budget.charges == 0
+    assert provider.json_calls == 0
+
+
+def test_an_unknown_or_foreign_session_does_not_consume_the_generation_budget(
+    client: TestClient, budget: _RecordingBudget
+) -> None:
+    fake_client = _wired_client(None)
+    provider = _RecordingProvider()
+    app.dependency_overrides[get_user_supabase_client] = lambda: fake_client
+    app.dependency_overrides[get_llm_provider] = lambda: provider
+    _authenticate()
+
+    response = client.post(f"/sessions/{SESSION_ID}/memory-suggestions")
+
+    assert response.status_code == 404
+    assert budget.charges == 0
+    assert provider.json_calls == 0
+
+
+def test_an_unplayed_draft_does_not_consume_the_generation_budget(
+    client: TestClient, budget: _RecordingBudget
+) -> None:
+    """The 409 is non-retryable, so it must never cost the DM a generation."""
+    fake_client = _wired_client({**_session_row(), "status": "draft"})
+    provider = _RecordingProvider()
+    app.dependency_overrides[get_user_supabase_client] = lambda: fake_client
+    app.dependency_overrides[get_llm_provider] = lambda: provider
+    _authenticate()
+
+    response = client.post(f"/sessions/{SESSION_ID}/memory-suggestions")
+
+    assert response.status_code == 409
+    assert response.json()["retryable"] is False
+    assert budget.charges == 0
+    assert provider.json_calls == 0
 
 
 def test_recovery_provider_builds_the_use_case() -> None:
-    use_case = provide_recover_memory_suggestions(MagicMock(), MagicMock())
+    use_case = provide_recover_memory_suggestions(
+        MagicMock(), MagicMock(), _RecordingBudget()
+    )
 
     assert use_case is not None

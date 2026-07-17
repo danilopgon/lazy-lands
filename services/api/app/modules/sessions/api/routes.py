@@ -181,7 +181,6 @@ async def update_session(
 async def recover_memory_suggestions(
     session_id: str,
     _user_id: Annotated[str, Depends(get_current_user)],
-    _rate_limit: Annotated[None, Depends(enforce_generation_rate_limit)],
     handler: Annotated[
         RecoverMemorySuggestions, Depends(provide_recover_memory_suggestions)
     ],
@@ -190,6 +189,9 @@ async def recover_memory_suggestions(
 
     POST rather than GET because it triggers a metered LLM call; the session
     itself is never written.
+
+    The generation budget is charged inside the use case rather than by a route
+    dependency, which FastAPI would resolve before eligibility is known.
     """
     _validate_session_id(session_id)
     suggestions = await handler.execute(session_id)

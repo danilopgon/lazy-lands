@@ -49,6 +49,15 @@ export class SessionNotExportableError extends SessionApiError {}
 export class SessionRateLimitError extends SessionApiError {}
 
 /**
+ * A session that was generated but never played, so it has nothing to remember.
+ *
+ * Unlike the other recovery failures, this one is not retryable: the session
+ * carries a planned synopsis, not an account of play, and no amount of asking
+ * again changes that until the DM records what actually happened.
+ */
+export class SessionNotPlayedError extends SessionApiError {}
+
+/**
  * Extract a message from a non-2xx JSON error body.
  *
  * Backend error handlers use `{ error: string, retryable: boolean }`
@@ -181,6 +190,9 @@ export async function recoverMemorySuggestions(
   if (!response.ok) {
     if (response.status === 404) {
       throw new SessionCampaignNotFoundError(`Session ${sessionId} not found`)
+    }
+    if (response.status === 409) {
+      throw new SessionNotPlayedError(await extractErrorMessage(response))
     }
     if (response.status === 422) {
       throw new SessionValidationError(await extractErrorMessage(response))

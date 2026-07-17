@@ -69,6 +69,7 @@ vi.mock('@/lib/sessions/api', () => ({
   SessionApiError: class SessionApiError extends Error {},
   SessionCampaignNotFoundError: class SessionCampaignNotFoundError extends Error {},
   SessionRateLimitError: class SessionRateLimitError extends Error {},
+  SessionNotPlayedError: class SessionNotPlayedError extends Error {},
   SessionValidationError: class SessionValidationError extends Error {},
 }))
 

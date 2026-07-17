@@ -501,7 +501,8 @@
       "error": {
         "generic": "The Scribe could not finish reading that session. Nothing was changed; try again.",
         "rateLimit": "The Scribe needs a moment — too many requests in a short time. Nothing was changed; try again shortly.",
-        "notFound": "The Scribe could not find that session."
+        "notFound": "The Scribe could not find that session.",
+        "notPlayed": "This session was planned but never played, so there is nothing to remember from it yet. Record what happened at the table first, and the Scribe will be able to propose memories from it."
       }
     },
     "backToCampaign": "Back to campaign",

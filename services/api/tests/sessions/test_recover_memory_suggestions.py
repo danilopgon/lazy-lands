@@ -21,6 +21,7 @@ from app.modules.sessions.application.errors import (
     SessionNotFoundError,
     SessionNotPlayedError,
 )
+from app.shared.generation_rate_limit import GenerationRateLimitError
 from app.shared.llm.errors import LlmOutputValidationError, ProviderRateLimitError
 
 SESSION_ROW = {
@@ -59,6 +60,11 @@ def _repo_with_session(session: dict | None) -> MagicMock:
     return repo
 
 
+def _budget() -> MagicMock:
+    """A generation budget that always has room, so charges are observable."""
+    return MagicMock()
+
+
 def _assert_no_writes(repo: MagicMock) -> None:
     for method in WRITE_METHODS:
         getattr(repo, method).assert_not_called()
@@ -68,20 +74,23 @@ async def test_recovers_validated_suggestions_for_a_persisted_session() -> None:
     repo = _repo_with_session(SESSION_ROW)
     suggest = MagicMock()
     suggest.execute = AsyncMock(return_value=[_suggestion()])
-    use_case = RecoverMemorySuggestions(repo, suggest)
+    budget = _budget()
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
 
     result = await use_case.execute("session-1")
 
     assert result == [_suggestion()]
     assert all(isinstance(item, MemorySuggestion) for item in result)
     suggest.execute.assert_awaited_once_with("campaign-1", SESSION_ROW)
+    budget.charge.assert_called_once()
 
 
 async def test_intentional_empty_result_is_a_success_not_an_error() -> None:
     repo = _repo_with_session(SESSION_ROW)
     suggest = MagicMock()
     suggest.execute = AsyncMock(return_value=[])
-    use_case = RecoverMemorySuggestions(repo, suggest)
+    budget = _budget()
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
 
     result = await use_case.execute("session-1")
 
@@ -102,7 +111,8 @@ async def test_provider_failure_surfaces_instead_of_degrading_to_empty(
     repo = _repo_with_session(SESSION_ROW)
     suggest = MagicMock()
     suggest.execute = AsyncMock(side_effect=error)
-    use_case = RecoverMemorySuggestions(repo, suggest)
+    budget = _budget()
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
 
     with pytest.raises(type(error)):
         await use_case.execute("session-1")
@@ -112,12 +122,14 @@ async def test_unknown_or_foreign_session_raises_not_found_before_the_llm() -> N
     repo = _repo_with_session(None)
     suggest = MagicMock()
     suggest.execute = AsyncMock()
-    use_case = RecoverMemorySuggestions(repo, suggest)
+    budget = _budget()
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
 
     with pytest.raises(SessionNotFoundError):
         await use_case.execute("session-1")
 
     suggest.execute.assert_not_awaited()
+    budget.charge.assert_not_called()
 
 
 async def test_draft_session_is_rejected_before_the_llm() -> None:
@@ -129,12 +141,14 @@ async def test_draft_session_is_rejected_before_the_llm() -> None:
     repo = _repo_with_session({**SESSION_ROW, "status": "draft"})
     suggest = MagicMock()
     suggest.execute = AsyncMock()
-    use_case = RecoverMemorySuggestions(repo, suggest)
+    budget = _budget()
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
 
     with pytest.raises(SessionNotPlayedError):
         await use_case.execute("session-1")
 
     suggest.execute.assert_not_awaited()
+    budget.charge.assert_not_called()
     _assert_no_writes(repo)
 
 
@@ -148,12 +162,14 @@ async def test_unexpected_status_fails_safe(status: str | None) -> None:
     repo = _repo_with_session({**SESSION_ROW, "status": status})
     suggest = MagicMock()
     suggest.execute = AsyncMock()
-    use_case = RecoverMemorySuggestions(repo, suggest)
+    budget = _budget()
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
 
     with pytest.raises(SessionNotPlayedError):
         await use_case.execute("session-1")
 
     suggest.execute.assert_not_awaited()
+    budget.charge.assert_not_called()
 
 
 async def test_missing_status_key_fails_safe() -> None:
@@ -162,12 +178,30 @@ async def test_missing_status_key_fails_safe() -> None:
     repo = _repo_with_session(row)
     suggest = MagicMock()
     suggest.execute = AsyncMock()
-    use_case = RecoverMemorySuggestions(repo, suggest)
+    budget = _budget()
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
 
     with pytest.raises(SessionNotPlayedError):
         await use_case.execute("session-1")
 
     suggest.execute.assert_not_awaited()
+    budget.charge.assert_not_called()
+
+
+async def test_a_spent_budget_stops_recovery_before_the_llm() -> None:
+    """An eligible session still answers 429 once the caller's window is full."""
+    repo = _repo_with_session(SESSION_ROW)
+    suggest = MagicMock()
+    suggest.execute = AsyncMock()
+    budget = _budget()
+    budget.charge.side_effect = GenerationRateLimitError("generation rate limit")
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
+
+    with pytest.raises(GenerationRateLimitError):
+        await use_case.execute("session-1")
+
+    suggest.execute.assert_not_awaited()
+    _assert_no_writes(repo)
 
 
 async def test_recovery_never_writes_to_the_session() -> None:
@@ -175,7 +209,8 @@ async def test_recovery_never_writes_to_the_session() -> None:
     snapshot = dict(SESSION_ROW)
     suggest = MagicMock()
     suggest.execute = AsyncMock(return_value=[_suggestion()])
-    use_case = RecoverMemorySuggestions(repo, suggest)
+    budget = _budget()
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
 
     await use_case.execute("session-1")
 
@@ -188,7 +223,8 @@ async def test_repeated_recovery_is_safe_and_leaves_the_session_untouched() -> N
     snapshot = dict(SESSION_ROW)
     suggest = MagicMock()
     suggest.execute = AsyncMock(side_effect=[[_suggestion("First.")], []])
-    use_case = RecoverMemorySuggestions(repo, suggest)
+    budget = _budget()
+    use_case = RecoverMemorySuggestions(repo, suggest, budget)
 
     first = await use_case.execute("session-1")
     second = await use_case.execute("session-1")

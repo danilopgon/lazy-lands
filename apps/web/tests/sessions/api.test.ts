@@ -16,6 +16,7 @@ import {
   SessionApiError,
   SessionCampaignNotFoundError,
   SessionNotExportableError,
+  SessionNotPlayedError,
   SessionRateLimitError,
   SessionValidationError,
 } from '@/lib/sessions/api'
@@ -166,6 +167,27 @@ describe('recoverMemorySuggestions (DM-triggered memory recovery)', () => {
 
     await expect(recoverMemorySuggestions('forged-id')).rejects.toBeInstanceOf(
       SessionCampaignNotFoundError
+    )
+  })
+
+  it('throws SessionNotPlayedError on a non-retryable 409, not the generic error', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: 'This session has not been played yet.',
+          retryable: false,
+        }),
+        { status: 409 }
+      )
+    )
+
+    const rejection = recoverMemorySuggestions('draft-session')
+
+    await expect(rejection).rejects.toBeInstanceOf(SessionNotPlayedError)
+    // A bare SessionApiError would route the DM to the generic "try again"
+    // copy, which can never succeed for a session that was never played.
+    await expect(rejection).rejects.toThrow(
+      'This session has not been played yet.'
     )
   })
 

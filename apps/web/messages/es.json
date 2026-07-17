@@ -501,7 +501,8 @@
       "error": {
         "generic": "El Escriba no ha podido terminar de leer esa sesión. No se ha cambiado nada; inténtalo de nuevo.",
         "rateLimit": "El Escriba necesita un momento: demasiadas peticiones en poco tiempo. No se ha cambiado nada; inténtalo de nuevo en unos instantes.",
-        "notFound": "El Escriba no ha podido encontrar esa sesión."
+        "notFound": "El Escriba no ha podido encontrar esa sesión.",
+        "notPlayed": "Esta sesión se planificó pero nunca se jugó, así que todavía no hay nada que recordar de ella. Registra primero lo que ocurrió en la mesa y el Escriba podrá proponer memorias a partir de ella."
       }
     },
     "backToCampaign": "Volver a la campaña",
