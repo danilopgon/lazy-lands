@@ -326,7 +326,20 @@ export default function MemoryReviewPage() {
   // render with a seeded draft and an empty lane — exactly the shape the
   // draft-completing effect above deletes.
   const recoverMutation = useMutation({
-    mutationFn: () => recoverMemorySuggestions(sessionId),
+    mutationFn: async () => {
+      const data = await recoverMemorySuggestions(sessionId)
+      // The endpoint is keyed by session alone, but this screen takes its
+      // campaign from the URL, so a stale or hand-edited link can ask campaign
+      // B to recover campaign A's session. From here that session simply does
+      // not exist: seeding it would show the wrong campaign's proposals and
+      // send an alien `source_session_id` to the accept path.
+      if (data.campaign_id !== campaignId) {
+        throw new SessionCampaignNotFoundError(
+          `Session ${sessionId} does not belong to campaign ${campaignId}`
+        )
+      }
+      return data
+    },
     // `?session=` can change while the request is in flight. Pin the session
     // the DM actually asked about so a late reply can be matched against the
     // route that is live when it lands.
@@ -422,11 +435,20 @@ export default function MemoryReviewPage() {
   const campaign = campaignQuery.data
   if (!campaign) return null
   // Without `?session=` there is no session to re-read, so no action is offered.
-  // An unplayed session can never become recoverable by asking again, so the
-  // trigger is withdrawn rather than left inviting a retry that cannot work.
+  //
+  // Two failures are permanent for this URL, so the trigger is withdrawn rather
+  // than left inviting a retry that cannot work: an unplayed session has
+  // nothing to remember until it is recorded, and a session this campaign
+  // cannot see will not appear by asking twice. Both cost a metered generation
+  // on every attempt, so leaving the button would bill the DM for a certain
+  // failure. Transient failures keep the trigger — retrying those can work.
+  const FUTILE_RECOVER_ERRORS: readonly RecoverErrorKey[] = [
+    'notPlayed',
+    'notFound',
+  ]
   const recoverIsFutile =
     recoverMutation.isError &&
-    recoverErrorKey(recoverMutation.error) === 'notPlayed'
+    FUTILE_RECOVER_ERRORS.includes(recoverErrorKey(recoverMutation.error))
   const canRecover = Boolean(sessionId) && !recoverIsFutile
   // A 200 carrying no proposals: the Scribe was asked and had nothing to say.
   // Distinct from `isError` on purpose — this is a success and must never read

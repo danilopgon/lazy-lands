@@ -18,7 +18,7 @@ from typing import Protocol
 from starlette.concurrency import run_in_threadpool
 
 from app.modules.sessions.application.commands.register_session import SuggestsMemories
-from app.modules.sessions.application.contracts import MemorySuggestion
+from app.modules.sessions.application.contracts import MemorySuggestionsResponse
 from app.modules.sessions.application.errors import (
     SessionNotFoundError,
     SessionNotPlayedError,
@@ -48,15 +48,18 @@ class RecoverMemorySuggestions:
         self._suggest = suggest
         self._budget = budget
 
-    async def execute(self, session_id: str) -> list[MemorySuggestion]:
+    async def execute(self, session_id: str) -> MemorySuggestionsResponse:
         """Return 0-5 freshly proposed, validated suggestions for the session.
 
         Args:
             session_id: The persisted session to re-propose memories for.
 
         Returns:
-            0-5 transient ``MemorySuggestion`` proposals — never persisted. An
-            empty list means the Scribe proposed nothing, not that it failed.
+            The owning ``campaign_id`` and 0-5 transient ``MemorySuggestion``
+            proposals — never persisted. An empty list means the Scribe
+            proposed nothing, not that it failed. The campaign is reported
+            because the caller keys this request by session alone and cannot
+            otherwise tell which campaign the proposals belong to.
 
         Raises:
             SessionNotFoundError: Forged/foreign/unknown ``session_id``.
@@ -78,4 +81,8 @@ class RecoverMemorySuggestions:
         # 404/409 and then answer the retry with a misleading 429.
         self._budget.charge()
 
-        return await self._suggest.execute(row["campaign_id"], row)
+        campaign_id = row["campaign_id"]
+        suggestions = await self._suggest.execute(campaign_id, row)
+        return MemorySuggestionsResponse(
+            campaign_id=campaign_id, memory_suggestions=suggestions
+        )

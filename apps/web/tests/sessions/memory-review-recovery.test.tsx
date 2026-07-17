@@ -114,6 +114,7 @@ describe('MemoryReviewPage — recovery', () => {
       throw new DOMException('QuotaExceededError')
     })
     mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
       memory_suggestions: [SUGGESTION],
     })
     const user = userEvent.setup()
@@ -130,6 +131,39 @@ describe('MemoryReviewPage — recovery', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(
       screen.queryByText(/could not finish reading/i)
+    ).not.toBeInTheDocument()
+  })
+
+  it('refuses proposals recovered for a session owned by another campaign', async () => {
+    // A stale or hand-edited link can point this campaign's review screen at a
+    // session belonging to another one. The endpoint is keyed by session alone
+    // and answers happily; from here that session does not exist, and seeding
+    // it would send an alien source_session_id to the accept path.
+    mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'a-different-campaign',
+      memory_suggestions: [SUGGESTION],
+    })
+    const user = userEvent.setup()
+    renderPage()
+    await waitForLoaded()
+
+    await user.click(
+      screen.getByRole('button', { name: /ask the scribe to read it again/i })
+    )
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/could not find that session/i)
+      ).toBeInTheDocument()
+    )
+    expect(screen.queryByText(SUGGESTION_TEXT)).not.toBeInTheDocument()
+    expect(readMemoryReviewDraft('camp-1', 'session-a')).toBeNull()
+    // Every attempt costs a metered generation, and this one can never succeed
+    // for this link, so the trigger goes rather than billing a certain failure.
+    expect(
+      screen.queryByRole('button', {
+        name: /ask the scribe to read it again/i,
+      })
     ).not.toBeInTheDocument()
   })
 
@@ -165,6 +199,7 @@ describe('MemoryReviewPage — recovery', () => {
 
   it('ignores a recovery that resolves after the active session changed', async () => {
     let resolveRecovery: (value: {
+      campaign_id: string
       memory_suggestions: MemorySuggestion[]
     }) => void = () => {}
     mockRecoverMemorySuggestions.mockImplementation(
@@ -193,7 +228,7 @@ describe('MemoryReviewPage — recovery', () => {
     await waitForLoaded()
 
     // ...and only then does session A's request land.
-    resolveRecovery({ memory_suggestions: [SUGGESTION] })
+    resolveRecovery({ campaign_id: 'camp-1', memory_suggestions: [SUGGESTION] })
 
     await waitFor(() =>
       expect(screen.getByText(/the margins are clean/i)).toBeInTheDocument()
@@ -204,6 +239,7 @@ describe('MemoryReviewPage — recovery', () => {
 
   it('seeds the lane and the draft when the session has not changed', async () => {
     mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
       memory_suggestions: [SUGGESTION],
     })
     const user = userEvent.setup()

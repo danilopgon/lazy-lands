@@ -58,6 +58,10 @@ export type MemorySuggestion = z.infer<typeof memorySuggestionSchema>
 // read exactly like the ones returned at registration time. An empty list is a
 // success (the Scribe proposed nothing), never an error.
 export const memorySuggestionsResponseSchema = z.object({
+  // The route is keyed by session alone, but the review screen takes its
+  // campaign from the URL. The owning campaign travels with the proposals so a
+  // screen opened on a different campaign can refuse them.
+  campaign_id: z.string().min(1),
   memory_suggestions: z.array(memorySuggestionSchema),
 })
 export type MemorySuggestionsResponse = z.infer<

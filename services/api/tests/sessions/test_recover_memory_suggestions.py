@@ -79,8 +79,11 @@ async def test_recovers_validated_suggestions_for_a_persisted_session() -> None:
 
     result = await use_case.execute("session-1")
 
-    assert result == [_suggestion()]
-    assert all(isinstance(item, MemorySuggestion) for item in result)
+    assert result.memory_suggestions == [_suggestion()]
+    assert all(isinstance(item, MemorySuggestion) for item in result.memory_suggestions)
+    # The caller keys this request by session alone, so the owning campaign is
+    # reported back for it to check the proposals belong where it is showing them.
+    assert result.campaign_id == "campaign-1"
     suggest.execute.assert_awaited_once_with("campaign-1", SESSION_ROW)
     budget.charge.assert_called_once()
 
@@ -94,7 +97,8 @@ async def test_intentional_empty_result_is_a_success_not_an_error() -> None:
 
     result = await use_case.execute("session-1")
 
-    assert result == []
+    assert result.memory_suggestions == []
+    assert result.campaign_id == "campaign-1"
 
 
 @pytest.mark.parametrize(
@@ -229,8 +233,8 @@ async def test_repeated_recovery_is_safe_and_leaves_the_session_untouched() -> N
     first = await use_case.execute("session-1")
     second = await use_case.execute("session-1")
 
-    assert first == [_suggestion("First.")]
-    assert second == []
+    assert first.memory_suggestions == [_suggestion("First.")]
+    assert second.memory_suggestions == []
     assert suggest.execute.await_count == 2
     _assert_no_writes(repo)
     assert snapshot == SESSION_ROW

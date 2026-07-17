@@ -194,8 +194,7 @@ async def recover_memory_suggestions(
     dependency, which FastAPI would resolve before eligibility is known.
     """
     _validate_session_id(session_id)
-    suggestions = await handler.execute(session_id)
-    return MemorySuggestionsResponse(memory_suggestions=suggestions)
+    return await handler.execute(session_id)
 
 
 @detail_router.post(

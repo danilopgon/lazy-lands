@@ -136,9 +136,15 @@ describe('recoverMemorySuggestions (DM-triggered memory recovery)', () => {
 
   it('posts to /sessions/{id}/memory-suggestions and parses the proposals', async () => {
     mockApiFetch.mockResolvedValue(
-      new Response(JSON.stringify({ memory_suggestions: [suggestion] }), {
-        status: 200,
-      })
+      new Response(
+        JSON.stringify({
+          campaign_id: 'camp-1',
+          memory_suggestions: [suggestion],
+        }),
+        {
+          status: 200,
+        }
+      )
     )
 
     const result = await recoverMemorySuggestions('sess-1')
@@ -152,10 +158,14 @@ describe('recoverMemorySuggestions (DM-triggered memory recovery)', () => {
 
   it('treats 200 with an empty list as a success, not an error', async () => {
     mockApiFetch.mockResolvedValue(
-      new Response(JSON.stringify({ memory_suggestions: [] }), { status: 200 })
+      new Response(
+        JSON.stringify({ campaign_id: 'camp-1', memory_suggestions: [] }),
+        { status: 200 }
+      )
     )
 
     await expect(recoverMemorySuggestions('sess-1')).resolves.toEqual({
+      campaign_id: 'camp-1',
       memory_suggestions: [],
     })
   })

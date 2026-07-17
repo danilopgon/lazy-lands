@@ -168,6 +168,9 @@ def test_recovery_returns_200_with_validated_suggestions(client: TestClient) -> 
     assert len(body["memory_suggestions"]) == 1
     assert body["memory_suggestions"][0]["content"] == SUGGESTION_PAYLOAD["content"]
     assert body["memory_suggestions"][0]["type"] == "revelation"
+    # The route is keyed by session alone, so the owning campaign travels with
+    # the proposals: a review screen opened on another campaign can refuse them.
+    assert body["campaign_id"] == "campaign-1"
 
 
 def test_recovery_is_read_only_and_never_writes_the_session(

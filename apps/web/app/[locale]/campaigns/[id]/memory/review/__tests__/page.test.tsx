@@ -810,6 +810,7 @@ describe('MemoryReviewPage — recovering memory suggestions', () => {
   it('flows recovered proposals into the existing pending lane', async () => {
     const user = userEvent.setup()
     mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
       memory_suggestions: [recovered],
     })
 
@@ -828,6 +829,7 @@ describe('MemoryReviewPage — recovering memory suggestions', () => {
   it('writes recovered proposals into the draft so they survive a remount', async () => {
     const user = userEvent.setup()
     mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
       memory_suggestions: [recovered],
     })
 
@@ -872,6 +874,7 @@ describe('MemoryReviewPage — recovering memory suggestions', () => {
   it('lets the DM accept a recovered proposal exactly like a registration-time one', async () => {
     const user = userEvent.setup()
     mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
       memory_suggestions: [recovered],
     })
     mockCreateMemoryFact.mockResolvedValue({ ...activeMemory, id: 'memory-2' })
@@ -897,6 +900,7 @@ describe('MemoryReviewPage — recovering memory suggestions', () => {
   it('lets the DM dismiss a recovered proposal without creating a memory fact', async () => {
     const user = userEvent.setup()
     mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
       memory_suggestions: [recovered],
     })
 
@@ -911,7 +915,10 @@ describe('MemoryReviewPage — recovering memory suggestions', () => {
 
   it('reports an empty proposal set honestly, never as an error', async () => {
     const user = userEvent.setup()
-    mockRecoverMemorySuggestions.mockResolvedValue({ memory_suggestions: [] })
+    mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
+      memory_suggestions: [],
+    })
 
     renderPage()
 
@@ -992,6 +999,7 @@ describe('MemoryReviewPage — recovering memory suggestions', () => {
     await screen.findByRole('alert')
 
     mockRecoverMemorySuggestions.mockResolvedValueOnce({
+      campaign_id: 'camp-1',
       memory_suggestions: [recovered],
     })
     await user.click(await findRecoverButton())
@@ -1004,7 +1012,10 @@ describe('MemoryReviewPage — recovering memory suggestions', () => {
 
   it('offers the recovery action in Spanish', async () => {
     const user = userEvent.setup()
-    mockRecoverMemorySuggestions.mockResolvedValue({ memory_suggestions: [] })
+    mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
+      memory_suggestions: [],
+    })
 
     renderPageEs()
 
