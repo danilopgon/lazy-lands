@@ -5,6 +5,8 @@
 > Your campaign, without the amnesia.
 > Persistent, reviewable memory for NPCs, factions and consequences.
 
+<img width="1920" height="1440" alt="Lazy Lands Landing Page" src="https://github.com/user-attachments/assets/1ea55e95-86e3-40f5-ade5-41ecc686e5a3" />
+
 ---
 
 ## Problem
