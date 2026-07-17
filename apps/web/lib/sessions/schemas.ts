@@ -184,6 +184,13 @@ export const sessionDetailSchema = z.object({
   summary: z.string().nullable(),
   consequences: z.string().nullable(),
   generated_content: generatedContentSchema.nullable(),
+  // Mirrors `SessionDetailResponse.status`. Same fail-safe as
+  // `sessionResponseSchema`: absent or unrecognized degrades to 'registered',
+  // never 'draft'. The detail screen titles a draft as an unplayed proposal,
+  // so guessing 'draft' would tell the DM that the session they already ran is
+  // still a discardable plan. `.catch()` keeps a future enum member from
+  // throwing and blanking the whole screen.
+  status: sessionStatusSchema.catch('registered').default('registered'),
   trace_json: z.record(z.string(), z.unknown()).nullable(),
   created_at: z.string().nullable(),
   updated_at: z.string().nullable(),

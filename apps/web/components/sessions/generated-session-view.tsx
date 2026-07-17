@@ -54,9 +54,14 @@ type GeneratedSessionViewProps = {
 }
 
 /**
- * Generated session draft view — renders the Scribe's proposal sections, the
- * woven-memory sidebar and legend. Each section is editable
- * inline and persisted via PATCH; the generated-proposal title drives the H1.
+ * Generated session view — renders the Scribe's sections, the woven-memory
+ * sidebar and legend. Each section is editable inline and persisted via PATCH;
+ * the generated title drives the H1.
+ *
+ * Presentation branches on the session's lifecycle status: only an explicit
+ * 'draft' is titled and framed as an unplayed proposal, and only a draft
+ * offers per-section regeneration. Everything else — 'registered', an
+ * unrecognized status, or none at all — renders the neutral recorded view.
  *
  * @param {GeneratedSessionViewProps} props - Component props.
  * @returns {React.ReactElement} The generated session view element.
@@ -117,10 +122,16 @@ export function GeneratedSessionView({
   const session = providedSession ?? sessionQuery.data
   const activeMemories = providedMemories ?? memoriesQuery.data
   const visibleSections = sections ?? session?.generated_content?.sections ?? []
+  // Draft copy requires proof of draftness. `status === 'draft'` — deliberately
+  // NOT `status !== 'registered'` — so an unexpected or missing status can
+  // never present a session the DM already played as an unfinished proposal.
+  const isDraft = session?.status === 'draft'
   const generatedTitle = session?.generated_content?.title
   const title =
     generatedTitle ||
-    t('proposalTitle', { number: session?.session_number ?? 0 })
+    t(isDraft ? 'proposalTitle' : 'registeredTitle', {
+      number: session?.session_number ?? 0,
+    })
 
   const continuityLinks = session?.generated_content?.continuity_links
   const linkedMemories = useMemo(() => {
@@ -359,19 +370,23 @@ export function GeneratedSessionView({
         <Link href={dashboardHref}>{t('breadcrumbs.campaigns')}</Link> /{' '}
         <Link href={campaignTarget}>{campaign.title}</Link> /{' '}
         <b className="text-[var(--ink)]">
-          {t('breadcrumbs.draft', { number: session.session_number })}
+          {t(isDraft ? 'breadcrumbs.draft' : 'breadcrumbs.registered', {
+            number: session.session_number,
+          })}
         </b>
       </nav>
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
-            {t('kicker', { number: session.session_number })}
+            {t(isDraft ? 'kicker' : 'kickerRegistered', {
+              number: session.session_number,
+            })}
           </p>
           <h1 className="mt-3 font-serif text-[38px] font-semibold leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
             {title}
           </h1>
           <p className="mt-3 text-base text-[var(--ink-2)]">
-            {t.rich('subtitle', {
+            {t.rich(isDraft ? 'subtitle' : 'subtitleRegistered', {
               scribe: (chunks) => (
                 <span className="font-serif italic text-[var(--accent-deep)]">
                   {chunks}
@@ -441,16 +456,24 @@ export function GeneratedSessionView({
                       >
                         {te('edit')}
                       </button>
-                      <button
-                        type="button"
-                        className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-3)] underline"
-                        disabled={regeneratingSectionIds.has(section.id)}
-                        onClick={() => void regenerateSectionAction(section.id)}
-                      >
-                        {regeneratingSectionIds.has(section.id)
-                          ? t('regenerating')
-                          : t('regenerate')}
-                      </button>
+                      {/* Regeneration rewrites the *plan*. Once the session
+                          has been played and recorded there is no plan left to
+                          rewrite, and the call is metered — so only a draft
+                          offers it. */}
+                      {isDraft ? (
+                        <button
+                          type="button"
+                          className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-3)] underline"
+                          disabled={regeneratingSectionIds.has(section.id)}
+                          onClick={() =>
+                            void regenerateSectionAction(section.id)
+                          }
+                        >
+                          {regeneratingSectionIds.has(section.id)
+                            ? t('regenerating')
+                            : t('regenerate')}
+                        </button>
+                      ) : null}
                     </>
                   ) : null}
                 </div>
@@ -555,7 +578,8 @@ export function GeneratedSessionView({
               <OriginBadge origin="scribe" /> · {t('legendScribe')}
             </span>
             <span>
-              <OriginBadge origin="edited" /> · {t('legendEdited')}
+              <OriginBadge origin="edited" /> ·{' '}
+              {t(isDraft ? 'legendEdited' : 'legendEditedRegistered')}
             </span>
             <span>
               <span className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.09em] text-[var(--mute)]">
