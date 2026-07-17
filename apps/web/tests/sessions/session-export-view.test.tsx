@@ -38,6 +38,9 @@ const session: SessionDetail = {
   session_number: 8,
   summary: null,
   consequences: null,
+  // The export screen is status-agnostic; a draft exports exactly like a
+  // registered session.
+  status: 'draft',
   generated_content: {
     sections: [
       {

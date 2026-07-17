@@ -406,6 +406,10 @@ function buildFixtures(prose: LocaleProse): DemoFixtures {
     session_number: 8,
     summary: prose.generated.summary,
     consequences: null,
+    // The demo's session 8 is an unplayed Scribe proposal: the guided tour
+    // shows the draft framing and exercises per-section regeneration, both of
+    // which the detail screen offers only on an explicit 'draft'.
+    status: 'draft',
     generated_content: {
       title: prose.generated.title,
       sections: [

@@ -8,6 +8,25 @@ import {
   updateSessionContentSchema,
 } from '@/lib/sessions/schemas'
 
+/** A minimal, valid `GET /sessions/{id}` payload for status-parsing cases. */
+function sessionDetailRow() {
+  return {
+    id: 'session-8',
+    campaign_id: 'camp-1',
+    session_number: 8,
+    summary: 'Halia calls in the debt.',
+    consequences: null,
+    generated_content: {
+      sections: [
+        { id: 'synopsis', label: 'Synopsis', body: 'Draft', origin: 'scribe' },
+      ],
+    },
+    trace_json: null,
+    created_at: '2026-07-10T10:00:00Z',
+    updated_at: '2026-07-10T10:00:00Z',
+  }
+}
+
 describe('Block 8 session generation schemas', () => {
   it('trims optional direction fields and preserves server defaults', () => {
     const result = generateSessionRequestSchema.parse({
@@ -102,6 +121,40 @@ describe('Block 8 session generation schemas', () => {
       'mem-1'
     )
   })
+
+  it.each([
+    ['draft', 'draft'],
+    ['registered', 'registered'],
+  ])(
+    'keeps the %s lifecycle status on a session detail row',
+    (stored, expected) => {
+      const result = sessionDetailSchema.parse({
+        ...sessionDetailRow(),
+        status: stored,
+      })
+
+      expect(result.status).toBe(expected)
+    }
+  )
+
+  it.each([
+    ['absent', {}],
+    ['unrecognized', { status: 'archived' }],
+    ['null', { status: null }],
+  ])(
+    'falls back to registered when the session detail status is %s',
+    (_case, override) => {
+      // Never 'draft': the detail screen titles a draft as an unplayed
+      // proposal, so an unknown status must degrade to the neutral, recorded
+      // presentation rather than claim the DM's real record is discardable.
+      const result = sessionDetailSchema.parse({
+        ...sessionDetailRow(),
+        ...override,
+      })
+
+      expect(result.status).toBe('registered')
+    }
+  )
 
   it('preserves unknown generated content fields so section updates do not erase them', () => {
     const result = generatedContentSchema.parse({

@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { render, screen, waitFor } from '@/tests/intl'
 import { GeneratedSessionView } from '@/components/sessions/generated-session-view'
+import type { SessionDetail } from '@/lib/sessions/schemas'
 
 function withQueryClient({ children }: { children: ReactNode }) {
   return (
@@ -24,6 +25,7 @@ const session = {
   session_number: 8,
   summary: 'Halia calls in the debt.',
   consequences: null,
+  status: 'draft' as const,
   generated_content: {
     continuity_links: [{ memory_fact_id: 'mem-1', relevance: 'Halia split' }],
     sections: [
@@ -112,6 +114,155 @@ describe('GeneratedSessionView', () => {
     ).not.toBeInTheDocument()
     expect(screen.getByText('Private DM notes')).toBeInTheDocument()
   })
+
+  it.each([
+    [
+      'en',
+      {
+        breadcrumb: 'Session 8',
+        kicker: 'Session 8 · Recorded',
+        title: 'Session 8',
+        draftWording: [/draft/i, /proposal/i],
+      },
+    ],
+    [
+      'es',
+      {
+        breadcrumb: 'Sesión 8',
+        kicker: 'Sesión 8 · Registrada',
+        title: 'Sesión 8',
+        draftWording: [/borrador/i, /propuesta/i],
+      },
+    ],
+  ] as const)(
+    'presents a registered session as recorded, with no draft or proposal wording, in %s',
+    (locale, expected) => {
+      render(
+        <GeneratedSessionView
+          campaignId="camp-1"
+          sessionId="session-8"
+          campaign={campaign}
+          session={{ ...session, status: 'registered' }}
+          memories={memories}
+        />,
+        { wrapper: withQueryClient, locale }
+      )
+
+      expect(screen.getByText(expected.kicker)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: expected.title, level: 1 })
+      ).toBeInTheDocument()
+      const nav = screen.getByRole('navigation')
+      expect(nav).toHaveTextContent(expected.breadcrumb)
+
+      // No draft/proposal wording anywhere in the header region: breadcrumb,
+      // kicker, H1 and subtitle all describe a session already played.
+      const header = screen.getByRole('main')
+      for (const wording of expected.draftWording) {
+        expect(header.textContent).not.toMatch(wording)
+      }
+    }
+  )
+
+  it.each([
+    ['en', 'Session 8 · Proposal', 'Session 8 proposal'],
+    ['es', 'Sesión 8 · Propuesta', 'Propuesta de sesión 8'],
+  ] as const)(
+    'keeps the Scribe proposal copy for an actual draft in %s',
+    (locale, kicker, title) => {
+      render(
+        <GeneratedSessionView
+          campaignId="camp-1"
+          sessionId="session-8"
+          campaign={campaign}
+          session={{ ...session, status: 'draft' }}
+          memories={memories}
+        />,
+        { wrapper: withQueryClient, locale }
+      )
+
+      expect(screen.getByText(kicker)).toBeInTheDocument()
+      expect(
+        screen.getByRole('heading', { name: title, level: 1 })
+      ).toBeInTheDocument()
+    }
+  )
+
+  it.each([
+    ['an unexpected status', 'archived'],
+    ['a missing status', undefined],
+  ])(
+    'falls back to the neutral recorded presentation for %s, never draft copy',
+    (_case, status) => {
+      renderGenerated(
+        <GeneratedSessionView
+          campaignId="camp-1"
+          sessionId="session-8"
+          campaign={campaign}
+          // Deliberately outside the schema's union: the screen must never
+          // claim draftness it cannot prove.
+          session={{ ...session, status } as unknown as SessionDetail}
+          memories={memories}
+        />
+      )
+
+      expect(screen.getByText('Session 8 · Recorded')).toBeInTheDocument()
+      expect(screen.getByRole('main').textContent).not.toMatch(/proposal/i)
+      expect(
+        screen.queryByRole('button', { name: 'Regenerate' })
+      ).not.toBeInTheDocument()
+    }
+  )
+
+  it('does not offer Regenerate on a registered session, but keeps saving, copying and exporting', () => {
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={{ ...session, status: 'registered' }}
+        memories={memories}
+      />
+    )
+
+    // Regenerating a plan the table already played would rewrite the record
+    // for nothing and burn a metered generation.
+    expect(
+      screen.queryByRole('button', { name: 'Regenerate' })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Save changes' })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Export PDF →' })).toBeEnabled()
+    expect(
+      screen.getByRole('button', { name: '← Campaign' })
+    ).toBeInTheDocument()
+    // Editing a registered session stays intended.
+    expect(screen.getAllByRole('button', { name: 'Edit' })).toHaveLength(2)
+    // The badge legend must not name a control this session does not offer.
+    // The legend is split across the badge and its caption, so match the
+    // rendered container rather than a single text node.
+    expect(screen.getByRole('main').textContent).toContain('yours now')
+    expect(screen.getByRole('main').textContent).not.toMatch(
+      /regenerate replaces it/i
+    )
+  })
+
+  it.each([
+    ['en', 'Opening this generated session'],
+    ['es', 'Abriendo esta sesión generada'],
+  ] as const)(
+    'uses status-neutral loading copy in %s, because status is unknown while loading',
+    (locale, caption) => {
+      render(
+        <GeneratedSessionView campaignId="camp-1" sessionId="session-8" />,
+        { wrapper: withQueryClient, locale }
+      )
+
+      expect(screen.getByText(caption)).toBeInTheDocument()
+    }
+  )
 
   it.each([
     ['en', 'Private DM notes', 'Coming soon', 'Excluded from PDF'],

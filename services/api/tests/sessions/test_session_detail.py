@@ -59,6 +59,7 @@ def _session() -> dict[str, object]:
             ],
             "continuity_links": [{"memory_fact_id": "mem-1", "relevance": "Payoff."}],
         },
+        "status": "draft",
         "trace_json": {"prompt_version": "generate_session_v1"},
         "created_at": "2026-07-10T00:00:00Z",
         "updated_at": "2026-07-10T00:00:00Z",
@@ -75,6 +76,36 @@ def test_get_session_returns_full_generated_content() -> None:
         {"memory_fact_id": "mem-1", "relevance": "Payoff."}
     ]
     assert result.trace_json["prompt_version"] == "generate_session_v1"
+
+
+def test_get_session_exposes_draft_status() -> None:
+    row = _session()
+    row["status"] = "draft"
+
+    result = GetSessionUseCase(_Repo(row)).execute("session-1")
+
+    assert result.status == "draft"
+
+
+def test_get_session_exposes_registered_status() -> None:
+    row = _session()
+    row["status"] = "registered"
+
+    result = GetSessionUseCase(_Repo(row)).execute("session-1")
+
+    assert result.status == "registered"
+
+
+def test_get_session_defaults_missing_status_to_registered() -> None:
+    row = _session()
+    row.pop("status", None)
+
+    result = GetSessionUseCase(_Repo(row)).execute("session-1")
+
+    # A row without a stored status must never read as a draft: the detail
+    # screen titles a draft as an unplayed proposal, so defaulting the other
+    # way would present the DM's real record as a discardable plan.
+    assert result.status == "registered"
 
 
 def test_get_session_raises_not_found_on_rls_miss() -> None:
@@ -203,6 +234,7 @@ def test_session_detail_routes_get_and_patch_generated_content() -> None:
     assert get_response.json()["generated_content"]["continuity_links"] == [
         {"memory_fact_id": "mem-1", "relevance": "Payoff."}
     ]
+    assert get_response.json()["status"] == "draft"
     assert patch_response.status_code == 200
     assert patch_response.json()["generated_content"]["sections"][0]["origin"] == (
         "edited"
