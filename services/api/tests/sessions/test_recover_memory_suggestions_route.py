@@ -20,7 +20,10 @@ from app.modules.sessions.api.dependencies import (
 from app.modules.sessions.application.contracts import (
     MemorySuggestionsOutput,
 )
-from app.modules.sessions.application.errors import SessionNotFoundError
+from app.modules.sessions.application.errors import (
+    SessionNotFoundError,
+    SessionNotPlayedError,
+)
 from app.shared.database import get_user_supabase_client
 from app.shared.generation_rate_limit import enforce_generation_rate_limit
 from app.shared.llm.dependencies import get_llm_provider
@@ -231,6 +234,39 @@ def test_recovery_returns_404_for_a_foreign_session_without_calling_the_provider
     assert response.json() == {"error": "Not found."}
 
 
+def test_recovery_of_an_unplayed_draft_returns_a_non_retryable_409(
+    client: TestClient,
+) -> None:
+    """Replaying can never succeed until the DM records what actually happened."""
+    use_case = _FakeUseCase(error=SessionNotPlayedError())
+    app.dependency_overrides[provide_recover_memory_suggestions] = lambda: use_case
+    _authenticate()
+
+    response = client.post(f"/sessions/{SESSION_ID}/memory-suggestions")
+
+    assert response.status_code == 409
+    body = response.json()
+    assert body["retryable"] is False
+    assert "memory_suggestions" not in body
+
+
+def test_recovery_of_a_draft_row_returns_409_without_calling_the_provider(
+    client: TestClient,
+) -> None:
+    """End-to-end through the real use case: the draft guard precedes the LLM."""
+    fake_client = _wired_client({**_session_row(), "status": "draft"})
+    provider = FakeLlmProvider()
+    app.dependency_overrides[get_user_supabase_client] = lambda: fake_client
+    app.dependency_overrides[get_llm_provider] = lambda: provider
+    _authenticate()
+
+    response = client.post(f"/sessions/{SESSION_ID}/memory-suggestions")
+
+    assert response.status_code == 409
+    assert response.json()["retryable"] is False
+    fake_client.table("sessions").update.assert_not_called()
+
+
 def test_recovery_returns_404_for_a_malformed_session_id(client: TestClient) -> None:
     use_case = _FakeUseCase()
     app.dependency_overrides[provide_recover_memory_suggestions] = lambda: use_case
@@ -287,9 +323,7 @@ def _api_routes(routes) -> list[APIRoute]:
 
 def test_recovery_route_enforces_the_generation_rate_limit() -> None:
     """The metered LLM call must sit behind the same budget as regeneration."""
-    route = next(
-        route for route in _api_routes(app.routes) if route.path == ROUTE_PATH
-    )
+    route = next(route for route in _api_routes(app.routes) if route.path == ROUTE_PATH)
 
     assert "POST" in route.methods
     assert any(

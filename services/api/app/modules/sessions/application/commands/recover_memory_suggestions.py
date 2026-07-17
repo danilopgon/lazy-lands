@@ -17,7 +17,10 @@ from starlette.concurrency import run_in_threadpool
 
 from app.modules.sessions.application.commands.register_session import SuggestsMemories
 from app.modules.sessions.application.contracts import MemorySuggestion
-from app.modules.sessions.application.errors import SessionNotFoundError
+from app.modules.sessions.application.errors import (
+    SessionNotFoundError,
+    SessionNotPlayedError,
+)
 from app.modules.sessions.domain.ports import SessionRepository
 
 
@@ -43,11 +46,16 @@ class RecoverMemorySuggestions:
 
         Raises:
             SessionNotFoundError: Forged/foreign/unknown ``session_id``.
+            SessionNotPlayedError: The session was never played, so it carries
+                a planned synopsis rather than an account of what happened.
             LlmOutputValidationError: The proposal could not be validated.
             ProviderRateLimitError: The upstream provider refused the call.
         """
         row = await run_in_threadpool(self._repository.get_session, session_id)
         if row is None:
             raise SessionNotFoundError()
+
+        if row.get("status") != "registered":
+            raise SessionNotPlayedError()
 
         return await self._suggest.execute(row["campaign_id"], row)

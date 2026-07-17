@@ -17,7 +17,10 @@ from app.modules.sessions.application.commands.recover_memory_suggestions import
     RecoverMemorySuggestions,
 )
 from app.modules.sessions.application.contracts import MemorySuggestion
-from app.modules.sessions.application.errors import SessionNotFoundError
+from app.modules.sessions.application.errors import (
+    SessionNotFoundError,
+    SessionNotPlayedError,
+)
 from app.shared.llm.errors import LlmOutputValidationError, ProviderRateLimitError
 
 SESSION_ROW = {
@@ -112,6 +115,56 @@ async def test_unknown_or_foreign_session_raises_not_found_before_the_llm() -> N
     use_case = RecoverMemorySuggestions(repo, suggest)
 
     with pytest.raises(SessionNotFoundError):
+        await use_case.execute("session-1")
+
+    suggest.execute.assert_not_awaited()
+
+
+async def test_draft_session_is_rejected_before_the_llm() -> None:
+    """A draft is a GENERATED, UNPLAYED session — its synopsis is a plan.
+
+    Proposing memories from it would let the DM canonize events that never
+    happened, so the guard must fire before the provider is ever invoked.
+    """
+    repo = _repo_with_session({**SESSION_ROW, "status": "draft"})
+    suggest = MagicMock()
+    suggest.execute = AsyncMock()
+    use_case = RecoverMemorySuggestions(repo, suggest)
+
+    with pytest.raises(SessionNotPlayedError):
+        await use_case.execute("session-1")
+
+    suggest.execute.assert_not_awaited()
+    _assert_no_writes(repo)
+
+
+@pytest.mark.parametrize("status", ["archived", "", None])
+async def test_unexpected_status_fails_safe(status: str | None) -> None:
+    """The guard tests ``!= 'registered'``, so an unknown status is refused.
+
+    A future status value must never silently become recoverable just because
+    it is not literally 'draft'.
+    """
+    repo = _repo_with_session({**SESSION_ROW, "status": status})
+    suggest = MagicMock()
+    suggest.execute = AsyncMock()
+    use_case = RecoverMemorySuggestions(repo, suggest)
+
+    with pytest.raises(SessionNotPlayedError):
+        await use_case.execute("session-1")
+
+    suggest.execute.assert_not_awaited()
+
+
+async def test_missing_status_key_fails_safe() -> None:
+    """A row without ``status`` is not provably played, so recovery is refused."""
+    row = {key: value for key, value in SESSION_ROW.items() if key != "status"}
+    repo = _repo_with_session(row)
+    suggest = MagicMock()
+    suggest.execute = AsyncMock()
+    use_case = RecoverMemorySuggestions(repo, suggest)
+
+    with pytest.raises(SessionNotPlayedError):
         await use_case.execute("session-1")
 
     suggest.execute.assert_not_awaited()

@@ -317,30 +317,58 @@ export default function MemoryReviewPage() {
     },
   })
 
+  const activeDraftKey = sessionId ? `${campaignId}:${sessionId}` : null
+
   // Recovery seeds the pending lane, so the draft write and `setPending` must
   // land in the SAME commit. Splitting them across an effect would leave one
   // render with a seeded draft and an empty lane — exactly the shape the
   // draft-completing effect above deletes.
   const recoverMutation = useMutation({
     mutationFn: () => recoverMemorySuggestions(sessionId),
-    onSuccess: (data) => {
+    // `?session=` can change while the request is in flight. Pin the session
+    // the DM actually asked about so a late reply can be matched against the
+    // route that is live when it lands.
+    onMutate: () => ({ requestedDraftKey: activeDraftKey }),
+    onSuccess: (data, _variables, context) => {
+      // A stale reply belongs to a session the DM has already left. Seeding it
+      // here would show one session's proposals under another and let them be
+      // accepted with the wrong `source_session_id`.
+      if (context.requestedDraftKey !== activeDraftKey) return
       if (data.memory_suggestions.length === 0) return
 
       const recovered = data.memory_suggestions.map((suggestion, index) => ({
         ...suggestion,
         id: suggestionId(suggestion, index),
       }))
-      writeMemoryReviewDraft({
-        campaign_id: campaignId,
-        session_id: sessionId,
-        // Recovery re-reads a session by id and never learns its number.
-        session_number: draft?.session_number ?? null,
-        memory_suggestions: data.memory_suggestions,
-      })
+      try {
+        writeMemoryReviewDraft({
+          campaign_id: campaignId,
+          session_id: sessionId,
+          // Recovery re-reads a session by id and never learns its number.
+          session_number: draft?.session_number ?? null,
+          memory_suggestions: data.memory_suggestions,
+        })
+      } catch {
+        // Draft storage is best effort (same contract as registration). The
+        // proposals were recovered successfully, so they must still reach the
+        // lane — rendering a successful recovery as a failure would be a lie.
+        // Only the write is guarded: the payload is already schema-validated
+        // by the API client, so this catch cannot mask a contract bug.
+      }
       pendingRef.current = recovered
       setPending(recovered)
     },
   })
+
+  // The mutation object outlives a `?session=` switch, and the empty/error
+  // notices below read its state declaratively — so without this reset,
+  // session A's failure (or its "proposed nothing" answer) would render under
+  // session B. Resetting does NOT cancel the in-flight request; the key guard
+  // in `onSuccess` is what protects the seeding itself.
+  const { reset: resetRecovery } = recoverMutation
+  useEffect(() => {
+    resetRecovery()
+  }, [campaignId, sessionId, resetRecovery])
 
   /**
    * Removes a proposal locally so dismissed Scribe output never reaches the API.
