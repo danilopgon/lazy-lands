@@ -24,7 +24,10 @@ const {
   mockReadMemoryReviewDraft,
   mockCompleteMemoryReviewDraft,
   mockRewriteMemoryReviewDraftSuggestions,
+  mockWriteMemoryReviewDraft,
+  mockRecoverMemorySuggestions,
   mockPush,
+  searchParams,
 } = vi.hoisted(() => ({
   mockGetCampaignDetail: vi.fn(),
   mockGetMemoryFacts: vi.fn(),
@@ -33,7 +36,11 @@ const {
   mockReadMemoryReviewDraft: vi.fn(),
   mockCompleteMemoryReviewDraft: vi.fn(),
   mockRewriteMemoryReviewDraftSuggestions: vi.fn(),
+  mockWriteMemoryReviewDraft: vi.fn(),
+  mockRecoverMemorySuggestions: vi.fn(),
   mockPush: vi.fn(),
+  // Mutable so a test can drop `?session=` and assert the not-eligible state.
+  searchParams: { value: 'session=sess-1' },
 }))
 
 vi.mock('@/lib/campaigns/api', () => ({
@@ -54,11 +61,21 @@ vi.mock('@/lib/sessions/memory-review-draft', () => ({
   readMemoryReviewDraft: mockReadMemoryReviewDraft,
   completeMemoryReviewDraft: mockCompleteMemoryReviewDraft,
   rewriteMemoryReviewDraftSuggestions: mockRewriteMemoryReviewDraftSuggestions,
+  writeMemoryReviewDraft: mockWriteMemoryReviewDraft,
+}))
+
+vi.mock('@/lib/sessions/api', () => ({
+  recoverMemorySuggestions: mockRecoverMemorySuggestions,
+  SessionApiError: class SessionApiError extends Error {},
+  SessionCampaignNotFoundError: class SessionCampaignNotFoundError extends Error {},
+  SessionRateLimitError: class SessionRateLimitError extends Error {},
+  SessionNotPlayedError: class SessionNotPlayedError extends Error {},
+  SessionValidationError: class SessionValidationError extends Error {},
 }))
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ id: 'camp-1' }),
-  useSearchParams: () => new URLSearchParams('session=sess-1'),
+  useSearchParams: () => new URLSearchParams(searchParams.value),
 }))
 
 vi.mock('@/i18n/navigation', async () => {
@@ -172,6 +189,7 @@ function deferred<T>() {
 describe('MemoryReviewPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    searchParams.value = 'session=sess-1'
     mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
     mockGetMemoryFacts.mockResolvedValue([activeMemory])
     mockReadMemoryReviewDraft.mockReturnValue(draft)
@@ -703,5 +721,310 @@ describe('MemoryReviewPage', () => {
     )
     expect(retire).toBeEnabled()
     expect(screen.getByText(/the guild remembers/i)).toBeInTheDocument()
+  })
+})
+
+describe('MemoryReviewPage — recovering memory suggestions', () => {
+  const recovered = {
+    content: 'The warehouse fire exposed guild ledgers.',
+    type: 'consequence',
+    importance: 'medium',
+    reason: 'Future faction pressure depends on this evidence.',
+    related: ['Black Bear Guild'],
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    searchParams.value = 'session=sess-1'
+    mockGetCampaignDetail.mockResolvedValue(buildCampaignDetail())
+    mockGetMemoryFacts.mockResolvedValue([activeMemory])
+    // The empty pending lane is the only place the recovery action lives.
+    mockReadMemoryReviewDraft.mockReturnValue(null)
+  })
+
+  async function findRecoverButton() {
+    return screen.findByRole('button', {
+      name: /ask the scribe to read it again/i,
+    })
+  }
+
+  it('offers the recovery action inside the empty pending lane when a session is linked', async () => {
+    renderPage()
+
+    expect(await findRecoverButton()).toBeEnabled()
+    expect(screen.getByText(/the margins are clean/i)).toBeInTheDocument()
+    // Proposal-only language: nothing is written until the DM accepts.
+    expect(
+      screen.getByText(/nothing is written to your session/i)
+    ).toBeInTheDocument()
+  })
+
+  it('renders no recovery action when no session is linked', async () => {
+    searchParams.value = ''
+
+    renderPage()
+
+    await screen.findByText(/the margins are clean/i)
+    expect(
+      screen.queryByRole('button', {
+        name: /ask the scribe to read it again/i,
+      })
+    ).not.toBeInTheDocument()
+    // The not-eligible empty state is exactly today's copy, unchanged.
+    expect(screen.getByText(/no suggestions await review/i)).toBeInTheDocument()
+  })
+
+  it('shows the quill loading treatment and disables the trigger while in flight', async () => {
+    const user = userEvent.setup()
+    const recovery = deferred<{ memory_suggestions: unknown[] }>()
+    mockRecoverMemorySuggestions.mockReturnValue(recovery.promise)
+
+    const { container } = renderPage()
+
+    await user.click(await findRecoverButton())
+
+    await waitFor(() => {
+      expect(screen.getByText(/re-reading the session/i)).toBeInTheDocument()
+    })
+    expect(container.querySelector('.ll-quill')).not.toBeNull()
+    expect(await findRecoverButton()).toBeDisabled()
+
+    recovery.resolve({ memory_suggestions: [] })
+  })
+
+  it('does not fire two requests when the trigger is double-clicked', async () => {
+    const user = userEvent.setup()
+    const recovery = deferred<{ memory_suggestions: unknown[] }>()
+    mockRecoverMemorySuggestions.mockReturnValue(recovery.promise)
+
+    renderPage()
+
+    const trigger = await findRecoverButton()
+    await user.dblClick(trigger)
+
+    expect(mockRecoverMemorySuggestions).toHaveBeenCalledTimes(1)
+
+    recovery.resolve({ memory_suggestions: [] })
+  })
+
+  it('flows recovered proposals into the existing pending lane', async () => {
+    const user = userEvent.setup()
+    mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
+      memory_suggestions: [recovered],
+    })
+
+    renderPage()
+
+    await user.click(await findRecoverButton())
+
+    expect(
+      await screen.findByText(/the warehouse fire exposed guild ledgers/i)
+    ).toBeInTheDocument()
+    expect(screen.getByText(/1 suggestion/i)).toBeInTheDocument()
+    expect(screen.getByText(/❧ the scribe proposes/i)).toBeInTheDocument()
+    expect(screen.queryByText(/the margins are clean/i)).not.toBeInTheDocument()
+  })
+
+  it('writes recovered proposals into the draft so they survive a remount', async () => {
+    const user = userEvent.setup()
+    mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
+      memory_suggestions: [recovered],
+    })
+
+    const first = renderPage()
+
+    await findRecoverButton()
+    // The empty lane already completed the (absent) draft on mount; only what
+    // happens after the recovery matters here.
+    mockCompleteMemoryReviewDraft.mockClear()
+
+    await user.click(await findRecoverButton())
+    await screen.findByText(/the warehouse fire exposed guild ledgers/i)
+
+    await waitFor(() => {
+      expect(mockWriteMemoryReviewDraft).toHaveBeenCalledWith({
+        campaign_id: 'camp-1',
+        session_id: 'sess-1',
+        session_number: null,
+        memory_suggestions: [recovered],
+      })
+    })
+    // The lane is populated, so the draft-completing effect must not clear it.
+    expect(mockCompleteMemoryReviewDraft).not.toHaveBeenCalled()
+
+    first.unmount()
+
+    // A remount reads the draft the recovery just seeded.
+    mockReadMemoryReviewDraft.mockReturnValue({
+      version: 1,
+      campaign_id: 'camp-1',
+      session_id: 'sess-1',
+      session_number: null,
+      memory_suggestions: [recovered],
+    })
+    renderPage()
+
+    expect(
+      await screen.findByText(/the warehouse fire exposed guild ledgers/i)
+    ).toBeInTheDocument()
+  })
+
+  it('lets the DM accept a recovered proposal exactly like a registration-time one', async () => {
+    const user = userEvent.setup()
+    mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
+      memory_suggestions: [recovered],
+    })
+    mockCreateMemoryFact.mockResolvedValue({ ...activeMemory, id: 'memory-2' })
+
+    renderPage()
+
+    await user.click(await findRecoverButton())
+    await user.click(
+      await screen.findByRole('button', { name: /accept as memory/i })
+    )
+
+    await waitFor(() => {
+      expect(mockCreateMemoryFact).toHaveBeenCalledWith('camp-1', {
+        source_session_id: 'sess-1',
+        content: 'The warehouse fire exposed guild ledgers.',
+        type: 'consequence',
+        importance: 'medium',
+      })
+    })
+    expect(await screen.findByText(/★ accepted/i)).toBeInTheDocument()
+  })
+
+  it('lets the DM dismiss a recovered proposal without creating a memory fact', async () => {
+    const user = userEvent.setup()
+    mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
+      memory_suggestions: [recovered],
+    })
+
+    renderPage()
+
+    await user.click(await findRecoverButton())
+    await user.click(await screen.findByRole('button', { name: /^dismiss$/i }))
+
+    expect(await screen.findByText(/struck out/i)).toBeInTheDocument()
+    expect(mockCreateMemoryFact).not.toHaveBeenCalled()
+  })
+
+  it('reports an empty proposal set honestly, never as an error', async () => {
+    const user = userEvent.setup()
+    mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
+      memory_suggestions: [],
+    })
+
+    renderPage()
+
+    await user.click(await findRecoverButton())
+
+    expect(await screen.findByText(/proposed nothing/i)).toBeInTheDocument()
+    // An intentional empty result is a success: no error notice, no alert.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/could not finish reading/i)
+    ).not.toBeInTheDocument()
+    // The trigger stays available so the DM can ask again.
+    expect(await findRecoverButton()).toBeEnabled()
+    expect(mockWriteMemoryReviewDraft).not.toHaveBeenCalled()
+  })
+
+  it('renders a provider failure as an error, never as "no proposals"', async () => {
+    const user = userEvent.setup()
+    const { SessionValidationError } = await import('@/lib/sessions/api')
+    mockRecoverMemorySuggestions.mockRejectedValue(
+      new SessionValidationError('unreadable output')
+    )
+
+    renderPage()
+
+    await user.click(await findRecoverButton())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /could not finish reading/i
+    )
+    // The honest-empty copy must never stand in for a failure.
+    expect(screen.queryByText(/proposed nothing/i)).not.toBeInTheDocument()
+    expect(await findRecoverButton()).toBeEnabled()
+  })
+
+  it('distinguishes a rate-limit failure from a generic one', async () => {
+    const user = userEvent.setup()
+    const { SessionRateLimitError } = await import('@/lib/sessions/api')
+    mockRecoverMemorySuggestions.mockRejectedValue(
+      new SessionRateLimitError('Too many requests.')
+    )
+
+    renderPage()
+
+    await user.click(await findRecoverButton())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /needs a moment/i
+    )
+    expect(
+      screen.queryByText(/could not finish reading/i)
+    ).not.toBeInTheDocument()
+  })
+
+  it('reports an unknown session distinctly', async () => {
+    const user = userEvent.setup()
+    const { SessionCampaignNotFoundError } = await import('@/lib/sessions/api')
+    mockRecoverMemorySuggestions.mockRejectedValue(
+      new SessionCampaignNotFoundError('Session sess-1 not found')
+    )
+
+    renderPage()
+
+    await user.click(await findRecoverButton())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /could not find that session/i
+    )
+  })
+
+  it('clears a previous failure when the DM retries successfully', async () => {
+    const user = userEvent.setup()
+    mockRecoverMemorySuggestions.mockRejectedValueOnce(new Error('network'))
+
+    renderPage()
+
+    await user.click(await findRecoverButton())
+    await screen.findByRole('alert')
+
+    mockRecoverMemorySuggestions.mockResolvedValueOnce({
+      campaign_id: 'camp-1',
+      memory_suggestions: [recovered],
+    })
+    await user.click(await findRecoverButton())
+
+    expect(
+      await screen.findByText(/the warehouse fire exposed guild ledgers/i)
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('offers the recovery action in Spanish', async () => {
+    const user = userEvent.setup()
+    mockRecoverMemorySuggestions.mockResolvedValue({
+      campaign_id: 'camp-1',
+      memory_suggestions: [],
+    })
+
+    renderPageEs()
+
+    const trigger = await screen.findByRole('button', {
+      name: /pedir al escriba que la lea de nuevo/i,
+    })
+    await user.click(trigger)
+
+    expect(await screen.findByText(/no ha propuesto nada/i)).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 import {
   completeSessionRequestSchema,
+  memorySuggestionsResponseSchema,
   registerSessionResponseSchema,
   sessionResponseSchema,
   generateSessionRequestSchema,
@@ -13,6 +14,7 @@ import {
   sessionDetailSchema,
   updateSessionContentSchema,
   type CompleteSessionRequest,
+  type MemorySuggestionsResponse,
   type RegisterSessionRequest,
   type RegisterSessionResponse,
   type SessionResponse,
@@ -38,6 +40,22 @@ export class SessionValidationError extends SessionApiError {}
 
 /** Raised when the persisted draft is missing or has no exportable sections (409). */
 export class SessionNotExportableError extends SessionApiError {}
+
+/**
+ * Raised when a metered Scribe call is refused for rate or quota reasons (429).
+ * Distinct from {@link SessionApiError} so the UI can tell the DM to wait rather
+ * than implying the request itself was malformed.
+ */
+export class SessionRateLimitError extends SessionApiError {}
+
+/**
+ * A session that was generated but never played, so it has nothing to remember.
+ *
+ * Unlike the other recovery failures, this one is not retryable: the session
+ * carries a planned synopsis, not an account of play, and no amount of asking
+ * again changes that until the DM records what actually happened.
+ */
+export class SessionNotPlayedError extends SessionApiError {}
 
 /**
  * Extract a message from a non-2xx JSON error body.
@@ -141,6 +159,51 @@ export async function completeSession(
   }
 
   return registerSessionResponseSchema.parse(await response.json())
+}
+
+/**
+ * `POST /sessions/{sessionId}/memory-suggestions` — re-ask the Scribe for memory
+ * proposals from a session it has already persisted. Read-only: the session row
+ * is never written, so this is safe to retry.
+ *
+ * POST rather than GET because it triggers a metered LLM call.
+ *
+ * A `200` carrying an empty list is a SUCCESS — it means the Scribe genuinely
+ * proposed nothing. Only a thrown error means the Scribe failed; callers must
+ * keep the two apart and never render a failure as "no proposals".
+ *
+ * @param {string} sessionId - The persisted session to re-read.
+ * @returns {Promise<MemorySuggestionsResponse>} 0-5 transient, unpersisted proposals.
+ * @throws {SessionCampaignNotFoundError} Unknown, foreign, or malformed session (404).
+ * @throws {SessionValidationError} The Scribe returned unusable output (422, retryable).
+ * @throws {SessionRateLimitError} Rate limit or quota exhausted (429).
+ * @throws {SessionApiError} Any other non-2xx response.
+ */
+export async function recoverMemorySuggestions(
+  sessionId: string
+): Promise<MemorySuggestionsResponse> {
+  const response = await apiFetch(`/sessions/${sessionId}/memory-suggestions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new SessionCampaignNotFoundError(`Session ${sessionId} not found`)
+    }
+    if (response.status === 409) {
+      throw new SessionNotPlayedError(await extractErrorMessage(response))
+    }
+    if (response.status === 422) {
+      throw new SessionValidationError(await extractErrorMessage(response))
+    }
+    if (response.status === 429) {
+      throw new SessionRateLimitError(await extractErrorMessage(response))
+    }
+    throw new SessionApiError(await extractErrorMessage(response))
+  }
+
+  return memorySuggestionsResponseSchema.parse(await response.json())
 }
 
 /**

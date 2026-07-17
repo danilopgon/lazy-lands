@@ -42,6 +42,23 @@ class RegisterSessionResponse(BaseModel):
     memory_suggestions: list[MemorySuggestion] = Field(default_factory=list)
 
 
+class MemorySuggestionsResponse(BaseModel):
+    """``POST /sessions/{id}/memory-suggestions`` response body.
+
+    Keyed like ``RegisterSessionResponse`` so the review UI reads recovered
+    proposals exactly as it reads the ones returned at registration time.
+
+    ``campaign_id`` names the campaign the recovered session actually belongs
+    to. The route is keyed by session alone, but the review screen takes its
+    campaign from the URL, so the two can disagree — a stale link can ask
+    campaign B's screen to recover campaign A's session. Reporting the true
+    owner lets the caller refuse proposals that belong somewhere else.
+    """
+
+    campaign_id: str
+    memory_suggestions: list[MemorySuggestion] = Field(default_factory=list)
+
+
 class PersistedExportSection(BaseModel):
     """The allowlisted persisted fields that may enter an export document."""
 

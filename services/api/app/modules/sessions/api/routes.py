@@ -17,6 +17,7 @@ from app.modules.sessions.api.dependencies import (
     provide_get_session,
     provide_get_sessions,
     provide_pdf_renderer,
+    provide_recover_memory_suggestions,
     provide_regenerate_section,
     provide_register_session,
     provide_update_session,
@@ -36,6 +37,9 @@ from app.modules.sessions.application.commands.export_session import (
     ExportSession,
     ExportSessionCommand,
 )
+from app.modules.sessions.application.commands.recover_memory_suggestions import (
+    RecoverMemorySuggestions,
+)
 from app.modules.sessions.application.commands.regenerate_section import (
     RegenerateSectionCommand,
     RegenerateSectionUseCase,
@@ -48,7 +52,10 @@ from app.modules.sessions.application.commands.update_session import (
     UpdateSessionCommand,
     UpdateSessionUseCase,
 )
-from app.modules.sessions.application.contracts import RegisterSessionResponse
+from app.modules.sessions.application.contracts import (
+    MemorySuggestionsResponse,
+    RegisterSessionResponse,
+)
 from app.modules.sessions.application.errors import SessionNotFoundError
 from app.modules.sessions.application.queries.get_session import GetSessionUseCase
 from app.modules.sessions.application.queries.get_sessions import GetSessions
@@ -166,6 +173,28 @@ async def update_session(
         provided_fields=set(payload.model_fields_set),
     )
     return await run_in_threadpool(handler.execute, session_id, command)
+
+
+@detail_router.post(
+    "/{session_id}/memory-suggestions", response_model=MemorySuggestionsResponse
+)
+async def recover_memory_suggestions(
+    session_id: str,
+    _user_id: Annotated[str, Depends(get_current_user)],
+    handler: Annotated[
+        RecoverMemorySuggestions, Depends(provide_recover_memory_suggestions)
+    ],
+) -> MemorySuggestionsResponse:
+    """Re-propose memories for a persisted session without modifying it.
+
+    POST rather than GET because it triggers a metered LLM call; the session
+    itself is never written.
+
+    The generation budget is charged inside the use case rather than by a route
+    dependency, which FastAPI would resolve before eligibility is known.
+    """
+    _validate_session_id(session_id)
+    return await handler.execute(session_id)
 
 
 @detail_router.post(

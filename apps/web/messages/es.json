@@ -493,6 +493,18 @@
     "subtitleEmpty": "No hay nada pendiente de revisión.",
     "emptyPendingTitle": "Los márgenes están limpios",
     "emptyPendingDescription": "No hay sugerencias pendientes de revisión. Registra tu próxima sesión y el Escriba leerá qué vale la pena recordar.",
+    "recover": {
+      "eligibleDescription": "No hay sugerencias pendientes de revisión. El Escriba puede leer esta sesión de nuevo y proponer memorias a partir de ella: solo propuestas editables. No se escribe nada en tu sesión ni en la crónica hasta que lo aceptes.",
+      "action": "Pedir al Escriba que la lea de nuevo",
+      "loadingCaption": "Releyendo la sesión",
+      "emptyResult": "El Escriba ha leído la sesión de nuevo y no ha propuesto nada esta vez. Es una respuesta, no un fallo: no se ha cambiado nada.",
+      "error": {
+        "generic": "El Escriba no ha podido terminar de leer esa sesión. No se ha cambiado nada; inténtalo de nuevo.",
+        "rateLimit": "El Escriba necesita un momento: demasiadas peticiones en poco tiempo. No se ha cambiado nada; inténtalo de nuevo en unos instantes.",
+        "notFound": "El Escriba no ha podido encontrar esa sesión.",
+        "notPlayed": "Esta sesión se planificó pero nunca se jugó, así que todavía no hay nada que recordar de ella. Registra primero lo que ocurrió en la mesa y el Escriba podrá proponer memorias a partir de ella."
+      }
+    },
     "backToCampaign": "Volver a la campaña",
     "scribeProposes": "❧ El Escriba propone...",
     "acceptedStamp": "★ Aceptada",

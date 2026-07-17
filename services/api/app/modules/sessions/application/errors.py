@@ -41,6 +41,23 @@ class SessionAlreadyRegisteredError(Exception):
     """
 
 
+class SessionNotPlayedError(Exception):
+    """Raised when re-proposing memories from a session that was never played.
+
+    A session whose ``status`` is not 'registered' holds the Scribe's PLANNED
+    synopsis, not an account of play. Memories record what HAPPENED, so feeding
+    a plan into the suggestion stage would offer the DM proposals for events
+    that never occurred — and an accepted proposal becomes campaign canon.
+
+    Not retryable: unlike a transport failure, replaying the same request can
+    never succeed until the DM completes the session via ``POST
+    /sessions/{id}/complete``, which is what turns a plan into a played account.
+
+    Guarded on ``!= 'registered'`` rather than ``== 'draft'`` so an unexpected
+    or future status value fails safe instead of silently becoming recoverable.
+    """
+
+
 class SessionValidationError(Exception):
     """Raised when a direct session application command violates its contract."""
 

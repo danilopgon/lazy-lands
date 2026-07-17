@@ -10,7 +10,10 @@ const memoryReviewDraftSchema = z.object({
   version: z.literal(VERSION),
   campaign_id: z.string().min(1),
   session_id: z.string().min(1),
-  session_number: z.number().int().positive(),
+  // Nullable because a draft can also be seeded by DM-triggered recovery, which
+  // re-reads a session by id and never learns its number. Registration always
+  // supplies a real one.
+  session_number: z.number().int().positive().nullable(),
   memory_suggestions: z.array(memorySuggestionSchema).max(5),
 })
 

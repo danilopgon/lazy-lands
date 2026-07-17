@@ -13,6 +13,7 @@ from app.modules.sessions.application.errors import (
     NonExportableSessionError,
     SessionAlreadyRegisteredError,
     SessionNotFoundError,
+    SessionNotPlayedError,
     SessionPersistenceError,
     SessionValidationError,
 )
@@ -65,6 +66,24 @@ async def session_already_registered_error_handler(
         status_code=409,
         content={
             "error": "This session is already recorded.",
+            "retryable": False,
+        },
+    )
+
+
+async def session_not_played_error_handler(
+    _request: Request, _exc: SessionNotPlayedError
+) -> JSONResponse:
+    """Map a recovery attempt on an unplayed session to 409.
+
+    Non-retryable, like ``SessionAlreadyRegisteredError``'s 409: the session
+    holds a plan rather than a played account, so replaying the request can
+    never succeed until the DM completes it.
+    """
+    return JSONResponse(
+        status_code=409,
+        content={
+            "error": "This session has not been played yet.",
             "retryable": False,
         },
     )

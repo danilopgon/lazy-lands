@@ -12,9 +12,12 @@ import {
   registerSession,
   getSessions,
   downloadSessionPdf,
+  recoverMemorySuggestions,
   SessionApiError,
   SessionCampaignNotFoundError,
   SessionNotExportableError,
+  SessionNotPlayedError,
+  SessionRateLimitError,
   SessionValidationError,
 } from '@/lib/sessions/api'
 
@@ -115,6 +118,152 @@ describe('sessions api client (Block 7a frontend)', () => {
     const result = await getSessions('camp-1')
 
     expect(result).toEqual([])
+  })
+})
+
+describe('recoverMemorySuggestions (DM-triggered memory recovery)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const suggestion = {
+    content: 'Captain Vess owes the party a favor.',
+    type: 'relationship',
+    importance: 'high',
+    reason: 'The favor changes future negotiations.',
+    related: ['Captain Vess'],
+  }
+
+  it('posts to /sessions/{id}/memory-suggestions and parses the proposals', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          campaign_id: 'camp-1',
+          memory_suggestions: [suggestion],
+        }),
+        {
+          status: 200,
+        }
+      )
+    )
+
+    const result = await recoverMemorySuggestions('sess-1')
+
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      '/sessions/sess-1/memory-suggestions',
+      expect.objectContaining({ method: 'POST' })
+    )
+    expect(result.memory_suggestions).toEqual([suggestion])
+  })
+
+  it('treats 200 with an empty list as a success, not an error', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({ campaign_id: 'camp-1', memory_suggestions: [] }),
+        { status: 200 }
+      )
+    )
+
+    await expect(recoverMemorySuggestions('sess-1')).resolves.toEqual({
+      campaign_id: 'camp-1',
+      memory_suggestions: [],
+    })
+  })
+
+  it('throws SessionCampaignNotFoundError on 404', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(JSON.stringify({ error: 'not found' }), { status: 404 })
+    )
+
+    await expect(recoverMemorySuggestions('forged-id')).rejects.toBeInstanceOf(
+      SessionCampaignNotFoundError
+    )
+  })
+
+  it('throws SessionNotPlayedError on a non-retryable 409, not the generic error', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: 'This session has not been played yet.',
+          retryable: false,
+        }),
+        { status: 409 }
+      )
+    )
+
+    const rejection = recoverMemorySuggestions('draft-session')
+
+    await expect(rejection).rejects.toBeInstanceOf(SessionNotPlayedError)
+    // A bare SessionApiError would route the DM to the generic "try again"
+    // copy, which can never succeed for a session that was never played.
+    await expect(rejection).rejects.toThrow(
+      'This session has not been played yet.'
+    )
+  })
+
+  it('throws SessionValidationError on a 422 retryable provider failure', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: 'The Scribe returned unreadable output.',
+          retryable: true,
+        }),
+        { status: 422 }
+      )
+    )
+
+    let caught: unknown
+    try {
+      await recoverMemorySuggestions('sess-1')
+    } catch (err) {
+      caught = err
+    }
+    expect(caught).toBeInstanceOf(SessionValidationError)
+    expect((caught as Error).message).toMatch(/unreadable output/i)
+  })
+
+  it('throws SessionRateLimitError on 429 so quota copy stays distinguishable', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Too many requests.' }), {
+        status: 429,
+      })
+    )
+
+    let caught: unknown
+    try {
+      await recoverMemorySuggestions('sess-1')
+    } catch (err) {
+      caught = err
+    }
+    expect(caught).toBeInstanceOf(SessionRateLimitError)
+    expect(caught).toBeInstanceOf(SessionApiError)
+  })
+
+  it('throws SessionApiError with the backend message on other failures', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(JSON.stringify({ error: 'The Scribe is unavailable.' }), {
+        status: 500,
+      })
+    )
+
+    let caught: unknown
+    try {
+      await recoverMemorySuggestions('sess-1')
+    } catch (err) {
+      caught = err
+    }
+    expect(caught).toBeInstanceOf(SessionApiError)
+    expect((caught as Error).message).toMatch(/scribe is unavailable/i)
+  })
+
+  it('rejects a malformed proposal payload instead of rendering it', async () => {
+    mockApiFetch.mockResolvedValue(
+      new Response(JSON.stringify({ memory_suggestions: [{ content: 42 }] }), {
+        status: 200,
+      })
+    )
+
+    await expect(recoverMemorySuggestions('sess-1')).rejects.toThrow()
   })
 })
 

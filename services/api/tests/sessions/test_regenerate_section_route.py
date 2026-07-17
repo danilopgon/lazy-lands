@@ -151,7 +151,20 @@ def test_regenerate_section_returns_uniform_404_for_rls_miss_or_unknown_session(
 def test_regenerate_section_dependency_has_no_module_level_generation_import() -> None:
     """Composition-root check: the DI provider imports the generation adapter
     lazily (function-local), not at ``sessions/api/dependencies.py`` module
-    scope — ``sessions`` never imports ``generation`` at module level."""
+    scope — ``sessions`` never imports ``generation`` at module level.
+
+    The edge this protects is the compile-time ``generation -> sessions``
+    direction, so only ``app.modules.generation`` can create the cycle.
+    ``app.shared`` infrastructure cannot, whatever it happens to be called.
+    Resolving each statement to its source module matters: for ``from X import
+    Y``, ``alias.name`` is ``Y``, so matching on it would miss the very
+    from-import this guards against and instead trip over unrelated names.
+
+    Relative imports are refused outright rather than resolved. ``from ...
+    import generation`` reaches the adapter with no module path to match on,
+    so allowing the form at all would leave a hole no string check can close.
+    The file imports absolutely throughout, so this costs nothing.
+    """
     import ast
     from pathlib import Path
 
@@ -159,13 +172,31 @@ def test_regenerate_section_dependency_has_no_module_level_generation_import() -
         encoding="utf-8"
     )
     tree = ast.parse(source)
-    module_level_imports = {
-        alias.name
-        for node in tree.body
-        if isinstance(node, (ast.Import, ast.ImportFrom))
-        for alias in node.names
-    }
-    assert not any("generation" in name for name in module_level_imports)
+
+    relative_imports = [
+        node for node in tree.body if isinstance(node, ast.ImportFrom) and node.level
+    ]
+    assert not relative_imports, (
+        "module-level relative imports defeat this guard; import absolutely"
+    )
+
+    module_level_sources: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            module_level_sources.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            module_level_sources.add(node.module)
+            # ``from app.modules import generation`` names the module as an
+            # alias, so the module path alone would miss it.
+            module_level_sources.update(
+                f"{node.module}.{alias.name}" for alias in node.names
+            )
+
+    assert not any(
+        source_module == "app.modules.generation"
+        or source_module.startswith("app.modules.generation.")
+        for source_module in module_level_sources
+    )
 
 
 def test_regenerate_section_provider_builds_use_case(

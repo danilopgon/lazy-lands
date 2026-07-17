@@ -13,6 +13,7 @@ import { LoadingScribe } from '@/components/ui/loading-scribe'
 import { Notice } from '@/components/ui/notice'
 import {
   ActiveMemories,
+  InlineScribeBusy,
   RetryButton,
   SuggestionCard,
   SuggestionEditor,
@@ -27,15 +28,40 @@ import {
   updateMemoryFact,
 } from '@/lib/memory/api'
 import {
+  recoverMemorySuggestions,
+  SessionCampaignNotFoundError,
+  SessionNotPlayedError,
+  SessionRateLimitError,
+} from '@/lib/sessions/api'
+import {
   completeMemoryReviewDraft,
   readMemoryReviewDraft,
   rewriteMemoryReviewDraftSuggestions,
+  writeMemoryReviewDraft,
   type MemoryReviewDraft,
 } from '@/lib/sessions/memory-review-draft'
 import type { MemorySuggestion } from '@/lib/sessions/schemas'
 
 type Feedback = 'accepted' | 'edited' | 'dismissed' | 'retired' | null
 type ActionError = 'create' | 'retire' | null
+type RecoverErrorKey = 'notFound' | 'rateLimit' | 'notPlayed' | 'generic'
+
+/**
+ * Maps a failed recovery attempt onto the copy that tells the DM what to do next.
+ *
+ * Every branch here is a FAILURE. A successful call that carries no proposals is
+ * never routed through this function — the Scribe having nothing to say is an
+ * answer, and rendering it as an error would be a lie.
+ *
+ * @param {unknown} error - The error thrown by the recovery request.
+ * @returns {RecoverErrorKey} The message key describing the failure.
+ */
+function recoverErrorKey(error: unknown): RecoverErrorKey {
+  if (error instanceof SessionCampaignNotFoundError) return 'notFound'
+  if (error instanceof SessionRateLimitError) return 'rateLimit'
+  if (error instanceof SessionNotPlayedError) return 'notPlayed'
+  return 'generic'
+}
 
 /**
  * Creates a stable client-only key for transient suggestions that have no persisted ID.
@@ -293,6 +319,72 @@ export default function MemoryReviewPage() {
     },
   })
 
+  const activeDraftKey = sessionId ? `${campaignId}:${sessionId}` : null
+
+  // Recovery seeds the pending lane, so the draft write and `setPending` must
+  // land in the SAME commit. Splitting them across an effect would leave one
+  // render with a seeded draft and an empty lane — exactly the shape the
+  // draft-completing effect above deletes.
+  const recoverMutation = useMutation({
+    mutationFn: async () => {
+      const data = await recoverMemorySuggestions(sessionId)
+      // The endpoint is keyed by session alone, but this screen takes its
+      // campaign from the URL, so a stale or hand-edited link can ask campaign
+      // B to recover campaign A's session. From here that session simply does
+      // not exist: seeding it would show the wrong campaign's proposals and
+      // send an alien `source_session_id` to the accept path.
+      if (data.campaign_id !== campaignId) {
+        throw new SessionCampaignNotFoundError(
+          `Session ${sessionId} does not belong to campaign ${campaignId}`
+        )
+      }
+      return data
+    },
+    // `?session=` can change while the request is in flight. Pin the session
+    // the DM actually asked about so a late reply can be matched against the
+    // route that is live when it lands.
+    onMutate: () => ({ requestedDraftKey: activeDraftKey }),
+    onSuccess: (data, _variables, context) => {
+      // A stale reply belongs to a session the DM has already left. Seeding it
+      // here would show one session's proposals under another and let them be
+      // accepted with the wrong `source_session_id`.
+      if (context.requestedDraftKey !== activeDraftKey) return
+      if (data.memory_suggestions.length === 0) return
+
+      const recovered = data.memory_suggestions.map((suggestion, index) => ({
+        ...suggestion,
+        id: suggestionId(suggestion, index),
+      }))
+      try {
+        writeMemoryReviewDraft({
+          campaign_id: campaignId,
+          session_id: sessionId,
+          // Recovery re-reads a session by id and never learns its number.
+          session_number: draft?.session_number ?? null,
+          memory_suggestions: data.memory_suggestions,
+        })
+      } catch {
+        // Draft storage is best effort (same contract as registration). The
+        // proposals were recovered successfully, so they must still reach the
+        // lane — rendering a successful recovery as a failure would be a lie.
+        // Only the write is guarded: the payload is already schema-validated
+        // by the API client, so this catch cannot mask a contract bug.
+      }
+      pendingRef.current = recovered
+      setPending(recovered)
+    },
+  })
+
+  // The mutation object outlives a `?session=` switch, and the empty/error
+  // notices below read its state declaratively — so without this reset,
+  // session A's failure (or its "proposed nothing" answer) would render under
+  // session B. Resetting does NOT cancel the in-flight request; the key guard
+  // in `onSuccess` is what protects the seeding itself.
+  const { reset: resetRecovery } = recoverMutation
+  useEffect(() => {
+    resetRecovery()
+  }, [campaignId, sessionId, resetRecovery])
+
   /**
    * Removes a proposal locally so dismissed Scribe output never reaches the API.
    *
@@ -342,12 +434,39 @@ export default function MemoryReviewPage() {
 
   const campaign = campaignQuery.data
   if (!campaign) return null
+  // Without `?session=` there is no session to re-read, so no action is offered.
+  //
+  // Two failures are permanent for this URL, so the trigger is withdrawn rather
+  // than left inviting a retry that cannot work: an unplayed session has
+  // nothing to remember until it is recorded, and a session this campaign
+  // cannot see will not appear by asking twice. Both cost a metered generation
+  // on every attempt, so leaving the button would bill the DM for a certain
+  // failure. Transient failures keep the trigger — retrying those can work.
+  const FUTILE_RECOVER_ERRORS: readonly RecoverErrorKey[] = [
+    'notPlayed',
+    'notFound',
+  ]
+  const recoverIsFutile =
+    recoverMutation.isError &&
+    FUTILE_RECOVER_ERRORS.includes(recoverErrorKey(recoverMutation.error))
+  const canRecover = Boolean(sessionId) && !recoverIsFutile
+  // A 200 carrying no proposals: the Scribe was asked and had nothing to say.
+  // Distinct from `isError` on purpose — this is a success and must never read
+  // as a failure.
+  const recoveredNothing =
+    recoverMutation.isSuccess &&
+    recoverMutation.data.memory_suggestions.length === 0
   const sessionDisplay = draft?.session_number
     ? String(draft.session_number)
     : t('sessionUnknown')
   const sourceLabelFor = (sourceSessionId?: string | null) => {
     if (!sourceSessionId) return t('manualSource')
-    if (draft?.session_id === sourceSessionId) {
+    // A recovery-seeded draft has no session number; fall through to the
+    // generic label rather than rendering "Session null".
+    if (
+      draft?.session_id === sourceSessionId &&
+      draft.session_number !== null
+    ) {
       return t('sessionLabel', { number: draft.session_number })
     }
     return t('sessionSource')
@@ -412,14 +531,59 @@ export default function MemoryReviewPage() {
             <EmptyState
               className="border-dashed bg-transparent shadow-none"
               title={t('emptyPendingTitle')}
-              description={t('emptyPendingDescription')}
+              description={
+                canRecover
+                  ? t('recover.eligibleDescription')
+                  : t('emptyPendingDescription')
+              }
               action={
-                <Button
-                  type="button"
-                  onClick={() => router.push(`/campaigns/${campaignId}`)}
-                >
-                  {t('backToCampaign')}
-                </Button>
+                <div className="flex w-full flex-col items-center gap-4">
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Button
+                      type="button"
+                      onClick={() => router.push(`/campaigns/${campaignId}`)}
+                    >
+                      {t('backToCampaign')}
+                    </Button>
+                    {canRecover ? (
+                      <Button
+                        type="button"
+                        variant="accent"
+                        disabled={recoverMutation.isPending}
+                        onClick={() => recoverMutation.mutate()}
+                      >
+                        {t('recover.action')}
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  {recoverMutation.isPending ? (
+                    <InlineScribeBusy label={t('recover.loadingCaption')} />
+                  ) : null}
+
+                  {recoveredNothing ? (
+                    <Notice
+                      className="max-w-[52ch] text-left"
+                      variant="plain"
+                      role="status"
+                    >
+                      {t('recover.emptyResult')}
+                    </Notice>
+                  ) : null}
+
+                  {recoverMutation.isError ? (
+                    <Notice
+                      className="max-w-[52ch] text-left"
+                      variant="error"
+                      ornament="⚠"
+                      role="alert"
+                    >
+                      {t(
+                        `recover.error.${recoverErrorKey(recoverMutation.error)}`
+                      )}
+                    </Notice>
+                  ) : null}
+                </div>
               }
             />
           ) : (

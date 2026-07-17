@@ -493,6 +493,18 @@
     "subtitleEmpty": "Nothing awaits review.",
     "emptyPendingTitle": "The margins are clean",
     "emptyPendingDescription": "No suggestions await review. Log your next session and the Scribe will read it for things worth remembering.",
+    "recover": {
+      "eligibleDescription": "No suggestions await review. The Scribe can read this session again and propose memories from it — editable proposals only. Nothing is written to your session or the chronicle until you accept it.",
+      "action": "Ask the Scribe to read it again",
+      "loadingCaption": "Re-reading the session",
+      "emptyResult": "The Scribe read the session again and proposed nothing this time. That is an answer, not a failure — nothing was changed.",
+      "error": {
+        "generic": "The Scribe could not finish reading that session. Nothing was changed; try again.",
+        "rateLimit": "The Scribe needs a moment — too many requests in a short time. Nothing was changed; try again shortly.",
+        "notFound": "The Scribe could not find that session.",
+        "notPlayed": "This session was planned but never played, so there is nothing to remember from it yet. Record what happened at the table first, and the Scribe will be able to propose memories from it."
+      }
+    },
     "backToCampaign": "Back to campaign",
     "scribeProposes": "❧ The Scribe proposes...",
     "acceptedStamp": "★ Accepted",

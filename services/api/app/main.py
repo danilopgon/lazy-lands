@@ -52,6 +52,7 @@ from app.modules.sessions.api.exception_handlers import (
     non_exportable_session_error_handler,
     session_already_registered_error_handler,
     session_not_found_error_handler,
+    session_not_played_error_handler,
     session_persistence_error_handler,
     session_validation_error_handler,
 )
@@ -60,6 +61,7 @@ from app.modules.sessions.application.errors import (
     NonExportableSessionError,
     SessionAlreadyRegisteredError,
     SessionNotFoundError,
+    SessionNotPlayedError,
     SessionPersistenceError,
     SessionValidationError,
 )
@@ -166,6 +168,10 @@ app.add_exception_handler(
 app.add_exception_handler(
     SessionAlreadyRegisteredError,
     session_already_registered_error_handler,  # type: ignore[arg-type]
+)
+app.add_exception_handler(
+    SessionNotPlayedError,
+    session_not_played_error_handler,  # type: ignore[arg-type]
 )
 app.add_exception_handler(
     ExportSelectionError,
