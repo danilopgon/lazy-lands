@@ -42,6 +42,16 @@ class RegisterSessionResponse(BaseModel):
     memory_suggestions: list[MemorySuggestion] = Field(default_factory=list)
 
 
+class MemorySuggestionsResponse(BaseModel):
+    """``POST /sessions/{id}/memory-suggestions`` response body.
+
+    Keyed like ``RegisterSessionResponse`` so the review UI reads recovered
+    proposals exactly as it reads the ones returned at registration time.
+    """
+
+    memory_suggestions: list[MemorySuggestion] = Field(default_factory=list)
+
+
 class PersistedExportSection(BaseModel):
     """The allowlisted persisted fields that may enter an export document."""
 

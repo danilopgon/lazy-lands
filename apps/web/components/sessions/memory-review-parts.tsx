@@ -41,7 +41,7 @@ export type SuggestionFx = 'stamping' | 'accepting' | 'discarding'
  * @param {string} root0.label - The mono status label.
  * @returns {React.ReactElement} The inline busy indicator element.
  */
-function InlineScribeBusy({ label }: { label: string }) {
+export function InlineScribeBusy({ label }: { label: string }) {
   return (
     <span
       role="status"

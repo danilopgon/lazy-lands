@@ -11,6 +11,9 @@ from supabase import Client
 
 from app.modules.sessions.application.commands.complete_session import CompleteSession
 from app.modules.sessions.application.commands.export_session import ExportSession
+from app.modules.sessions.application.commands.recover_memory_suggestions import (
+    RecoverMemorySuggestions,
+)
 from app.modules.sessions.application.commands.regenerate_section import (
     RegenerateSectionUseCase,
 )
@@ -52,6 +55,16 @@ def provide_complete_session(
     summarize = SummarizeCampaign(llm_provider=llm_provider, repository=repository)
     suggest = SuggestMemories(llm_provider=llm_provider, repository=repository)
     return CompleteSession(repository, summarize, suggest)
+
+
+def provide_recover_memory_suggestions(
+    client: Annotated[Client, Depends(get_user_supabase_client)],
+    llm_provider: Annotated[LlmProvider, Depends(get_llm_provider)],
+) -> RecoverMemorySuggestions:
+    """Build the read-only memory-suggestion recovery handler."""
+    repository = SupabaseSessionRepository(client)
+    suggest = SuggestMemories(llm_provider=llm_provider, repository=repository)
+    return RecoverMemorySuggestions(repository, suggest)
 
 
 def provide_get_sessions(

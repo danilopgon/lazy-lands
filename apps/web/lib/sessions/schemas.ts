@@ -53,6 +53,17 @@ export const memorySuggestionSchema = z.object({
 })
 export type MemorySuggestion = z.infer<typeof memorySuggestionSchema>
 
+// Mirrors `MemorySuggestionsResponse` — `POST /sessions/{id}/memory-suggestions`
+// body. Deliberately keyed like `RegisterSessionResponse` so recovered proposals
+// read exactly like the ones returned at registration time. An empty list is a
+// success (the Scribe proposed nothing), never an error.
+export const memorySuggestionsResponseSchema = z.object({
+  memory_suggestions: z.array(memorySuggestionSchema),
+})
+export type MemorySuggestionsResponse = z.infer<
+  typeof memorySuggestionsResponseSchema
+>
+
 // Mirrors `RegisterSessionResponse` — `POST /campaigns/{id}/sessions` body.
 export const registerSessionResponseSchema = z.object({
   session_id: z.string(),
