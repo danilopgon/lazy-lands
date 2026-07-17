@@ -390,7 +390,7 @@ Note: Dockerfiles are structurally correct but not verified locally (WSL2 + Dock
 | Production application | [lazy-lands.com](https://lazy-lands.com/)                                                              |
 | Public demo            | [lazy-lands.com/demo](https://lazy-lands.com/demo)                                                     |
 | Slides (spanish)       | [Presentation PDF](https://drive.google.com/file/d/1w2AocxSQL1UK5Usq2BQWyIXzU9rSpQ5d/view?usp=sharing) |
-| Video                  | To be published                                                                                        |
+| Video                  | [Demo](https://youtu.be/bmefhRZokWk)                                                                   |
 
 ---
 
