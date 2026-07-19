@@ -92,6 +92,9 @@ export default async function PrivacyPage({ params }: LegalPageProps) {
             {t('privacyPage.aiTitle')}
           </h2>
           <p className="mt-2">{t('privacyPage.aiIntro')}</p>
+          <p className="mt-2">{t.rich('privacyPage.aiReuse', { b })}</p>
+          <p className="mt-2">{t.rich('privacyPage.aiBasis', { b })}</p>
+          <p className="mt-2">{t.rich('privacyPage.aiCaution', { b })}</p>
           <p className="mt-2">{t.rich('privacyPage.aiPrivateNote', { b })}</p>
           <p className="mt-3">{t('privacyPage.aiProvidersIntro')}</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
@@ -118,6 +121,7 @@ export default async function PrivacyPage({ params }: LegalPageProps) {
             <li>{t.rich('privacyPage.rightAccess', { b })}</li>
             <li>{t.rich('privacyPage.rightRectify', { b })}</li>
             <li>{t.rich('privacyPage.rightErasure', { b })}</li>
+            <li>{t.rich('privacyPage.rightRestrict', { b })}</li>
             <li>{t.rich('privacyPage.rightPortability', { b })}</li>
             <li>{t.rich('privacyPage.rightObject', { b })}</li>
             <li>{t.rich('privacyPage.rightComplaint', { b })}</li>

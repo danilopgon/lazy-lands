@@ -142,6 +142,20 @@ describe('/privacy page (LEGAL-002)', () => {
     }
   })
 
+  it('LEGAL-002j: discloses free-tier reuse and the consent basis for AI', async () => {
+    const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
+    render(await PrivacyPage(enProps()))
+    expect(screen.getByText(/free service tiers/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/improve its own models and services/i)
+    ).toBeInTheDocument()
+    expect(screen.getAllByText(/consent/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Art\. 6\.1\.a/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/do not include real personal data/i)
+    ).toBeInTheDocument()
+  })
+
   it('LEGAL-002i: covers international transfers and the AEPD complaint right', async () => {
     const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
     render(await PrivacyPage(enProps()))
@@ -167,9 +181,10 @@ describe('/privacy page (LEGAL-002)', () => {
     const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
     render(await PrivacyPage(enProps()))
     const elements = screen.getAllByText(
-      /access|rectif|erasure|portab|objection/i
+      /access|rectif|erasure|restrict|portab|objection/i
     )
     expect(elements.length).toBeGreaterThan(0)
+    expect(screen.getByText(/Right to restriction/i)).toBeInTheDocument()
   })
 
   it('LEGAL-002g: contains back-link to landing (/)', async () => {
