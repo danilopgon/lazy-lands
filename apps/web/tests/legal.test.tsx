@@ -117,7 +117,7 @@ describe('/privacy page (LEGAL-002)', () => {
     expect(
       screen.getByRole('heading', { level: 2, name: /data controller/i })
     ).toBeInTheDocument()
-    expect(screen.getByText(/Dani López González/)).toBeInTheDocument()
+    expect(screen.getByText(/Daniel López González/)).toBeInTheDocument()
   })
 
   it('LEGAL-002d: exposes a working contact channel for rights requests', async () => {
