@@ -111,20 +111,66 @@ describe('/privacy page (LEGAL-002)', () => {
     ).toBeInTheDocument()
   })
 
-  it('LEGAL-002c: uses pending legal-safe controller copy', async () => {
+  it('LEGAL-002c: identifies a real, contactable data controller', async () => {
     const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
     render(await PrivacyPage(enProps()))
     expect(
-      screen.getByText(/legal data controller is pending final legal review/i)
+      screen.getByRole('heading', { level: 2, name: /data controller/i })
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Daniel López González/)).toBeInTheDocument()
+  })
+
+  it('LEGAL-002d: exposes a working contact channel for rights requests', async () => {
+    const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
+    const { container } = render(await PrivacyPage(enProps()))
+    const mailto = container.querySelector('a[href^="mailto:"]')
+    expect(mailto).toHaveAttribute('href', 'mailto:contacto@danilopgon.com')
+    expect(
+      screen.queryByText(/privacy@lazylands\.app/i)
+    ).not.toBeInTheDocument()
+  })
+
+  it('LEGAL-002h: discloses AI processing of campaign content and its providers', async () => {
+    const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
+    render(await PrivacyPage(enProps()))
+    expect(screen.getByText(/AI Processing/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/never sent to the AI provider/i)
+    ).toBeInTheDocument()
+    for (const provider of [/Gemini/, /Groq/, /Mistral/, /Cerebras/]) {
+      expect(screen.getAllByText(provider).length).toBeGreaterThan(0)
+    }
+  })
+
+  it('LEGAL-002j: discloses free-tier reuse and states the basis honestly', async () => {
+    const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
+    render(await PrivacyPage(enProps()))
+    expect(screen.getByText(/free service tiers/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/improve its own models and services/i)
+    ).toBeInTheDocument()
+    // The academic release does not capture AI consent, so the notice must not
+    // over-claim it: the basis for the requested service is Art. 6.1.b and the
+    // gap is disclosed as a known limitation.
+    expect(screen.getAllByText(/Art\. 6\.1\.b/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/known limitation/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/do not include real personal data/i)
     ).toBeInTheDocument()
   })
 
-  it('LEGAL-002d: does not invent a legal contact channel', async () => {
+  it('LEGAL-002i: covers international transfers and the AEPD complaint right', async () => {
     const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
-    const { container } = render(await PrivacyPage(enProps()))
-    expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
-    expect(screen.queryByText(/@.*\.(com|org|net|io)/i)).toBeNull()
-    expect(screen.getByText(/privacy@lazylands\.app/i)).toBeInTheDocument()
+    render(await PrivacyPage(enProps()))
+    expect(
+      screen.getByText(/International Data Transfers/i)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Standard Contractual Clauses/i)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Agencia Española de Protección de Datos/i)
+    ).toBeInTheDocument()
   })
 
   it('LEGAL-002e: mentions GDPR art. 6.1.b legal basis', async () => {
@@ -138,9 +184,10 @@ describe('/privacy page (LEGAL-002)', () => {
     const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
     render(await PrivacyPage(enProps()))
     const elements = screen.getAllByText(
-      /access|rectif|erasure|portab|objection/i
+      /access|rectif|erasure|restrict|portab|objection/i
     )
     expect(elements.length).toBeGreaterThan(0)
+    expect(screen.getByText(/Right to restriction/i)).toBeInTheDocument()
   })
 
   it('LEGAL-002g: contains back-link to landing (/)', async () => {
