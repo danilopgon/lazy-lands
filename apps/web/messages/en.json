@@ -804,7 +804,7 @@
       "legalBasisTitle": "Legal Basis",
       "legalBasisBody": "Processing is based on <b>GDPR Art. 6.1.b</b>: processing is necessary for the performance of a contract to which you are party (the Lazy Lands terms of service), or in order to take steps at your request prior to entering into a contract.",
       "aiTitle": "AI Processing (the Scribe)",
-      "aiIntro": "Lazy Lands generates editable proposals with the help of a large language model. To do this, the campaign content you submit — your premise, session summaries, world state, NPCs, factions, arcs, and accepted memories — is sent to a third-party AI provider that processes it on our behalf, as a data processor, and returns a proposal. Your content is not used to train the provider's models.",
+      "aiIntro": "Lazy Lands generates editable proposals with the help of a large language model. To do this, the campaign content you submit — your premise, session summaries, world state, NPCs, factions, arcs, and accepted memories — is sent to a third-party AI provider that processes it and returns a proposal. What the provider may do with that content depends on the provider and the service tier in use: some free or unpaid tiers allow the provider to use submitted content to improve its own models and services, whereas paid tiers generally restrict it to processing on our behalf. We never use your content to train a model of our own, and we never sell or share it for marketing purposes.",
       "aiPrivateNote": "<b>Private notes are never sent to the AI provider</b>, and dismissed suggestions never re-enter the model context.",
       "aiProvidersIntro": "Depending on availability, the AI provider that processes your content may be one of the following:",
       "aiProviderGemini": "<b>Google (Gemini)</b> — United States.",
@@ -812,7 +812,7 @@
       "aiProviderMistral": "<b>Mistral AI</b> — European Union (France).",
       "aiProviderCerebras": "<b>Cerebras</b> — United States.",
       "transfersTitle": "International Data Transfers",
-      "transfersBody": "Some of the processors above are located outside the European Economic Area (Google, Groq, and Cerebras in the United States). These transfers rely on the appropriate safeguards required by Chapter V of the GDPR, principally the European Commission's Standard Contractual Clauses. Mistral AI processes data within the European Union. Supabase, our database and authentication provider, acts as a data processor under a data processing agreement.",
+      "transfersBody": "Some of the processors we use are based in, or transfer data to, the United States (Google, Groq, and Cerebras for AI generation; Vercel and Railway for hosting). These transfers rely on the appropriate safeguards required by Chapter V of the GDPR, principally the European Commission's Standard Contractual Clauses. Mistral AI processes data within the European Union. Each provider acts as a data processor under a data processing agreement.",
       "rightsTitle": "Your Rights",
       "rightsIntro": "Under GDPR, you have the following rights regarding your personal data:",
       "rightAccess": "<b>Right of access</b>: request a copy of the personal data we hold about you.",
@@ -825,7 +825,7 @@
       "retentionTitle": "Data Retention",
       "retentionBody": "We retain your data for as long as your account is active. Deleting your account removes all campaign data. Authentication logs are retained for up to 90 days for security purposes.",
       "noSharingTitle": "No Third-Party Sharing",
-      "noSharingBody": "We do not sell, rent, or share your personal data with third parties for marketing purposes. We only rely on data processors that act on our instructions: Supabase for database and authentication, and the AI provider described above for generating proposals. Each acts under a data processing agreement."
+      "noSharingBody": "We do not sell, rent, or share your personal data with third parties for marketing purposes. Beyond the AI provider described above, we rely on infrastructure processors that act on our instructions: Supabase for database and authentication, Vercel for frontend hosting, and Railway for backend hosting. Each acts under a data processing agreement."
     }
   },
   "Errors": {
