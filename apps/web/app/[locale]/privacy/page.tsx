@@ -25,7 +25,7 @@ export async function generateMetadata({
 }
 
 /**
- * Privacy policy page — non-indexed placeholder until legal review is finalised.
+ * Privacy policy page — non-indexed GDPR/LOPDGDD notice for the Spanish market.
  *
  * @param {LegalPageProps} root0 - Route props.
  * @param {Promise<{locale: string}>} root0.params - App Router locale params.
@@ -35,6 +35,11 @@ export default async function PrivacyPage({ params }: LegalPageProps) {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'Legal' })
   const b = (chunks: React.ReactNode) => <strong>{chunks}</strong>
+  const mail = (chunks: React.ReactNode) => (
+    <a href="mailto:contacto@danilopgon.com" className="text-[var(--accent)]">
+      {chunks}
+    </a>
+  )
 
   return (
     <main id="main-content" className="mx-auto max-w-2xl px-6 py-16 font-serif">
@@ -58,7 +63,9 @@ export default async function PrivacyPage({ params }: LegalPageProps) {
           <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
             {t('privacyPage.controllerTitle')}
           </h2>
-          <p className="mt-2">{t('privacyPage.controllerBody')}</p>
+          <p className="mt-2">
+            {t.rich('privacyPage.controllerBody', { b, mail })}
+          </p>
         </div>
 
         <div>
@@ -82,6 +89,28 @@ export default async function PrivacyPage({ params }: LegalPageProps) {
 
         <div>
           <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
+            {t('privacyPage.aiTitle')}
+          </h2>
+          <p className="mt-2">{t('privacyPage.aiIntro')}</p>
+          <p className="mt-2">{t.rich('privacyPage.aiPrivateNote', { b })}</p>
+          <p className="mt-3">{t('privacyPage.aiProvidersIntro')}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>{t.rich('privacyPage.aiProviderGemini', { b })}</li>
+            <li>{t.rich('privacyPage.aiProviderGroq', { b })}</li>
+            <li>{t.rich('privacyPage.aiProviderMistral', { b })}</li>
+            <li>{t.rich('privacyPage.aiProviderCerebras', { b })}</li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
+            {t('privacyPage.transfersTitle')}
+          </h2>
+          <p className="mt-2">{t('privacyPage.transfersBody')}</p>
+        </div>
+
+        <div>
+          <h2 className="font-serif text-2xl font-semibold text-[var(--ink)]">
             {t('privacyPage.rightsTitle')}
           </h2>
           <p className="mt-2">{t('privacyPage.rightsIntro')}</p>
@@ -91,6 +120,7 @@ export default async function PrivacyPage({ params }: LegalPageProps) {
             <li>{t.rich('privacyPage.rightErasure', { b })}</li>
             <li>{t.rich('privacyPage.rightPortability', { b })}</li>
             <li>{t.rich('privacyPage.rightObject', { b })}</li>
+            <li>{t.rich('privacyPage.rightComplaint', { b })}</li>
           </ul>
           <p className="mt-3">
             {t.rich('privacyPage.rightsContact', {

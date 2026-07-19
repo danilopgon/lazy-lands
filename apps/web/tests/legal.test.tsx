@@ -111,20 +111,49 @@ describe('/privacy page (LEGAL-002)', () => {
     ).toBeInTheDocument()
   })
 
-  it('LEGAL-002c: uses pending legal-safe controller copy', async () => {
+  it('LEGAL-002c: identifies a real, contactable data controller', async () => {
     const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
     render(await PrivacyPage(enProps()))
     expect(
-      screen.getByText(/legal data controller is pending final legal review/i)
+      screen.getByRole('heading', { level: 2, name: /data controller/i })
     ).toBeInTheDocument()
+    expect(screen.getByText(/Dani López González/)).toBeInTheDocument()
   })
 
-  it('LEGAL-002d: does not invent a legal contact channel', async () => {
+  it('LEGAL-002d: exposes a working contact channel for rights requests', async () => {
     const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
     const { container } = render(await PrivacyPage(enProps()))
-    expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
-    expect(screen.queryByText(/@.*\.(com|org|net|io)/i)).toBeNull()
-    expect(screen.getByText(/privacy@lazylands\.app/i)).toBeInTheDocument()
+    const mailto = container.querySelector('a[href^="mailto:"]')
+    expect(mailto).toHaveAttribute('href', 'mailto:contacto@danilopgon.com')
+    expect(
+      screen.queryByText(/privacy@lazylands\.app/i)
+    ).not.toBeInTheDocument()
+  })
+
+  it('LEGAL-002h: discloses AI processing of campaign content and its providers', async () => {
+    const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
+    render(await PrivacyPage(enProps()))
+    expect(screen.getByText(/AI Processing/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/never sent to the AI provider/i)
+    ).toBeInTheDocument()
+    for (const provider of [/Gemini/, /Groq/, /Mistral/, /Cerebras/]) {
+      expect(screen.getAllByText(provider).length).toBeGreaterThan(0)
+    }
+  })
+
+  it('LEGAL-002i: covers international transfers and the AEPD complaint right', async () => {
+    const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
+    render(await PrivacyPage(enProps()))
+    expect(
+      screen.getByText(/International Data Transfers/i)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Standard Contractual Clauses/i)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Agencia Española de Protección de Datos/i)
+    ).toBeInTheDocument()
   })
 
   it('LEGAL-002e: mentions GDPR art. 6.1.b legal basis', async () => {
