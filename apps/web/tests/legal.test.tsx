@@ -142,15 +142,18 @@ describe('/privacy page (LEGAL-002)', () => {
     }
   })
 
-  it('LEGAL-002j: discloses free-tier reuse and the consent basis for AI', async () => {
+  it('LEGAL-002j: discloses free-tier reuse and states the basis honestly', async () => {
     const { default: PrivacyPage } = await import('@/app/[locale]/privacy/page')
     render(await PrivacyPage(enProps()))
     expect(screen.getByText(/free service tiers/i)).toBeInTheDocument()
     expect(
       screen.getByText(/improve its own models and services/i)
     ).toBeInTheDocument()
-    expect(screen.getAllByText(/consent/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/Art\. 6\.1\.a/i)).toBeInTheDocument()
+    // The academic release does not capture AI consent, so the notice must not
+    // over-claim it: the basis for the requested service is Art. 6.1.b and the
+    // gap is disclosed as a known limitation.
+    expect(screen.getAllByText(/Art\. 6\.1\.b/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/known limitation/i)).toBeInTheDocument()
     expect(
       screen.getByText(/do not include real personal data/i)
     ).toBeInTheDocument()
