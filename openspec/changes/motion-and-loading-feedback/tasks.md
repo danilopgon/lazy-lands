@@ -111,18 +111,18 @@
 
 ### Phase 4.1: Frontend RED tests
 
-- [ ] 4.1.1 In `apps/web/components/ui/__tests__/modal.test.tsx`, add a failing test asserting the backdrop/panel transition resolves at `duration: 0` under `data-motion="subtle"` (the pre-existing gap this unit closes) and under `"off"`.
-- [ ] 4.1.2 Confirm the existing modal a11y test suite (portal target, `role="dialog"`, `aria-modal`, `aria-labelledby`, focus trap Tab/Shift+Tab cycling, Escape close, backdrop-click close, `body.style.overflow` scroll lock, focus restoration to `previousFocusRef`) is captured as an explicit regression guard that MUST stay green, unmodified, through this migration.
-- [ ] 4.1.3 Add a failing integration test with `ModalPresence` mounted above a real conditional `<Modal>` subtree: closing removes the condition, the dialog remains only through the configured full-motion exit, and then unmounts; under `subtle`/`off` it resolves at zero duration. A test that renders `ModalPresence` only inside the conditional is invalid.
+- [x] 4.1.1 In `apps/web/components/ui/__tests__/modal.test.tsx`, add a failing test asserting the backdrop/panel transition resolves at `duration: 0` under `data-motion="subtle"` (the pre-existing gap this unit closes) and under `"off"`.
+- [x] 4.1.2 Confirm the existing modal a11y test suite (portal target, `role="dialog"`, `aria-modal`, `aria-labelledby`, focus trap Tab/Shift+Tab cycling, Escape close, backdrop-click close, `body.style.overflow` scroll lock, focus restoration to `previousFocusRef`) is captured as an explicit regression guard that MUST stay green, unmodified, through this migration.
+- [x] 4.1.3 Add a failing integration test with `ModalPresence` mounted above a real conditional `<Modal>` subtree: closing removes the condition, the dialog remains only through the configured full-motion exit, and then unmounts; under `subtle`/`off` it resolves at zero duration. A test that renders `ModalPresence` only inside the conditional is invalid.
 
 ### Phase 4.2: Implementation
 
-- [ ] 4.2.1 In `apps/web/components/ui/modal.tsx`, replace the `motion-safe:`/`motion-reduced:` Tailwind classes at the backdrop and panel with Motion elements driven by `useMotionMode()`. Change only the entrance/exit transform/opacity mechanism; portal rendering, props, focus trap, Escape handling, backdrop-click close, scroll lock, and focus restoration MUST remain behaviorally identical.
-- [ ] 4.2.2 In the six shipped/demo NPC, faction, and arc route pages, keep `<ModalPresence>` mounted above each existing entity-modal and delete-modal conditional. Apply one mechanical wrapper pattern only; do not change route state, CRUD callbacks, copy, or modal component props.
+- [x] 4.2.1 In `apps/web/components/ui/modal.tsx`, replace the `motion-safe:`/`motion-reduced:` Tailwind classes at the backdrop and panel with Motion elements driven by `useMotionMode()`. Change only the entrance/exit transform/opacity mechanism; portal rendering, props, focus trap, Escape handling, backdrop-click close, scroll lock, and focus restoration MUST remain behaviorally identical.
+- [x] 4.2.2 In the six shipped/demo NPC, faction, and arc route pages, keep `<ModalPresence>` mounted above each existing entity-modal and delete-modal conditional. Apply one mechanical wrapper pattern only; do not change route state, CRUD callbacks, copy, or modal component props.
 
 ### Phase 4.3: Quality gates
 
-- [ ] 4.3.1 Run `pnpm --filter web test -- components/ui/__tests__/modal.test.tsx`, `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green, including the untouched a11y suite.
+- [x] 4.3.1 Run `pnpm --filter web test -- components/ui/__tests__/modal.test.tsx`, `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green, including the untouched a11y suite.
 
 ### Phase 4.4: Manual verification (JSDOM cannot measure this)
 

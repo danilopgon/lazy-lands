@@ -1,8 +1,33 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import {
+  render as rtlRender,
+  screen,
+  waitFor,
+  type RenderOptions,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import type { ReactElement, ReactNode } from 'react'
 
 import { Modal } from '@/components/ui/modal'
+import { MotionModeProvider } from '@/lib/motion/use-motion-mode'
+
+/**
+ * Render under the motion provider the modal always sits beneath in production
+ * (`app/[locale]/layout.tsx`). Every assertion below is an accessibility
+ * guarantee that must survive the Motion migration untouched.
+ *
+ * @param {ReactElement} ui - The element under test.
+ * @param {RenderOptions} [options] - Testing Library options.
+ * @returns {ReturnType<typeof rtlRender>} The Testing Library render result.
+ */
+function render(ui: ReactElement, options?: RenderOptions) {
+  return rtlRender(ui, {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <MotionModeProvider mode="full">{children}</MotionModeProvider>
+    ),
+    ...options,
+  })
+}
 
 describe('Modal', () => {
   const defaultProps = {

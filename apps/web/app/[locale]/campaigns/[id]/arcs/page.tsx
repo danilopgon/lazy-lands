@@ -10,6 +10,7 @@ import { EntityFilterBar } from '@/components/campaigns/entity-filter-bar'
 import { ArcList } from '@/components/campaigns/arc-list'
 import { ArcModal } from '@/components/campaigns/arc-modal'
 import { ConfirmDeleteModal } from '@/components/campaigns/confirm-delete-modal'
+import { ModalPresence } from '@/components/motion/modal-presence'
 import { deleteArc } from '@/lib/campaigns/api'
 
 import type { ArcResponse, ArcStatus } from '@/lib/campaigns/schemas'
@@ -90,29 +91,35 @@ export default function ArcsPage() {
         }}
       </EntityListScreen>
 
-      {modal !== null ? (
-        <ArcModal
-          campaignId={campaignId}
-          arc={modal === 'add' ? null : modal}
-          onClose={() => setModal(null)}
-        />
-      ) : null}
+      <ModalPresence open={modal !== null}>
+        {modal !== null ? (
+          <ArcModal
+            key="entity"
+            campaignId={campaignId}
+            arc={modal === 'add' ? null : modal}
+            onClose={() => setModal(null)}
+          />
+        ) : null}
+      </ModalPresence>
 
-      {deleting ? (
-        <ConfirmDeleteModal
-          title={t('arcs.deleteTitle')}
-          deleteError={t('arcs.deleteError')}
-          itemName={deleting.title}
-          onConfirm={async () => {
-            await deleteArc(deleting.id)
-            queryClient.invalidateQueries({
-              queryKey: ['campaign', campaignId],
-            })
-            setDeleting(null)
-          }}
-          onClose={() => setDeleting(null)}
-        />
-      ) : null}
+      <ModalPresence open={deleting !== null}>
+        {deleting ? (
+          <ConfirmDeleteModal
+            key="delete"
+            title={t('arcs.deleteTitle')}
+            deleteError={t('arcs.deleteError')}
+            itemName={deleting.title}
+            onConfirm={async () => {
+              await deleteArc(deleting.id)
+              queryClient.invalidateQueries({
+                queryKey: ['campaign', campaignId],
+              })
+              setDeleting(null)
+            }}
+            onClose={() => setDeleting(null)}
+          />
+        ) : null}
+      </ModalPresence>
     </>
   )
 }

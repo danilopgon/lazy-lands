@@ -38,6 +38,12 @@ development server. They are the only open Unit 2 items.
 - [x] 2.2.2 Mechanical in-app `Link` to `NavLink` migration across 32 files.
 - [x] 2.2.3 English and Spanish `Nav.pending` copy.
 - [x] 2.3.1 Focused/full tests, lint, typecheck, and targeted formatting gates.
+- [x] 4.1.1 Zero-duration exit coverage under `subtle` and `off`.
+- [x] 4.1.2 Existing modal a11y suite retained unchanged as a regression guard.
+- [x] 4.1.3 Presence-above-the-conditional exit integration coverage.
+- [x] 4.2.1 Motion-driven backdrop and panel via `useMotionMode().transition()`.
+- [x] 4.2.2 `ModalPresence` mounted above both modal conditionals in six entity routes.
+- [x] 4.3.1 Focused/full tests, lint, typecheck, and targeted formatting gates.
 
 ## TDD Cycle Evidence
 
@@ -88,6 +94,14 @@ development server. They are the only open Unit 2 items.
 | Unit 2 browser acceptance | NOT PERFORMED. Tasks 2.4.1 and 2.4.2 need a running dev server, which this session was not authorized to start. No JSDOM result was substituted for them. |
 | Unit 2 review | Four 4R lenses were run against the working tree (high tier: >400 changed lines). `review-reliability` and `review-readability` independently found the same CRITICAL defect: `LinkPending`'s visible branch hardcoded the default slot class instead of the `slotClassName` prop, so the nine block-level call sites would have snapped back to an inline slot the moment a navigation went pending — the exact reflow the prop exists to prevent. The two tests covering that prop passed vacuously (the footprint test only compared the default slot; the override test never set `pending`). Fixed test-first: the rewritten `keeps a repositioned status slot in place through the pending state` failed with `expected 'ml-1 inline-block…' to be 'absolute right-5 top-4'`, then passed after `nav-link.tsx:102` was corrected. `review-risk` and `review-resilience` returned no findings. `review-readability` also raised one SUGGESTION about undocumented migration exclusions, addressed with a WHY comment at each of the three excluded files. |
 | Unit 2 review tooling | The bounded `gentle-ai review start/finalize/validate` facade recorded for Units 1 and 3 does not exist in the installed CLI (1.49.0 exposes `review-start --policy-file` / `review-step --operation` instead, with undocumented payload schemas). No lineage was created for Unit 2, because probing those schemas against a live lineage is what terminally escalated a previous one. The 4R lenses were run directly instead; this is a deviation from the receipt-bound lifecycle and no pre-commit receipt validation was performed. |
+| Unit 4 focused test | RED: `pnpm exec vitest run tests/ui/modal-presence.test.tsx` — FAIL, the dialog unmounted immediately under `full` because nothing animated its exit. GREEN: 35/35 across `tests/ui`, including the 16 untouched a11y assertions. |
+| Unit 4 full regression | `pnpm exec vitest run` — PASS, 85 files / 684 tests. |
+| Unit 4 static quality | `pnpm --filter web lint` — PASS; `pnpm --filter web typecheck` — PASS; targeted Prettier — PASS. |
+| Unit 4 exit-boundary discovery | Mounting the presence boundary above the conditional surfaced a real defect that only exists once a closing modal outlives its condition: for the length of the exit, two `role="dialog"` nodes coexist. The exiting one still held a window-level keydown listener (double Escape, competing focus trap), and its unmount cleanup would later unlock body scroll and pull focus away from the modal that had just opened. Two pre-existing route tests caught it as `Found multiple elements with the role "dialog"`. `Modal` now reads `useIsPresent()`: while exiting it drops `role`/`aria-modal`, sets `aria-hidden`, detaches the keydown listener, and releases focus plus the scroll lock at exit start instead of at unmount. Open-state behavior is unchanged. |
+| Unit 4 review | One `review-reliability` lens (medium tier, ~280 changed lines). It returned three WARNINGs, all judged correct and all fixed: (1) the `subtle`/`off` exit test asserted only role absence, which the new `isPresent` guard satisfies at exit start regardless of mode — it now probes panel text, the same way the full-motion test does; (2) the pending initial-focus timer was not cleared when `release()` ran early, so it could pull focus back into the exiting panel — `release()` now clears it; (3) `isReleasedRef` was never reset and the scroll-lock effect ran once per instance, so a modal reopened mid-exit came back live with the page unlocked. (3) was confirmed by a new failing test (`expected '' to be 'hidden'`) before the acquire/release effect was made symmetric. |
+| Unit 4 test harness | `tests/intl.tsx` now also wraps renders in `MotionModeProvider mode="full"`, mirroring `app/[locale]/layout.tsx:138-141`. Nine test files render a `Modal` through that helper and would otherwise hit `useMotionMode`'s deliberate outside-provider throw. `tests/ui/modal.test.tsx` uses a local provider wrapper for the same reason; every assertion in its a11y suite is byte-identical. |
+| Unit 4 browser acceptance | NOT PERFORMED. Task 4.4.1 needs a running dev server, which this session was not authorized to start. |
+| Unit 4 rollback boundary | Revert `components/ui/modal.tsx`, the six route wrappers, `tests/ui/modal-presence.test.tsx`, and the two test-harness provider additions. `globals.css` still carries the migrated classes, so the revert path stays intact (follow-up F.1). |
 | Unit 2 rollback boundary | Revert `components/navigation/`, `tests/navigation/`, the 32 migrated call-site files, the two locale keys, and the two test-harness adjustments. No route, `href`, API, schema, query key, or persistence contract changed. |
 
 ## Frontend Handoff Checklist
@@ -186,4 +200,5 @@ development server. They are the only open Unit 2 items.
 
 - [ ] 2.4.1 Playwright throttled-navigation sample — needs a dev server; not authorized this session.
 - [ ] 2.4.2 Manual <=900px three-mode check of the pending affordance — same blocker.
-- [ ] Units 4 and 5.
+- [ ] 4.4.1 Manual <=900px three-mode modal open/close check — same blocker.
+- [ ] Unit 5.

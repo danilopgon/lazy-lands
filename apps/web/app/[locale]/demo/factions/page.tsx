@@ -8,6 +8,7 @@ import { EntitySearch } from '@/components/campaigns/entity-search'
 import { FactionList } from '@/components/campaigns/faction-list'
 import { FactionModal } from '@/components/campaigns/faction-modal'
 import { ConfirmDeleteModal } from '@/components/campaigns/confirm-delete-modal'
+import { ModalPresence } from '@/components/motion/modal-presence'
 import { matchesQuery } from '@/lib/campaigns/text-match'
 import { useDemoStore } from '@/lib/demo/store'
 
@@ -91,31 +92,37 @@ export default function DemoFactionsPage() {
         }}
       </DemoEntityScreen>
 
-      {modal !== null ? (
-        <FactionModal
-          campaignId={campaignId}
-          faction={modal === 'add' ? null : modal}
-          onClose={() => setModal(null)}
-          onSubmit={(draft) =>
-            modal === 'add'
-              ? store.createFaction(draft)
-              : store.updateFaction(modal.id, draft)
-          }
-        />
-      ) : null}
+      <ModalPresence open={modal !== null}>
+        {modal !== null ? (
+          <FactionModal
+            key="entity"
+            campaignId={campaignId}
+            faction={modal === 'add' ? null : modal}
+            onClose={() => setModal(null)}
+            onSubmit={(draft) =>
+              modal === 'add'
+                ? store.createFaction(draft)
+                : store.updateFaction(modal.id, draft)
+            }
+          />
+        ) : null}
+      </ModalPresence>
 
-      {deleting ? (
-        <ConfirmDeleteModal
-          title={t('factions.deleteTitle')}
-          deleteError={t('factions.deleteError')}
-          itemName={deleting.name}
-          onConfirm={async () => {
-            await store.deleteFaction(deleting.id)
-            setDeleting(null)
-          }}
-          onClose={() => setDeleting(null)}
-        />
-      ) : null}
+      <ModalPresence open={deleting !== null}>
+        {deleting ? (
+          <ConfirmDeleteModal
+            key="delete"
+            title={t('factions.deleteTitle')}
+            deleteError={t('factions.deleteError')}
+            itemName={deleting.name}
+            onConfirm={async () => {
+              await store.deleteFaction(deleting.id)
+              setDeleting(null)
+            }}
+            onClose={() => setDeleting(null)}
+          />
+        ) : null}
+      </ModalPresence>
     </>
   )
 }
