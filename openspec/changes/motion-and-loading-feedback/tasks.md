@@ -32,24 +32,24 @@
 
 ### Phase 1.1: Frontend RED tests
 
-- [ ] 1.1.1 In `apps/web/components/sessions/__tests__/generated-session-view.test.tsx`, add a deferred-promise helper and failing tests asserting: while `saveSection`'s `useMutation` is pending, the "Save section changes" button is `disabled` and its label switches to the in-flight copy; on resolve it re-enables, reverts its label, closes the editor, and the existing "section saved" toast still renders; on reject it re-enables, reverts its label, and the existing localized section-save error `Notice` renders without discarding the draft text.
-- [ ] 1.1.2 Add the same failing coverage for `saveAll` / "Save changes" (pending disable+relabel, success re-enable + existing "all saved" toast, error re-enable + existing save-all error `Notice`).
-- [ ] 1.1.3 Add failing tests for the double-submit guard clause: invoking `saveSection('synopsis')` a second time while the first call for that same section is still pending issues no second PATCH; invoking `saveAll()` a second time while pending issues no second PATCH; once a prior mutation has settled (success or error), a new call is not blocked and issues a new PATCH.
+- [x] 1.1.1 In `apps/web/components/sessions/__tests__/generated-session-view.test.tsx`, add a deferred-promise helper and failing tests asserting: while `saveSection`'s `useMutation` is pending, the "Save section changes" button is `disabled` and its label switches to the in-flight copy; on resolve it re-enables, reverts its label, closes the editor, and the existing "section saved" toast still renders; on reject it re-enables, reverts its label, and the existing localized section-save error `Notice` renders without discarding the draft text.
+- [x] 1.1.2 Add the same failing coverage for `saveAll` / "Save changes" (pending disable+relabel, success re-enable + existing "all saved" toast, error re-enable + existing save-all error `Notice`).
+- [x] 1.1.3 Add failing tests for the double-submit guard clause: invoking `saveSection('synopsis')` a second time while the first call for that same section is still pending issues no second PATCH; invoking `saveAll()` a second time while pending issues no second PATCH; once a prior mutation has settled (success or error), a new call is not blocked and issues a new PATCH.
 
 ### Phase 1.2: Implementation
 
-- [ ] 1.2.1 Convert `saveSection` and `saveAll` in `apps/web/components/sessions/generated-session-view.tsx` to TanStack Query `useMutation` calls, matching the `NpcModal` / `WorldStateEditor` pattern.
-- [ ] 1.2.2 Add an explicit early-return guard clause inside `saveSection` / `saveAll` (or their `useMutation` wrapper) that no-ops silently (no `Notice`) when that same mutation is already pending — independent of, and in addition to, the disabled button.
-- [ ] 1.2.3 Wire `isPending` to disable each triggering button and swap its label to the in-flight copy; leave existing success/error toast and `Notice` copy and trigger conditions unchanged.
-- [ ] 1.2.4 In `apps/web/messages/en.json` and `apps/web/messages/es.json`, add the new in-flight labels under `SessionGeneration.generated` (no hard-coded English literal).
+- [x] 1.2.1 Convert `saveSection` and `saveAll` in `apps/web/components/sessions/generated-session-view.tsx` to TanStack Query `useMutation` calls, matching the `NpcModal` / `WorldStateEditor` pattern.
+- [x] 1.2.2 Add an explicit early-return guard clause inside `saveSection` / `saveAll` (or their `useMutation` wrapper) that no-ops silently (no `Notice`) when that same mutation is already pending — independent of, and in addition to, the disabled button.
+- [x] 1.2.3 Wire `isPending` to disable each triggering button and swap its label to the in-flight copy; leave existing success/error toast and `Notice` copy and trigger conditions unchanged.
+- [x] 1.2.4 In `apps/web/messages/en.json` and `apps/web/messages/es.json`, add the new in-flight labels under `SessionGeneration.generated` (no hard-coded English literal).
 
 ### Phase 1.3: Quality gates
 
-- [ ] 1.3.1 Run `pnpm --filter web test -- components/sessions/__tests__/generated-session-view.test.tsx`, `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
+- [x] 1.3.1 Run `pnpm --filter web test -- components/sessions/__tests__/generated-session-view.test.tsx`, `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
 
 ### Phase 1.4: Manual verification (JSDOM cannot measure this)
 
-- [ ] 1.4.1 At ≤900px viewport width, verify the pending/disabled/relabel state for both buttons under `data-motion="full"`, `"subtle"`, and `"off"`, and confirm a rapid double-click fires only one PATCH in at least one motion mode.
+- [x] 1.4.1 At ≤900px viewport width, verify the pending/disabled/relabel state for both buttons under `data-motion="full"`, `"subtle"`, and `"off"`, and confirm a rapid double-click fires only one PATCH in at least one motion mode.
 
 ---
 

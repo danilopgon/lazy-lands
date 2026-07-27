@@ -2,12 +2,22 @@
 
 ## Status
 
-Strict TDD mode. Unit 3 tasks 3.1.1 through 3.4.1 are complete.
-No commit, push, or PR was created. Unit 3 remains an independent under-budget work unit and is
-complete.
+Strict TDD mode. Unit 1 tasks 1.1.1 through 1.4.1 and Unit 3 tasks 3.1.1 through 3.4.1 are complete.
+Unit 1's real-browser matrix passed at 900×900 across full, subtle, off, and OS reduced-motion
+modes. No commit, push, or PR was created. Units 1 and 3 remain independent under-budget work
+units.
 
 ## Completed Tasks
 
+- [x] 1.1.1 Deferred section-save pending, success, and error coverage.
+- [x] 1.1.2 Deferred whole-session pending, success, and error coverage.
+- [x] 1.1.3 Pre-paint duplicate invocation and post-settlement retry coverage.
+- [x] 1.2.1 `saveSection` and `saveAll` TanStack Query mutations.
+- [x] 1.2.2 Explicit synchronous in-flight guard refs plus `isPending` early returns.
+- [x] 1.2.3 Disabled, localized, layout-reserved in-flight button labels.
+- [x] 1.2.4 English and Spanish generated-session saving labels.
+- [x] 1.3.1 Focused/full tests, lint, typecheck, and targeted formatting gates.
+- [x] 1.4.1 Pending-state, duplicate-invocation, CLS, and retry browser matrix at 900×900.
 - [x] 3.1.1 Mode-aware transition RED coverage.
 - [x] 3.1.2 Layout/provider single-expression RED coverage.
 - [x] 3.1.3 SSR reduced-motion snapshot RED coverage.
@@ -22,6 +32,10 @@ complete.
 
 | Task | Test file | Layer | Safety net | RED | GREEN | Triangulate | Refactor |
 |---|---|---|---|---|---|---|---|
+| 1.1.1 | `apps/web/tests/sessions/generated-session-view.test.tsx` | Component integration | 33/33 passed | 6 failures / 34 passes after deferred pending and duplicate-submit tests were added before production changes | 38/38 final focused tests passed | Section success, error, retry, and Spanish pending copy | Shared deferred helper; reserved-label grid retained 38/38 |
+| 1.1.2 | Same | Component integration | 33/33 passed | Same RED run: both whole-session pending-label assertions and duplicate invocation failed | 38/38 final focused tests passed | Whole-session success, error, retry, and Spanish pending copy | Success/error callbacks moved into mutation lifecycle |
+| 1.1.3 | Same | Component integration | 33/33 passed | Pre-paint double dispatch issued 2 PATCH calls for both save paths | 38/38 final focused tests passed; each pending window issued exactly 1 call | Both save scopes plus post-error retry | Synchronous refs close the render-before-paint race; `onSettled` releases guards |
+| 1.2.1–1.2.4 | Same | Component integration | Covered above | Covered by the Unit 1 RED tests | Focused 38/38 and full 83 files / 664 tests passed | English/Spanish, section/all, success/error | Targeted Prettier and semantics-only test assertions |
 | 3.1.1 | `apps/web/lib/motion/__tests__/use-motion-mode.test.tsx` | Unit | N/A (new API) | FAIL: module resolution stopped on the first absent Unit 3 primitive before production existed | 11/11 passed | Full, subtle, off, OS reduce, and reactive OS changes | Targeted Prettier; 11/11 remained green |
 | 3.1.2 | Same | Integration | `tests/providers.test.tsx`: 2/2 passed | Same absent-module RED run; layout test already referenced the missing provider | 2 layout cases passed inside 11/11 | `VISUAL_REGRESSION_TEST_MODE=false` -> full and `true` -> off | No behavior-changing refactor |
 | 3.1.3 | Same | SSR unit | N/A (new API) | Same absent-module RED run; SSR probe referenced the missing provider/hook | SSR assertion passed inside 11/11 | Client `matchMedia=true` versus server snapshot `false` | No behavior-changing refactor |
@@ -35,6 +49,15 @@ complete.
 
 | Evidence | Result |
 |---|---|
+| Unit 1 focused test | Baseline: `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx` — PASS, 1 file / 33 tests. RED: same command — FAIL, 6 failed / 34 passed. GREEN/refactor: same command — PASS, 1 file / 38 tests. |
+| Unit 1 full regression | `pnpm --filter web test` — PASS, 83 files / 664 tests. |
+| Unit 1 static quality | `pnpm lint` — PASS; `pnpm typecheck` — PASS. |
+| Unit 1 formatting | Targeted `pnpm exec prettier --check` over the four changed frontend files — PASS. Repo-wide `format:check` was intentionally not used because the handoff records ~522 unrelated pre-existing violations and mandates targeted formatting. |
+| Unit 1 runtime harness | PASS at `http://localhost:3000/en/demo/sessions/generated` in Chromium at 900×900. Modes sampled: `full`, `subtle`, `off`, and `full` with OS `prefers-reduced-motion: reduce`. Both pending labels were visible and disabled in every mode; rapid double-click produced exactly one invocation for section-save and save-all in every mode. No console, page, request, or navigation errors occurred. The verifier did not start, stop, restart, or otherwise manage the user-owned dev server. |
+| Unit 1 layout stability | Standard CLS was exactly `0` in every case, with width/height delta exactly `0`. Save-all geometry was idle `(248.203, 271.016, 157.656, 44)` and pending `(249.703, 272.516, 157.656, 44)`; section geometry was idle `(24, 518.266, 157.938, 36)` and pending `(25.5, 519.766, 157.938, 36)`. The `+1.5px` x/y offset is existing press/disabled physics, not layout shift. Full and OS-reduce produced no layout-shift entries; subtle/off input-associated shifts were approximately `0.000039` and `0.000037`, both with `hadRecentInput=true`, and therefore contributed `0` CLS. |
+| Unit 1 failure/retry runtime | A temporary failure override proved the section draft `Browser failure draft retained.` and save-all draft `Browser save-all failure draft retained.` survived rejection. Retry controls re-enabled; successful retries closed editors and preserved the existing success toasts. |
+| Unit 1 runtime scope | The public demo uses the production component with a 450ms in-memory save instead of authenticated persistence. Automated tests separately prove exactly one `updateSessionFn` call. Runtime evidence remains temporary at `C:\Users\Usuario\AppData\Local\Temp\opencode\lazy-lands-unit1-1.4.1\results.json` and was not copied into the repository. |
+| Unit 1 rollback boundary | Revert `generated-session-view.tsx`, its focused test additions, and the two locale keys. No API, schema, query key, domain, cache, or persistence contract changed. |
 | Focused test | `pnpm --filter web test -- lib/motion/__tests__/use-motion-mode.test.tsx` — PASS, 1 file / 11 tests. |
 | Full regression | `pnpm --filter web test -- --run` — PASS, 83 files / 659 tests. |
 | Static quality | `pnpm --filter web lint` — PASS; `pnpm --filter web typecheck` — PASS. |
@@ -48,6 +71,18 @@ complete.
 
 ## Frontend Handoff Checklist
 
+- [x] Unit 1 fields: no generated-section field, textarea, validation, provenance, or persisted payload shape changed.
+- [x] Unit 1 copy: existing action/success/error strings remain exact; only `savingSection` and `savingChanges` were added in English and Spanish.
+- [x] Unit 1 layout: existing header/editor structure remains; overlapping grid labels reserve the larger idle/pending footprint without hard-coded width.
+- [x] Unit 1 interactions: per-section save and whole-session save semantics remain distinct; each has disabled UI plus a synchronous programmatic duplicate guard.
+- [x] Unit 1 shared components: existing `Button`, `Notice`, `Textarea`, `OriginBadge`, `MarkdownBody`, and `LoadingScribe` vocabulary is preserved; no new primitive or dependency.
+- [x] Unit 1 design tokens: no color, radius, border, shadow, or typography token changed.
+- [x] Unit 1 motion: pending feedback is DOM text plus `disabled`; it is not Motion-driven and remains present when animation is disabled.
+- [x] Unit 1 loading state: each triggering button is disabled and localized while its own mutation is pending.
+- [x] Unit 1 error state: localized existing `Notice` remains; typed draft remains and controls re-enable for retry.
+- [x] Unit 1 empty state: unchanged; no empty-state behavior belongs to these save paths.
+- [x] Unit 1 success state: editor closes where applicable, persisted sections update, and existing section/all toast feedback remains.
+- [x] Unit 1 runtime at <=900px across full/subtle/off/OS reduce: both pending labels remained visible and disabled, duplicate invocation was blocked for both save scopes, standard CLS was exactly 0, and failure/retry retained draft text and existing success feedback.
 - [x] Fields: no field or form call site changed.
 - [x] Copy: no user-visible copy or locale catalog changed.
 - [x] Layout: provider adds context only and renders no DOM wrapper.
@@ -62,6 +97,17 @@ complete.
 
 ## Handoff Compliance Report
 
+- Unit 1 structure: PASS in source/test review — existing screen hierarchy and both save scopes preserved.
+- Unit 1 copy: PASS — 2/2 new strings localized in both catalogs; existing copy unchanged.
+- Unit 1 states:
+  - loading: reference = inline disabled+relabel, no takeover | implementation = per-mutation disabled+localized relabel | MATCH
+  - error: reference = localized `Notice`, typed draft retained, retry enabled | implementation = same | MATCH
+  - empty: reference = no save-specific empty state | implementation = unchanged | MATCH
+  - success: reference = editor closes/sections update/existing toast | implementation = same | MATCH
+- Unit 1 design tokens: 0 violations; existing `Button` styling only.
+- Unit 1 motion: 1/1 requirement implemented — essential feedback is static DOM state, independent of Motion/CSS animation.
+- Unit 1 runtime: PASS — the 900×900 Chromium matrix covered full, subtle, off, and OS reduced motion; both save scopes preserved pending feedback, one-invocation guards, zero CLS, failure drafts, and successful retries without browser/runtime errors.
+- Unit 1 VERDICT: PASS — implementation, automated behavior, localization, source compliance, and task 1.4.1 browser acceptance are complete.
 - Structure: PASS — one provider boundary, four additive modules, zero call-site migrations.
 - Copy: PASS — 0 strings changed.
 - States:
@@ -90,4 +136,4 @@ complete.
 
 ## Remaining Tasks
 
-- [ ] Units 1, 2, 4, and 5 remain untouched by this apply batch.
+- [ ] Units 2, 4, and 5 remain untouched by this apply batch.

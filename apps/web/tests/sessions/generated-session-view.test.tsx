@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { render, screen, waitFor } from '@/tests/intl'
+import { act, render, screen, waitFor } from '@/tests/intl'
 import { GeneratedSessionView } from '@/components/sessions/generated-session-view'
 import type { SessionDetail } from '@/lib/sessions/schemas'
 
@@ -17,6 +17,17 @@ function withQueryClient({ children }: { children: ReactNode }) {
 
 function renderGenerated(ui: React.ReactElement) {
   return render(ui, { wrapper: withQueryClient })
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+
+  return { promise, resolve, reject }
 }
 
 const session = {
@@ -655,6 +666,191 @@ describe('GeneratedSessionView', () => {
     expect(screen.getByText('Edited plan for Halia.')).toBeInTheDocument()
     expect(screen.getAllByText('✎ Edited by you').length).toBeGreaterThan(0)
     expect(screen.getByRole('status')).toHaveTextContent('Section saved')
+  })
+
+  it('restores the section save after failure without discarding the draft', async () => {
+    const pending = deferred<SessionDetail>()
+    const update = vi
+      .fn()
+      .mockReturnValueOnce(pending.promise)
+      .mockResolvedValueOnce(session)
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+        updateSessionFn={update}
+      />
+    )
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+    await userEvent.clear(screen.getByLabelText('Synopsis'))
+    await userEvent.type(screen.getByLabelText('Synopsis'), 'Retained draft.')
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Save section changes' })
+    )
+    expect(
+      await screen.findByRole('button', { name: 'Saving section…' })
+    ).toBeDisabled()
+
+    pending.reject(new Error('network'))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not save this section'
+    )
+    expect(
+      screen.getByRole('button', { name: 'Save section changes' })
+    ).toBeEnabled()
+    expect(screen.getByLabelText('Synopsis')).toHaveValue('Retained draft.')
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Save section changes' })
+    )
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(2))
+  })
+
+  it('restores Save changes after failure without discarding an open draft', async () => {
+    const pending = deferred<SessionDetail>()
+    const update = vi
+      .fn()
+      .mockReturnValueOnce(pending.promise)
+      .mockResolvedValueOnce(session)
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+        updateSessionFn={update}
+      />
+    )
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Edit' })[1])
+    await userEvent.clear(screen.getByLabelText('Twist'))
+    await userEvent.type(
+      screen.getByLabelText('Twist'),
+      'Retained all-save draft.'
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+    expect(
+      await screen.findByRole('button', { name: 'Saving changes…' })
+    ).toBeDisabled()
+
+    pending.reject(new Error('network'))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not save changes'
+    )
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled()
+    expect(screen.getByLabelText('Twist')).toHaveValue(
+      'Retained all-save draft.'
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(2))
+  })
+
+  it('issues only one section PATCH when save is invoked twice before paint', async () => {
+    const pending = deferred<SessionDetail>()
+    const update = vi.fn().mockReturnValue(pending.promise)
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+        updateSessionFn={update}
+      />
+    )
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+    const save = screen.getByRole('button', { name: 'Save section changes' })
+    act(() => {
+      save.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      save.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(1))
+    expect(
+      await screen.findByRole('button', { name: 'Saving section…' })
+    ).toBeDisabled()
+    pending.resolve(session)
+    await screen.findByRole('button', { name: 'Save changes' })
+    expect(screen.queryByLabelText('Synopsis')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Section saved')
+  })
+
+  it('issues only one whole-session PATCH when Save changes is invoked twice before paint', async () => {
+    const pending = deferred<SessionDetail>()
+    const update = vi.fn().mockReturnValue(pending.promise)
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+        updateSessionFn={update}
+      />
+    )
+
+    const save = screen.getByRole('button', { name: 'Save changes' })
+    act(() => {
+      save.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      save.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(1))
+    expect(
+      await screen.findByRole('button', { name: 'Saving changes…' })
+    ).toBeDisabled()
+    pending.resolve(session)
+    expect(
+      await screen.findByRole('button', { name: 'Save changes' })
+    ).toBeEnabled()
+    expect(screen.getByRole('status')).toHaveTextContent('All changes saved')
+  })
+
+  it('localizes both in-flight save labels in Spanish', async () => {
+    const sectionPending = deferred<SessionDetail>()
+    const allPending = deferred<SessionDetail>()
+    const update = vi
+      .fn()
+      .mockReturnValueOnce(sectionPending.promise)
+      .mockReturnValueOnce(allPending.promise)
+    render(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+        updateSessionFn={update}
+      />,
+      { wrapper: withQueryClient, locale: 'es' }
+    )
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0])
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios de sección' })
+    )
+    expect(
+      await screen.findByRole('button', { name: 'Guardando sección…' })
+    ).toBeDisabled()
+
+    sectionPending.resolve(session)
+    await screen.findByRole('button', { name: 'Guardar cambios' })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Guardar cambios' })
+    )
+    expect(
+      await screen.findByRole('button', { name: 'Guardando cambios…' })
+    ).toBeDisabled()
+
+    allPending.resolve(session)
+    await screen.findByRole('button', { name: 'Guardar cambios' })
   })
 
   it('opens section editing from the explicit edit button without relying on body clicks', async () => {

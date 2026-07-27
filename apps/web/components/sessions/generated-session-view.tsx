@@ -1,9 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { Link, useRouter } from '@/i18n/navigation'
 
@@ -31,9 +31,15 @@ import type {
   GeneratedSection,
   SectionId,
   SessionDetail,
+  UpdateSessionContent,
 } from '@/lib/sessions/schemas'
 
 type GeneratedCampaign = { id: string; title: string }
+
+type SaveMutationVariables = {
+  nextSections: GeneratedSection[]
+  payload: UpdateSessionContent
+}
 
 type GeneratedSessionViewProps = {
   campaignId: string
@@ -95,6 +101,8 @@ export function GeneratedSessionView({
   )
   const [toast, setToast] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const sectionSaveInFlightRef = useRef(false)
+  const allSaveInFlightRef = useRef(false)
   // Per-section regeneration state — keyed by section id, NOT a single
   // global flag, so unrelated sections stay fully interactive while one
   // section regenerates (NFR-UI-2).
@@ -116,6 +124,40 @@ export function GeneratedSessionView({
     queryKey: ['campaign', campaignId, 'memory-facts', 'active', 'generated'],
     queryFn: () => getMemoryFacts(campaignId, { status: 'active' }),
     enabled: !providedMemories,
+  })
+
+  const sectionSaveMutation = useMutation({
+    mutationFn: ({ payload }: SaveMutationVariables) =>
+      updateSessionFn(sessionId, payload),
+    onSuccess: (updated, { nextSections }) => {
+      setSections(updated.generated_content?.sections ?? nextSections)
+      setEditing(null)
+      setError(null)
+      showToast(t('toast.sectionSaved'))
+    },
+    onError: () => {
+      setError(t('sectionSaveError'))
+    },
+    onSettled: () => {
+      sectionSaveInFlightRef.current = false
+    },
+  })
+
+  const allSaveMutation = useMutation({
+    mutationFn: ({ payload }: SaveMutationVariables) =>
+      updateSessionFn(sessionId, payload),
+    onSuccess: (updated, { nextSections }) => {
+      setSections(updated.generated_content?.sections ?? nextSections)
+      setEditing(null)
+      setError(null)
+      showToast(t('toast.allSaved'))
+    },
+    onError: () => {
+      setError(t('saveAllError'))
+    },
+    onSettled: () => {
+      allSaveInFlightRef.current = false
+    },
   })
 
   const campaign = providedCampaign ?? campaignQuery.data
@@ -272,28 +314,25 @@ export function GeneratedSessionView({
    *
    * @param {string} sectionId - The id of the section being saved.
    */
-  async function saveSection(sectionId: string) {
-    if (!session) return
+  function saveSection(sectionId: string) {
+    if (
+      !session ||
+      sectionSaveInFlightRef.current ||
+      sectionSaveMutation.isPending
+    ) {
+      return
+    }
     const nextSections = visibleSections.map((section) =>
       section.id === sectionId
         ? { ...section, body: draft, origin: 'edited' as const }
         : section
     )
-    try {
-      const payload = {
-        generated_content: generatedContentWithSections(nextSections),
-        ...(sectionId === 'synopsis' ? { summary: draft } : {}),
-      }
-      const updated = await updateSessionFn(sessionId, {
-        ...payload,
-      })
-      setSections(updated.generated_content?.sections ?? nextSections)
-      setEditing(null)
-      setError(null)
-      showToast(t('toast.sectionSaved'))
-    } catch {
-      setError(t('sectionSaveError'))
+    const payload = {
+      generated_content: generatedContentWithSections(nextSections),
+      ...(sectionId === 'synopsis' ? { summary: draft } : {}),
     }
+    sectionSaveInFlightRef.current = true
+    sectionSaveMutation.mutate({ nextSections, payload })
   }
 
   /**
@@ -329,21 +368,15 @@ export function GeneratedSessionView({
   }
 
   /** Persist the full visible section state as a single "Save changes" action. */
-  async function saveAll() {
+  function saveAll() {
+    if (allSaveInFlightRef.current || allSaveMutation.isPending) return
     const nextSections = sectionsIncludingOpenDraft()
     const payload = {
       generated_content: generatedContentWithSections(nextSections),
       ...(editing === 'synopsis' ? { summary: draft } : {}),
     }
-    try {
-      const updated = await updateSessionFn(sessionId, payload)
-      setSections(updated.generated_content?.sections ?? nextSections)
-      setEditing(null)
-      setError(null)
-      showToast(t('toast.allSaved'))
-    } catch {
-      setError(t('saveAllError'))
-    }
+    allSaveInFlightRef.current = true
+    allSaveMutation.mutate({ nextSections, payload })
   }
 
   /** Copy the visible sections to the clipboard and confirm only on success. */
@@ -409,9 +442,22 @@ export function GeneratedSessionView({
           <Button
             type="button"
             variant="secondary"
+            disabled={allSaveMutation.isPending}
             onClick={() => void saveAll()}
           >
-            {t('saveChanges')}
+            <span className="grid">
+              <span
+                aria-hidden="true"
+                className="invisible col-start-1 row-start-1"
+              >
+                {t('savingChanges')}
+              </span>
+              <span className="col-start-1 row-start-1">
+                {allSaveMutation.isPending
+                  ? t('savingChanges')
+                  : t('saveChanges')}
+              </span>
+            </span>
           </Button>
           <Button
             type="button"
@@ -491,9 +537,22 @@ export function GeneratedSessionView({
                     <Button
                       type="button"
                       size="sm"
+                      disabled={sectionSaveMutation.isPending}
                       onClick={() => void saveSection(section.id)}
                     >
-                      {t('saveSectionChanges')}
+                      <span className="grid">
+                        <span
+                          aria-hidden="true"
+                          className="invisible col-start-1 row-start-1"
+                        >
+                          {t('saveSectionChanges')}
+                        </span>
+                        <span className="col-start-1 row-start-1">
+                          {sectionSaveMutation.isPending
+                            ? t('savingSection')
+                            : t('saveSectionChanges')}
+                        </span>
+                      </span>
                     </Button>
                     <Button
                       type="button"
