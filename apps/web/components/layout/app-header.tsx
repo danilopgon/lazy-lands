@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 import { LogoutButton } from '@/components/auth/logout-button'
 import { userInitials } from '@/lib/user/initials'
@@ -36,12 +36,12 @@ export function AppHeader({ email, children }: AppHeaderProps) {
   return (
     <>
       <header className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4 llg:px-10">
-        <Link
+        <NavLink
           href="/dashboard"
           className="font-serif text-xl font-semibold tracking-[-0.02em] text-[var(--ink)]"
         >
           Lazy <span className="text-[var(--accent)]">Lands</span>
-        </Link>
+        </NavLink>
 
         <div className="flex items-center gap-3">
           <LanguageSwitcher compact persistUserLanguage />

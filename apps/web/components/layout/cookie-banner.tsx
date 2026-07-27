@@ -1,7 +1,7 @@
 'use client'
 
 import { startTransition, useEffect, useState } from 'react'
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 
 import { useTranslations } from 'next-intl'
 
@@ -47,9 +47,9 @@ export function CookieBanner() {
       <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-4">
         <p className="font-sans text-sm text-[var(--ink-2)]">
           {t('cookieNoticeBody')}{' '}
-          <Link href="/cookies" className="text-[var(--accent)] underline">
+          <NavLink href="/cookies" className="text-[var(--accent)] underline">
             {t('learnMore')}
-          </Link>
+          </NavLink>
         </p>
         <Button onClick={handleAccept} size="sm">
           {t('gotIt')}

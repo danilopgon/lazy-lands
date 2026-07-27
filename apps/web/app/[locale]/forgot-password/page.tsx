@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -89,9 +89,9 @@ export default function ForgotPasswordPage() {
           {t('forgotSentBody')}
         </p>
         <p className="mt-6 text-sm text-[var(--ink-2)]">
-          <Link href="/login" className="underline">
+          <NavLink href="/login" className="underline">
             {t('backToSignIn')}
-          </Link>
+          </NavLink>
         </p>
       </AuthCard>
     )
@@ -138,9 +138,9 @@ export default function ForgotPasswordPage() {
 
       <p className="mt-6 text-sm text-[var(--ink-2)]">
         {t('forgotRemembered')}{' '}
-        <Link href="/login" className="underline">
+        <NavLink href="/login" className="underline">
           {t('loginTitle')}
-        </Link>
+        </NavLink>
       </p>
     </AuthCard>
   )

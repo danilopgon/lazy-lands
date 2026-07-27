@@ -59,19 +59,19 @@
 
 ### Phase 2.1: Frontend RED tests
 
-- [ ] 2.1.1 In `apps/web/components/navigation/__tests__/nav-link.test.tsx`, add failing tests for a new `NavLink` component: it renders `<Link>{children}</Link>` with a Client Component `LinkPending` reader inside `<Link>`'s children (per Next 16.2.9's `useLinkStatus` topology — reading it anywhere else silently returns `{pending:false}`); it shows a `role="status"` pending affordance only after `NAV_PENDING_DELAY_MS` has elapsed while `pending: true` (grace delay against flicker); the affordance clears once `pending` flips back to `false`; the affordance's footprint is reserved in both pending and non-pending states (no CLS).
-- [ ] 2.1.2 Add failing tests asserting `NavLink` renders a bare anchor with no status node for hash (`#anchor`) and external (`https://...`) `href` values — a quiet no-op, never a runtime error.
-- [ ] 2.1.3 Add a failing test asserting the pending affordance renders identically in every `data-motion` mode (it involves no Motion animation, so this is a straightforward DOM/text assertion, not a `transition()`/duration assertion).
+- [x] 2.1.1 In `apps/web/components/navigation/__tests__/nav-link.test.tsx`, add failing tests for a new `NavLink` component: it renders `<Link>{children}</Link>` with a Client Component `LinkPending` reader inside `<Link>`'s children (per Next 16.2.9's `useLinkStatus` topology — reading it anywhere else silently returns `{pending:false}`); it shows a `role="status"` pending affordance only after `NAV_PENDING_DELAY_MS` has elapsed while `pending: true` (grace delay against flicker); the affordance clears once `pending` flips back to `false`; the affordance's footprint is reserved in both pending and non-pending states (no CLS).
+- [x] 2.1.2 Add failing tests asserting `NavLink` renders a bare anchor with no status node for hash (`#anchor`) and external (`https://...`) `href` values — a quiet no-op, never a runtime error.
+- [x] 2.1.3 Add a failing test asserting the pending affordance renders identically in every `data-motion` mode (it involves no Motion animation, so this is a straightforward DOM/text assertion, not a `transition()`/duration assertion).
 
 ### Phase 2.2: Implementation
 
-- [ ] 2.2.1 Create `apps/web/lib/motion/tokens.ts`'s `NAV_PENDING_DELAY_MS` constant (or add it if Unit 3 has not yet merged; coordinate ownership — see Unit 3 Phase 3.2.1) and `apps/web/components/navigation/nav-link.tsx` exporting `NavLink` (`LinkProps` + optional `pendingLabel`) and its internal `LinkPending` Client Component reader.
-- [ ] 2.2.2 Replace `<Link>` with `<NavLink>` at every call site under `apps/web/components/**` and `apps/web/app/[locale]/**` whose `href` targets an in-app route (excluding hash/external links), including `apps/web/components/layout/app-header.tsx`'s persistent nav links.
-- [ ] 2.2.3 In `apps/web/messages/en.json` and `apps/web/messages/es.json`, add any new pending-navigation copy or `aria-label` introduced by `LinkPending`.
+- [x] 2.2.1 Create `apps/web/lib/motion/tokens.ts`'s `NAV_PENDING_DELAY_MS` constant (or add it if Unit 3 has not yet merged; coordinate ownership — see Unit 3 Phase 3.2.1) and `apps/web/components/navigation/nav-link.tsx` exporting `NavLink` (`LinkProps` + optional `pendingLabel`) and its internal `LinkPending` Client Component reader.
+- [x] 2.2.2 Replace `<Link>` with `<NavLink>` at every call site under `apps/web/components/**` and `apps/web/app/[locale]/**` whose `href` targets an in-app route (excluding hash/external links), including `apps/web/components/layout/app-header.tsx`'s persistent nav links.
+- [x] 2.2.3 In `apps/web/messages/en.json` and `apps/web/messages/es.json`, add any new pending-navigation copy or `aria-label` introduced by `LinkPending`.
 
 ### Phase 2.3: Quality gates
 
-- [ ] 2.3.1 Run `pnpm --filter web test -- components/navigation/__tests__/nav-link.test.tsx`, the full `pnpm --filter web test` suite (regression check on all migrated call sites), `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
+- [x] 2.3.1 Run `pnpm --filter web test -- components/navigation/__tests__/nav-link.test.tsx`, the full `pnpm --filter web test` suite (regression check on all migrated call sites), `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
 
 ### Phase 2.4: E2E and manual verification (pattern-level, not exhaustive per-`Link`)
 

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 
@@ -92,9 +92,9 @@ export function RecentSessions({
         description={t('history.emptyDescription')}
         action={
           <Button variant="ink" asChild>
-            <Link href={`/campaigns/${campaignId}/sessions/new`}>
+            <NavLink href={`/campaigns/${campaignId}/sessions/new`}>
               {t('history.logSession')}
-            </Link>
+            </NavLink>
           </Button>
         }
       />
@@ -122,14 +122,14 @@ export function RecentSessions({
           >
             <div className="flex items-baseline gap-2">
               {hasGeneratedContent ? (
-                <Link
+                <NavLink
                   href={sessionHref}
                   className="font-serif text-[15px] font-semibold text-[var(--ink)] hover:underline"
                 >
                   {t('history.sessionLabel', {
                     number: session.session_number,
                   })}
-                </Link>
+                </NavLink>
               ) : (
                 <span className="font-serif text-[15px] font-semibold text-[var(--ink)]">
                   {t('history.sessionLabel', {
@@ -145,13 +145,13 @@ export function RecentSessions({
             </div>
             {session.summary ? (
               hasGeneratedContent ? (
-                <Link
+                <NavLink
                   href={sessionHref}
                   data-testid="session-occurrence-excerpt"
                   className="mt-1 block line-clamp-2 text-sm leading-relaxed text-[var(--ink-2)] hover:underline"
                 >
                   {session.summary}
-                </Link>
+                </NavLink>
               ) : (
                 <p
                   data-testid="session-occurrence-excerpt"
@@ -162,12 +162,12 @@ export function RecentSessions({
               )
             ) : null}
             {isDraft ? (
-              <Link
+              <NavLink
                 href={sessionHref}
                 className="mt-1 inline-flex font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
                 {t('history.resumeDraft')}
-              </Link>
+              </NavLink>
             ) : null}
           </div>
         )

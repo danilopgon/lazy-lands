@@ -1,5 +1,9 @@
-import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
+
+// The pages resolve their own copy through `getTranslations`, but their links
+// are client components that read the same catalog from context — so the
+// rendered tree still needs the provider these routes sit under in production.
+import { render, screen } from '@/tests/intl'
 
 import en from '@/messages/en.json'
 import es from '@/messages/es.json'

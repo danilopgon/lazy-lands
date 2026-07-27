@@ -5,7 +5,9 @@ import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { Link, useRouter } from '@/i18n/navigation'
+import { useRouter } from '@/i18n/navigation'
+
+import { NavLink } from '@/components/navigation/nav-link'
 
 import { Button } from '@/components/ui/button'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
@@ -400,8 +402,8 @@ export function GeneratedSessionView({
       className="ll-view-enter ll-workspace mx-auto max-w-[900px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        <Link href={dashboardHref}>{t('breadcrumbs.campaigns')}</Link> /{' '}
-        <Link href={campaignTarget}>{campaign.title}</Link> /{' '}
+        <NavLink href={dashboardHref}>{t('breadcrumbs.campaigns')}</NavLink> /{' '}
+        <NavLink href={campaignTarget}>{campaign.title}</NavLink> /{' '}
         <b className="text-[var(--ink)]">
           {t(isDraft ? 'breadcrumbs.draft' : 'breadcrumbs.registered', {
             number: session.session_number,

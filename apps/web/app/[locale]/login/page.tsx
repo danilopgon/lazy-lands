@@ -6,7 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 
-import { Link, useRouter } from '@/i18n/navigation'
+import { useRouter } from '@/i18n/navigation'
+
+import { NavLink } from '@/components/navigation/nav-link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -150,16 +152,16 @@ export default function LoginPage() {
       </form>
 
       <p className="mt-4 text-sm text-[var(--ink-2)]">
-        <Link href="/forgot-password" className="underline">
+        <NavLink href="/forgot-password" className="underline">
           {t('forgotPassword')}
-        </Link>
+        </NavLink>
       </p>
 
       <p className="mt-6 text-sm text-[var(--ink-2)]">
         {t('loginNoAccount')}{' '}
-        <Link href="/register" className="underline">
+        <NavLink href="/register" className="underline">
           {t('loginCreateAccount')}
-        </Link>
+        </NavLink>
       </p>
     </AuthCard>
   )

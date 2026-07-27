@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Notice } from '@/components/ui/notice'
@@ -191,7 +191,9 @@ export default function DemoMemoryReviewPage() {
               description={t('emptyPendingDescription')}
               action={
                 <Button asChild type="button">
-                  <Link href={demoHrefs.campaign}>{t('backToCampaign')}</Link>
+                  <NavLink href={demoHrefs.campaign}>
+                    {t('backToCampaign')}
+                  </NavLink>
                 </Button>
               }
             />
@@ -263,10 +265,10 @@ export default function DemoMemoryReviewPage() {
 
       <div className="mt-6 flex justify-end gap-3">
         <Button asChild type="button">
-          <Link href={demoHrefs.campaign}>{t('backToCampaign')}</Link>
+          <NavLink href={demoHrefs.campaign}>{t('backToCampaign')}</NavLink>
         </Button>
         <Button asChild type="button" variant="accent">
-          <Link href={demoHrefs.prepare}>{t('prepareNext')}</Link>
+          <NavLink href={demoHrefs.prepare}>{t('prepareNext')}</NavLink>
         </Button>
       </div>
     </main>

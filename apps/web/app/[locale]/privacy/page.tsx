@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 
 type LegalPageProps = { params: Promise<{ locale: string }> }
 
@@ -43,12 +43,12 @@ export default async function PrivacyPage({ params }: LegalPageProps) {
 
   return (
     <main id="main-content" className="mx-auto max-w-2xl px-6 py-16 font-serif">
-      <Link
+      <NavLink
         href="/"
         className="font-mono text-xs uppercase tracking-widest text-[var(--ink-2)] hover:text-[var(--accent)]"
       >
         {t('backHome')}
-      </Link>
+      </NavLink>
 
       <h1 className="mt-8 font-serif text-4xl font-semibold leading-tight text-[var(--ink)]">
         {t('privacyPage.title')}

@@ -2,7 +2,9 @@
 
 import { useTranslations } from 'next-intl'
 
-import { Link, usePathname } from '@/i18n/navigation'
+import { usePathname } from '@/i18n/navigation'
+
+import { NavLink } from '@/components/navigation/nav-link'
 import { cn } from '@/lib/utils'
 
 type EntityNavProps = {
@@ -62,7 +64,7 @@ export function EntityNav({ campaignId }: EntityNavProps) {
       className="flex items-center gap-6 border-b border-[var(--line)] px-4 llg:px-10"
     >
       {items.map((item) => (
-        <Link
+        <NavLink
           key={item.key}
           href={item.href}
           aria-current={item.active ? 'page' : undefined}
@@ -74,7 +76,7 @@ export function EntityNav({ campaignId }: EntityNavProps) {
           )}
         >
           {t(item.key)}
-        </Link>
+        </NavLink>
       ))}
     </nav>
   )

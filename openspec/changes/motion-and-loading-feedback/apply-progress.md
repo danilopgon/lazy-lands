@@ -4,8 +4,12 @@
 
 Strict TDD mode. Unit 1 tasks 1.1.1 through 1.4.1 and Unit 3 tasks 3.1.1 through 3.4.1 are complete.
 Unit 1's real-browser matrix passed at 900×900 across full, subtle, off, and OS reduced-motion
-modes. No commit, push, or PR was created. Units 1 and 3 remain independent under-budget work
-units.
+modes. Units 1 and 3 are committed locally as `8a62d05` and `82f5fef` and pushed to
+`origin/feat/session-save-pending-guard`; no PR was created.
+
+Unit 2 tasks 2.1.1 through 2.3.1 are complete. Tasks 2.4.1 and 2.4.2 are **deferred, not done**:
+both require a running browser, and this session holds no authorization to start or manage a
+development server. They are the only open Unit 2 items.
 
 ## Completed Tasks
 
@@ -27,6 +31,13 @@ units.
 - [x] 3.2.4 Locale layout provider mount.
 - [x] 3.3.1 Unit, regression, lint, typecheck, and targeted formatting gates.
 - [x] 3.4.1 Zero-diff browser regression at <=900px across full, subtle, off, and OS reduce.
+- [x] 2.1.1 Real-`<Link>` topology, grace-delay, clearing, and reserved-footprint RED coverage.
+- [x] 2.1.2 Hash and external bare-anchor RED coverage.
+- [x] 2.1.3 Identical affordance across all three `data-motion` modes.
+- [x] 2.2.1 `NavLink` plus its internal `LinkPending` reader.
+- [x] 2.2.2 Mechanical in-app `Link` to `NavLink` migration across 32 files.
+- [x] 2.2.3 English and Spanish `Nav.pending` copy.
+- [x] 2.3.1 Focused/full tests, lint, typecheck, and targeted formatting gates.
 
 ## TDD Cycle Evidence
 
@@ -44,6 +55,8 @@ units.
 | 3.2.3 | Same | Component | N/A (new files) | Presence imports absent; exact focused command exited 1 | Modal open/closed and keyed list behavior passed | Modal and list boundaries | Targeted Prettier; 11/11 remained green |
 | 3.2.4 | Same | Server component integration | Existing provider safety net: 2/2 passed | Layout referenced the missing provider in RED suite | Both environment branches passed | Full/off expression branches | Provider adds no DOM element |
 | 3.3.1 | Same + full suite | Regression | 83 files / 648 pre-existing tests plus 11 new tests | N/A (quality gate) | 83 files / 659 tests passed | Focused and full-suite commands | Lint, typecheck, and targeted Prettier passed |
+| 2.1.1–2.1.3 | `apps/web/tests/navigation/nav-link.test.tsx` | Component integration | 84 files / 664 tests passed | FAIL: `Failed to resolve import "@/components/navigation/nav-link"`, 0 tests executed | 13/13 focused tests passed | Idle, sub-delay, post-delay, settle, hash, external, and all three modes | Grace flag replaced an effect-body `setState`; 13/13 remained green |
+| 2.2.1–2.2.3 | Same + full suite | Component integration | Covered above | Covered by the Unit 2 RED run | Focused 13/13 and full 84 files / 677 tests passed | Three-call-site blast-radius run before the remaining 29 files | Targeted Prettier over 5 files; semantics-only assertions |
 
 ## Work Unit Evidence
 
@@ -68,6 +81,14 @@ units.
 | Task 3.4.1 evidence scope | Runtime JSON and four screenshots remain temporary under `C:\Users\Usuario\AppData\Local\Temp\opencode\lazy-lands-unit3-3.4.1\` and were not copied into the repository. This is a focused Chromium sample on one public route, not an exhaustive route sweep; it is sufficient because Unit 3 has zero consumers and adds no DOM wrapper. |
 | Artifact formatting | `pnpm exec prettier --check "openspec/changes/motion-and-loading-feedback/tasks.md" "openspec/changes/motion-and-loading-feedback/apply-progress.md"` — PASS, `All matched files use Prettier code style!` |
 | Rollback boundary | Revert the four new motion modules, the focused test, the locale-layout provider wrapper, and the Vitest include entry. No call-site behavior, CSS, messages, domain state, or persistence changes are involved. |
+| Unit 2 focused test | Baseline: the file did not exist. RED: `pnpm exec vitest run tests/navigation/nav-link.test.tsx` — FAIL, unresolved production import, 0 tests executed. GREEN/refactor: same command — PASS, 1 file / 13 tests. |
+| Unit 2 full regression | `pnpm exec vitest run` — PASS, 84 files / 677 tests (664 before this unit). Two harness files needed updating because `NavLink` introduces a client-context dependency every in-app link now carries: `tests/legal.test.tsx` renders through `@/tests/intl` (the pages sit under `NextIntlClientProvider` in production, see `app/[locale]/layout.tsx:138`), and `tests/i18n-switcher.test.tsx`'s `next/link` mock now exports `useLinkStatus`. No production assertion was weakened. |
+| Unit 2 static quality | `pnpm --filter web lint` — PASS; `pnpm --filter web typecheck` — PASS. Lint initially rejected a synchronous `setState` inside `LinkPending`'s effect (`react-hooks/set-state-in-effect`); the reader now derives visibility as `pending && hasGraceElapsed` and only rearms the flag in cleanup. |
+| Unit 2 formatting | Targeted `pnpm exec prettier --check` over every changed non-OpenSpec file — PASS after formatting five migrated files. Repo-wide `format:check` remains excluded for pre-existing debt. |
+| Unit 2 browser acceptance | NOT PERFORMED. Tasks 2.4.1 and 2.4.2 need a running dev server, which this session was not authorized to start. No JSDOM result was substituted for them. |
+| Unit 2 review | Four 4R lenses were run against the working tree (high tier: >400 changed lines). `review-reliability` and `review-readability` independently found the same CRITICAL defect: `LinkPending`'s visible branch hardcoded the default slot class instead of the `slotClassName` prop, so the nine block-level call sites would have snapped back to an inline slot the moment a navigation went pending — the exact reflow the prop exists to prevent. The two tests covering that prop passed vacuously (the footprint test only compared the default slot; the override test never set `pending`). Fixed test-first: the rewritten `keeps a repositioned status slot in place through the pending state` failed with `expected 'ml-1 inline-block…' to be 'absolute right-5 top-4'`, then passed after `nav-link.tsx:102` was corrected. `review-risk` and `review-resilience` returned no findings. `review-readability` also raised one SUGGESTION about undocumented migration exclusions, addressed with a WHY comment at each of the three excluded files. |
+| Unit 2 review tooling | The bounded `gentle-ai review start/finalize/validate` facade recorded for Units 1 and 3 does not exist in the installed CLI (1.49.0 exposes `review-start --policy-file` / `review-step --operation` instead, with undocumented payload schemas). No lineage was created for Unit 2, because probing those schemas against a live lineage is what terminally escalated a previous one. The 4R lenses were run directly instead; this is a deviation from the receipt-bound lifecycle and no pre-commit receipt validation was performed. |
+| Unit 2 rollback boundary | Revert `components/navigation/`, `tests/navigation/`, the 32 migrated call-site files, the two locale keys, and the two test-harness adjustments. No route, `href`, API, schema, query key, or persistence contract changed. |
 
 ## Frontend Handoff Checklist
 
@@ -94,6 +115,16 @@ units.
 - [x] Empty state: unchanged because Unit 3 has no call-site migrations.
 - [x] Success state: unchanged because Unit 3 has no call-site migrations.
 - [x] Runtime regression across every mode at <=900px: focused Chromium coverage passed on the public NPC demo route for `full`, `subtle`, `off`, and OS reduced motion, including structure and keyboard/modal behavior.
+- [x] Unit 2 fields: no form field, `href`, route, or component semantic changed; the migration is a wrapper swap.
+- [x] Unit 2 copy: existing link labels unchanged; only `Nav.pending` was added, in both catalogs.
+- [x] Unit 2 layout: the status slot renders with one class string in both states, so revealing the quill never shifts the link; block-level anchors place it absolutely instead of inline.
+- [x] Unit 2 shared components: reuses the existing `.ll-quill` glyph and `sr-only`; no new primitive or dependency.
+- [x] Unit 2 design tokens: no visual token changed; the grace period is `NAV_PENDING_DELAY_MS` from Unit 3's token module.
+- [x] Unit 2 motion: the affordance imports no Motion runtime, so it stays perceivable under `subtle`, `off`, and OS reduce by construction.
+- [x] Unit 2 loading state: `role="status"` with a localized screen-reader label appears only after the 150ms grace period, and only while that link's own navigation is pending.
+- [x] Unit 2 idle state: no `status` node exists at all, so existing `getByRole('link')` and `getByRole('status')` queries across 677 tests are unaffected.
+- [x] Unit 2 error/empty/success states: unchanged; navigation feedback owns none of them.
+- [ ] Unit 2 runtime at <=900px across full/subtle/off/OS reduce: NOT VERIFIED — no dev-server authorization this session.
 
 ## Handoff Compliance Report
 
@@ -124,6 +155,23 @@ units.
 
 - Added `lib/**/__tests__/**/*.test.{ts,tsx}` to `vitest.config.ts` because the task-mandated test path was outside the repository's previous Vitest include patterns.
 - Used targeted Prettier as explicitly required by the apply handoff; unrelated repository-wide formatting debt was not touched.
+- **Unit 2 test path.** Task 2.1.1 names `apps/web/components/navigation/__tests__/nav-link.test.tsx`,
+  which `vitest.config.ts` does not collect. The suite's real convention is `tests/**` (the modal
+  a11y guard task 4.1.2 must keep green lives at `apps/web/tests/ui/modal.test.tsx`), so the file
+  landed at `apps/web/tests/navigation/nav-link.test.tsx`. Widening the include pattern was rejected:
+  `vitest.config.ts` is in no unit's file-change table, and a test written at an uncollected path
+  would have produced a RED that never ran.
+- **Unit 2 pending-affordance placement.** `NavLink` gained an optional `pendingSlotClassName`. The
+  inline default reserves width on a text line, but a block-level anchor (`campaign-card.tsx`, the
+  four `campaign-detail-view.tsx` stat cells, the four `demo/page.tsx` stat cells) would grow a new
+  row when the quill appears — a real layout shift. Those nine call sites place the slot absolutely
+  instead. Both states still share one class string, so the no-CLS property holds either way.
+- **Unit 2 deliberate migration exclusions.** `components/i18n/language-switcher.tsx` keeps raw
+  `next/link`: it builds fully localized hrefs itself and intercepts the click to persist the locale,
+  so routing it through the locale-aware `Link` would break the switch. The `#product`/`#how`/
+  `#early-access` anchors in `footer.tsx` and the `navLinks` anchors in `public-top.tsx` also keep
+  raw `next/link` — they are same-page hash targets, which produce no router transition and
+  therefore no pending state. Every `@/i18n/navigation` `Link` call site was migrated.
 - No design or product behavior deviation.
 
 ## Implementation Discoveries
@@ -136,4 +184,6 @@ units.
 
 ## Remaining Tasks
 
-- [ ] Units 2, 4, and 5 remain untouched by this apply batch.
+- [ ] 2.4.1 Playwright throttled-navigation sample — needs a dev server; not authorized this session.
+- [ ] 2.4.2 Manual <=900px three-mode check of the pending affordance — same blocker.
+- [ ] Units 4 and 5.

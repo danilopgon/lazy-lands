@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -226,9 +226,9 @@ export default function RegisterPage() {
 
       <p className="mt-6 text-sm text-[var(--ink-2)]">
         {t('registerHaveAccount')}{' '}
-        <Link href="/login" className="underline">
+        <NavLink href="/login" className="underline">
           {t('loginTitle')}
-        </Link>
+        </NavLink>
       </p>
     </AuthCard>
   )

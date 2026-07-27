@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -190,9 +190,9 @@ function ResetContent() {
         <p role="alert" className="text-base text-[var(--danger)]">
           {errorMessage}
         </p>
-        <Link href="/forgot-password" className="mt-4 underline">
+        <NavLink href="/forgot-password" className="mt-4 underline">
           {t('resetRequestNew')}
-        </Link>
+        </NavLink>
       </AuthCard>
     )
   }
@@ -207,9 +207,9 @@ function ResetContent() {
           {t('resetSuccessBody')}
         </p>
         <p className="mt-6 text-sm text-[var(--ink-2)]">
-          <Link href="/login" className="underline">
+          <NavLink href="/login" className="underline">
             {t('loginTitle')}
-          </Link>
+          </NavLink>
         </p>
       </AuthCard>
     )

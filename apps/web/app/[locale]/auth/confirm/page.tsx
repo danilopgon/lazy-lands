@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { buildLocalizedPath } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
@@ -92,9 +92,9 @@ function ConfirmContent() {
       <p role="alert" className="text-base text-[var(--danger)]">
         {errorMessage}
       </p>
-      <Link href="/register" className="mt-4 underline">
+      <NavLink href="/register" className="mt-4 underline">
         {t('confirmRegisterAgain')}
-      </Link>
+      </NavLink>
     </AuthCard>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
@@ -34,7 +34,7 @@ export function CampaignList({ campaigns }: CampaignListProps) {
         description={t('emptyDescription')}
         action={
           <Button asChild variant="accent">
-            <Link href="/campaigns/new">{t('emptyAction')}</Link>
+            <NavLink href="/campaigns/new">{t('emptyAction')}</NavLink>
           </Button>
         }
       />
