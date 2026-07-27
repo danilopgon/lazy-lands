@@ -10,6 +10,7 @@ export default defineConfig({
     include: [
       'tests/**/*.test.{ts,tsx}',
       'app/**/__tests__/**/*.test.{ts,tsx}',
+      'lib/**/__tests__/**/*.test.{ts,tsx}',
     ],
   },
   resolve: {

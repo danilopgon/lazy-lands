@@ -13,6 +13,7 @@ import {
 import { notFound } from 'next/navigation'
 
 import { routing } from '@/i18n/routing'
+import { MotionModeProvider } from '@/lib/motion/use-motion-mode'
 import { getSiteUrl } from '@/lib/site'
 import { Providers } from '@/providers'
 import '../globals.css'
@@ -135,7 +136,9 @@ export default async function LocaleLayout({
           {t('skipLink')}
         </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>{children}</Providers>
+          <MotionModeProvider mode={motion}>
+            <Providers>{children}</Providers>
+          </MotionModeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

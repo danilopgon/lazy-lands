@@ -43,6 +43,9 @@ test-results
 # SDD tooling (skill registry + cache, local/personal)
 .atl
 
+# Local CodeGraph index
+.codegraph/
+
 # OS
 .DS_Store
 Thumbs.db
