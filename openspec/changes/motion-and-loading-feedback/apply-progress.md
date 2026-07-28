@@ -7,9 +7,17 @@ Unit 1's real-browser matrix passed at 900×900 across full, subtle, off, and OS
 modes. Units 1 and 3 are committed locally as `8a62d05` and `82f5fef` and pushed to
 `origin/feat/session-save-pending-guard`; no PR was created.
 
-Unit 2 tasks 2.1.1 through 2.3.1 are complete. Tasks 2.4.1 and 2.4.2 are **deferred, not done**:
-both require a running browser, and this session holds no authorization to start or manage a
-development server. They are the only open Unit 2 items.
+Units 2, 4, and 5 are complete, including their browser acceptance. They are committed locally as
+`c6f9844`, `b320d2b`, and `b5ebb1f`, with `b459d8d` carrying the animation-critique fixes; nothing
+is pushed and no PR exists.
+
+Every task in `tasks.md` is now checked except `F.1` and `F.2`, which are deliberate follow-ups.
+Two further follow-ups came out of the critique and are listed under Remaining Tasks.
+
+Acceptance provenance differs by condition and is recorded per unit below. `full` at 900x900 was
+measured over CDP; `subtle`, `off`, and OS reduced motion were validated by the maintainer, who
+alone could reach them. No `gentle-ai` review receipt exists for Units 2, 4, or 5 — see the review
+tooling note in Work Unit Evidence.
 
 ## Completed Tasks
 
@@ -109,7 +117,7 @@ development server. They are the only open Unit 2 items.
 | Unit 4 exit-boundary discovery | Mounting the presence boundary above the conditional surfaced a real defect that only exists once a closing modal outlives its condition: for the length of the exit, two `role="dialog"` nodes coexist. The exiting one still held a window-level keydown listener (double Escape, competing focus trap), and its unmount cleanup would later unlock body scroll and pull focus away from the modal that had just opened. Two pre-existing route tests caught it as `Found multiple elements with the role "dialog"`. `Modal` now reads `useIsPresent()`: while exiting it drops `role`/`aria-modal`, sets `aria-hidden`, detaches the keydown listener, and releases focus plus the scroll lock at exit start instead of at unmount. Open-state behavior is unchanged. |
 | Unit 4 review | One `review-reliability` lens (medium tier, ~280 changed lines). It returned three WARNINGs, all judged correct and all fixed: (1) the `subtle`/`off` exit test asserted only role absence, which the new `isPresent` guard satisfies at exit start regardless of mode — it now probes panel text, the same way the full-motion test does; (2) the pending initial-focus timer was not cleared when `release()` ran early, so it could pull focus back into the exiting panel — `release()` now clears it; (3) `isReleasedRef` was never reset and the scroll-lock effect ran once per instance, so a modal reopened mid-exit came back live with the page unlocked. (3) was confirmed by a new failing test (`expected '' to be 'hidden'`) before the acquire/release effect was made symmetric. |
 | Unit 4 test harness | `tests/intl.tsx` now also wraps renders in `MotionModeProvider mode="full"`, mirroring `app/[locale]/layout.tsx:138-141`. Nine test files render a `Modal` through that helper and would otherwise hit `useMotionMode`'s deliberate outside-provider throw. `tests/ui/modal.test.tsx` uses a local provider wrapper for the same reason; every assertion in its a11y suite is byte-identical. |
-| Unit 4 browser acceptance | `full` at 900x900, measured over CDP against the running dev server. Open state: portal depth unchanged (backdrop is a direct child of `body`), `aria-modal="true"`, `body.style.overflow = hidden`, focus inside the panel, panel 512x700 inside the viewport. Close: `role` is already absent 23ms in while the panel is still mounted (the inert-exit guard), panel and backdrop both reach opacity 0 at **t=152ms with a gap of 0** — the desync the critique found, where the backdrop finished 80ms before the panel, is gone — unmount at 188ms, focus restored to the triggering button. OS reduced motion validated separately by the maintainer. Still open: `subtle` and `off`. |
+| Unit 4 browser acceptance | `full` at 900x900, measured over CDP against the running dev server. Open state: portal depth unchanged (backdrop is a direct child of `body`), `aria-modal="true"`, `body.style.overflow = hidden`, focus inside the panel, panel 512x700 inside the viewport. Close: `role` is already absent 23ms in while the panel is still mounted (the inert-exit guard), panel and backdrop both reach opacity 0 at **t=152ms with a gap of 0** — the desync the critique found, where the backdrop finished 80ms before the panel, is gone — unmount at 188ms, focus restored to the triggering button. OS reduced motion validated separately by the maintainer. `subtle` and `off` validated by the maintainer. |
 | Unit 4 rollback boundary | Revert `components/ui/modal.tsx`, the six route wrappers, `tests/ui/modal-presence.test.tsx`, and the two test-harness provider additions. `globals.css` still carries the migrated classes, so the revert path stays intact (follow-up F.1). |
 | Unit 5 focused test | Safety net first: 8 characterization tests over the real review screen passed against the pre-migration component. RED: `exposes the transient phase as state, not styling` failed in all three modes (no `data-fx` attribute). GREEN: `pnpm exec vitest run tests/sessions/memory-review-choreography.test.tsx` — PASS, 13 tests. |
 | Unit 5 full regression | `pnpm exec vitest run` — PASS, 85 files / 697 tests. `tests/demo/demo-tour.test.tsx > drives the exact steps passed via props when replayed` fails intermittently under full-suite load; it was reproduced at `b320d2b` with Unit 5 stashed, so it is pre-existing and unrelated. |
@@ -250,14 +258,12 @@ the browser-verification bucket.
 ## Remaining Tasks
 
 - [x] 2.4.1 Playwright throttled-navigation sample — `apps/web/tests/e2e/nav-pending.spec.ts`.
-- [ ] 2.4.2 / 4.4.1 / 5.4.1 — covered: `full` at 900x900 (CDP measurements above) and OS reduced
-      motion (maintainer). Still open, both requiring a server or source change rather than a
-      browser setting:
-      - `off`: restart the dev server with `VISUAL_REGRESSION_TEST_MODE=true`.
-      - `subtle`: NOT reachable at runtime. `app/[locale]/layout.tsx:121-122` resolves the mode to
-        `full` or `off` and no toggle exists by design. Flipping `data-motion` in DevTools moves
-        only the CSS — `MotionModeProvider` takes its value from that server expression, so the
-        Motion path stays in `full`. Exercising it needs a temporary local edit to that constant.
+- [x] 2.4.2 / 4.4.1 / 5.4.1 — the full acceptance matrix is closed. Provenance differs by
+      condition and is recorded per unit above: `full` at 900x900 was measured over CDP in this
+      session; `subtle`, `off`, and OS reduced motion were validated by the maintainer, who alone
+      could reach them (`off` needs the server restarted with `VISUAL_REGRESSION_TEST_MODE=true`,
+      and `subtle` is not reachable at runtime at all — `app/[locale]/layout.tsx:121-122` resolves
+      the mode server-side with no toggle by design, so it requires a temporary local edit).
 - [ ] F.1 Retire the migrated `globals.css` classes, one PR after this one.
 - [ ] Critique follow-up: decide whether the pending slot should keep reserving ~20px inside
       centred button-shaped links (`buttonVariants` is `inline-flex justify-center`, so the slot

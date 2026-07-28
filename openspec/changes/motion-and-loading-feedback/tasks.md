@@ -76,7 +76,7 @@
 ### Phase 2.4: E2E and manual verification (pattern-level, not exhaustive per-`Link`)
 
 - [x] 2.4.1 Add a Playwright test exercising throttled navigation on a representative sample of route-declaration classes: one breadcrumb link, one card/list-row link, one `app-header.tsx` nav link, and one CTA button-styled link.
-- [ ] 2.4.2 Manually verify, at ≤900px viewport width and under all three `data-motion` modes, the pending affordance for that same representative sample (not every `<Link>` instance in the codebase).
+- [x] 2.4.2 Manually verify, at ≤900px viewport width and under all three `data-motion` modes, the pending affordance for that same representative sample (not every `<Link>` instance in the codebase).
 
 ---
 
@@ -126,7 +126,7 @@
 
 ### Phase 4.4: Manual verification (JSDOM cannot measure this)
 
-- [ ] 4.4.1 At ≤900px viewport width, verify modal open/close visually under all three `data-motion` modes, confirming portal, focus trap, Escape, backdrop-click, scroll lock, and focus restoration are all unaffected.
+- [x] 4.4.1 At ≤900px viewport width, verify modal open/close visually under all three `data-motion` modes, confirming portal, focus trap, Escape, backdrop-click, scroll lock, and focus restoration are all unaffected.
 
 ---
 
@@ -153,7 +153,7 @@
 
 ### Phase 5.4: Manual verification (JSDOM cannot measure this)
 
-- [ ] 5.4.1 At ≤900px viewport width, verify accept/dismiss animation quality under `data-motion="full"`, and verify static-but-correct teardown (no card ever stranded on screen) under `"subtle"` and `"off"`.
+- [x] 5.4.1 At ≤900px viewport width, verify accept/dismiss animation quality under `data-motion="full"`, and verify static-but-correct teardown (no card ever stranded on screen) under `"subtle"` and `"off"`.
 
 ---
 
