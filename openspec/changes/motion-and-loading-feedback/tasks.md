@@ -75,7 +75,7 @@
 
 ### Phase 2.4: E2E and manual verification (pattern-level, not exhaustive per-`Link`)
 
-- [ ] 2.4.1 Add a Playwright test exercising throttled navigation on a representative sample of route-declaration classes: one breadcrumb link, one card/list-row link, one `app-header.tsx` nav link, and one CTA button-styled link.
+- [x] 2.4.1 Add a Playwright test exercising throttled navigation on a representative sample of route-declaration classes: one breadcrumb link, one card/list-row link, one `app-header.tsx` nav link, and one CTA button-styled link.
 - [ ] 2.4.2 Manually verify, at ≤900px viewport width and under all three `data-motion` modes, the pending affordance for that same representative sample (not every `<Link>` instance in the codebase).
 
 ---
