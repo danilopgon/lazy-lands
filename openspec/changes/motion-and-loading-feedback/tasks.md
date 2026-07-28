@@ -136,20 +136,20 @@
 
 ### Phase 5.1: Frontend RED tests
 
-- [ ] 5.1.1 In `apps/web/components/sessions/__tests__/memory-review-parts.test.tsx`, using fake timers, add failing tests asserting a suggestion card is removed from the DOM after `STAMP_LIFETIME_MS + CARD_EXIT_MS` for accept, and after the existing dismiss exit window, in **all three** `data-motion` modes (`full`, `subtle`, `off`) — never gated on a CSS `animationend` listener, since `.ll-stamp`/`.ll-strike`/`.ll-discarding`/`.ll-accepting` are static under `subtle`/`off` and never fire that event.
-- [ ] 5.1.2 Add a failing test asserting per-card `isSubmitting` busy isolation is preserved: accepting one card leaves a sibling card's Accept/Edit/Dismiss controls enabled and unaffected.
-- [ ] 5.1.3 Add a failing test asserting `InlineScribeBusy` and `OriginBadge` rendering inside `SuggestionCard` are unaffected by the `fx`-machine migration.
-- [ ] 5.1.4 Non-blocking spike task: confirm under Vitest/JSDOM whether Motion's `onAnimationComplete` fires during the fake-timer-driven test run (it is rAF-scheduled per the design's verified `motion-dom@12.42.0` source evidence). Record the finding; it decides only whether tests may additionally assert on the Motion callback, not whether the architecture changes — the timer path stays authoritative either way.
+- [x] 5.1.1 In `apps/web/components/sessions/__tests__/memory-review-parts.test.tsx`, using fake timers, add failing tests asserting a suggestion card is removed from the DOM after `STAMP_LIFETIME_MS + CARD_EXIT_MS` for accept, and after the existing dismiss exit window, in **all three** `data-motion` modes (`full`, `subtle`, `off`) — never gated on a CSS `animationend` listener, since `.ll-stamp`/`.ll-strike`/`.ll-discarding`/`.ll-accepting` are static under `subtle`/`off` and never fire that event.
+- [x] 5.1.2 Add a failing test asserting per-card `isSubmitting` busy isolation is preserved: accepting one card leaves a sibling card's Accept/Edit/Dismiss controls enabled and unaffected.
+- [x] 5.1.3 Add a failing test asserting `InlineScribeBusy` and `OriginBadge` rendering inside `SuggestionCard` are unaffected by the `fx`-machine migration.
+- [x] 5.1.4 Non-blocking spike task: confirm under Vitest/JSDOM whether Motion's `onAnimationComplete` fires during the fake-timer-driven test run (it is rAF-scheduled per the design's verified `motion-dom@12.42.0` source evidence). Record the finding; it decides only whether tests may additionally assert on the Motion callback, not whether the architecture changes — the timer path stays authoritative either way.
 
 ### Phase 5.2: Implementation
 
-- [ ] 5.2.1 In `apps/web/components/sessions/memory-review-parts.tsx`, migrate `SuggestionCard`'s `fx` prop (`'stamping' | 'accepting' | 'discarding'`) visual mechanics from CSS classes to `<ExitPresence>`/`layout` animation driven by `useMotionMode()`, preserving the stamp-pop → hold → file-away sequencing for accept and the strike → slide-out sequencing for dismiss.
-- [ ] 5.2.2 In `apps/web/app/[locale]/campaigns/[id]/memory/review/page.tsx`, keep the `window.setTimeout` orchestration (existing `STAMP_LIFETIME_MS` / `CARD_EXIT_MS` constants from `apps/web/lib/motion/timings.ts`) as the sole authority for state removal; `AnimatePresence` exit remains visual-only and MUST NOT gate DOM removal.
-- [ ] 5.2.3 Confirm no new copy is introduced (`MemoryReview.acceptedStamp`, `.stamping`, and feedback strings remain unchanged) — no `en.json`/`es.json` edit required for this unit.
+- [x] 5.2.1 In `apps/web/components/sessions/memory-review-parts.tsx`, migrate `SuggestionCard`'s `fx` prop (`'stamping' | 'accepting' | 'discarding'`) visual mechanics from CSS classes to `<ExitPresence>`/`layout` animation driven by `useMotionMode()`, preserving the stamp-pop → hold → file-away sequencing for accept and the strike → slide-out sequencing for dismiss.
+- [x] 5.2.2 In `apps/web/app/[locale]/campaigns/[id]/memory/review/page.tsx`, keep the `window.setTimeout` orchestration (existing `STAMP_LIFETIME_MS` / `CARD_EXIT_MS` constants from `apps/web/lib/motion/timings.ts`) as the sole authority for state removal; `AnimatePresence` exit remains visual-only and MUST NOT gate DOM removal.
+- [x] 5.2.3 Confirm no new copy is introduced (`MemoryReview.acceptedStamp`, `.stamping`, and feedback strings remain unchanged) — no `en.json`/`es.json` edit required for this unit.
 
 ### Phase 5.3: Quality gates
 
-- [ ] 5.3.1 Run `pnpm --filter web test -- components/sessions/__tests__/memory-review-parts.test.tsx`, `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
+- [x] 5.3.1 Run `pnpm --filter web test -- components/sessions/__tests__/memory-review-parts.test.tsx`, `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
 
 ### Phase 5.4: Manual verification (JSDOM cannot measure this)
 

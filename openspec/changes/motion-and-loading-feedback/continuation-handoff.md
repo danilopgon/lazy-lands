@@ -6,16 +6,123 @@ change's proposal, specs, design, tasks, or cumulative evidence.
 
 Repository root: `C:\Users\Usuario\Dev\lazy-lands`
 
-## First Action
+## First Action (2026-07-28 session)
 
-Remain on `feat/session-save-pending-guard`. Do not create, switch, or rebase branches. Confirm the
-branch and clean worktree, read this file plus the current hybrid artifacts, then begin Unit 2 with
-the first Strict TDD RED topology test in
-`apps/web/components/navigation/__tests__/nav-link.test.tsx`.
+Remain on `feat/session-save-pending-guard`. Do not create, switch, or rebase branches.
 
-That first RED test MUST render `LinkPending` inside a real Next.js `<Link>` subtree. Rendering the
-reader in isolation, or merely mocking `useLinkStatus`, is invalid because outside Next's
-`LinkStatusContext.Provider` the hook silently returns `{ pending: false }`.
+Units 2 and 4 are complete and committed. **Unit 5 is implemented and green but deliberately
+NOT committed** — the working tree holds it. The exact resume sequence the user agreed to is:
+
+1. Run a single `review-reliability` lens over the uncommitted Unit 5 working tree (medium tier).
+2. Judge its findings, fix the correct ones test-first, then commit Unit 5 (no push).
+3. Only then run the final animation critique subagent.
+
+The prepared Unit 5 review prompt, verbatim, is in "Unit 5 Review Prompt" below. Do not widen it
+into a 4R sweep: Unit 5 is ~250 changed lines, which is medium tier — exactly one lens.
+
+### Judging the critique subagent (step 3)
+
+Score every critique finding against `design.md`'s "Impeccable `animate` decision record", which
+records these as ALREADY REJECTED with rationale: no spring token; no stagger on sibling removal
+(list reflow is simultaneous); timer-driven teardown stays authoritative with `AnimatePresence`
+visual-only; OS reduced-motion does NOT clamp `effectiveMode` (clamping would move the stamp from
+centred to top-right); `.ll-view-enter` stays CSS. A finding that lands in that set is NOT correct
+however well argued — implementing it regresses an approved decision. Act only on findings outside
+it. Pass the design record to the subagent as input so it critiques against the spec rather than
+generic motion taste.
+
+## Session Log: 2026-07-28
+
+Commits added on this branch, in order:
+
+1. `c6f9844 feat(navigation): show pending feedback on in-app links` — Unit 2.
+2. `b320d2b feat(ui): animate modal entry and exit through the motion foundation` — Unit 4.
+
+Unit 5 is uncommitted in the working tree. Full suite: 694 passed. One pre-existing flake,
+`tests/demo/demo-tour.test.tsx > drives the exact steps passed via props when replayed`, fails
+only under full-suite load and was verified to fail at `b320d2b` with Unit 5 stashed — it is NOT
+caused by this work.
+
+### Environment gotcha (cost real time)
+
+The Bash tool's PATH is mangled Windows PATH. Node is at `F:\Programas\Nodejs`, pnpm at
+`%APPDATA%\npm`, git at `/usr/bin` + `/mingw64/bin`. Every command needs:
+
+```
+export PATH="/usr/bin:/mingw64/bin:/f/Programas/Nodejs:/c/Users/Usuario/AppData/Roaming/npm:$PATH"
+```
+
+`sed` is unavailable; use `node -e` for scripted edits. Source files are CRLF, so string matching
+in scripts must use the file's own EOL.
+
+### Review tooling deviation — read before trying `gentle-ai`
+
+The installed CLI is **1.49.0**, which does NOT expose the `review start` / `finalize` /
+`validate` facade that Units 1 and 3 used. It exposes `review-start --lineage --policy-file`,
+`review-step --operation --input`, and `review-validate --receipt --request`, whose payload
+schemas are undocumented. No lineage was created for Units 2, 4, or 5, because probing those
+schemas against a live lineage is what terminally escalated a previous one (`passed` defaults to
+`false`; `escalated` is terminal). The 4R/reliability lenses were run directly as subagents
+instead. Units 2/4/5 therefore have NO content-bound receipt.
+
+### Unit 5 Review Prompt
+
+Give this to one `review-reliability` subagent, unchanged:
+
+> Review the uncommitted working-tree changes in `C:\Users\Usuario\Dev\lazy-lands` (branch
+> `feat/session-save-pending-guard`, HEAD `b320d2b`). Run `git diff` and `git status`, and read the
+> new untracked file `apps/web/tests/sessions/memory-review-choreography.test.tsx`.
+>
+> Scope: Unit 5 of `motion-and-loading-feedback`. Read `design.md` — the "Unit 5 teardown" row in
+> Architecture Decisions and the "Unit 5: Scribe signature choreography" section of the Impeccable
+> animate decision record — plus `tasks.md` Unit 5. Those are the binding contract.
+>
+> What changed: `memory-review-parts.tsx`'s `SuggestionCard` `<article>` became a `motion.article`
+> with `layout="position"`, a `data-fx` attribute, and an `animate` target per phase (`FX_TARGET`)
+> resolved through `useMotionMode().transition()`; it no longer applies `.ll-accepting` /
+> `.ll-discarding`. The keyed lists in `campaigns/[id]/memory/review/page.tsx` and
+> `demo/memory/page.tsx` are wrapped in `<ExitPresence>`. `globals.css`'s `.ll-stamp` pop easing
+> changed from an overshooting curve to the approved `EASE.out`; the stamp itself stays CSS.
+>
+> THE BINDING INVARIANT to check hardest: timer-driven state removal (`STAMP_LIFETIME_MS`,
+> `CARD_EXIT_MS` from `lib/motion/timings.ts`) must remain the SOLE authority for removing a card
+> from the DOM. `ExitPresence` must be visual-only and must never extend a card's DOM lifetime or
+> gate teardown — that is why the phase animation is on `animate`, not `exit`. Verify no path lets
+> Motion delay or block removal in any of the three modes.
+>
+> Also check: per-card `isSubmitting` isolation; `InlineScribeBusy`, `OriginBadge`, `.ll-stamp` and
+> all copy unchanged; the reflow never animates `height` and never staggers sibling removal;
+> whether the new tests would still pass if removal were wrongly gated on an animation callback;
+> whether keeping `.ll-stamp` on CSS really prevents Motion's inline `transform` from clobbering
+> its `translate(-50%,-50%)` centring (and preserves centred geometry under OS reduced motion at
+> `data-motion="full"`); and whether `layout="position"` inside `ExitPresence` can strand a
+> transform when a sibling is removed mid-animation.
+>
+> Report only merge-blocking defects anchored to `path:line` with a concrete failure scenario. Do
+> not propose motion-design preferences: springs, stagger on sibling removal, and
+> `onAnimationComplete`-driven removal are already rejected by the design record.
+
+### Unit 5 decisions worth not relitigating
+
+- The phase animation is on `animate`, not `exit`, so `ExitPresence` cannot extend DOM lifetime.
+- `.ll-stamp` stays CSS: its geometry is mode-scoped (`full` centred via
+  `translate(-50%,-50%)`; `subtle`/`off` static top-right) and Motion's inline `transform` would
+  clobber the centring. Only its easing moved to `EASE.out`, which `design.md` explicitly requires
+  over the previous overshoot. `tests/motion/timings.test.ts` parses durations only, so it stays green.
+- `layout="position"`, not bare `layout`: bare `layout` animates the box, distorting the serif text
+  and the hard ink shadow, and `design.md` forbids animating `height`.
+- The dismiss strike stays `text-decoration-line`. `design.md` describes a `scaleX: 0 -> 1` draw,
+  but a single scaled element cannot strike a multi-line blockquote correctly. **This is an open
+  deviation that still needs recording in `apply-progress.md`.**
+- `demo/memory/page.tsx` was widened into scope (task 5.2.2 names only the real review page)
+  because `SuggestionCard` is shared: once it stops applying the CSS classes, the demo route loses
+  its teardown animation without the same boundary. Same shape as Unit 4's approved demo widening.
+
+### Still owed on Unit 5 before commit
+
+- Record the strike deviation and the demo widening in `apply-progress.md`.
+- Add the Unit 5 evidence rows to `apply-progress.md` (the Unit 2 and Unit 4 rows are the template).
+- Leave task 5.4.1 unchecked — browser verification is unauthorized, same as 2.4.1/2.4.2/4.4.1.
 
 ## Immutable Current State
 

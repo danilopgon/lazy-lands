@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useRouter } from '@/i18n/navigation'
 
+import { ExitPresence } from '@/components/motion/exit-presence'
 import { NavLink } from '@/components/navigation/nav-link'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -588,34 +589,36 @@ export default function MemoryReviewPage() {
               }
             />
           ) : (
-            pending.map((suggestion) =>
-              editing === suggestion.id ? (
-                <SuggestionEditor
-                  key={suggestion.id}
-                  suggestion={suggestion}
-                  isBusy={submittingIds[suggestion.id] === true}
-                  onCancel={() => setEditing(null)}
-                  onSave={(content) =>
-                    createMutation.mutate({ suggestion, content })
-                  }
-                />
-              ) : (
-                <SuggestionCard
-                  key={suggestion.id}
-                  suggestion={suggestion}
-                  fx={fx[suggestion.id]}
-                  isSubmitting={submittingIds[suggestion.id] === true}
-                  onAccept={() =>
-                    createMutation.mutate({
-                      suggestion,
-                      content: suggestion.content,
-                    })
-                  }
-                  onEdit={() => setEditing(suggestion.id)}
-                  onDismiss={() => dismissSuggestion(suggestion)}
-                />
-              )
-            )
+            <ExitPresence>
+              {pending.map((suggestion) =>
+                editing === suggestion.id ? (
+                  <SuggestionEditor
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    isBusy={submittingIds[suggestion.id] === true}
+                    onCancel={() => setEditing(null)}
+                    onSave={(content) =>
+                      createMutation.mutate({ suggestion, content })
+                    }
+                  />
+                ) : (
+                  <SuggestionCard
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    fx={fx[suggestion.id]}
+                    isSubmitting={submittingIds[suggestion.id] === true}
+                    onAccept={() =>
+                      createMutation.mutate({
+                        suggestion,
+                        content: suggestion.content,
+                      })
+                    }
+                    onEdit={() => setEditing(suggestion.id)}
+                    onDismiss={() => dismissSuggestion(suggestion)}
+                  />
+                )
+              )}
+            </ExitPresence>
           )}
         </section>
 

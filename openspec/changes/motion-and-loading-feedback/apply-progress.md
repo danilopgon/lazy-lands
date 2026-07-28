@@ -44,6 +44,14 @@ development server. They are the only open Unit 2 items.
 - [x] 4.2.1 Motion-driven backdrop and panel via `useMotionMode().transition()`.
 - [x] 4.2.2 `ModalPresence` mounted above both modal conditionals in six entity routes.
 - [x] 4.3.1 Focused/full tests, lint, typecheck, and targeted formatting gates.
+- [x] 5.1.1 Timer-authoritative accept and dismiss removal coverage in all three modes.
+- [x] 5.1.2 Per-card `isSubmitting` isolation coverage.
+- [x] 5.1.3 `InlineScribeBusy` and stamp rendering coverage.
+- [x] 5.1.4 Spike resolved: the timer path alone is asserted; no Motion callback is relied on.
+- [x] 5.2.1 `SuggestionCard` phase mechanics moved to Motion `animate` plus `layout="position"`.
+- [x] 5.2.2 `ExitPresence` above the keyed list; page timers remain the sole removal authority.
+- [x] 5.2.3 Confirmed: no new copy, no locale-catalog edit.
+- [x] 5.3.1 Focused/full tests, lint, typecheck, and targeted formatting gates.
 
 ## TDD Cycle Evidence
 
@@ -102,6 +110,12 @@ development server. They are the only open Unit 2 items.
 | Unit 4 test harness | `tests/intl.tsx` now also wraps renders in `MotionModeProvider mode="full"`, mirroring `app/[locale]/layout.tsx:138-141`. Nine test files render a `Modal` through that helper and would otherwise hit `useMotionMode`'s deliberate outside-provider throw. `tests/ui/modal.test.tsx` uses a local provider wrapper for the same reason; every assertion in its a11y suite is byte-identical. |
 | Unit 4 browser acceptance | NOT PERFORMED. Task 4.4.1 needs a running dev server, which this session was not authorized to start. |
 | Unit 4 rollback boundary | Revert `components/ui/modal.tsx`, the six route wrappers, `tests/ui/modal-presence.test.tsx`, and the two test-harness provider additions. `globals.css` still carries the migrated classes, so the revert path stays intact (follow-up F.1). |
+| Unit 5 focused test | Safety net first: 8 characterization tests over the real review screen passed against the pre-migration component. RED: `exposes the transient phase as state, not styling` failed in all three modes (no `data-fx` attribute). GREEN: `pnpm exec vitest run tests/sessions/memory-review-choreography.test.tsx` — PASS, 13 tests. |
+| Unit 5 full regression | `pnpm exec vitest run` — PASS, 85 files / 697 tests. `tests/demo/demo-tour.test.tsx > drives the exact steps passed via props when replayed` fails intermittently under full-suite load; it was reproduced at `b320d2b` with Unit 5 stashed, so it is pre-existing and unrelated. |
+| Unit 5 static quality | `pnpm --filter web lint` — PASS; `pnpm --filter web typecheck` — PASS; targeted Prettier — PASS. |
+| Unit 5 review | One `review-reliability` lens (medium tier). It returned one CRITICAL, judged correct and fixed: with animation disabled (`subtle`, `off`, or OS reduce at `full`), the phase target drove the card to `opacity: 0` on the next frame, so a dismissed proposal blinked out instead of showing its danger strike for the teardown window. The lens anchored it to the guarantee the migration had orphaned — `globals.css:485-489` forced `opacity: 1 !important; transform: none !important` on `.ll-discarding`/`.ll-accepting`/`.ll-stamp` under OS reduced motion — and correctly noted that the existing removal tests could not distinguish the two behaviors, since they only assert DOM presence. `fxTarget()` now holds the resting state whenever `animationsEnabled` is false. The new perceivability test was mutation-checked: forcing the old behavior makes it fail with `expected +0 not to be +0`. The lens also confirmed `ExitPresence` cannot gate teardown, because `SuggestionCard` sets no `exit` prop. |
+| Unit 5 browser acceptance | NOT PERFORMED. Task 5.4.1 needs a running dev server, which this session was not authorized to start. |
+| Unit 5 rollback boundary | Revert `memory-review-parts.tsx`, the two page wrappers, the `globals.css` easing, and the new test. `.ll-accepting`/`.ll-discarding` remain declared in `globals.css` (follow-up F.1 owns their retirement), so the revert path is intact. |
 | Unit 2 rollback boundary | Revert `components/navigation/`, `tests/navigation/`, the 32 migrated call-site files, the two locale keys, and the two test-harness adjustments. No route, `href`, API, schema, query key, or persistence contract changed. |
 
 ## Frontend Handoff Checklist
@@ -186,6 +200,21 @@ development server. They are the only open Unit 2 items.
   `#early-access` anchors in `footer.tsx` and the `navLinks` anchors in `public-top.tsx` also keep
   raw `next/link` — they are same-page hash targets, which produce no router transition and
   therefore no pending state. Every `@/i18n/navigation` `Link` call site was migrated.
+- **Unit 5 dismiss strike.** `design.md` specifies the danger strike "draws left-to-right with
+  `scaleX: 0 -> 1` over 140ms". Not implemented: the strike is `text-decoration-line` on a
+  blockquote that wraps to several lines, and a single scaled element cannot strike multi-line text
+  correctly. `.ll-strike` stays as-is and remains legible in every mode. The overlapping card exit
+  the design pairs it with is implemented.
+- **Unit 5 stamp stays CSS.** `.ll-stamp`'s geometry is mode-scoped — centred via
+  `translate(-50%, -50%)` under `full`, static top-right under `subtle`/`off` — and OS reduced
+  motion at `full` must keep the centred placement (`design.md`'s precedence row rejects clamping
+  precisely to avoid that geometry swap). Motion writes `transform` inline, so animating the stamp
+  would clobber the centring. Only its easing moved, from an overshooting curve to the approved
+  `EASE.out`; `tests/motion/timings.test.ts` parses durations, so it stays green.
+- **Unit 5 demo widening.** Task 5.2.2 names only the real review page, but `SuggestionCard` is
+  shared: once it stops applying `.ll-accepting`/`.ll-discarding`, `app/[locale]/demo/memory/page.tsx`
+  loses its teardown choreography without the same `ExitPresence` boundary. It mirrors the same
+  timer orchestration, so it was included — the same shape as Unit 4's approved demo widening.
 - No design or product behavior deviation.
 
 ## Implementation Discoveries
@@ -201,4 +230,5 @@ development server. They are the only open Unit 2 items.
 - [ ] 2.4.1 Playwright throttled-navigation sample — needs a dev server; not authorized this session.
 - [ ] 2.4.2 Manual <=900px three-mode check of the pending affordance — same blocker.
 - [ ] 4.4.1 Manual <=900px three-mode modal open/close check — same blocker.
-- [ ] Unit 5.
+- [ ] 5.4.1 Manual <=900px accept/dismiss quality check across the three modes — same blocker.
+- [ ] F.1 Retire the migrated `globals.css` classes, one PR after this one.

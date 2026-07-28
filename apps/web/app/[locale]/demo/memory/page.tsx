@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
+import { ExitPresence } from '@/components/motion/exit-presence'
 import { NavLink } from '@/components/navigation/nav-link'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -198,27 +199,29 @@ export default function DemoMemoryReviewPage() {
               }
             />
           ) : (
-            pending.map((suggestion) =>
-              editing === suggestion.id ? (
-                <SuggestionEditor
-                  key={suggestion.id}
-                  suggestion={suggestion}
-                  isBusy={submittingId === suggestion.id}
-                  onCancel={() => setEditing(null)}
-                  onSave={(content) => void accept(suggestion, content)}
-                />
-              ) : (
-                <SuggestionCard
-                  key={suggestion.id}
-                  suggestion={suggestion}
-                  fx={fx[suggestion.id]}
-                  isSubmitting={submittingId === suggestion.id}
-                  onAccept={() => void accept(suggestion, suggestion.content)}
-                  onEdit={() => setEditing(suggestion.id)}
-                  onDismiss={() => dismiss(suggestion)}
-                />
-              )
-            )
+            <ExitPresence>
+              {pending.map((suggestion) =>
+                editing === suggestion.id ? (
+                  <SuggestionEditor
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    isBusy={submittingId === suggestion.id}
+                    onCancel={() => setEditing(null)}
+                    onSave={(content) => void accept(suggestion, content)}
+                  />
+                ) : (
+                  <SuggestionCard
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    fx={fx[suggestion.id]}
+                    isSubmitting={submittingId === suggestion.id}
+                    onAccept={() => void accept(suggestion, suggestion.content)}
+                    onEdit={() => setEditing(suggestion.id)}
+                    onDismiss={() => dismiss(suggestion)}
+                  />
+                )
+              )}
+            </ExitPresence>
           )}
         </section>
 

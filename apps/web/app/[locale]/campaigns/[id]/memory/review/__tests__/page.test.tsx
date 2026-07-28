@@ -422,7 +422,7 @@ describe('MemoryReviewPage', () => {
     // Then the exit animation plays before the card is torn down.
     await waitFor(
       () => {
-        expect(container.querySelector('.ll-accepting')).not.toBeNull()
+        expect(container.querySelector('[data-fx="accepting"]')).not.toBeNull()
       },
       { timeout: LIFETIME_TIMEOUT_MS }
     )

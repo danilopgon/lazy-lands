@@ -412,7 +412,10 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   box-shadow: 3px 3px 0 var(--shadow);
-  animation: ll-stamp-pop 260ms cubic-bezier(0.2, 1.4, 0.32, 1) both;
+  /* Exponential deceleration, not an overshooting curve: the stamp's physical
+     impact comes from its own keyframes, and a bounce would read as decoration
+     rather than as confirmation. Mirrors EASE.out in lib/motion/tokens.ts. */
+  animation: ll-stamp-pop 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 [data-motion='full'] .ll-strike {
