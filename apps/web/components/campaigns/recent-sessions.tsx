@@ -148,7 +148,10 @@ export function RecentSessions({
                 <NavLink
                   href={sessionHref}
                   data-testid="session-occurrence-excerpt"
-                  className="mt-1 block line-clamp-2 text-sm leading-relaxed text-[var(--ink-2)] hover:underline"
+                  // `line-clamp` resolves to `-webkit-box` + `overflow: hidden`,
+                  // which would clip an inline slot out of existence.
+                  pendingSlotClassName="absolute right-0 top-0"
+                  className="relative mt-1 block line-clamp-2 text-sm leading-relaxed text-[var(--ink-2)] hover:underline"
                 >
                   {session.summary}
                 </NavLink>

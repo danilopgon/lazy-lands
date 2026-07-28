@@ -179,6 +179,27 @@ development server. They are the only open Unit 2 items.
 - Runtime: PASS for Unit 3 — focused 900×900 Chromium evidence covers `full`, `subtle`, `off`, and OS reduce with identical direct-body structure, no provider DOM node, and no behavior/layout regression. Scope is one public route rather than an exhaustive route sweep, which is sufficient because Unit 3 has zero consumers.
 - VERDICT: PASS — Unit 3 implementation, source/test compliance, and task 3.4.1 runtime regression are complete.
 
+## Animation Critique Checkpoint
+
+A read-only motion critique was run across all three commits, scored against `design.md`'s
+Impeccable animate decision record. Six findings; four accepted, one partially accepted, one
+deferred. Nothing landed in the record's already-rejected set (springs, stagger, callback-driven
+removal, mode clamping, `.ll-view-enter` migration, `height`/bare `layout`).
+
+| Finding | Verdict | Action |
+|---|---|---|
+| Modal close inherited the 220ms `EASE.out` entrance instead of the specified 140ms `EASE.in`, finishing 80ms after the backdrop | Correct — verified against `design.md:232-234` | Both backdrop and panel now carry their own `exit` transition, so they close together on the fast window. |
+| Dismiss strike never draws, and the card starts fading on the same tick | Half correct | Accepted the sequencing half: the discard transition now leads with `delay: 0.08` then runs `DURATION.fast`, totalling the unchanged 220ms window, so the strike is readable before the slide. Declined the `::after` scaleX draw — the quote wraps to several lines and a single scaled bar cannot strike multi-line text; `text-decoration-line` stays. |
+| Under OS reduced motion the stamp lost its centring and was clipped | Correct, and pre-existing | `[data-motion='full'] .ll-stamp` now declares its `translate(-50%, -50%)` statically instead of inheriting it from the keyframes, and the reduced-motion reset re-asserts it for the centred variant only. The subtle/off stamp is anchored top-right with no transform, so the generic `transform: none` reset stays correct for it. This also corrects `design.md:35`'s claim that the reduced-motion block "kills duration only". |
+| The pending slot is clipped inside `line-clamp` and offsets labels inside centred buttons | Correct on both counts | Fixed the functional half: `recent-sessions.tsx`'s clamped excerpt link places the slot absolutely, because `-webkit-box` + `overflow: hidden` clipped the inline slot out of existence and the affordance never appeared there. The centred-button half is left for a visual judgement call — see Remaining Tasks. |
+| CSS entrance durations (`.ll-panel-settle` 180ms, `.ll-view-enter` 500ms vs `DESIGN.md`'s 0.34s) sit outside the token vocabulary | Correct but out of scope | Not changed. These predate this change, are in no unit's file table, and reconciling `.ll-view-enter` needs a call on which number is intended. Logged as a follow-up. |
+| `ExitPresence` does no presence work at the suggestion list, so a future reader may "fix" it by adding `exit` | Correct | Documented the invariant on the primitive itself. |
+
+The modal exit-duration fix is NOT covered by a test. A JSDOM timing assertion was written and then
+removed: it passed identically with the defect reintroduced, because Motion's rAF-scheduled
+completion adds roughly 180ms of overhead that swamps the 80ms being measured. That fix belongs to
+the browser-verification bucket.
+
 ## Deviations and Constraints
 
 - Added `lib/**/__tests__/**/*.test.{ts,tsx}` to `vitest.config.ts` because the task-mandated test path was outside the repository's previous Vitest include patterns.
@@ -232,3 +253,10 @@ development server. They are the only open Unit 2 items.
 - [ ] 4.4.1 Manual <=900px three-mode modal open/close check — same blocker.
 - [ ] 5.4.1 Manual <=900px accept/dismiss quality check across the three modes — same blocker.
 - [ ] F.1 Retire the migrated `globals.css` classes, one PR after this one.
+- [ ] Critique follow-up: decide whether the pending slot should keep reserving ~20px inside
+      centred button-shaped links (`buttonVariants` is `inline-flex justify-center`, so the slot
+      becomes a flex item and the label sits ~10px left of centre). Absolute placement fixes the
+      centring but risks overlapping the label on small buttons. Needs a look in a browser.
+- [ ] Critique follow-up: reconcile the CSS entrance durations with the token vocabulary —
+      `.ll-panel-settle` at 180ms has no distinct meaning next to `DURATION.base`, and
+      `.ll-view-enter` at 500ms contradicts `DESIGN.md`'s 0.34s page turn.

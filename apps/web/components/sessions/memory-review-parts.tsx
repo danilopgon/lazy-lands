@@ -199,10 +199,17 @@ export function SuggestionCard({
       // height.
       layout="position"
       animate={fxTarget(fx, animationsEnabled)}
-      transition={transition({
-        duration: DURATION.base,
-        ease: fx && fx !== 'stamping' ? EASE.in : EASE.out,
-      })}
+      // Dismiss leads with the strike and only then slides away, so the DM can
+      // read what was struck out. Both halves still land inside the same
+      // CARD_EXIT_MS window the removal timer owns.
+      transition={transition(
+        discarding
+          ? { duration: DURATION.fast, delay: 0.08, ease: EASE.in }
+          : {
+              duration: DURATION.base,
+              ease: fx === 'accepting' ? EASE.in : EASE.out,
+            }
+      )}
       className="relative overflow-hidden border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)]"
     >
       {/* The stamp stays mounted through the exit phase so it never blinks out

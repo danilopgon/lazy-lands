@@ -148,7 +148,10 @@ export function Modal({
       onMouseDown={handleBackdropClick}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      exit={{
+        opacity: 0,
+        transition: transition({ duration: DURATION.fast, ease: EASE.in }),
+      }}
       transition={transition({ duration: DURATION.fast, ease: EASE.out })}
     >
       <motion.div
@@ -165,7 +168,16 @@ export function Modal({
         // vertical settle only. Borders and ink shadow stay hard and static.
         initial={{ opacity: 0, y: 8, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 4, scale: 0.99 }}
+        // Asymmetric on purpose: the sheet is placed deliberately and lifted
+        // quickly. Without its own transition the exit would inherit the slower
+        // entrance below and finish 80ms after the backdrop, leaving a
+        // half-faded dialog over an undimmed page.
+        exit={{
+          opacity: 0,
+          y: 4,
+          scale: 0.99,
+          transition: transition({ duration: DURATION.fast, ease: EASE.in }),
+        }}
         transition={transition({ duration: DURATION.base, ease: EASE.out })}
       >
         <div className="flex shrink-0 items-center justify-between border-b-2 border-[var(--line)] px-6 py-4">

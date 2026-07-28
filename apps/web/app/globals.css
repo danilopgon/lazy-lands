@@ -401,6 +401,11 @@ body {
   position: absolute;
   top: 48%;
   left: 50%;
+  /* Centring must not depend on the keyframes alone: `animation-fill-mode` is
+     overridden by the `transform: none !important` reduced-motion reset below,
+     which would drop the stamp's top-left corner on the anchor point and let
+     the card's `overflow-hidden` clip it. */
+  transform: translate(-50%, -50%);
   z-index: 2;
   border: 2px solid var(--good);
   background: color-mix(in srgb, var(--paper) 82%, transparent);
@@ -487,6 +492,15 @@ body {
   .ll-stamp {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  /* Only the centred variant needs its transform back. `transform: none` above
+     would drop its top-left corner on the anchor point, where the card's
+     `overflow-hidden` clips it — reduced motion must remove movement, never
+     relocate the feedback. The subtle/off stamp is anchored top-right with no
+     transform, so the reset above is already correct for it. */
+  [data-motion='full'] .ll-stamp {
+    transform: translate(-50%, -50%) !important;
   }
 
   .ll-panel-settle {
