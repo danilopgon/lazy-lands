@@ -6,6 +6,8 @@
  * Everything here derives from verifiable product facts only — no ratings,
  * prices, or claims that aren't backed by the app itself.
  */
+import type { Metadata } from 'next'
+
 import { buildLocalizedPath } from '@/lib/format'
 import type { AppLocale } from '@/i18n/routing'
 
@@ -35,6 +37,86 @@ export function localeAlternates(
   return {
     canonical: locale === 'es' ? es : en,
     languages: { en, es, 'x-default': en },
+  }
+}
+
+type SocialMetadataInput = {
+  locale: AppLocale
+  siteName: string
+  tagline: string
+  title: string
+  description: string
+  path?: string
+}
+
+type SocialMetadata = Required<Pick<Metadata, 'openGraph' | 'twitter'>>
+
+const OG_IMAGE = { width: 1200, height: 630, type: 'image/png' } as const
+
+/**
+ * Build the Open Graph + Twitter blocks for a page.
+ *
+ * Both cards are derived from the page's own title and description. Next does
+ * not deep-merge `openGraph` across segments, so a page that overrides `title`
+ * without also rebuilding `openGraph` would silently keep the parent layout's
+ * copy on every share card — this helper is the single place that keeps the two
+ * in sync.
+ *
+ * `openGraph.url` is set explicitly because Next does not derive `og:url` from
+ * `alternates.canonical`. It is omitted unless a page passes its own `path`:
+ * scrapers key their share cache on `og:url`, so an inherited site-wide value
+ * would make every route claim to be — and share a cache entry with — the page
+ * that value points at.
+ *
+ * The image is likewise declared explicitly rather than left to the
+ * `opengraph-image` file convention: the convention would emit the
+ * locale-prefixed `/en/opengraph-image`, which `localePrefix: 'as-needed'`
+ * redirects to the unprefixed path — a hop some scrapers do not follow.
+ *
+ * @param {SocialMetadataInput} root0 - Page locale, brand name, tagline, title, description, and locale-free path.
+ * @param {AppLocale} root0.locale - The locale of the page being rendered.
+ * @param {string} root0.siteName - The brand name used as `og:site_name`.
+ * @param {string} root0.tagline - The tagline the social image renders, used as its alt text.
+ * @param {string} root0.title - The page title shared as `og:title`.
+ * @param {string} root0.description - The share copy used as `og:description`.
+ * @param {string} [root0.path] - The page's own locale-free pathname. Omit on shared fallbacks so no `og:url` is emitted.
+ * @returns {SocialMetadata} The `openGraph` and `twitter` metadata blocks.
+ */
+export function buildSocialMetadata({
+  locale,
+  siteName,
+  tagline,
+  title,
+  description,
+  path,
+}: SocialMetadataInput): SocialMetadata {
+  const images = [
+    {
+      ...OG_IMAGE,
+      url: buildLocalizedPath('/opengraph-image', locale),
+      // Describes what the image renders — the wordmark over the tagline — not
+      // the longer share copy that sits beside it in the card.
+      alt: `${siteName} — ${tagline}`,
+    },
+  ]
+
+  return {
+    openGraph: {
+      type: 'website',
+      siteName,
+      title,
+      description,
+      ...(path === undefined ? {} : { url: buildLocalizedPath(path, locale) }),
+      locale: locale === 'es' ? 'es_ES' : 'en_US',
+      alternateLocale: locale === 'es' ? 'en_US' : 'es_ES',
+      images,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images,
+    },
   }
 }
 

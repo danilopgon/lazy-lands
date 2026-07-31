@@ -13,6 +13,7 @@ import {
 import { notFound } from 'next/navigation'
 
 import { routing } from '@/i18n/routing'
+import { buildSocialMetadata } from '@/lib/seo'
 import { getSiteUrl } from '@/lib/site'
 import { Providers } from '@/providers'
 import '../globals.css'
@@ -73,19 +74,33 @@ export async function generateMetadata({
       template: `%s · ${siteName}`,
     },
     description: t('description'),
-    openGraph: {
-      type: 'website',
+    // Declared explicitly rather than via the `app/` file conventions: the app
+    // root holds no layout (the root layout is this locale segment), so
+    // conventions placed there are not merged into the rendered document.
+    manifest: '/manifest.webmanifest',
+    icons: {
+      icon: [
+        // Google Search ignores SVG favicons, so the raster .ico leads and the
+        // scalable SVG follows for browsers that prefer it.
+        {
+          url: '/favicon.ico',
+          sizes: '16x16 32x32 48x48',
+          type: 'image/x-icon',
+        },
+        { url: '/icon.svg', type: 'image/svg+xml' },
+      ],
+      apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+    },
+    ...buildSocialMetadata({
+      locale,
       siteName,
+      tagline: t('description'),
       title: siteName,
-      description: t('description'),
-      locale: locale === 'es' ? 'es_ES' : 'en_US',
-      alternateLocale: locale === 'es' ? 'en_US' : 'es_ES',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: siteName,
-      description: t('description'),
-    },
+      description: t('socialDescription'),
+      // No `path`: this is the site-wide fallback, and every route that does
+      // not replace `openGraph` inherits it. An `og:url` here would make
+      // /login, /privacy and the rest all claim to be the same page.
+    }),
   }
 }
 

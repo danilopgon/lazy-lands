@@ -2,6 +2,9 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 import { ImageResponse } from 'next/og'
+import { getTranslations } from 'next-intl/server'
+
+import { routing } from '@/i18n/routing'
 
 export const alt = 'Lazy Lands — Campaign Companion for Dungeon Masters'
 export const size = { width: 1200, height: 630 }
@@ -14,15 +17,37 @@ export const contentType = 'image/png'
 const FONT_PATH = join(process.cwd(), 'lib/og/source-serif-4-semibold.ttf')
 
 /**
+ * Return the supported locale params so both social images are prerendered.
+ *
+ * @returns {{locale: string}[]} Supported locale params.
+ */
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }))
+}
+
+type OpenGraphImageProps = {
+  params: Promise<{ locale: string }>
+}
+
+/**
  * Default social-sharing (Open Graph / Twitter) image, rendered from the
  * design-system palette in the brand serif. A bespoke, art-directed image pack
- * is deferred post-MVP; this is the credible baseline. Single app-root image
- * applied to every route.
+ * is deferred post-MVP; this is the credible baseline.
  *
+ * Lives inside the locale segment so the tagline matches the language of the
+ * page being shared, and so the image resolves under the same
+ * `localePrefix: 'as-needed'` scheme as every other route.
+ *
+ * @param {OpenGraphImageProps} root0 - Image route props.
+ * @param {Promise<{locale: string}>} root0.params - App Router locale params.
  * @returns {Promise<ImageResponse>} The rendered 1200×630 social image.
  */
-export default async function OpenGraphImage() {
-  const sourceSerif = await readFile(FONT_PATH)
+export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
+  const { locale } = await params
+  const [sourceSerif, t] = await Promise.all([
+    readFile(FONT_PATH),
+    getTranslations({ locale, namespace: 'Root' }),
+  ])
 
   return new ImageResponse(
     <div
@@ -57,7 +82,7 @@ export default async function OpenGraphImage() {
           color: '#585C51',
         }}
       >
-        Campaign Companion for Dungeon Masters
+        {t('description')}
       </div>
     </div>,
     {
