@@ -68,10 +68,12 @@ const OG_IMAGE = { width: 1200, height: 630, type: 'image/png' } as const
  * would make every route claim to be — and share a cache entry with — the page
  * that value points at.
  *
- * The image is likewise declared explicitly rather than left to the
- * `opengraph-image` file convention: the convention would emit the
- * locale-prefixed `/en/opengraph-image`, which `localePrefix: 'as-needed'`
- * redirects to the unprefixed path — a hop some scrapers do not follow.
+ * The image is addressed by explicit locale prefix, including for the default
+ * locale whose pages are unprefixed. The bare `/opengraph-image` would be
+ * resolved by `localeDetection`, so a client sending `Accept-Language: es`
+ * asking for the English card would be redirected to the Spanish one; the
+ * prefixed path names the language instead of negotiating it. `proxy.ts`
+ * excludes these paths from i18n routing so the prefix survives.
  *
  * @param {SocialMetadataInput} root0 - Page locale, brand name, tagline, title, description, and locale-free path.
  * @param {AppLocale} root0.locale - The locale of the page being rendered.
@@ -93,7 +95,7 @@ export function buildSocialMetadata({
   const images = [
     {
       ...OG_IMAGE,
-      url: buildLocalizedPath('/opengraph-image', locale),
+      url: `/${locale}/opengraph-image`,
       // Describes what the image renders — the wordmark over the tagline — not
       // the longer share copy that sits beside it in the card.
       alt: `${siteName} — ${tagline}`,

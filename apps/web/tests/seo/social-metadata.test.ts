@@ -81,17 +81,18 @@ describe('buildSocialMetadata', () => {
     expect(og.url).toBeUndefined()
     expect(og).not.toHaveProperty('url')
     // The rest of the card still applies site-wide.
-    expect(og.images?.[0]?.url).toBe('/opengraph-image')
+    expect(og.images?.[0]?.url).toBe('/en/opengraph-image')
     expect(og.siteName).toBe('Lazy Lands')
   })
 
-  it('points og:image at the unprefixed English image route', () => {
+  it('prefixes the English image route, so the card cannot be renegotiated', () => {
     const og = buildSocialMetadata({ ...base, locale: 'en' })
       .openGraph as OpenGraph
 
-    // Not `/en/opengraph-image`: `localePrefix: 'as-needed'` redirects the
-    // default-locale prefix away, and a redirect hop loses some scrapers.
-    expect(og.images?.[0]?.url).toBe('/opengraph-image')
+    // Explicitly prefixed even though English pages are not: the bare path
+    // would be resolved by localeDetection, handing a Spanish-speaking client
+    // the Spanish card when it asked for the English one.
+    expect(og.images?.[0]?.url).toBe('/en/opengraph-image')
     expect(og.images?.[0]).toMatchObject({ width: 1200, height: 630 })
   })
 
@@ -107,7 +108,7 @@ describe('buildSocialMetadata', () => {
     const card = twitter as Twitter
 
     expect(card.card).toBe('summary_large_image')
-    expect(card.images?.[0]?.url).toBe('/opengraph-image')
+    expect(card.images?.[0]?.url).toBe('/en/opengraph-image')
     expect(card.title).toBe(base.title)
     expect(card.description).toBe(base.description)
   })
@@ -175,7 +176,7 @@ describe('landing share card', () => {
   it('carries an image on both the Open Graph and Twitter cards', async () => {
     const { openGraph, twitter } = await landingMetadata('en')
 
-    expect(openGraph?.images?.[0]?.url).toBe('/opengraph-image')
-    expect(twitter?.images?.[0]?.url).toBe('/opengraph-image')
+    expect(openGraph?.images?.[0]?.url).toBe('/en/opengraph-image')
+    expect(twitter?.images?.[0]?.url).toBe('/en/opengraph-image')
   })
 })

@@ -212,9 +212,11 @@ describe('proxy — session-management (Phase 2B)', () => {
     ])
       expect(matches(pathname)).toBe(false)
 
-    // The social image is the exception: it lives inside the locale segment,
-    // so the unprefixed English URL only resolves via the i18n rewrite.
-    expect(matches('/opengraph-image')).toBe(true)
+    // The social images carry an explicit locale prefix and must reach it
+    // untouched: negotiation here would serve the Spanish card to a Spanish
+    // client that asked for the English one.
+    expect(matches('/en/opengraph-image')).toBe(false)
+    expect(matches('/es/opengraph-image')).toBe(false)
   })
 
   it('redirects unauthenticated Spanish dashboard requests to localized login and preserves query', async () => {
