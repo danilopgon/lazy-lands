@@ -6,7 +6,11 @@ import { CookieBanner } from '@/components/layout/cookie-banner'
 import { LandingPage } from '@/components/landing/landing-page'
 import { JsonLd } from '@/components/seo/json-ld'
 import { isAppLocale, routing } from '@/i18n/routing'
-import { buildStructuredData, localeAlternates } from '@/lib/seo'
+import {
+  buildSocialMetadata,
+  buildStructuredData,
+  localeAlternates,
+} from '@/lib/seo'
 import { getSiteUrl } from '@/lib/site'
 
 type HomeProps = {
@@ -26,12 +30,24 @@ export async function generateMetadata({
 }: HomeProps): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'Landing' })
+  const tRoot = await getTranslations({ locale, namespace: 'Root' })
   const appLocale = isAppLocale(locale) ? locale : routing.defaultLocale
 
   return {
     title: t('metadataTitle'),
     description: t('metadataDescription'),
     alternates: localeAlternates('/', appLocale),
+    // The share card carries the landing's own title, not the layout's bare
+    // brand name: Next replaces `openGraph` per segment instead of merging it,
+    // so overriding `title` alone would leave the parent's copy on the card.
+    ...buildSocialMetadata({
+      locale: appLocale,
+      siteName: tRoot('title'),
+      tagline: tRoot('description'),
+      title: t('metadataTitle'),
+      description: tRoot('socialDescription'),
+      path: '/',
+    }),
   }
 }
 
