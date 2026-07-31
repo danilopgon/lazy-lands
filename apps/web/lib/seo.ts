@@ -46,7 +46,7 @@ type SocialMetadataInput = {
   tagline: string
   title: string
   description: string
-  path: string
+  path?: string
 }
 
 type SocialMetadata = Required<Pick<Metadata, 'openGraph' | 'twitter'>>
@@ -63,8 +63,13 @@ const OG_IMAGE = { width: 1200, height: 630, type: 'image/png' } as const
  * in sync.
  *
  * `openGraph.url` is set explicitly because Next does not derive `og:url` from
- * `alternates.canonical`. The image is likewise declared explicitly rather than
- * left to the `opengraph-image` file convention: the convention would emit the
+ * `alternates.canonical`. It is omitted unless a page passes its own `path`:
+ * scrapers key their share cache on `og:url`, so an inherited site-wide value
+ * would make every route claim to be — and share a cache entry with — the page
+ * that value points at.
+ *
+ * The image is likewise declared explicitly rather than left to the
+ * `opengraph-image` file convention: the convention would emit the
  * locale-prefixed `/en/opengraph-image`, which `localePrefix: 'as-needed'`
  * redirects to the unprefixed path — a hop some scrapers do not follow.
  *
@@ -74,7 +79,7 @@ const OG_IMAGE = { width: 1200, height: 630, type: 'image/png' } as const
  * @param {string} root0.tagline - The tagline the social image renders, used as its alt text.
  * @param {string} root0.title - The page title shared as `og:title`.
  * @param {string} root0.description - The share copy used as `og:description`.
- * @param {string} root0.path - The locale-free pathname (e.g. `/` or `/login`).
+ * @param {string} [root0.path] - The page's own locale-free pathname. Omit on shared fallbacks so no `og:url` is emitted.
  * @returns {SocialMetadata} The `openGraph` and `twitter` metadata blocks.
  */
 export function buildSocialMetadata({
@@ -101,7 +106,7 @@ export function buildSocialMetadata({
       siteName,
       title,
       description,
-      url: buildLocalizedPath(path, locale),
+      ...(path === undefined ? {} : { url: buildLocalizedPath(path, locale) }),
       locale: locale === 'es' ? 'es_ES' : 'en_US',
       alternateLocale: locale === 'es' ? 'en_US' : 'es_ES',
       images,

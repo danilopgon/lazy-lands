@@ -97,7 +97,9 @@ export async function generateMetadata({
       tagline: t('description'),
       title: siteName,
       description: t('socialDescription'),
-      path: '/',
+      // No `path`: this is the site-wide fallback, and every route that does
+      // not replace `openGraph` inherits it. An `og:url` here would make
+      // /login, /privacy and the rest all claim to be the same page.
     }),
   }
 }

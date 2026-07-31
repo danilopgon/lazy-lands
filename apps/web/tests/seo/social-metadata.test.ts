@@ -67,6 +67,24 @@ describe('buildSocialMetadata', () => {
     expect(og.url).toBe('/es/login')
   })
 
+  it('omits og:url when no path is given, so a fallback cannot claim a route', () => {
+    const og = buildSocialMetadata({
+      locale: 'en',
+      siteName: base.siteName,
+      tagline: base.tagline,
+      title: base.title,
+      description: base.description,
+    }).openGraph as OpenGraph
+
+    // Scrapers key their share cache on og:url: a site-wide value inherited by
+    // /login, /privacy and friends would collide every route onto one entry.
+    expect(og.url).toBeUndefined()
+    expect(og).not.toHaveProperty('url')
+    // The rest of the card still applies site-wide.
+    expect(og.images?.[0]?.url).toBe('/opengraph-image')
+    expect(og.siteName).toBe('Lazy Lands')
+  })
+
   it('points og:image at the unprefixed English image route', () => {
     const og = buildSocialMetadata({ ...base, locale: 'en' })
       .openGraph as OpenGraph
