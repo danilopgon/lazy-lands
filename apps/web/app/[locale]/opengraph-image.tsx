@@ -35,8 +35,9 @@ type OpenGraphImageProps = {
  * is deferred post-MVP; this is the credible baseline.
  *
  * Lives inside the locale segment so the tagline matches the language of the
- * page being shared, and so the image resolves under the same
- * `localePrefix: 'as-needed'` scheme as every other route.
+ * page being shared. Unlike the pages, both languages are addressed by explicit
+ * prefix (`/en/...` as well as `/es/...`): a share card must render the language
+ * it was asked for, never the one the requesting client happens to prefer.
  *
  * @param {OpenGraphImageProps} root0 - Image route props.
  * @param {Promise<{locale: string}>} root0.params - App Router locale params.
