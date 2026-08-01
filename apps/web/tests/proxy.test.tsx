@@ -175,12 +175,48 @@ describe('proxy — session-management (Phase 2B)', () => {
     )
   })
 
-  it('SM-proxy-05: preserves the existing broad matcher (session-refresh for all non-asset paths)', async () => {
+  it('SM-proxy-05: preserves the broad matcher (session-refresh for all non-asset paths)', async () => {
     const { config } = await import('../proxy')
+    const [pattern] = config.matcher
+    const matches = (pathname: string) =>
+      new RegExp(`^${pattern}$`).test(pathname)
 
-    expect(config.matcher).toEqual([
-      '/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    for (const pathname of [
+      '/',
+      '/es',
+      '/login',
+      '/dashboard',
+      '/es/campaigns',
     ])
+      expect(matches(pathname)).toBe(true)
+
+    for (const pathname of ['/_next/static/chunk.js', '/api/health'])
+      expect(matches(pathname)).toBe(false)
+  })
+
+  it('leaves the root metadata routes unrewritten, so crawlers do not hit a 404', async () => {
+    const { config } = await import('../proxy')
+    const [pattern] = config.matcher
+    const matches = (pathname: string) =>
+      new RegExp(`^${pattern}$`).test(pathname)
+
+    // Single, non-localized documents served from the app root: i18n routing
+    // would rewrite them into a locale segment that has no such route.
+    for (const pathname of [
+      '/robots.txt',
+      '/sitemap.xml',
+      '/manifest.webmanifest',
+      '/favicon.ico',
+      '/icon.svg',
+      '/apple-icon.png',
+    ])
+      expect(matches(pathname)).toBe(false)
+
+    // The social images carry an explicit locale prefix and must reach it
+    // untouched: negotiation here would serve the Spanish card to a Spanish
+    // client that asked for the English one.
+    expect(matches('/en/opengraph-image')).toBe(false)
+    expect(matches('/es/opengraph-image')).toBe(false)
   })
 
   it('redirects unauthenticated Spanish dashboard requests to localized login and preserves query', async () => {

@@ -120,8 +120,20 @@ export async function proxy(request: NextRequest) {
 // assets. This is intentional — Supabase SSR requires the middleware to run
 // on ALL page requests so it can refresh the auth cookie transparently.
 // Route protection is enforced by decideAuth (PROTECTED list), not the matcher.
+//
+// The root metadata routes are excluded because they are single, non-localized
+// documents served from the app root. i18n routing would rewrite them into the
+// locale segment (`/en/robots.txt`), where no route exists, and `as-needed`
+// then bounces the default-locale prefix straight back — leaving crawlers a
+// 404 at the exact well-known paths they look for.
+//
+// The social images are excluded for the opposite reason: they are addressed by
+// explicit locale prefix, and locale negotiation must not touch them. Left in,
+// `as-needed` would strip `/en` and `localeDetection` would then resolve the
+// bare path by Accept-Language — serving the Spanish card to every Spanish
+// client that asked for the English one.
 export const config = {
   matcher: [
-    '/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api(?:/|$)|_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|[^/]+/opengraph-image$|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
