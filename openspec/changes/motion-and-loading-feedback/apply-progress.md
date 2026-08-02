@@ -7,9 +7,9 @@ Unit 1's real-browser matrix passed at 900×900 across full, subtle, off, and OS
 modes. Units 1 and 3 are committed locally as `8a62d05` and `82f5fef` and pushed to
 `origin/feat/session-save-pending-guard`; no PR was created.
 
-Units 2, 4, and 5 are complete, including their browser acceptance. They are committed locally as
-`c6f9844`, `b320d2b`, and `b5ebb1f`, with `b459d8d` carrying the animation-critique fixes; nothing
-is pushed and no PR exists.
+Units 2, 4, and 5 are complete, including their browser acceptance. They are committed as
+`c6f9844`, `b320d2b`, and `b5ebb1f`, with `b459d8d` carrying the animation-critique fixes. The
+branch is pushed and open as PR #100; review feedback from that PR has been applied on top.
 
 Every task in `tasks.md` is now checked except `F.1` and `F.2`, which are deliberate follow-ups.
 Two further follow-ups came out of the critique and are listed under Remaining Tasks.
@@ -158,8 +158,8 @@ tooling note in Work Unit Evidence.
 - [x] Unit 2 shared components: reuses the existing `.ll-quill` glyph and `sr-only`; no new primitive or dependency.
 - [x] Unit 2 design tokens: no visual token changed; the grace period is `NAV_PENDING_DELAY_MS` from Unit 3's token module.
 - [x] Unit 2 motion: the affordance imports no Motion runtime, so it stays perceivable under `subtle`, `off`, and OS reduce by construction.
-- [x] Unit 2 loading state: `role="status"` with a localized screen-reader label appears only after the 150ms grace period, and only while that link's own navigation is pending.
-- [x] Unit 2 idle state: no `status` node exists at all, so existing `getByRole('link')` and `getByRole('status')` queries across 677 tests are unaffected.
+- [x] Unit 2 loading state: an always-mounted `aria-live` region is filled with a localized screen-reader label only after the 150ms grace period, and only while that link's own navigation is pending.
+- [x] Unit 2 idle state: the region is empty and claims no role, so existing `getByRole('link')` and `getByRole('status')` queries elsewhere in the suite are unaffected.
 - [x] Unit 2 error/empty/success states: unchanged; navigation feedback owns none of them.
 - [ ] Unit 2 runtime at <=900px across full/subtle/off/OS reduce: NOT VERIFIED — no dev-server authorization this session.
 

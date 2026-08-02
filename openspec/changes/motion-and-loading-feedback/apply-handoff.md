@@ -234,12 +234,10 @@ not the route files under `apps/web/app/[locale]/**`.
 ## 7. Environment gotchas that will waste your time
 
 **Bash tool PATH.** The Bash tool starts **without `/usr/bin` on PATH**, so coreutils (`rm`,
-`cat`, `head`, `tail`, `grep`, `mkdir`, `sh`, `env`) and git hooks fail. Prepend this to Bash
-commands that need them:
-
-```bash
-export PATH="/c/Program Files/Git/usr/bin:/c/Program Files/Git/mingw64/bin:/f/Programas/Nodejs:/c/Users/Usuario/.local/bin:/f/Programas/GitHub CLI:$PATH"
-```
+`cat`, `head`, `tail`, `grep`, `mkdir`, `sh`, `env`) and git hooks fail. Prepend the Git shell's
+`usr/bin` and `mingw64/bin`, plus wherever Node, pnpm and `gh` actually live on the machine, to
+`PATH` before running anything that needs them. Discover those locations per environment — the
+concrete paths are machine-specific and deliberately not recorded here.
 
 **husky and `gh` ARE installed and working.** An earlier session wrongly concluded otherwise;
 that was the missing-`/usr/bin` PATH above, not a broken install. With the PATH fixed, hooks spawn

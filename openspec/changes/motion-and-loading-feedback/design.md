@@ -76,7 +76,7 @@ Primitives — few and thin, capped to what Units 4-5 consume (issue #99 non-goa
 
 `NavLink` renders a plain `<Link>` with **no** status affordance when `href` is a hash or external
 URL — a quiet no-op, never a runtime error. `<LinkPending>` reserves its footprint in both states
-(no CLS), exposes `role="status"` text, and is **not** Motion-driven, so it stays perceivable in
+(no CLS), exposes an `aria-live` region, and is **not** Motion-driven, so it stays perceivable in
 every mode by construction — preserving the property that makes `LoadingScribe` / `InlineScribeBusy`
 mode-proof today.
 
@@ -117,7 +117,7 @@ Unit 5:  accept ──→ setFx('stamping') ──→ setTimeout(STAMP_LIFETIME_
 | Unit | Layer | What / How |
 |---|---|---|
 | 1 | Unit (RTL) | Deferred promise holds the PATCH: assert button `disabled`, pending label, and that a second click issues **no** second `updateSessionFn` call. Error and success paths unchanged. |
-| 2 | Unit (RTL) | `NavLink` renders `role="status"` only after `NAV_PENDING_DELAY_MS`; hash/external `href` renders a bare anchor with no status node; footprint reserved in both states. |
+| 2 | Unit (RTL) | `NavLink` populates its `aria-live` region only after `NAV_PENDING_DELAY_MS`; hash/external `href` renders a bare anchor with no region; footprint reserved in both states. |
 | 2 | E2E (Playwright) | Throttled navigation on a representative sample of route classes — **not** exhaustive per-`Link` (proposal risk row). |
 | 3 | Unit | `transition()` returns `duration: 0` for `subtle`, `off`, and `prefersReducedMotion`; provider value tracks `layout.tsx`'s expression. |
 | 4 | Unit | Existing modal a11y suite (portal, focus trap, Escape, scroll lock, restoration) stays green **unmodified**; new test asserts `duration: 0` under `subtle`. |
@@ -240,9 +240,11 @@ shadow remain static so the modal never becomes a floating soft-shadow surface.
 ### Unit 2: Navigation pending affordance
 
 The affordance is deliberately **not Motion-driven**. After the `150ms` grace period, a fixed-width
-inline slot switches immediately from an `aria-hidden`, invisible quill placeholder to a visible
-`role="status"` quill plus screen-reader pending label. The slot exists in both states, so the link
-does not shift. The existing CSS `.ll-quill` may animate the glyph under `full`, but the glyph and
+inline slot fills with a visible quill plus a screen-reader pending label. The slot — an
+`aria-live="polite"` region — stays mounted and empty until then, both because assistive technology
+does not reliably announce a region introduced already populated, and because a `role="status"`
+node inside all 73 links would make every unnamed status query in the app ambiguous. The slot exists
+in both states, so the link does not shift. The existing CSS `.ll-quill` may animate the glyph under `full`, but the glyph and
 status text remain statically perceivable when CSS animation is disabled. There is no fade, slide,
 progress bar, or Motion import.
 

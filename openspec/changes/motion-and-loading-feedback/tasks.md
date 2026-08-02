@@ -59,7 +59,7 @@
 
 ### Phase 2.1: Frontend RED tests
 
-- [x] 2.1.1 In `apps/web/tests/navigation/nav-link.test.tsx`, add failing tests for a new `NavLink` component: it renders `<Link>{children}</Link>` with a Client Component `LinkPending` reader inside `<Link>`'s children (per Next 16.2.9's `useLinkStatus` topology — reading it anywhere else silently returns `{pending:false}`); it shows a `role="status"` pending affordance only after `NAV_PENDING_DELAY_MS` has elapsed while `pending: true` (grace delay against flicker); the affordance clears once `pending` flips back to `false`; the affordance's footprint is reserved in both pending and non-pending states (no CLS).
+- [x] 2.1.1 In `apps/web/tests/navigation/nav-link.test.tsx`, add failing tests for a new `NavLink` component: it renders `<Link>{children}</Link>` with a Client Component `LinkPending` reader inside `<Link>`'s children (per Next 16.2.9's `useLinkStatus` topology — reading it anywhere else silently returns `{pending:false}`); it fills an always-mounted `aria-live` region only after `NAV_PENDING_DELAY_MS` has elapsed while `pending: true` (grace delay against flicker); the affordance clears once `pending` flips back to `false`; the affordance's footprint is reserved in both pending and non-pending states (no CLS).
 - [x] 2.1.2 Add failing tests asserting `NavLink` renders a bare anchor with no status node for hash (`#anchor`) and external (`https://...`) `href` values — a quiet no-op, never a runtime error.
 - [x] 2.1.3 Add a failing test asserting the pending affordance renders identically in every `data-motion` mode (it involves no Motion animation, so this is a straightforward DOM/text assertion, not a `transition()`/duration assertion).
 

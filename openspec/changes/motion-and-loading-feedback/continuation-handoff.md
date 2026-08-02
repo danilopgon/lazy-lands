@@ -41,15 +41,14 @@ Commits on the branch, oldest first:
 
 ### Environment gotcha (cost real time)
 
-The Bash tool's PATH is mangled Windows PATH. Node is at `F:\Programas\Nodejs`, pnpm at
-`%APPDATA%\npm`, git at `/usr/bin` + `/mingw64/bin`. Every command needs:
+On Windows, an agent's Bash tool may receive the semicolon-separated Windows `PATH` and fail to
+parse it, so `git`, `node` and `pnpm` all resolve to "command not found". Discover their locations
+once (`where node`, `where pnpm`, or the `PATH` entries themselves) and prepend them, plus the Git
+shell's own `/usr/bin` and `/mingw64/bin`, before running anything. The concrete paths are
+machine-specific and deliberately not recorded here.
 
-```shell
-export PATH="/usr/bin:/mingw64/bin:/f/Programas/Nodejs:/c/Users/Usuario/AppData/Roaming/npm:$PATH"
-```
-
-`sed` is unavailable; use `node -e` for scripted edits. Source files are CRLF, so string matching
-in scripts must use the file's own EOL.
+`sed` may be unavailable in that shell; `node -e` is a portable substitute for scripted edits.
+Source files are CRLF, so string matching in scripts must use the file's own EOL.
 
 ### Review tooling deviation — read before trying `gentle-ai`
 
