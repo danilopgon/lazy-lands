@@ -17,7 +17,6 @@ import { OriginBadge } from '@/components/ui/origin-badge'
 import { Textarea } from '@/components/ui/textarea'
 import { getCampaignDetail } from '@/lib/campaigns/api'
 import { getMemoryFacts } from '@/lib/memory/api'
-import type { MemoryFactResponse } from '@/lib/memory/schemas'
 import {
   getSession,
   regenerateSection,
@@ -32,34 +31,9 @@ import type {
   GeneratedContent,
   GeneratedSection,
   SectionId,
-  SessionDetail,
-  UpdateSessionContent,
 } from '@/lib/sessions/schemas'
 
-type GeneratedCampaign = { id: string; title: string }
-
-type SaveMutationVariables = {
-  nextSections: GeneratedSection[]
-  payload: UpdateSessionContent
-}
-
-type GeneratedSessionViewProps = {
-  campaignId: string
-  sessionId: string
-  campaign?: GeneratedCampaign
-  session?: SessionDetail
-  memories?: MemoryFactResponse[]
-  updateSessionFn?: typeof updateSessionContent
-  regenerateSectionFn?: typeof regenerateSection
-  /** Navigation override for the header actions. Defaults to the localized router push. */
-  navigate?: (href: string) => void
-  /** Breadcrumb root href. Defaults to the authenticated dashboard. */
-  dashboardHref?: string
-  /** Breadcrumb + "back" campaign href. Defaults to the authenticated campaign detail. */
-  campaignHref?: string
-  /** "Export PDF" target. Defaults to the authenticated export route. */
-  exportHref?: string
-}
+import type { GeneratedSessionViewProps, SaveMutationVariables } from './types'
 
 /**
  * Generated session view — renders the Scribe's sections, the woven-memory

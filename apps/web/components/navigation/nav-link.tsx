@@ -1,20 +1,13 @@
 'use client'
 
-import { useEffect, useState, type ComponentProps, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useLinkStatus } from 'next/link'
 import { useTranslations } from 'next-intl'
 
 import { Link } from '@/i18n/navigation'
 import { NAV_PENDING_DELAY_MS } from '@/lib/motion/tokens'
 
-type LocaleLinkProps = ComponentProps<typeof Link>
-
-type NavLinkProps = LocaleLinkProps & {
-  /** Overrides the default screen-reader announcement while navigating. */
-  pendingLabel?: string
-  /** Absolute placement for block-level links, whose box an inline slot grows. */
-  pendingSlotClassName?: string
-}
+import type { LinkPendingProps, LocaleLinkProps, NavLinkProps } from './types'
 
 const SLOT_CLASS_NAME = 'ml-1 inline-block w-[1em] text-center align-baseline'
 
@@ -43,13 +36,7 @@ function isInAppHref(href: LocaleLinkProps['href']): boolean {
  * @param {string} root0.slotClassName - Placement classes for the status slot.
  * @returns {React.ReactElement} The reserved status slot.
  */
-function LinkPending({
-  label,
-  slotClassName,
-}: {
-  label: string
-  slotClassName: string
-}) {
+function LinkPending({ label, slotClassName }: LinkPendingProps) {
   const { pending } = useLinkStatus()
   const [hasGraceElapsed, setHasGraceElapsed] = useState(false)
   const isVisible = pending && hasGraceElapsed

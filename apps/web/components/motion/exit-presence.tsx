@@ -1,12 +1,8 @@
 'use client'
 
 import { AnimatePresence } from 'motion/react'
-import type { ReactNode } from 'react'
 
-type ExitPresenceProps = {
-  children: ReactNode
-  mode?: 'popLayout'
-}
+import type { ExitPresenceProps } from './types'
 
 /**
  * Coordinate keyed list exits without owning their visual state or teardown.
