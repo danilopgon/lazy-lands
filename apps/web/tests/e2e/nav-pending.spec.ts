@@ -84,14 +84,18 @@ test('links announce nothing while idle', async ({ page }) => {
   await expect(page.locator(`a ${PENDING_SHOWN}`)).toHaveCount(0)
 })
 
+// Measured on a breadcrumb, which keeps the inline slot. A card link places its
+// slot absolutely, so it is out of flow and could not shift the box either way.
 test('the pending affordance reserves its footprint', async ({ page }) => {
-  await page.goto('/demo')
-  const link = page.getByRole('link', { name: /NPCs/i }).first()
+  await page.goto('/demo/npcs')
+  const link = page
+    .getByRole('navigation')
+    .getByRole('link', { name: 'Demo campaign' })
   const before = await link.boundingBox()
 
-  await holdNavigationTo(page, '**/demo/npcs*')
+  await holdNavigationTo(page, '**/demo?*')
   await link.click()
-  await expect(link.locator(PENDING_SLOT)).toBeVisible({ timeout: 3000 })
+  await expect(link.locator(PENDING_SHOWN)).toBeVisible({ timeout: 3000 })
 
   const after = await link.boundingBox()
   expect(after?.width).toBe(before?.width)
