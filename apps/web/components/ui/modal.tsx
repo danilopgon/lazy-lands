@@ -39,10 +39,6 @@ export function Modal({
   className,
 }: ModalProps) {
   const { transition } = useMotionMode()
-  // False while the dialog is playing its exit under a presence boundary. The
-  // node is still on screen, but it must stop acting like a dialog: another
-  // modal may already have opened, and two live dialogs would fight over focus,
-  // Escape, and the body scroll lock. Always true when rendered without one.
   const isPresent = useIsPresent()
   const titleId = React.useId()
   const modalRef = React.useRef<HTMLDivElement>(null)
@@ -52,10 +48,6 @@ export function Modal({
   const isReleasedRef = React.useRef(false)
   const focusTimerRef = React.useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  // Hand the page back exactly once, whether that happens when the exit starts
-  // or at unmount. Deferring it to unmount alone would leave the scroll locked
-  // and focus stolen for the length of the exit. The pending initial-focus timer
-  // has to die with it, or it would pull focus back into the exiting panel.
   const release = React.useCallback(() => {
     if (isReleasedRef.current) {
       return
@@ -64,6 +56,12 @@ export function Modal({
     clearTimeout(focusTimerRef.current)
     document.body.style.overflow = previousOverflowRef.current
     previousFocusRef.current?.focus()
+
+    // Focus left inside would make this subtree unhideable.
+    const active = document.activeElement
+    if (active instanceof HTMLElement && modalRef.current?.contains(active)) {
+      active.blur()
+    }
   }, [])
 
   React.useEffect(() => {
@@ -72,10 +70,9 @@ export function Modal({
     }
   }, [release])
 
-  // Acquire on entry and release on exit, symmetrically. Presence can hand the
-  // same instance back when a modal reopens before its exit finished, so this
-  // must re-acquire rather than assume one lifetime per instance.
-  React.useEffect(() => {
+  // Layout, not passive: focus must leave before the commit that hides this
+  // subtree paints, or the browser refuses to hide it.
+  React.useLayoutEffect(() => {
     if (!isPresent) {
       release()
       return
@@ -159,19 +156,16 @@ export function Modal({
         role={isPresent ? 'dialog' : undefined}
         aria-modal={isPresent ? 'true' : undefined}
         aria-hidden={isPresent ? undefined : true}
+        inert={!isPresent}
         aria-labelledby={titleId}
         className={cn(
           'flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)]',
           className
         )}
-        // The sheet is placed on the desk rather than floating in: a short
-        // vertical settle only. Borders and ink shadow stay hard and static.
         initial={{ opacity: 0, y: 8, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        // Asymmetric on purpose: the sheet is placed deliberately and lifted
-        // quickly. Without its own transition the exit would inherit the slower
-        // entrance below and finish 80ms after the backdrop, leaving a
-        // half-faded dialog over an undimmed page.
+        // Own transition, or the exit inherits the slower entrance and lands
+        // 80ms after the backdrop.
         exit={{
           opacity: 0,
           y: 4,

@@ -129,8 +129,6 @@ describe('memory review choreography', () => {
         .querySelector<HTMLElement>('button')!
       await user.click(accept)
 
-      // The stamp must stay readable for its full lifetime in EVERY mode: under
-      // subtle/off it is a static badge, so nothing but the timer can retire it.
       await act(async () => {
         vi.advanceTimersByTime(STAMP_LIFETIME_MS - 1)
       })
@@ -176,8 +174,6 @@ describe('memory review choreography', () => {
 
       await user.click(article.querySelector<HTMLElement>('button.ml-auto')!)
 
-      // The phase is the contract the choreography reads; the CSS classes that
-      // used to carry it are being retired in the follow-up cleanup.
       expect(article).toHaveAttribute('data-fx', 'discarding')
       expect(article).not.toHaveClass('ll-discarding')
     }
@@ -193,10 +189,6 @@ describe('memory review choreography', () => {
       const article = card.closest('article')!
       await user.click(article.querySelector<HTMLElement>('button.ml-auto')!)
 
-      // Movement is disabled, not feedback: the struck-through proposal has to
-      // stay readable for the whole teardown window instead of blinking out.
-      // `globals.css` guaranteed exactly this before the migration, forcing
-      // `opacity: 1 !important` on the discarding card under OS reduced motion.
       expect(article).toHaveAttribute('data-fx', 'discarding')
       expect(Number(article.style.opacity || '1')).not.toBe(0)
       expect(screen.getByText(FIRST)).toBeVisible()

@@ -6,10 +6,8 @@ import { NAV_PENDING_DELAY_MS } from '@/lib/motion/tokens'
 
 const linkStatus = { pending: false }
 
-// `NavLink`'s reader is only correct if it renders INSIDE Next's `<Link>`, whose
-// provider owns the pending state. The app's `@/i18n/navigation` Link is stubbed
-// to a bare anchor by `tests/setup.ts`, which would make that topology
-// unobservable — so this file overrides the stub with Next's real `Link`.
+// `tests/setup.ts` stubs this to a bare anchor, which would hide the topology
+// under test.
 vi.mock('@/i18n/navigation', async () => {
   const nextLink = await import('next/link')
   return {
@@ -23,10 +21,8 @@ vi.mock('@/i18n/navigation', async () => {
   }
 })
 
-// jsdom runs the Pages-Router build of `next/link`, whose `LinkStatusContext`
-// default is permanently `{ pending: false }`; only the App Router build ever
-// publishes a real value. Overriding the reader — while keeping the real `Link`
-// above — is the only way to drive the pending branch under test.
+// jsdom resolves the Pages-Router build, whose `LinkStatusContext` is
+// permanently `{ pending: false }`.
 vi.mock('next/link', async (importOriginal) => {
   const actual = await importOriginal<typeof import('next/link')>()
   return {
@@ -68,14 +64,18 @@ describe('NavLink', () => {
     expect(anchor.contains(slot)).toBe(true)
   })
 
-  it('exposes no status node while the navigation is idle', () => {
+  it('keeps the live region mounted and empty while idle', () => {
     render(<NavLink href="/dashboard">Dashboard</NavLink>)
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.getByTestId(PENDING_SLOT)).toHaveAttribute(
-      'aria-hidden',
-      'true'
-    )
+    const slot = screen.getByTestId(PENDING_SLOT)
+    expect(slot).toHaveAttribute('aria-live', 'polite')
+    expect(slot).toBeEmptyDOMElement()
+  })
+
+  it('leaves the link name untouched while idle', () => {
+    render(<NavLink href="/dashboard">Dashboard</NavLink>)
+
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
   })
 
   it('reserves the same affordance footprint idle and pending', () => {
@@ -98,12 +98,12 @@ describe('NavLink', () => {
     act(() => {
       vi.advanceTimersByTime(NAV_PENDING_DELAY_MS - 1)
     })
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByTestId(PENDING_SLOT)).toBeEmptyDOMElement()
 
     act(() => {
       vi.advanceTimersByTime(1)
     })
-    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(screen.getByTestId(PENDING_SLOT)).not.toBeEmptyDOMElement()
   })
 
   it('clears the affordance once the navigation settles', () => {
@@ -112,12 +112,12 @@ describe('NavLink', () => {
     act(() => {
       vi.advanceTimersByTime(NAV_PENDING_DELAY_MS)
     })
-    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(screen.getByTestId(PENDING_SLOT)).not.toBeEmptyDOMElement()
 
     linkStatus.pending = false
     rerender(<NavLink href="/dashboard">Dashboard</NavLink>)
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByTestId(PENDING_SLOT)).toBeEmptyDOMElement()
   })
 
   it('announces the pending navigation with localized copy', () => {
@@ -128,7 +128,7 @@ describe('NavLink', () => {
       vi.advanceTimersByTime(NAV_PENDING_DELAY_MS)
     })
 
-    expect(screen.getByRole('status')).toHaveTextContent(/opening/i)
+    expect(screen.getByTestId(PENDING_SLOT)).toHaveTextContent(/opening/i)
   })
 
   it('keeps a repositioned status slot in place through the pending state', () => {
@@ -151,7 +151,7 @@ describe('NavLink', () => {
       vi.advanceTimersByTime(NAV_PENDING_DELAY_MS)
     })
 
-    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(screen.getByTestId(PENDING_SLOT)).not.toBeEmptyDOMElement()
     expect(screen.getByTestId(PENDING_SLOT).className).toBe(placement)
   })
 
@@ -186,7 +186,7 @@ describe('NavLink', () => {
         vi.advanceTimersByTime(NAV_PENDING_DELAY_MS)
       })
 
-      expect(screen.getByRole('status')).toBeInTheDocument()
+      expect(screen.getByTestId(PENDING_SLOT)).not.toBeEmptyDOMElement()
       delete document.documentElement.dataset.motion
     }
   )

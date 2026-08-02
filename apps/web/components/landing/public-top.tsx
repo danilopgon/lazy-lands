@@ -1,8 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-// `navLinks` are same-page hash targets, which never start a router transition —
-// so they stay on a plain `Link` rather than `NavLink`'s pending affordance.
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 

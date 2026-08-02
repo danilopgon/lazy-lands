@@ -162,6 +162,29 @@ export function GeneratedSessionView({
     },
   })
 
+  // Both paths PATCH the whole session from their own snapshot; overlapping
+  // means the slower one reverts the other.
+  const isSavePending =
+    sectionSaveMutation.isPending || allSaveMutation.isPending
+
+  /**
+   * Read the shared save gate at call time.
+   *
+   * The refs MUST be read here rather than during render: a second click
+   * dispatched before React repaints still sees the previous render's value, so
+   * a render-derived flag would let the duplicate through — which is the whole
+   * reason these refs exist alongside the disabled buttons.
+   *
+   * @returns {boolean} Whether either save path is already running.
+   */
+  function isSaveInFlight(): boolean {
+    return (
+      sectionSaveInFlightRef.current ||
+      allSaveInFlightRef.current ||
+      isSavePending
+    )
+  }
+
   const campaign = providedCampaign ?? campaignQuery.data
   const session = providedSession ?? sessionQuery.data
   const activeMemories = providedMemories ?? memoriesQuery.data
@@ -317,11 +340,7 @@ export function GeneratedSessionView({
    * @param {string} sectionId - The id of the section being saved.
    */
   function saveSection(sectionId: string) {
-    if (
-      !session ||
-      sectionSaveInFlightRef.current ||
-      sectionSaveMutation.isPending
-    ) {
+    if (!session || isSaveInFlight()) {
       return
     }
     const nextSections = visibleSections.map((section) =>
@@ -371,7 +390,7 @@ export function GeneratedSessionView({
 
   /** Persist the full visible section state as a single "Save changes" action. */
   function saveAll() {
-    if (allSaveInFlightRef.current || allSaveMutation.isPending) return
+    if (isSaveInFlight()) return
     const nextSections = sectionsIncludingOpenDraft()
     const payload = {
       generated_content: generatedContentWithSections(nextSections),
@@ -444,7 +463,7 @@ export function GeneratedSessionView({
           <Button
             type="button"
             variant="secondary"
-            disabled={allSaveMutation.isPending}
+            disabled={isSavePending}
             onClick={() => void saveAll()}
           >
             <span className="grid">
@@ -539,7 +558,7 @@ export function GeneratedSessionView({
                     <Button
                       type="button"
                       size="sm"
-                      disabled={sectionSaveMutation.isPending}
+                      disabled={isSavePending}
                       onClick={() => void saveSection(section.id)}
                     >
                       <span className="grid">

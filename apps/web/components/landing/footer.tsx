@@ -1,7 +1,5 @@
 'use client'
 
-// Same-page hash targets stay on a plain `Link`: they never start a router
-// transition, so `NavLink`'s pending affordance would be dead weight on them.
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 

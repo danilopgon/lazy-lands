@@ -25,9 +25,8 @@ async function holdNavigationTo(page: Page, pattern: string) {
   })
 }
 
-// One representative per declaration class, not every <Link> in the codebase:
-// the affordance is structural (a single NavLink wrapper), so per-site coverage
-// would assert the same code path 73 times.
+// One representative per declaration class: the affordance is a single shared
+// wrapper, so per-site coverage would assert one code path 73 times.
 const CLASSES = [
   {
     name: 'breadcrumb',
@@ -76,9 +75,6 @@ for (const declaration of CLASSES) {
 test('links carry no status node while idle', async ({ page }) => {
   await page.goto('/demo')
 
-  // The reserved slot exists from first paint so revealing the quill shifts
-  // nothing, but it must contribute no accessible status until a navigation is
-  // actually pending — otherwise every link would announce itself at rest.
   await expect(
     page.locator('[data-testid="nav-link-pending"]').first()
   ).toBeAttached()

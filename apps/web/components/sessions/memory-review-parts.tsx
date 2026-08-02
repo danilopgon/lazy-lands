@@ -40,11 +40,7 @@ export type SuggestionFx = 'stamping' | 'accepting' | 'discarding'
 /**
  * Terminal visual state for each transient phase.
  *
- * These are `animate` targets, not `exit` targets, on purpose: the card reaches
- * its terminal state while it is still in the page's state, and the page's
- * timers remain the only authority on removal. An `exit` animation would add a
- * second departure on top of the one already played and stretch the card's DOM
- * lifetime past the timers that own it.
+ * `animate` targets, never `exit`: the page's timers own removal.
  */
 const FX_TARGET = {
   stamping: { x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 },
@@ -57,11 +53,8 @@ const FX_REST = FX_TARGET.stamping
 /**
  * Resolve the terminal visual state for a phase under the current motion mode.
  *
- * With animation disabled the card holds its resting state instead of fading
- * out instantly. Movement is what those modes switch off, not feedback: the
- * stamp and the danger strike have to stay legible for the whole teardown
- * window, which is what `globals.css` guaranteed by forcing `opacity: 1` on a
- * discarding card under OS reduced motion.
+ * Disabled motion holds the resting state: those modes drop movement, not
+ * feedback.
  *
  * @param {SuggestionFx | undefined} fx - The card's transient phase.
  * @param {boolean} animationsEnabled - Whether Motion may actually animate.
@@ -194,14 +187,9 @@ export function SuggestionCard({
   return (
     <motion.article
       data-fx={fx}
-      // Position only: animating the box would distort the serif text and the
-      // hard ink shadow, and the design settles siblings without touching
-      // height.
       layout="position"
       animate={fxTarget(fx, animationsEnabled)}
-      // Dismiss leads with the strike and only then slides away, so the DM can
-      // read what was struck out. Both halves still land inside the same
-      // CARD_EXIT_MS window the removal timer owns.
+      // Strike leads, slide follows; both inside CARD_EXIT_MS.
       transition={transition(
         discarding
           ? { duration: DURATION.fast, delay: 0.08, ease: EASE.in }

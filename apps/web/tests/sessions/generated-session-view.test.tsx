@@ -782,6 +782,69 @@ describe('GeneratedSessionView', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Section saved')
   })
 
+  it('will not save the whole session while a section save is still in flight', async () => {
+    const pending = deferred<SessionDetail>()
+    const update = vi.fn().mockReturnValue(pending.promise)
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+        updateSessionFn={update}
+      />
+    )
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Save section changes' })
+    )
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(1))
+
+    const saveAll = await screen.findByRole('button', { name: 'Save changes' })
+    expect(saveAll).toBeDisabled()
+
+    act(() => {
+      saveAll.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(update).toHaveBeenCalledTimes(1)
+
+    pending.resolve(session)
+    await waitFor(() => expect(saveAll).toBeEnabled())
+  })
+
+  it('will not save a section while the whole-session save is still in flight', async () => {
+    const pending = deferred<SessionDetail>()
+    const update = vi.fn().mockReturnValue(pending.promise)
+    renderGenerated(
+      <GeneratedSessionView
+        campaignId="camp-1"
+        sessionId="session-8"
+        campaign={campaign}
+        session={session}
+        memories={memories}
+        updateSessionFn={update}
+      />
+    )
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+    const saveSection = screen.getByRole('button', {
+      name: 'Save section changes',
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(1))
+
+    expect(saveSection).toBeDisabled()
+    act(() => {
+      saveSection.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(update).toHaveBeenCalledTimes(1)
+
+    pending.resolve(session)
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(1))
+  })
+
   it('issues only one whole-session PATCH when Save changes is invoked twice before paint', async () => {
     const pending = deferred<SessionDetail>()
     const update = vi.fn().mockReturnValue(pending.promise)

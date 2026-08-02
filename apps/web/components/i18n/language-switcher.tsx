@@ -8,9 +8,6 @@ import {
   useState,
   type MouseEvent,
 } from 'react'
-// Deliberately not `NavLink` (and not the locale-aware `Link`): this component
-// builds fully localized hrefs itself and intercepts the click to persist the
-// choice, so routing it through locale-aware navigation would break the switch.
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'

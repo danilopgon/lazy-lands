@@ -12,23 +12,14 @@ type LocaleLinkProps = ComponentProps<typeof Link>
 type NavLinkProps = LocaleLinkProps & {
   /** Overrides the default screen-reader announcement while navigating. */
   pendingLabel?: string
-  /**
-   * Repositions the status slot. The inline default reserves its width on a
-   * text line; block-level links (cards, list rows) pass an absolute placement
-   * instead, because an inline slot would grow their box when the quill
-   * appears.
-   */
+  /** Absolute placement for block-level links, whose box an inline slot grows. */
   pendingSlotClassName?: string
 }
 
-/** Fixed inline slot so the link never reflows when the quill appears. */
 const SLOT_CLASS_NAME = 'ml-1 inline-block w-[1em] text-center align-baseline'
 
 /**
  * Decide whether a destination is handled by the client router.
- *
- * Hash fragments and absolute URLs never produce a router transition, so they
- * get a bare anchor instead of a status affordance.
  *
  * @param {LocaleLinkProps['href']} href - The link destination.
  * @returns {boolean} Whether the destination is an in-app route.
@@ -44,12 +35,8 @@ function isInAppHref(href: LocaleLinkProps['href']): boolean {
 /**
  * Read this link's own navigation status and surface it after a grace period.
  *
- * `useLinkStatus` only returns a real value inside Next's `<Link>` subtree, so
- * this component must never be rendered anywhere else — outside it the hook
- * silently reports an idle navigation instead of failing.
- *
- * The delay keeps a warm, already-prefetched navigation from flashing an
- * indicator it would clear in the same frame.
+ * MUST render inside Next's `<Link>`: elsewhere `useLinkStatus` silently
+ * reports idle rather than failing.
  *
  * @param {object} root0 - Reader props.
  * @param {string} root0.label - Screen-reader announcement while navigating.
@@ -65,8 +52,6 @@ function LinkPending({
 }) {
   const { pending } = useLinkStatus()
   const [hasGraceElapsed, setHasGraceElapsed] = useState(false)
-  // Gating on `pending` as well keeps the affordance from surviving one frame
-  // into the next navigation; the cleanup only rearms the grace period.
   const isVisible = pending && hasGraceElapsed
 
   useEffect(() => {
@@ -85,28 +70,23 @@ function LinkPending({
     }
   }, [pending])
 
-  if (!isVisible) {
-    return (
-      <span
-        aria-hidden="true"
-        data-testid="nav-link-pending"
-        className={slotClassName}
-      />
-    )
-  }
-
+  // `aria-live`, not `role="status"`: a status node in all 73 links would make
+  // every unnamed `getByRole('status')` ambiguous.
   return (
     <span
-      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       data-testid="nav-link-pending"
       className={slotClassName}
     >
-      {/* Deliberately CSS-only: the glyph and its label stay perceivable when
-          `data-motion` disables the quill animation. */}
-      <span aria-hidden="true" className="ll-quill inline-block">
-        ✒
-      </span>
-      <span className="sr-only">{label}</span>
+      {isVisible ? (
+        <>
+          <span aria-hidden="true" className="ll-quill inline-block">
+            ✒
+          </span>
+          <span className="sr-only">{label}</span>
+        </>
+      ) : null}
     </span>
   )
 }

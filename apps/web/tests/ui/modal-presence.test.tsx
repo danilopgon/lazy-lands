@@ -87,12 +87,37 @@ describe('Modal presence', () => {
     await user.keyboard('{Escape}')
     expect(document.body.style.overflow).toBe('')
 
-    // Back before the exit finished: presence may hand the same instance back
-    // rather than remounting it, so the lock has to be re-acquired.
     await user.click(screen.getByRole('button', { name: 'Open' }))
 
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(document.body.style.overflow).toBe('hidden')
+  })
+
+  it('takes focus out of the closing dialog before hiding it', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    render(<ModalHarness mode="full" />)
+
+    const panel = screen.getByRole('dialog')
+    await user.keyboard('{Escape}')
+
+    expect(panel.contains(document.activeElement)).toBe(false)
+    expect(panel).toHaveAttribute('inert')
+  })
+
+  it('returns focus to the control that opened it', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    render(<ModalHarness mode="full" />)
+
+    await user.keyboard('{Escape}')
+    await act(async () => {
+      vi.advanceTimersByTime(EXIT_MS * 2)
+    })
+
+    const open = screen.getByRole('button', { name: 'Open' })
+    await user.click(open)
+    await user.keyboard('{Escape}')
+
+    expect(document.activeElement).toBe(open)
   })
 
   it('stops presenting a closing dialog as a live dialog', async () => {
@@ -101,9 +126,6 @@ describe('Modal presence', () => {
 
     await user.keyboard('{Escape}')
 
-    // Still on screen for its exit, but no longer a dialog: a second modal may
-    // legitimately open during this window, and two live dialogs would fight
-    // over focus, Escape, and the scroll lock.
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.getByText('Panel body')).toBeInTheDocument()
   })
