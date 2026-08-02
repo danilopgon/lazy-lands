@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
-import { Link as LocaleLink } from '@/i18n/navigation'
+import { usePathname } from '@/i18n/navigation'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
@@ -16,13 +17,18 @@ import { navLinks } from './data'
  * @returns {React.ReactElement} The top navigation element with desktop and mobile variants.
  */
 export function PublicTop() {
-  const [open, setOpen] = useState(false)
+  const [openedAt, setOpenedAt] = useState<string | null>(null)
   const t = useTranslations('Nav')
   const tl = useTranslations('Landing')
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const shouldRestoreFocusRef = useRef(true)
+  const pathname = usePathname()
+  // Tied to the route it was opened on, so the arriving route closes it without
+  // an effect. Closing on click instead would unmount a chosen link's pending
+  // affordance before its grace period, leaving a slow navigation silent.
+  const open = openedAt !== null && openedAt === pathname
 
   /**
    * Close the mobile menu overlay, optionally restoring focus to the trigger.
@@ -32,7 +38,7 @@ export function PublicTop() {
    */
   function closeMenu({ restoreFocus = true }: { restoreFocus?: boolean } = {}) {
     shouldRestoreFocusRef.current = restoreFocus
-    setOpen(false)
+    setOpenedAt(null)
   }
 
   useEffect(() => {
@@ -106,12 +112,12 @@ export function PublicTop() {
   return (
     <>
       <header className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4 llg:px-10">
-        <LocaleLink
+        <NavLink
           href="/"
           className="font-serif text-xl font-semibold tracking-[-0.02em] text-[var(--ink)]"
         >
           Lazy <span className="text-[var(--accent)]">Lands</span>
-        </LocaleLink>
+        </NavLink>
 
         <nav aria-label={t('main')} className="flex items-center gap-3">
           {/* Desktop links */}
@@ -131,16 +137,31 @@ export function PublicTop() {
           <div className="hidden items-center gap-2 llg:flex">
             <LanguageSwitcher compact />
             <Button asChild variant="ghost" size="sm">
-              <LocaleLink href="/login">{t('signIn')}</LocaleLink>
+              <NavLink
+                pendingSlotClassName={PENDING_SLOT_OVERLAY}
+                href="/login"
+              >
+                {t('signIn')}
+              </NavLink>
             </Button>
             <Button asChild variant="accent" size="sm">
-              <LocaleLink href="/register">{registerCta}</LocaleLink>
+              <NavLink
+                pendingSlotClassName={PENDING_SLOT_OVERLAY}
+                href="/register"
+              >
+                {registerCta}
+              </NavLink>
             </Button>
           </div>
 
           {/* Mobile: CTA + hamburger */}
           <Button asChild variant="accent" size="sm" className="llg:hidden">
-            <LocaleLink href="/register">{registerCta}</LocaleLink>
+            <NavLink
+              pendingSlotClassName={PENDING_SLOT_OVERLAY}
+              href="/register"
+            >
+              {registerCta}
+            </NavLink>
           </Button>
 
           <button
@@ -148,7 +169,7 @@ export function PublicTop() {
             type="button"
             aria-label={open ? t('closeMenu') : t('openMenu')}
             aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => (open ? closeMenu() : setOpenedAt(pathname))}
             className="llg:hidden flex h-10 w-10 flex-col items-center justify-center gap-[5px] border-2 border-[var(--border)] bg-[var(--paper)] shadow-[2px_2px_0_var(--shadow)]"
           >
             <span
@@ -174,13 +195,12 @@ export function PublicTop() {
           className="llg:hidden fixed inset-0 z-mobile-menu flex flex-col bg-[var(--paper)]"
         >
           <div className="flex items-center justify-between border-b-2 border-[var(--border)] px-4 py-4">
-            <LocaleLink
+            <NavLink
               href="/"
               className="font-serif text-xl font-semibold text-[var(--ink)]"
-              onClick={() => closeMenu({ restoreFocus: false })}
             >
               Lazy <span className="text-[var(--accent)]">Lands</span>
-            </LocaleLink>
+            </NavLink>
             <button
               ref={closeButtonRef}
               type="button"
@@ -207,20 +227,20 @@ export function PublicTop() {
             <div className="mt-8 flex flex-col gap-3">
               <LanguageSwitcher inline />
               <Button asChild variant="ghost">
-                <LocaleLink
+                <NavLink
+                  pendingSlotClassName={PENDING_SLOT_OVERLAY}
                   href="/login"
-                  onClick={() => closeMenu({ restoreFocus: false })}
                 >
                   {t('signIn')}
-                </LocaleLink>
+                </NavLink>
               </Button>
               <Button asChild variant="accent">
-                <LocaleLink
+                <NavLink
+                  pendingSlotClassName={PENDING_SLOT_OVERLAY}
                   href="/register"
-                  onClick={() => closeMenu({ restoreFocus: false })}
                 >
                   {t('register')} →
-                </LocaleLink>
+                </NavLink>
               </Button>
             </div>
           </div>

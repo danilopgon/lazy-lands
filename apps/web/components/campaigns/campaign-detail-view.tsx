@@ -1,6 +1,6 @@
 'use client'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 
@@ -57,9 +57,9 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
   return (
     <div className="ll-view-enter">
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        <Link href="/dashboard" className="hover:text-[var(--ink)]">
+        <NavLink href="/dashboard" className="hover:text-[var(--ink)]">
           {t('breadcrumbRoot')}
-        </Link>{' '}
+        </NavLink>{' '}
         / <b className="text-[var(--ink)]">{campaign.title}</b>
       </nav>
 
@@ -80,25 +80,28 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:shrink-0">
-          <Link
+          <NavLink
             href={`/campaigns/${campaign.id}/sessions/new`}
-            className="inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-transparent px-5 py-2 font-sans text-sm font-semibold text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:bg-[var(--paper-2)] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+            pendingSlotClassName={PENDING_SLOT_OVERLAY}
+            className="relative inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-transparent px-5 py-2 font-sans text-sm font-semibold text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:bg-[var(--paper-2)] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
           >
             {t('detail.logSessionHeader')}
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             href={`/campaigns/${campaign.id}/prepare`}
-            className="inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-[var(--accent)] px-5 py-2 font-sans text-sm font-semibold text-[var(--bg-contrast)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+            pendingSlotClassName={PENDING_SLOT_OVERLAY}
+            className="relative inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-[var(--accent)] px-5 py-2 font-sans text-sm font-semibold text-[var(--bg-contrast)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
           >
             {t('detail.prepareNextHeader')}
-          </Link>
+          </NavLink>
         </div>
       </div>
 
       <dl className="mt-6 grid border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)] llg:grid-flow-col llg:auto-cols-fr">
-        <Link
+        <NavLink
           href={`/campaigns/${campaign.id}/npcs`}
-          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
+          pendingSlotClassName="absolute right-3 top-3"
+          className="relative border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statNpcs')}
@@ -106,10 +109,11 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.npcs.length}
           </dd>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href={`/campaigns/${campaign.id}/factions`}
-          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
+          pendingSlotClassName="absolute right-3 top-3"
+          className="relative border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statFactions')}
@@ -117,10 +121,11 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.factions.length}
           </dd>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href={`/campaigns/${campaign.id}/arcs`}
-          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
+          pendingSlotClassName="absolute right-3 top-3"
+          className="relative border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statArcs')}
@@ -128,10 +133,11 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.arcs.length}
           </dd>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href={`/campaigns/${campaign.id}/memory/review`}
-          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 hover:bg-[var(--paper-2)] transition-colors"
+          pendingSlotClassName="absolute right-3 top-3"
+          className="relative border-b-2 border-[var(--border)] p-4 last:border-b-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <dt className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statMemory')}
@@ -139,7 +145,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
           <dd className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {memoriesQuery.data?.length ?? 0}
           </dd>
-        </Link>
+        </NavLink>
       </dl>
 
       <div className="mt-7 grid gap-7 llg:grid-cols-[1fr_340px] min-[1440px]:grid-cols-[minmax(0,75ch)_minmax(20rem,1fr)]">
@@ -173,12 +179,12 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                   {t('detail.recentSessions')}
                 </h3>
               </div>
-              <Link
+              <NavLink
                 href={`/campaigns/${campaign.id}/sessions/new`}
                 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
                 {t('detail.logSession')}
-              </Link>
+              </NavLink>
             </div>
           </div>
           <div className="mt-3">
@@ -202,12 +208,12 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                   {t('detail.arcsNeedingAttention')}
                 </h3>
               </div>
-              <Link
+              <NavLink
                 href={`/campaigns/${campaign.id}/arcs`}
                 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
                 {t('detail.viewAllArcs')}
-              </Link>
+              </NavLink>
             </div>
           </div>
           <div className="mt-3 space-y-3">
@@ -254,7 +260,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                   </span>
                 ) : null}
               </div>
-              <Link
+              <NavLink
                 href={`/campaigns/${campaign.id}/memory/review`}
                 aria-describedby={
                   hasHiddenActiveMemories
@@ -264,7 +270,7 @@ export function CampaignDetailView({ campaign }: CampaignDetailViewProps) {
                 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
                 {t('detail.viewAllMemories')}
-              </Link>
+              </NavLink>
             </div>
           </div>
           <ActiveMemoriesPanel

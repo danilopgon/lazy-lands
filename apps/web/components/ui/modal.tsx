@@ -2,7 +2,10 @@
 
 import * as React from 'react'
 import { createPortal } from 'react-dom'
+import { motion, useIsPresent } from 'motion/react'
 
+import { DURATION, EASE } from '@/lib/motion/tokens'
+import { useMotionMode } from '@/lib/motion/use-motion-mode'
 import { cn } from '@/lib/utils'
 
 type ModalProps = {
@@ -35,15 +38,52 @@ export function Modal({
   footer,
   className,
 }: ModalProps) {
+  const { transition } = useMotionMode()
+  const isPresent = useIsPresent()
   const titleId = React.useId()
   const modalRef = React.useRef<HTMLDivElement>(null)
   const bodyRef = React.useRef<HTMLDivElement>(null)
   const previousFocusRef = React.useRef<HTMLElement | null>(null)
+  const previousOverflowRef = React.useRef('')
+  const isReleasedRef = React.useRef(false)
+  const focusTimerRef = React.useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  const release = React.useCallback(() => {
+    if (isReleasedRef.current) {
+      return
+    }
+    isReleasedRef.current = true
+    clearTimeout(focusTimerRef.current)
+    document.body.style.overflow = previousOverflowRef.current
+    previousFocusRef.current?.focus()
+
+    // Focus left inside would make this subtree unhideable.
+    const active = document.activeElement
+    if (active instanceof HTMLElement && modalRef.current?.contains(active)) {
+      active.blur()
+    }
+  }, [])
 
   React.useEffect(() => {
-    previousFocusRef.current = document.activeElement as HTMLElement
+    return () => {
+      release()
+    }
+  }, [release])
 
-    const timer = setTimeout(() => {
+  // Layout, not passive: focus must leave before the commit that hides this
+  // subtree paints, or the browser refuses to hide it.
+  React.useLayoutEffect(() => {
+    if (!isPresent) {
+      release()
+      return
+    }
+
+    isReleasedRef.current = false
+    previousFocusRef.current = document.activeElement as HTMLElement
+    previousOverflowRef.current = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    focusTimerRef.current = setTimeout(() => {
       if (bodyRef.current) {
         const firstFocusable =
           bodyRef.current.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
@@ -56,14 +96,13 @@ export function Modal({
         }
       }
     }, 0)
-
-    return () => {
-      clearTimeout(timer)
-      previousFocusRef.current?.focus()
-    }
-  }, [])
+  }, [isPresent, release])
 
   React.useEffect(() => {
+    if (!isPresent) {
+      return
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose()
@@ -92,15 +131,7 @@ export function Modal({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
-
-  React.useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previousOverflow
-    }
-  }, [])
+  }, [isPresent, onClose])
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -109,19 +140,39 @@ export function Modal({
   }
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-[var(--ink)]/60 p-4 motion-safe:animate-in motion-safe:fade-in motion-reduced:animate-none"
+    <motion.div
+      className="fixed inset-0 z-40 flex items-center justify-center bg-[var(--ink)]/60 p-4"
       onMouseDown={handleBackdropClick}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{
+        opacity: 0,
+        transition: transition({ duration: DURATION.fast, ease: EASE.in }),
+      }}
+      transition={transition({ duration: DURATION.fast, ease: EASE.out })}
     >
-      <div
+      <motion.div
         ref={modalRef}
-        role="dialog"
-        aria-modal="true"
+        role={isPresent ? 'dialog' : undefined}
+        aria-modal={isPresent ? 'true' : undefined}
+        aria-hidden={isPresent ? undefined : true}
+        inert={!isPresent}
         aria-labelledby={titleId}
         className={cn(
-          'flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)] motion-safe:animate-in motion-safe:zoom-in-95 motion-reduced:animate-none',
+          'flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)]',
           className
         )}
+        initial={{ opacity: 0, y: 8, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        // Own transition, or the exit inherits the slower entrance and lands
+        // 80ms after the backdrop.
+        exit={{
+          opacity: 0,
+          y: 4,
+          scale: 0.99,
+          transition: transition({ duration: DURATION.fast, ease: EASE.in }),
+        }}
+        transition={transition({ duration: DURATION.base, ease: EASE.out })}
       >
         <div className="flex shrink-0 items-center justify-between border-b-2 border-[var(--line)] px-6 py-4">
           <h3
@@ -150,8 +201,8 @@ export function Modal({
             {footer}
           </div>
         )}
-      </div>
-    </div>,
+      </motion.div>
+    </motion.div>,
     document.body
   )
 }

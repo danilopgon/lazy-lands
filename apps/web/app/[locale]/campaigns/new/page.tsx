@@ -7,7 +7,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 
-import { Link, useRouter } from '@/i18n/navigation'
+import { useRouter } from '@/i18n/navigation'
+
+import { NavLink } from '@/components/navigation/nav-link'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -175,9 +177,9 @@ export default function NewCampaignPage() {
   return (
     <main id="main-content" className="mx-auto max-w-[720px] px-6 py-16">
       <nav className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-2)]">
-        <Link className="hover:text-[var(--accent-deep)]" href="/dashboard">
+        <NavLink className="hover:text-[var(--accent-deep)]" href="/dashboard">
           {t('breadcrumbRoot')}
-        </Link>{' '}
+        </NavLink>{' '}
         / <span className="text-[var(--ink)]">{t('create.breadcrumbNew')}</span>
       </nav>
       <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">

@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { useTranslations } from 'next-intl'
 
 /** Tailwind className string for the shared auth back-to-home link. */
@@ -25,9 +25,9 @@ export function AuthCard({ children }: { children: ReactNode }) {
       className="flex min-h-[100dvh] flex-col items-center justify-center bg-[var(--bg)] px-6 py-16"
     >
       <div className="w-full max-w-[440px] rounded-none border-2 border-[var(--border)] bg-[var(--paper)] p-8 shadow-[6px_6px_0_var(--shadow)]">
-        <Link href="/" className={authBackHomeClass}>
+        <NavLink href="/" className={authBackHomeClass}>
           {t('backHome')}
-        </Link>
+        </NavLink>
         {children}
       </div>
     </main>

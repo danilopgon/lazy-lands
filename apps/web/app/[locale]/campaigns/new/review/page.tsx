@@ -10,7 +10,9 @@ import {
 import { useTranslations } from 'next-intl'
 import { useMutation } from '@tanstack/react-query'
 
-import { Link, useRouter } from '@/i18n/navigation'
+import { useRouter } from '@/i18n/navigation'
+
+import { NavLink } from '@/components/navigation/nav-link'
 
 import { Button } from '@/components/ui/button'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
@@ -260,10 +262,10 @@ function ReviewCampaignClient({
   return (
     <main id="main-content" className="mx-auto max-w-[820px] px-6 py-16">
       <nav className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-2)]">
-        <Link className="hover:text-[var(--accent-deep)]" href="/dashboard">
+        <NavLink className="hover:text-[var(--accent-deep)]" href="/dashboard">
           {t('breadcrumbRoot')}
-        </Link>{' '}
-        / <Link href="/campaigns/new">{t('review.breadcrumbNew')}</Link> /{' '}
+        </NavLink>{' '}
+        / <NavLink href="/campaigns/new">{t('review.breadcrumbNew')}</NavLink> /{' '}
         <span className="text-[var(--ink)]">
           {t('review.breadcrumbReview')}
         </span>

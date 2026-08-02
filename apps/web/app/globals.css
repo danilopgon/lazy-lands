@@ -401,6 +401,8 @@ body {
   position: absolute;
   top: 48%;
   left: 50%;
+  /* Static, not keyframe-only: the reduced-motion reset below overrides fill-mode. */
+  transform: translate(-50%, -50%);
   z-index: 2;
   border: 2px solid var(--good);
   background: color-mix(in srgb, var(--paper) 82%, transparent);
@@ -412,7 +414,10 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   box-shadow: 3px 3px 0 var(--shadow);
-  animation: ll-stamp-pop 260ms cubic-bezier(0.2, 1.4, 0.32, 1) both;
+  /* Exponential deceleration, not an overshooting curve: the stamp's physical
+     impact comes from its own keyframes, and a bounce would read as decoration
+     rather than as confirmation. Mirrors EASE.out in lib/motion/tokens.ts. */
+  animation: ll-stamp-pop 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 [data-motion='full'] .ll-strike {
@@ -484,6 +489,15 @@ body {
   .ll-stamp {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  /* Only the centred variant needs its transform back. `transform: none` above
+     would drop its top-left corner on the anchor point, where the card's
+     `overflow-hidden` clips it — reduced motion must remove movement, never
+     relocate the feedback. The subtle/off stamp is anchored top-right with no
+     transform, so the reset above is already correct for it. */
+  [data-motion='full'] .ll-stamp {
+    transform: translate(-50%, -50%) !important;
   }
 
   .ll-panel-settle {

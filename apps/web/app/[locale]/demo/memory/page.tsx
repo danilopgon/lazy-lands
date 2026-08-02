@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { ExitPresence } from '@/components/motion/exit-presence'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Notice } from '@/components/ui/notice'
@@ -191,32 +192,39 @@ export default function DemoMemoryReviewPage() {
               description={t('emptyPendingDescription')}
               action={
                 <Button asChild type="button">
-                  <Link href={demoHrefs.campaign}>{t('backToCampaign')}</Link>
+                  <NavLink
+                    pendingSlotClassName={PENDING_SLOT_OVERLAY}
+                    href={demoHrefs.campaign}
+                  >
+                    {t('backToCampaign')}
+                  </NavLink>
                 </Button>
               }
             />
           ) : (
-            pending.map((suggestion) =>
-              editing === suggestion.id ? (
-                <SuggestionEditor
-                  key={suggestion.id}
-                  suggestion={suggestion}
-                  isBusy={submittingId === suggestion.id}
-                  onCancel={() => setEditing(null)}
-                  onSave={(content) => void accept(suggestion, content)}
-                />
-              ) : (
-                <SuggestionCard
-                  key={suggestion.id}
-                  suggestion={suggestion}
-                  fx={fx[suggestion.id]}
-                  isSubmitting={submittingId === suggestion.id}
-                  onAccept={() => void accept(suggestion, suggestion.content)}
-                  onEdit={() => setEditing(suggestion.id)}
-                  onDismiss={() => dismiss(suggestion)}
-                />
-              )
-            )
+            <ExitPresence>
+              {pending.map((suggestion) =>
+                editing === suggestion.id ? (
+                  <SuggestionEditor
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    isBusy={submittingId === suggestion.id}
+                    onCancel={() => setEditing(null)}
+                    onSave={(content) => void accept(suggestion, content)}
+                  />
+                ) : (
+                  <SuggestionCard
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    fx={fx[suggestion.id]}
+                    isSubmitting={submittingId === suggestion.id}
+                    onAccept={() => void accept(suggestion, suggestion.content)}
+                    onEdit={() => setEditing(suggestion.id)}
+                    onDismiss={() => dismiss(suggestion)}
+                  />
+                )
+              )}
+            </ExitPresence>
           )}
         </section>
 
@@ -263,10 +271,20 @@ export default function DemoMemoryReviewPage() {
 
       <div className="mt-6 flex justify-end gap-3">
         <Button asChild type="button">
-          <Link href={demoHrefs.campaign}>{t('backToCampaign')}</Link>
+          <NavLink
+            pendingSlotClassName={PENDING_SLOT_OVERLAY}
+            href={demoHrefs.campaign}
+          >
+            {t('backToCampaign')}
+          </NavLink>
         </Button>
         <Button asChild type="button" variant="accent">
-          <Link href={demoHrefs.prepare}>{t('prepareNext')}</Link>
+          <NavLink
+            pendingSlotClassName={PENDING_SLOT_OVERLAY}
+            href={demoHrefs.prepare}
+          >
+            {t('prepareNext')}
+          </NavLink>
         </Button>
       </div>
     </main>

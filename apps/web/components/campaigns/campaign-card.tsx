@@ -1,7 +1,8 @@
 'use client'
 
-import { Link } from '@/i18n/navigation'
 import { useTranslations } from 'next-intl'
+
+import { NavLink } from '@/components/navigation/nav-link'
 
 import { useAppLocale } from '@/i18n/use-app-locale'
 import { formatShortDate } from '@/lib/format'
@@ -35,9 +36,10 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
   const subtitle = [campaign.system, campaign.tone].filter(Boolean).join(' · ')
 
   return (
-    <Link
+    <NavLink
       href={`/campaigns/${campaign.id}`}
-      className="ll-view-enter flex cursor-pointer flex-col border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)] transition-[transform,box-shadow] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[4px_4px_0_var(--shadow)]"
+      pendingSlotClassName="absolute right-4 top-4"
+      className="ll-view-enter relative flex cursor-pointer flex-col border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)] transition-[transform,box-shadow] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[4px_4px_0_var(--shadow)]"
     >
       <div className="border-b border-[var(--line)] px-5 py-4">
         <div className="font-serif text-[20px] font-semibold tracking-[-0.01em] text-[var(--ink)]">
@@ -68,6 +70,6 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
           {t('openChronicle')}
         </span>
       </div>
-    </Link>
+    </NavLink>
   )
 }

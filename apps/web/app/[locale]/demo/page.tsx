@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 import { WorldStateEditor } from '@/components/campaigns/world-state-editor'
 import { DemoTour, type DemoTourStep } from '@/components/demo/demo-tour'
 import { useAppLocale } from '@/i18n/use-app-locale'
@@ -118,19 +118,21 @@ export default function DemoCampaignPage() {
           data-tour="actions"
           className="flex flex-wrap gap-2 sm:flex-nowrap sm:shrink-0"
         >
-          <Link
+          <NavLink
             href={demoHrefs.logSession}
-            className="inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-transparent px-5 py-2 font-sans text-sm font-semibold text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:bg-[var(--paper-2)] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+            pendingSlotClassName={PENDING_SLOT_OVERLAY}
+            className="relative inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-transparent px-5 py-2 font-sans text-sm font-semibold text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:bg-[var(--paper-2)] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
           >
             {t('detail.logSessionHeader')}
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             href={demoHrefs.prepare}
             data-tour="prepare"
-            className="inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-[var(--accent)] px-5 py-2 font-sans text-sm font-semibold text-[var(--bg-contrast)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+            pendingSlotClassName={PENDING_SLOT_OVERLAY}
+            className="relative inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-[var(--accent)] px-5 py-2 font-sans text-sm font-semibold text-[var(--bg-contrast)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
           >
             {t('detail.prepareNextHeader')}
-          </Link>
+          </NavLink>
         </div>
       </div>
 
@@ -138,9 +140,10 @@ export default function DemoCampaignPage() {
         data-tour="stats"
         className="mt-6 grid border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)] llg:grid-flow-col llg:auto-cols-fr"
       >
-        <Link
+        <NavLink
           href={demoHrefs.npcs}
-          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
+          pendingSlotClassName="absolute right-3 top-3"
+          className="relative border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statNpcs')}
@@ -148,10 +151,11 @@ export default function DemoCampaignPage() {
           <div className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.npcs.length}
           </div>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href={demoHrefs.factions}
-          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
+          pendingSlotClassName="absolute right-3 top-3"
+          className="relative border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statFactions')}
@@ -159,10 +163,11 @@ export default function DemoCampaignPage() {
           <div className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.factions.length}
           </div>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href={demoHrefs.arcs}
-          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
+          pendingSlotClassName="absolute right-3 top-3"
+          className="relative border-b-2 border-[var(--border)] p-4 last:border-b-0 llg:border-r-2 llg:border-b-0 llg:last:border-r-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statArcs')}
@@ -170,10 +175,11 @@ export default function DemoCampaignPage() {
           <div className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {campaign.arcs.length}
           </div>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           href={demoHrefs.memory}
-          className="border-b-2 border-[var(--border)] p-4 last:border-b-0 hover:bg-[var(--paper-2)] transition-colors"
+          pendingSlotClassName="absolute right-3 top-3"
+          className="relative border-b-2 border-[var(--border)] p-4 last:border-b-0 hover:bg-[var(--paper-2)] transition-colors"
         >
           <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-[var(--mute)]">
             {t('detail.statMemory')}
@@ -181,7 +187,7 @@ export default function DemoCampaignPage() {
           <div className="mt-1 font-serif text-3xl font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
             {activeMemories.length}
           </div>
-        </Link>
+        </NavLink>
       </div>
 
       <div className="mt-7 grid gap-7 llg:grid-cols-[1fr_340px] min-[1440px]:grid-cols-[minmax(0,75ch)_minmax(20rem,1fr)]">
@@ -216,12 +222,12 @@ export default function DemoCampaignPage() {
                   {t('detail.recentSessions')}
                 </h3>
               </div>
-              <Link
+              <NavLink
                 href={demoHrefs.logSession}
                 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
                 {t('detail.logSession')}
-              </Link>
+              </NavLink>
             </div>
           </div>
           <div className="ll-panel-settle mt-3 space-y-3">
@@ -254,12 +260,12 @@ export default function DemoCampaignPage() {
                   {t('detail.arcsNeedingAttention')}
                 </h3>
               </div>
-              <Link
+              <NavLink
                 href={demoHrefs.arcs}
                 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
                 {t('detail.viewAllArcs')}
-              </Link>
+              </NavLink>
             </div>
           </div>
           <div className="mt-3 space-y-3">
@@ -295,13 +301,13 @@ export default function DemoCampaignPage() {
                   {t('detail.activeMemories')}
                 </h3>
               </div>
-              <Link
+              <NavLink
                 href={demoHrefs.memory}
                 data-tour="memory"
                 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] hover:underline"
               >
                 {t('detail.viewAllMemories')}
-              </Link>
+              </NavLink>
             </div>
           </div>
           <div className="ll-panel-settle mt-3 border-2 border-[var(--border)] bg-[var(--paper)] px-4 shadow-[4px_4px_0_var(--shadow)]">

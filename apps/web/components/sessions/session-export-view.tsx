@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 
-import { Link, useRouter } from '@/i18n/navigation'
+import { useRouter } from '@/i18n/navigation'
+
+import { NavLink } from '@/components/navigation/nav-link'
 import { useAppLocale } from '@/i18n/use-app-locale'
 
 import { Button } from '@/components/ui/button'
@@ -149,11 +151,11 @@ export function SessionExportView({
 
   const breadcrumb = (
     <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-      <Link href={dashboardHref}>{tg('breadcrumbs.campaigns')}</Link> /{' '}
-      <Link href={campaignTarget}>{campaign.title}</Link> /{' '}
-      <Link href={draftTarget}>
+      <NavLink href={dashboardHref}>{tg('breadcrumbs.campaigns')}</NavLink> /{' '}
+      <NavLink href={campaignTarget}>{campaign.title}</NavLink> /{' '}
+      <NavLink href={draftTarget}>
         {tg('breadcrumbs.draft', { number: session.session_number })}
-      </Link>{' '}
+      </NavLink>{' '}
       / <b className="text-[var(--ink)]">{t('breadcrumbExport')}</b>
     </nav>
   )

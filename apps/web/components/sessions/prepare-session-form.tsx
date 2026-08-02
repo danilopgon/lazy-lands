@@ -4,7 +4,9 @@ import { FormEvent, useMemo, useState, type SelectHTMLAttributes } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 
-import { Link, useRouter } from '@/i18n/navigation'
+import { useRouter } from '@/i18n/navigation'
+
+import { NavLink } from '@/components/navigation/nav-link'
 
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -201,16 +203,16 @@ export function PrepareSessionView({
       className="ll-view-enter mx-auto max-w-[900px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        <Link href={dashboardHref} className="hover:text-[var(--ink)]">
+        <NavLink href={dashboardHref} className="hover:text-[var(--ink)]">
           {tc('breadcrumbRoot')}
-        </Link>{' '}
+        </NavLink>{' '}
         /{' '}
-        <Link
+        <NavLink
           href={campaignHref ?? `/campaigns/${campaignId}`}
           className="hover:text-[var(--ink)]"
         >
           {campaign.title}
-        </Link>{' '}
+        </NavLink>{' '}
         / <b className="text-[var(--ink)]">{t('breadcrumb')}</b>
       </nav>
       <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">

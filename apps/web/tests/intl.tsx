@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react'
 import { render as rtlRender, type RenderOptions } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 
+import { MotionModeProvider } from '@/lib/motion/use-motion-mode'
 import en from '@/messages/en.json'
 import es from '@/messages/es.json'
 import type { AppLocale } from '@/i18n/routing'
@@ -13,9 +14,12 @@ type IntlRenderOptions = RenderOptions & {
 }
 
 /**
- * Render a UI tree wrapped in `NextIntlClientProvider` so components that call
- * `useTranslations`/`useLocale` resolve against a real locale context — the same
- * way they do under the App Router `[locale]` layout in production.
+ * Render a UI tree wrapped in the two providers the `[locale]` layout mounts in
+ * production, in the same order: `NextIntlClientProvider` so components that
+ * call `useTranslations`/`useLocale` resolve against a real locale context, and
+ * `MotionModeProvider` so mode-aware primitives resolve a real transition
+ * policy. `full` is the mode the layout ships outside visual-regression runs;
+ * tests that need another mode mount their own provider.
  *
  * @param {ReactElement} ui - The element under test.
  * @param {IntlRenderOptions} [options] - Testing Library options plus an optional locale (defaults to `en`).
@@ -41,7 +45,7 @@ export function render(ui: ReactElement, options: IntlRenderOptions = {}) {
     )
     return (
       <NextIntlClientProvider locale={locale} messages={catalogs[locale]}>
-        {inner}
+        <MotionModeProvider mode="full">{inner}</MotionModeProvider>
       </NextIntlClientProvider>
     )
   }

@@ -10,6 +10,7 @@ import { EntitySearch } from '@/components/campaigns/entity-search'
 import { FactionList } from '@/components/campaigns/faction-list'
 import { FactionModal } from '@/components/campaigns/faction-modal'
 import { ConfirmDeleteModal } from '@/components/campaigns/confirm-delete-modal'
+import { ModalPresence } from '@/components/motion/modal-presence'
 import { deleteFaction } from '@/lib/campaigns/api'
 import { matchesQuery } from '@/lib/campaigns/text-match'
 
@@ -93,29 +94,35 @@ export default function FactionsPage() {
         }}
       </EntityListScreen>
 
-      {modal !== null ? (
-        <FactionModal
-          campaignId={campaignId}
-          faction={modal === 'add' ? null : modal}
-          onClose={() => setModal(null)}
-        />
-      ) : null}
+      <ModalPresence open={modal !== null}>
+        {modal !== null ? (
+          <FactionModal
+            key="entity"
+            campaignId={campaignId}
+            faction={modal === 'add' ? null : modal}
+            onClose={() => setModal(null)}
+          />
+        ) : null}
+      </ModalPresence>
 
-      {deleting ? (
-        <ConfirmDeleteModal
-          title={t('factions.deleteTitle')}
-          deleteError={t('factions.deleteError')}
-          itemName={deleting.name}
-          onConfirm={async () => {
-            await deleteFaction(deleting.id)
-            queryClient.invalidateQueries({
-              queryKey: ['campaign', campaignId],
-            })
-            setDeleting(null)
-          }}
-          onClose={() => setDeleting(null)}
-        />
-      ) : null}
+      <ModalPresence open={deleting !== null}>
+        {deleting ? (
+          <ConfirmDeleteModal
+            key="delete"
+            title={t('factions.deleteTitle')}
+            deleteError={t('factions.deleteError')}
+            itemName={deleting.name}
+            onConfirm={async () => {
+              await deleteFaction(deleting.id)
+              queryClient.invalidateQueries({
+                queryKey: ['campaign', campaignId],
+              })
+              setDeleting(null)
+            }}
+            onClose={() => setDeleting(null)}
+          />
+        ) : null}
+      </ModalPresence>
     </>
   )
 }

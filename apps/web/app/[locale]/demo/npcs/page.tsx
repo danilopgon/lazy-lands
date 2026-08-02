@@ -8,6 +8,7 @@ import { EntitySearch } from '@/components/campaigns/entity-search'
 import { NpcList } from '@/components/campaigns/npc-list'
 import { NpcModal } from '@/components/campaigns/npc-modal'
 import { ConfirmDeleteModal } from '@/components/campaigns/confirm-delete-modal'
+import { ModalPresence } from '@/components/motion/modal-presence'
 import { matchesQuery } from '@/lib/campaigns/text-match'
 import { useDemoStore } from '@/lib/demo/store'
 
@@ -93,31 +94,37 @@ export default function DemoNpcsPage() {
         }}
       </DemoEntityScreen>
 
-      {modal !== null ? (
-        <NpcModal
-          campaignId={campaignId}
-          npc={modal === 'add' ? null : modal}
-          onClose={() => setModal(null)}
-          onSubmit={(draft) =>
-            modal === 'add'
-              ? store.createNpc(draft)
-              : store.updateNpc(modal.id, draft)
-          }
-        />
-      ) : null}
+      <ModalPresence open={modal !== null}>
+        {modal !== null ? (
+          <NpcModal
+            key="entity"
+            campaignId={campaignId}
+            npc={modal === 'add' ? null : modal}
+            onClose={() => setModal(null)}
+            onSubmit={(draft) =>
+              modal === 'add'
+                ? store.createNpc(draft)
+                : store.updateNpc(modal.id, draft)
+            }
+          />
+        ) : null}
+      </ModalPresence>
 
-      {deleting ? (
-        <ConfirmDeleteModal
-          title={t('npcs.deleteTitle')}
-          deleteError={t('npcs.deleteError')}
-          itemName={deleting.name}
-          onConfirm={async () => {
-            await store.deleteNpc(deleting.id)
-            setDeleting(null)
-          }}
-          onClose={() => setDeleting(null)}
-        />
-      ) : null}
+      <ModalPresence open={deleting !== null}>
+        {deleting ? (
+          <ConfirmDeleteModal
+            key="delete"
+            title={t('npcs.deleteTitle')}
+            deleteError={t('npcs.deleteError')}
+            itemName={deleting.name}
+            onConfirm={async () => {
+              await store.deleteNpc(deleting.id)
+              setDeleting(null)
+            }}
+            onClose={() => setDeleting(null)}
+          />
+        ) : null}
+      </ModalPresence>
     </>
   )
 }

@@ -53,6 +53,8 @@ vi.mock('next/link', async () => {
       href: string
       children?: ReactNode
     }) => createElement('a', { href, ...props }, children),
+    // NavLink reads this inside every in-app link on the surfaces under test.
+    useLinkStatus: () => ({ pending: false }),
   }
 })
 

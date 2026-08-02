@@ -8,6 +8,7 @@ import { EntityFilterBar } from '@/components/campaigns/entity-filter-bar'
 import { ArcList } from '@/components/campaigns/arc-list'
 import { ArcModal } from '@/components/campaigns/arc-modal'
 import { ConfirmDeleteModal } from '@/components/campaigns/confirm-delete-modal'
+import { ModalPresence } from '@/components/motion/modal-presence'
 import { useDemoStore } from '@/lib/demo/store'
 
 import type { ArcResponse, ArcStatus } from '@/lib/campaigns/schemas'
@@ -88,31 +89,37 @@ export default function DemoArcsPage() {
         }}
       </DemoEntityScreen>
 
-      {modal !== null ? (
-        <ArcModal
-          campaignId={campaignId}
-          arc={modal === 'add' ? null : modal}
-          onClose={() => setModal(null)}
-          onSubmit={(draft) =>
-            modal === 'add'
-              ? store.createArc(draft)
-              : store.updateArc(modal.id, draft)
-          }
-        />
-      ) : null}
+      <ModalPresence open={modal !== null}>
+        {modal !== null ? (
+          <ArcModal
+            key="entity"
+            campaignId={campaignId}
+            arc={modal === 'add' ? null : modal}
+            onClose={() => setModal(null)}
+            onSubmit={(draft) =>
+              modal === 'add'
+                ? store.createArc(draft)
+                : store.updateArc(modal.id, draft)
+            }
+          />
+        ) : null}
+      </ModalPresence>
 
-      {deleting ? (
-        <ConfirmDeleteModal
-          title={t('arcs.deleteTitle')}
-          deleteError={t('arcs.deleteError')}
-          itemName={deleting.title}
-          onConfirm={async () => {
-            await store.deleteArc(deleting.id)
-            setDeleting(null)
-          }}
-          onClose={() => setDeleting(null)}
-        />
-      ) : null}
+      <ModalPresence open={deleting !== null}>
+        {deleting ? (
+          <ConfirmDeleteModal
+            key="delete"
+            title={t('arcs.deleteTitle')}
+            deleteError={t('arcs.deleteError')}
+            itemName={deleting.title}
+            onConfirm={async () => {
+              await store.deleteArc(deleting.id)
+              setDeleting(null)
+            }}
+            onClose={() => setDeleting(null)}
+          />
+        ) : null}
+      </ModalPresence>
     </>
   )
 }

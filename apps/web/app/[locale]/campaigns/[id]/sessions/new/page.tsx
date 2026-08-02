@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 
 import { LoadingScribe } from '@/components/ui/loading-scribe'
 import { Notice } from '@/components/ui/notice'
@@ -69,16 +69,16 @@ export default function LogSessionPage() {
       className="ll-view-enter mx-auto max-w-[720px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        <Link href="/dashboard" className="hover:text-[var(--ink)]">
+        <NavLink href="/dashboard" className="hover:text-[var(--ink)]">
           {tc('breadcrumbRoot')}
-        </Link>{' '}
+        </NavLink>{' '}
         /{' '}
-        <Link
+        <NavLink
           href={`/campaigns/${data.id}`}
           className="hover:text-[var(--ink)]"
         >
           {data.title}
-        </Link>{' '}
+        </NavLink>{' '}
         / <b className="text-[var(--ink)]">{t('breadcrumb')}</b>
       </nav>
 

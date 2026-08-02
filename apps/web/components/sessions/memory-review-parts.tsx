@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { motion } from 'motion/react'
+
+import { DURATION, EASE } from '@/lib/motion/tokens'
+import { useMotionMode } from '@/lib/motion/use-motion-mode'
 
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -32,6 +36,37 @@ export type Feedback = 'accepted' | 'edited' | 'dismissed' | 'retired' | null
  * files the card away; `discarding` strikes it through and slides it off.
  */
 export type SuggestionFx = 'stamping' | 'accepting' | 'discarding'
+
+/**
+ * Terminal visual state for each transient phase.
+ *
+ * `animate` targets, never `exit`: the page's timers own removal.
+ */
+const FX_TARGET = {
+  stamping: { x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 },
+  accepting: { x: 0, y: -10, scale: 0.985, rotate: 0, opacity: 0 },
+  discarding: { x: 18, y: 0, scale: 1, rotate: 0.4, opacity: 0 },
+} as const
+
+const FX_REST = FX_TARGET.stamping
+
+/**
+ * Resolve the terminal visual state for a phase under the current motion mode.
+ *
+ * Disabled motion holds the resting state: those modes drop movement, not
+ * feedback.
+ *
+ * @param {SuggestionFx | undefined} fx - The card's transient phase.
+ * @param {boolean} animationsEnabled - Whether Motion may actually animate.
+ * @returns {(typeof FX_TARGET)[SuggestionFx]} The animate target.
+ */
+function fxTarget(fx: SuggestionFx | undefined, animationsEnabled: boolean) {
+  if (!fx || !animationsEnabled) {
+    return FX_REST
+  }
+
+  return FX_TARGET[fx]
+}
 
 /**
  * Inline "the Scribe is working on this card" indicator — the compact sibling
@@ -144,17 +179,26 @@ export function SuggestionCard({
   onDismiss: () => void
 }) {
   const t = useTranslations('MemoryReview')
+  const { animationsEnabled, transition } = useMotionMode()
   const stamped = fx === 'stamping' || fx === 'accepting'
   const discarding = fx === 'discarding'
   const isBusy = isSubmitting || Boolean(fx)
 
   return (
-    <article
-      className={cn(
-        'relative overflow-hidden border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)]',
-        discarding && 'll-discarding',
-        fx === 'accepting' && 'll-accepting'
+    <motion.article
+      data-fx={fx}
+      layout="position"
+      animate={fxTarget(fx, animationsEnabled)}
+      // Strike leads, slide follows; both inside CARD_EXIT_MS.
+      transition={transition(
+        discarding
+          ? { duration: DURATION.fast, delay: 0.08, ease: EASE.in }
+          : {
+              duration: DURATION.base,
+              ease: fx === 'accepting' ? EASE.in : EASE.out,
+            }
       )}
+      className="relative overflow-hidden border-2 border-[var(--border)] bg-[var(--paper)] shadow-[6px_6px_0_var(--shadow)]"
     >
       {/* The stamp stays mounted through the exit phase so it never blinks out
           mid-animation. */}
@@ -212,7 +256,7 @@ export function SuggestionCard({
           {t('dismiss')}
         </button>
       </div>
-    </article>
+    </motion.article>
   )
 }
 

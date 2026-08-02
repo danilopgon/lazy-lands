@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { demoHrefs } from '@/lib/demo/hrefs'
 import { useDemoStore } from '@/lib/demo/store'
 
@@ -26,13 +26,13 @@ export function DemoBreadcrumb({ title }: DemoBreadcrumbProps) {
 
   return (
     <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-      <Link href={demoHrefs.campaign} className="hover:text-[var(--ink)]">
+      <NavLink href={demoHrefs.campaign} className="hover:text-[var(--ink)]">
         {t('breadcrumbRoot')}
-      </Link>{' '}
+      </NavLink>{' '}
       /{' '}
-      <Link href={demoHrefs.campaign} className="hover:text-[var(--ink)]">
+      <NavLink href={demoHrefs.campaign} className="hover:text-[var(--ink)]">
         {store.campaign.title}
-      </Link>{' '}
+      </NavLink>{' '}
       / <b className="text-[var(--ink)]">{title}</b>
     </nav>
   )

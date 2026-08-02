@@ -1,6 +1,6 @@
 'use client'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
@@ -73,14 +73,21 @@ export function LandCTA() {
               variant="ink-inverted"
               className="px-[22px] py-[11px] text-[14.5px]"
             >
-              <Link href="/register">{t('cta.cta')}</Link>
+              <NavLink
+                pendingSlotClassName={PENDING_SLOT_OVERLAY}
+                href="/register"
+              >
+                {t('cta.cta')}
+              </NavLink>
             </Button>
             <Button
               asChild
               variant="secondary"
               className="px-[22px] py-[11px] text-[14.5px]"
             >
-              <Link href="/demo">{t('cta.demoCta')}</Link>
+              <NavLink pendingSlotClassName={PENDING_SLOT_OVERLAY} href="/demo">
+                {t('cta.demoCta')}
+              </NavLink>
             </Button>
           </div>
         </ViewEnter>

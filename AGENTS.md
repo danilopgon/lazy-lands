@@ -194,8 +194,21 @@ unrelated changes. A reviewer should understand the purpose of a commit from its
 
 ### Prefer self-documenting code over inline comments
 
-Use clear names, small functions, typed boundaries, and focused tests before adding comments.
-Inline comments are acceptable when they explain non-obvious why, tradeoffs, invariants,
-security constraints, external framework behavior, or compatibility requirements. Do not add
-comments that restate the code, duplicate a test name, or narrate routine steps. Remove stale,
-misleading, decorative, or noisy comments when touching nearby code.
+Default: no comment. Reach for a better name, a smaller function, a typed boundary, or a test
+name first — those survive refactoring; a comment does not.
+
+An inline comment is justified only when ALL THREE hold:
+
+- the reason cannot be carried by a name, a type, or a test name;
+- a competent reader would otherwise change the code and break something; and
+- it fits in one line, two at the very most.
+
+State the constraint, do not explain it: cite `file:line`, an advisory id, or an upstream issue
+rather than narrating the reasoning.
+
+Never: restating the code, narrating steps, duplicating a test name, marking sections, or
+recording history that git already holds. A multi-line narrative block inside a function body is
+always wrong — that content belongs in the symbol's JSDoc, in a test name, or nowhere.
+
+Exported symbols keep their JSDoc. Remove stale, misleading, decorative, or noisy comments when
+touching nearby code.

@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useQuery } from '@tanstack/react-query'
@@ -105,16 +105,16 @@ export function EntityListScreen({
       className="ll-view-enter ll-workspace mx-auto max-w-[1100px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        <Link href="/dashboard" className="hover:text-[var(--ink)]">
+        <NavLink href="/dashboard" className="hover:text-[var(--ink)]">
           {t('breadcrumbRoot')}
-        </Link>{' '}
+        </NavLink>{' '}
         /{' '}
-        <Link
+        <NavLink
           href={`/campaigns/${data.id}`}
           className="hover:text-[var(--ink)]"
         >
           {data.title}
-        </Link>{' '}
+        </NavLink>{' '}
         / <b className="text-[var(--ink)]">{title}</b>
       </nav>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { Link } from '@/i18n/navigation'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 import { useTranslations } from 'next-intl'
 
 import { Badge } from '@/components/ui/badge'
@@ -69,14 +69,21 @@ export function LandHero() {
               variant="accent"
               className="px-[22px] py-[11px] text-[14.5px]"
             >
-              <Link href="/register">{t('hero.cta')}</Link>
+              <NavLink
+                pendingSlotClassName={PENDING_SLOT_OVERLAY}
+                href="/register"
+              >
+                {t('hero.cta')}
+              </NavLink>
             </Button>
             <Button
               asChild
               variant="secondary"
               className="px-[22px] py-[11px] text-[14.5px]"
             >
-              <Link href="/demo">{t('hero.demoCta')}</Link>
+              <NavLink pendingSlotClassName={PENDING_SLOT_OVERLAY} href="/demo">
+                {t('hero.demoCta')}
+              </NavLink>
             </Button>
           </div>
 

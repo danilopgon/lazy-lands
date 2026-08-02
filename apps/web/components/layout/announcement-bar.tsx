@@ -1,7 +1,7 @@
 'use client'
 
 import { startTransition, useEffect, useState } from 'react'
-import { Link } from '@/i18n/navigation'
+import { NavLink } from '@/components/navigation/nav-link'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
@@ -42,12 +42,12 @@ export function AnnouncementBar() {
           <span className="mr-2 text-[var(--accent)]">✦</span>
           {t.rich('announcement.body', {
             signup: (chunks) => (
-              <Link
+              <NavLink
                 href="/register"
                 className="underline hover:text-[var(--accent-wash)]"
               >
                 {chunks}
-              </Link>
+              </NavLink>
             ),
           })}
         </p>

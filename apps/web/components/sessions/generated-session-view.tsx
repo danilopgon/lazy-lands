@@ -1,11 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { Link, useRouter } from '@/i18n/navigation'
+import { useRouter } from '@/i18n/navigation'
+
+import { NavLink } from '@/components/navigation/nav-link'
 
 import { Button } from '@/components/ui/button'
 import { LoadingScribe } from '@/components/ui/loading-scribe'
@@ -15,7 +17,6 @@ import { OriginBadge } from '@/components/ui/origin-badge'
 import { Textarea } from '@/components/ui/textarea'
 import { getCampaignDetail } from '@/lib/campaigns/api'
 import { getMemoryFacts } from '@/lib/memory/api'
-import type { MemoryFactResponse } from '@/lib/memory/schemas'
 import {
   getSession,
   regenerateSection,
@@ -30,28 +31,9 @@ import type {
   GeneratedContent,
   GeneratedSection,
   SectionId,
-  SessionDetail,
 } from '@/lib/sessions/schemas'
 
-type GeneratedCampaign = { id: string; title: string }
-
-type GeneratedSessionViewProps = {
-  campaignId: string
-  sessionId: string
-  campaign?: GeneratedCampaign
-  session?: SessionDetail
-  memories?: MemoryFactResponse[]
-  updateSessionFn?: typeof updateSessionContent
-  regenerateSectionFn?: typeof regenerateSection
-  /** Navigation override for the header actions. Defaults to the localized router push. */
-  navigate?: (href: string) => void
-  /** Breadcrumb root href. Defaults to the authenticated dashboard. */
-  dashboardHref?: string
-  /** Breadcrumb + "back" campaign href. Defaults to the authenticated campaign detail. */
-  campaignHref?: string
-  /** "Export PDF" target. Defaults to the authenticated export route. */
-  exportHref?: string
-}
+import type { GeneratedSessionViewProps, SaveMutationVariables } from './types'
 
 /**
  * Generated session view — renders the Scribe's sections, the woven-memory
@@ -95,6 +77,8 @@ export function GeneratedSessionView({
   )
   const [toast, setToast] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const sectionSaveInFlightRef = useRef(false)
+  const allSaveInFlightRef = useRef(false)
   // Per-section regeneration state — keyed by section id, NOT a single
   // global flag, so unrelated sections stay fully interactive while one
   // section regenerates (NFR-UI-2).
@@ -117,6 +101,63 @@ export function GeneratedSessionView({
     queryFn: () => getMemoryFacts(campaignId, { status: 'active' }),
     enabled: !providedMemories,
   })
+
+  const sectionSaveMutation = useMutation({
+    mutationFn: ({ payload }: SaveMutationVariables) =>
+      updateSessionFn(sessionId, payload),
+    onSuccess: (updated, { nextSections }) => {
+      setSections(updated.generated_content?.sections ?? nextSections)
+      setEditing(null)
+      setError(null)
+      showToast(t('toast.sectionSaved'))
+    },
+    onError: () => {
+      setError(t('sectionSaveError'))
+    },
+    onSettled: () => {
+      sectionSaveInFlightRef.current = false
+    },
+  })
+
+  const allSaveMutation = useMutation({
+    mutationFn: ({ payload }: SaveMutationVariables) =>
+      updateSessionFn(sessionId, payload),
+    onSuccess: (updated, { nextSections }) => {
+      setSections(updated.generated_content?.sections ?? nextSections)
+      setEditing(null)
+      setError(null)
+      showToast(t('toast.allSaved'))
+    },
+    onError: () => {
+      setError(t('saveAllError'))
+    },
+    onSettled: () => {
+      allSaveInFlightRef.current = false
+    },
+  })
+
+  // Both paths PATCH the whole session from their own snapshot; overlapping
+  // means the slower one reverts the other.
+  const isSavePending =
+    sectionSaveMutation.isPending || allSaveMutation.isPending
+
+  /**
+   * Read the shared save gate at call time.
+   *
+   * The refs MUST be read here rather than during render: a second click
+   * dispatched before React repaints still sees the previous render's value, so
+   * a render-derived flag would let the duplicate through — which is the whole
+   * reason these refs exist alongside the disabled buttons.
+   *
+   * @returns {boolean} Whether either save path is already running.
+   */
+  function isSaveInFlight(): boolean {
+    return (
+      sectionSaveInFlightRef.current ||
+      allSaveInFlightRef.current ||
+      isSavePending
+    )
+  }
 
   const campaign = providedCampaign ?? campaignQuery.data
   const session = providedSession ?? sessionQuery.data
@@ -272,28 +313,21 @@ export function GeneratedSessionView({
    *
    * @param {string} sectionId - The id of the section being saved.
    */
-  async function saveSection(sectionId: string) {
-    if (!session) return
+  function saveSection(sectionId: string) {
+    if (!session || isSaveInFlight()) {
+      return
+    }
     const nextSections = visibleSections.map((section) =>
       section.id === sectionId
         ? { ...section, body: draft, origin: 'edited' as const }
         : section
     )
-    try {
-      const payload = {
-        generated_content: generatedContentWithSections(nextSections),
-        ...(sectionId === 'synopsis' ? { summary: draft } : {}),
-      }
-      const updated = await updateSessionFn(sessionId, {
-        ...payload,
-      })
-      setSections(updated.generated_content?.sections ?? nextSections)
-      setEditing(null)
-      setError(null)
-      showToast(t('toast.sectionSaved'))
-    } catch {
-      setError(t('sectionSaveError'))
+    const payload = {
+      generated_content: generatedContentWithSections(nextSections),
+      ...(sectionId === 'synopsis' ? { summary: draft } : {}),
     }
+    sectionSaveInFlightRef.current = true
+    sectionSaveMutation.mutate({ nextSections, payload })
   }
 
   /**
@@ -329,21 +363,15 @@ export function GeneratedSessionView({
   }
 
   /** Persist the full visible section state as a single "Save changes" action. */
-  async function saveAll() {
+  function saveAll() {
+    if (isSaveInFlight()) return
     const nextSections = sectionsIncludingOpenDraft()
     const payload = {
       generated_content: generatedContentWithSections(nextSections),
       ...(editing === 'synopsis' ? { summary: draft } : {}),
     }
-    try {
-      const updated = await updateSessionFn(sessionId, payload)
-      setSections(updated.generated_content?.sections ?? nextSections)
-      setEditing(null)
-      setError(null)
-      showToast(t('toast.allSaved'))
-    } catch {
-      setError(t('saveAllError'))
-    }
+    allSaveInFlightRef.current = true
+    allSaveMutation.mutate({ nextSections, payload })
   }
 
   /** Copy the visible sections to the clipboard and confirm only on success. */
@@ -367,8 +395,8 @@ export function GeneratedSessionView({
       className="ll-view-enter ll-workspace mx-auto max-w-[900px] px-6 py-16"
     >
       <nav className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-3)]">
-        <Link href={dashboardHref}>{t('breadcrumbs.campaigns')}</Link> /{' '}
-        <Link href={campaignTarget}>{campaign.title}</Link> /{' '}
+        <NavLink href={dashboardHref}>{t('breadcrumbs.campaigns')}</NavLink> /{' '}
+        <NavLink href={campaignTarget}>{campaign.title}</NavLink> /{' '}
         <b className="text-[var(--ink)]">
           {t(isDraft ? 'breadcrumbs.draft' : 'breadcrumbs.registered', {
             number: session.session_number,
@@ -409,9 +437,22 @@ export function GeneratedSessionView({
           <Button
             type="button"
             variant="secondary"
+            disabled={isSavePending}
             onClick={() => void saveAll()}
           >
-            {t('saveChanges')}
+            <span className="grid">
+              <span
+                aria-hidden="true"
+                className="invisible col-start-1 row-start-1"
+              >
+                {t('savingChanges')}
+              </span>
+              <span className="col-start-1 row-start-1">
+                {allSaveMutation.isPending
+                  ? t('savingChanges')
+                  : t('saveChanges')}
+              </span>
+            </span>
           </Button>
           <Button
             type="button"
@@ -491,9 +532,22 @@ export function GeneratedSessionView({
                     <Button
                       type="button"
                       size="sm"
+                      disabled={isSavePending}
                       onClick={() => void saveSection(section.id)}
                     >
-                      {t('saveSectionChanges')}
+                      <span className="grid">
+                        <span
+                          aria-hidden="true"
+                          className="invisible col-start-1 row-start-1"
+                        >
+                          {t('saveSectionChanges')}
+                        </span>
+                        <span className="col-start-1 row-start-1">
+                          {sectionSaveMutation.isPending
+                            ? t('savingSection')
+                            : t('saveSectionChanges')}
+                        </span>
+                      </span>
                     </Button>
                     <Button
                       type="button"

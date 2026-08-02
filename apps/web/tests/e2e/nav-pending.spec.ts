@@ -1,0 +1,128 @@
+import { expect, test, type Page } from '@playwright/test'
+
+const PENDING_SLOT = '[data-testid="nav-link-pending"]'
+// The slot stays mounted so the live region outlives its announcement; only its
+// contents signal a pending navigation.
+const PENDING_SHOWN = `${PENDING_SLOT}:not(:empty)`
+
+/**
+ * Hold the next client-side navigation to a path long enough for the pending
+ * affordance's grace period to elapse.
+ *
+ * Prefetch requests are aborted rather than delayed. Next warms every link in
+ * the viewport, and a warm route resolves inside a single frame — the exact
+ * case the 150ms grace period exists to stay quiet for. Aborting the prefetch
+ * forces the click to fetch for real, which is the slow navigation under test.
+ *
+ * @param {Page} page - The page under test.
+ * @param {string} pattern - Glob matching the destination route.
+ * @returns {Promise<void>} Resolves once the handler is installed.
+ */
+async function holdNavigationTo(page: Page, pattern: string) {
+  await page.route(pattern, async (route) => {
+    if (route.request().headers()['next-router-prefetch']) {
+      await route.abort()
+      return
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await route.continue()
+  })
+}
+
+// One representative per declaration class: the affordance is a single shared
+// wrapper, so per-site coverage would assert one code path 73 times.
+const CLASSES = [
+  {
+    name: 'breadcrumb',
+    from: '/demo/npcs',
+    hold: '**/demo?*',
+    link: (page: Page) =>
+      page.getByRole('navigation').getByRole('link', { name: 'Demo campaign' }),
+  },
+  {
+    name: 'card/list row',
+    from: '/demo',
+    hold: '**/demo/npcs*',
+    link: (page: Page) => page.getByRole('link', { name: /NPCs/i }).first(),
+  },
+  {
+    name: 'header nav',
+    from: '/demo/npcs',
+    hold: '**/demo?*',
+    link: (page: Page) =>
+      page.getByRole('link', { name: /Lazy Lands/i }).first(),
+  },
+  {
+    name: 'button-styled CTA',
+    from: '/demo',
+    hold: '**/demo/prepare*',
+    link: (page: Page) =>
+      page.getByRole('link', { name: /Prepare next session/i }).first(),
+  },
+] as const
+
+for (const declaration of CLASSES) {
+  test(`a ${declaration.name} link reports its own navigation as pending`, async ({
+    page,
+  }) => {
+    await page.goto(declaration.from)
+    await holdNavigationTo(page, declaration.hold)
+
+    const link = declaration.link(page)
+    await expect(link).toBeVisible()
+    await link.click()
+
+    await expect(link.locator(PENDING_SHOWN)).toBeVisible({ timeout: 3000 })
+  })
+}
+
+test('links announce nothing while idle', async ({ page }) => {
+  await page.goto('/demo')
+
+  await expect(page.locator(PENDING_SLOT).first()).toBeAttached()
+  await expect(page.locator(`a ${PENDING_SHOWN}`)).toHaveCount(0)
+})
+
+test('a button-styled link keeps its label centred', async ({ page }) => {
+  await page.goto('/')
+  const cta = page
+    .getByRole('link', { name: /Comenzar crónica|Start your chronicle/i })
+    .first()
+
+  const box = await cta.boundingBox()
+  const label = await cta.evaluate((el) => {
+    // Text nodes only: the pending slot is a child too, and including it would
+    // measure the very overlay this asserts is out of flow.
+    const range = document.createRange()
+    const text = [...el.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE)
+    range.setStartBefore(text[0])
+    range.setEndAfter(text[text.length - 1])
+    const { left, right } = range.getBoundingClientRect()
+    return { left, right }
+  })
+
+  // The slot must overlay rather than take a column: as a flex item it widens
+  // the button and `justify-center` then centres label-plus-slot, not the label.
+  const buttonCentre = box!.x + box!.width / 2
+  const labelCentre = (label.left + label.right) / 2
+  expect(Math.abs(buttonCentre - labelCentre)).toBeLessThan(3)
+})
+
+// Measured on a breadcrumb, which keeps the inline slot. A card link places its
+// slot absolutely, so it is out of flow and could not shift the box either way.
+test('the pending affordance reserves its footprint', async ({ page }) => {
+  await page.goto('/demo/npcs')
+  const link = page
+    .getByRole('navigation')
+    .getByRole('link', { name: 'Demo campaign' })
+  const before = await link.boundingBox()
+
+  await holdNavigationTo(page, '**/demo?*')
+  await link.click()
+  await expect(link.locator(PENDING_SHOWN)).toBeVisible({ timeout: 3000 })
+
+  const after = await link.boundingBox()
+  expect(after?.width).toBe(before?.width)
+  expect(after?.height).toBe(before?.height)
+})

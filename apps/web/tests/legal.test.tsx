@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
+
+import { render, screen } from '@/tests/intl'
 
 import en from '@/messages/en.json'
 import es from '@/messages/es.json'

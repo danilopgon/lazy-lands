@@ -10,6 +10,7 @@ import { EntitySearch } from '@/components/campaigns/entity-search'
 import { NpcList } from '@/components/campaigns/npc-list'
 import { NpcModal } from '@/components/campaigns/npc-modal'
 import { ConfirmDeleteModal } from '@/components/campaigns/confirm-delete-modal'
+import { ModalPresence } from '@/components/motion/modal-presence'
 import { deleteNpc } from '@/lib/campaigns/api'
 import { matchesQuery } from '@/lib/campaigns/text-match'
 
@@ -94,29 +95,35 @@ export default function NpcsPage() {
         }}
       </EntityListScreen>
 
-      {modal !== null ? (
-        <NpcModal
-          campaignId={campaignId}
-          npc={modal === 'add' ? null : modal}
-          onClose={() => setModal(null)}
-        />
-      ) : null}
+      <ModalPresence open={modal !== null}>
+        {modal !== null ? (
+          <NpcModal
+            key="entity"
+            campaignId={campaignId}
+            npc={modal === 'add' ? null : modal}
+            onClose={() => setModal(null)}
+          />
+        ) : null}
+      </ModalPresence>
 
-      {deleting ? (
-        <ConfirmDeleteModal
-          title={t('npcs.deleteTitle')}
-          deleteError={t('npcs.deleteError')}
-          itemName={deleting.name}
-          onConfirm={async () => {
-            await deleteNpc(deleting.id)
-            queryClient.invalidateQueries({
-              queryKey: ['campaign', campaignId],
-            })
-            setDeleting(null)
-          }}
-          onClose={() => setDeleting(null)}
-        />
-      ) : null}
+      <ModalPresence open={deleting !== null}>
+        {deleting ? (
+          <ConfirmDeleteModal
+            key="delete"
+            title={t('npcs.deleteTitle')}
+            deleteError={t('npcs.deleteError')}
+            itemName={deleting.name}
+            onConfirm={async () => {
+              await deleteNpc(deleting.id)
+              queryClient.invalidateQueries({
+                queryKey: ['campaign', campaignId],
+              })
+              setDeleting(null)
+            }}
+            onClose={() => setDeleting(null)}
+          />
+        ) : null}
+      </ModalPresence>
     </>
   )
 }
