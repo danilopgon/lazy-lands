@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
+import { usePathname } from '@/i18n/navigation'
 import { NavLink } from '@/components/navigation/nav-link'
 
 import { Button } from '@/components/ui/button'
@@ -16,13 +17,18 @@ import { navLinks } from './data'
  * @returns {React.ReactElement} The top navigation element with desktop and mobile variants.
  */
 export function PublicTop() {
-  const [open, setOpen] = useState(false)
+  const [openedAt, setOpenedAt] = useState<string | null>(null)
   const t = useTranslations('Nav')
   const tl = useTranslations('Landing')
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const shouldRestoreFocusRef = useRef(true)
+  const pathname = usePathname()
+  // Tied to the route it was opened on, so the arriving route closes it without
+  // an effect. Closing on click instead would unmount a chosen link's pending
+  // affordance before its grace period, leaving a slow navigation silent.
+  const open = openedAt !== null && openedAt === pathname
 
   /**
    * Close the mobile menu overlay, optionally restoring focus to the trigger.
@@ -32,7 +38,7 @@ export function PublicTop() {
    */
   function closeMenu({ restoreFocus = true }: { restoreFocus?: boolean } = {}) {
     shouldRestoreFocusRef.current = restoreFocus
-    setOpen(false)
+    setOpenedAt(null)
   }
 
   useEffect(() => {
@@ -148,7 +154,7 @@ export function PublicTop() {
             type="button"
             aria-label={open ? t('closeMenu') : t('openMenu')}
             aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => (open ? closeMenu() : setOpenedAt(pathname))}
             className="llg:hidden flex h-10 w-10 flex-col items-center justify-center gap-[5px] border-2 border-[var(--border)] bg-[var(--paper)] shadow-[2px_2px_0_var(--shadow)]"
           >
             <span
@@ -177,7 +183,6 @@ export function PublicTop() {
             <NavLink
               href="/"
               className="font-serif text-xl font-semibold text-[var(--ink)]"
-              onClick={() => closeMenu({ restoreFocus: false })}
             >
               Lazy <span className="text-[var(--accent)]">Lands</span>
             </NavLink>
@@ -207,20 +212,10 @@ export function PublicTop() {
             <div className="mt-8 flex flex-col gap-3">
               <LanguageSwitcher inline />
               <Button asChild variant="ghost">
-                <NavLink
-                  href="/login"
-                  onClick={() => closeMenu({ restoreFocus: false })}
-                >
-                  {t('signIn')}
-                </NavLink>
+                <NavLink href="/login">{t('signIn')}</NavLink>
               </Button>
               <Button asChild variant="accent">
-                <NavLink
-                  href="/register"
-                  onClick={() => closeMenu({ restoreFocus: false })}
-                >
-                  {t('register')} →
-                </NavLink>
+                <NavLink href="/register">{t('register')} →</NavLink>
               </Button>
             </div>
           </div>
