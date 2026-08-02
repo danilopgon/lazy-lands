@@ -401,10 +401,7 @@ body {
   position: absolute;
   top: 48%;
   left: 50%;
-  /* Centring must not depend on the keyframes alone: `animation-fill-mode` is
-     overridden by the `transform: none !important` reduced-motion reset below,
-     which would drop the stamp's top-left corner on the anchor point and let
-     the card's `overflow-hidden` clip it. */
+  /* Static, not keyframe-only: the reduced-motion reset below overrides fill-mode. */
   transform: translate(-50%, -50%);
   z-index: 2;
   border: 2px solid var(--good);

@@ -1,5 +1,10 @@
 import { expect, test, type Page } from '@playwright/test'
 
+const PENDING_SLOT = '[data-testid="nav-link-pending"]'
+// The slot stays mounted so the live region outlives its announcement; only its
+// contents signal a pending navigation.
+const PENDING_SHOWN = `${PENDING_SLOT}:not(:empty)`
+
 /**
  * Hold the next client-side navigation to a path long enough for the pending
  * affordance's grace period to elapse.
@@ -68,17 +73,15 @@ for (const declaration of CLASSES) {
     await expect(link).toBeVisible()
     await link.click()
 
-    await expect(link.locator('[role="status"]')).toBeVisible({ timeout: 3000 })
+    await expect(link.locator(PENDING_SHOWN)).toBeVisible({ timeout: 3000 })
   })
 }
 
-test('links carry no status node while idle', async ({ page }) => {
+test('links announce nothing while idle', async ({ page }) => {
   await page.goto('/demo')
 
-  await expect(
-    page.locator('[data-testid="nav-link-pending"]').first()
-  ).toBeAttached()
-  await expect(page.locator('a [role="status"]')).toHaveCount(0)
+  await expect(page.locator(PENDING_SLOT).first()).toBeAttached()
+  await expect(page.locator(`a ${PENDING_SHOWN}`)).toHaveCount(0)
 })
 
 test('the pending affordance reserves its footprint', async ({ page }) => {
@@ -88,7 +91,7 @@ test('the pending affordance reserves its footprint', async ({ page }) => {
 
   await holdNavigationTo(page, '**/demo/npcs*')
   await link.click()
-  await expect(link.locator('[role="status"]')).toBeVisible({ timeout: 3000 })
+  await expect(link.locator(PENDING_SLOT)).toBeVisible({ timeout: 3000 })
 
   const after = await link.boundingBox()
   expect(after?.width).toBe(before?.width)
