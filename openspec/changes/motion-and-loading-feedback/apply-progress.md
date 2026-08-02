@@ -234,7 +234,9 @@ the browser-verification bucket.
   `scaleX: 0 -> 1` over 140ms". Not implemented: the strike is `text-decoration-line` on a
   blockquote that wraps to several lines, and a single scaled element cannot strike multi-line text
   correctly. `.ll-strike` stays as-is and remains legible in every mode. The overlapping card exit
-  the design pairs it with is implemented.
+  the design pairs it with is implemented, so the sequencing the draw existed to provide survives.
+  `specs/motion-system/spec.md`'s full-motion dismiss scenario has been amended to match, since it
+  previously required a draw the implementation does not perform.
 - **Unit 5 stamp stays CSS.** `.ll-stamp`'s geometry is mode-scoped — centred via
   `translate(-50%, -50%)` under `full`, static top-right under `subtle`/`off` — and OS reduced
   motion at `full` must keep the centred placement (`design.md`'s precedence row rejects clamping

@@ -6,49 +6,45 @@ change's proposal, specs, design, tasks, or cumulative evidence.
 
 Repository root: `C:\Users\Usuario\Dev\lazy-lands`
 
-## First Action (2026-07-28 session)
+## Current State (2026-08-02)
 
-Remain on `feat/session-save-pending-guard`. Do not create, switch, or rebase branches.
+All five units are implemented, reviewed and committed on `feat/session-save-pending-guard`, and
+open as PR #100. The animation critique has been run and its accepted findings applied. Nothing is
+in flight; what is left is follow-up work, listed under "Remaining".
 
-Units 2 and 4 are complete and committed. **Unit 5 is implemented and green but deliberately
-NOT committed** — the working tree holds it. The exact resume sequence the user agreed to is:
+Commits on the branch, oldest first:
 
-1. Run a single `review-reliability` lens over the uncommitted Unit 5 working tree (medium tier).
-2. Judge its findings, fix the correct ones test-first, then commit Unit 5 (no push).
-3. Only then run the final animation critique subagent.
+| Commit | What |
+|---|---|
+| `8a62d05` | Unit 3 — mode-aware motion foundation |
+| `82f5fef` | Unit 1 — generated-session save pending guard |
+| `c6f9844` | Unit 2 — NavLink pending navigation feedback |
+| `b320d2b` | Unit 4 — modal entry/exit through the foundation |
+| `b5ebb1f` | Unit 5 — suggestion-card choreography |
+| `b459d8d` | Fixes from the animation critique |
+| `cd5d353` | Playwright coverage for the pending affordance |
+| `0d9a516`, `95ce86c`, `ec48bbf` | Browser-acceptance evidence |
+| `5eeb548`, `4a92c9a` | Merges of `origin/main` |
+| `2738e34` | Tightened comment rule plus branch sweep |
+| `a6c40a6` | Component types moved into their own files |
 
-The prepared Unit 5 review prompt, verbatim, is in "Unit 5 Review Prompt" below. Do not widen it
-into a 4R sweep: Unit 5 is ~250 changed lines, which is medium tier — exactly one lens.
+### Remaining
 
-### Judging the critique subagent (step 3)
+- `F.1` — retire the migrated `globals.css` classes, deliberately one PR later so this change
+  keeps a clean revert path.
+- Issue #105 — move component types out of the remaining 57 `.tsx` files, then add the lint rule.
+- Two critique follow-ups recorded in `apply-progress.md`: whether the pending slot should keep
+  reserving width inside centred button-shaped links, and reconciling the CSS entrance durations
+  with the token vocabulary.
 
-Score every critique finding against `design.md`'s "Impeccable `animate` decision record", which
-records these as ALREADY REJECTED with rationale: no spring token; no stagger on sibling removal
-(list reflow is simultaneous); timer-driven teardown stays authoritative with `AnimatePresence`
-visual-only; OS reduced-motion does NOT clamp `effectiveMode` (clamping would move the stamp from
-centred to top-right); `.ll-view-enter` stays CSS. A finding that lands in that set is NOT correct
-however well argued — implementing it regresses an approved decision. Act only on findings outside
-it. Pass the design record to the subagent as input so it critiques against the spec rather than
-generic motion taste.
-
-## Session Log: 2026-07-28
-
-Commits added on this branch, in order:
-
-1. `c6f9844 feat(navigation): show pending feedback on in-app links` — Unit 2.
-2. `b320d2b feat(ui): animate modal entry and exit through the motion foundation` — Unit 4.
-
-Unit 5 is uncommitted in the working tree. Full suite: 694 passed. One pre-existing flake,
-`tests/demo/demo-tour.test.tsx > drives the exact steps passed via props when replayed`, fails
-only under full-suite load and was verified to fail at `b320d2b` with Unit 5 stashed — it is NOT
-caused by this work.
+## Notes for whoever picks this up
 
 ### Environment gotcha (cost real time)
 
 The Bash tool's PATH is mangled Windows PATH. Node is at `F:\Programas\Nodejs`, pnpm at
 `%APPDATA%\npm`, git at `/usr/bin` + `/mingw64/bin`. Every command needs:
 
-```
+```shell
 export PATH="/usr/bin:/mingw64/bin:/f/Programas/Nodejs:/c/Users/Usuario/AppData/Roaming/npm:$PATH"
 ```
 
@@ -64,43 +60,6 @@ schemas are undocumented. No lineage was created for Units 2, 4, or 5, because p
 schemas against a live lineage is what terminally escalated a previous one (`passed` defaults to
 `false`; `escalated` is terminal). The 4R/reliability lenses were run directly as subagents
 instead. Units 2/4/5 therefore have NO content-bound receipt.
-
-### Unit 5 Review Prompt
-
-Give this to one `review-reliability` subagent, unchanged:
-
-> Review the uncommitted working-tree changes in `C:\Users\Usuario\Dev\lazy-lands` (branch
-> `feat/session-save-pending-guard`, HEAD `b320d2b`). Run `git diff` and `git status`, and read the
-> new untracked file `apps/web/tests/sessions/memory-review-choreography.test.tsx`.
->
-> Scope: Unit 5 of `motion-and-loading-feedback`. Read `design.md` — the "Unit 5 teardown" row in
-> Architecture Decisions and the "Unit 5: Scribe signature choreography" section of the Impeccable
-> animate decision record — plus `tasks.md` Unit 5. Those are the binding contract.
->
-> What changed: `memory-review-parts.tsx`'s `SuggestionCard` `<article>` became a `motion.article`
-> with `layout="position"`, a `data-fx` attribute, and an `animate` target per phase (`FX_TARGET`)
-> resolved through `useMotionMode().transition()`; it no longer applies `.ll-accepting` /
-> `.ll-discarding`. The keyed lists in `campaigns/[id]/memory/review/page.tsx` and
-> `demo/memory/page.tsx` are wrapped in `<ExitPresence>`. `globals.css`'s `.ll-stamp` pop easing
-> changed from an overshooting curve to the approved `EASE.out`; the stamp itself stays CSS.
->
-> THE BINDING INVARIANT to check hardest: timer-driven state removal (`STAMP_LIFETIME_MS`,
-> `CARD_EXIT_MS` from `lib/motion/timings.ts`) must remain the SOLE authority for removing a card
-> from the DOM. `ExitPresence` must be visual-only and must never extend a card's DOM lifetime or
-> gate teardown — that is why the phase animation is on `animate`, not `exit`. Verify no path lets
-> Motion delay or block removal in any of the three modes.
->
-> Also check: per-card `isSubmitting` isolation; `InlineScribeBusy`, `OriginBadge`, `.ll-stamp` and
-> all copy unchanged; the reflow never animates `height` and never staggers sibling removal;
-> whether the new tests would still pass if removal were wrongly gated on an animation callback;
-> whether keeping `.ll-stamp` on CSS really prevents Motion's inline `transform` from clobbering
-> its `translate(-50%,-50%)` centring (and preserves centred geometry under OS reduced motion at
-> `data-motion="full"`); and whether `layout="position"` inside `ExitPresence` can strand a
-> transform when a sibling is removed mid-animation.
->
-> Report only merge-blocking defects anchored to `path:line` with a concrete failure scenario. Do
-> not propose motion-design preferences: springs, stagger on sibling removal, and
-> `onAnimationComplete`-driven removal are already rejected by the design record.
 
 ### Unit 5 decisions worth not relitigating
 
@@ -118,33 +77,19 @@ Give this to one `review-reliability` subagent, unchanged:
   because `SuggestionCard` is shared: once it stops applying the CSS classes, the demo route loses
   its teardown animation without the same boundary. Same shape as Unit 4's approved demo widening.
 
-### Still owed on Unit 5 before commit
-
-- Record the strike deviation and the demo widening in `apply-progress.md`.
-- Add the Unit 5 evidence rows to `apply-progress.md` (the Unit 2 and Unit 4 rows are the template).
-- Leave task 5.4.1 unchecked — browser verification is unauthorized, same as 2.4.1/2.4.2/4.4.1.
-
-## Immutable Current State
+## Branch State
 
 | Item | State |
 |---|---|
 | Branch | `feat/session-save-pending-guard`; the user explicitly rejected a child branch |
-| Worktree | Clean when this handoff was created |
-| Remote baseline | `origin/main` at `6dbb1bb`; current branch is 0 behind and 2 commits ahead |
-| Push state | `origin/feat/session-save-pending-guard` exists at `82f5fef`; local and remote are synchronized (`0` behind / `0` ahead) |
-| Next implementation point | Unit 2, not started |
-| Apply mode | Hybrid persistence, Strict TDD, interactive checkpoint after each unit |
-| Authorization | No authorization for further pushes, PR creation, branch changes, or server/process management |
+| Base | Merged up to `origin/main` at `e25f358`, then `98d2df9` |
+| Pull request | #100, open against `main` |
+| Apply mode | Hybrid persistence, Strict TDD |
+| Review receipts | Units 1 and 3 only. Units 2, 4 and 5 have none — see the review tooling note above |
 
-The two local commits, in history order, are:
+Do not rewrite or squash the committed units.
 
-1. `8a62d05 feat(motion): add mode-aware motion foundation` - Unit 3 complete.
-2. `82f5fef fix(sessions): prevent duplicate generated session saves` - Unit 1 complete and current `HEAD`.
-
-No Unit 2, Unit 4, or Unit 5 implementation file has changed. Do not rewrite or squash either
-completed commit while continuing.
-
-## Completed Units and Evidence
+## Early Unit Detail
 
 ### Unit 3: Mode-aware motion foundation
 
@@ -193,83 +138,6 @@ Evidence:
 Do not replace this evidence when recording later units. The cumulative source is
 `openspec/changes/motion-and-loading-feedback/apply-progress.md` plus Engram observation `#949`.
 
-## Exact Next Task: Unit 2
-
-Unit 2 adds per-link pending navigation feedback across all internal application links. Its
-single-work-unit `size:exception` is already approved. Do not split it or ask for approval again.
-
-### Required Sequence
-
-1. Write and run focused RED tests for `NavLink` and the real Next `<Link>` topology first.
-2. Implement `apps/web/components/navigation/nav-link.tsx` with its internal Client Component
-   `LinkPending` reader.
-3. Mechanically migrate qualifying internal `<Link>` call sites under `apps/web/components/**` and
-   `apps/web/app/[locale]/**`; keep the repeated pattern uniform across approximately 33 files.
-4. Run the focused navigation tests, then the full frontend suite, lint, typecheck, and targeted
-   Prettier over only changed files.
-5. Exercise one representative browser sample for each declaration class: breadcrumb, card/list
-   row, `apps/web/components/layout/app-header.tsx` navigation, and CTA button-styled link.
-6. Persist cumulative OpenSpec and Engram progress, obtain the interactive checkpoint, and only then
-   proceed to another unit.
-
-### Binding Unit 2 Behavior
-
-- Use `NAV_PENDING_DELAY_MS = 150` from `apps/web/lib/motion/tokens.ts` as the grace period.
-- `LinkPending` must be an actual descendant of Next's `<Link>` so `useLinkStatus` reads the link's
-  provider state.
-- Do not use Motion for the pending affordance.
-- Reserve the affordance footprint in idle and pending states; browser acceptance requires no CLS.
-- Keep the status perceivable in `full`, `subtle`, `off`, and OS reduced-motion modes.
-- Hash links and external URLs remain bare anchors with no status node and no runtime error.
-- Add any new pending-navigation copy to both `apps/web/messages/en.json` and
-  `apps/web/messages/es.json`.
-- Preserve target URLs, routing behavior, component semantics, and existing styling. This is a
-  mechanical internal-Link migration, not a navigation redesign.
-
-Primary acceptance sources:
-
-- `openspec/changes/motion-and-loading-feedback/tasks.md`, tasks 2.1.1 through 2.4.2
-- `openspec/changes/motion-and-loading-feedback/specs/loading-feedback/spec.md`, requirement
-  "Every in-app navigation `<Link>` shows pending feedback"
-- `openspec/changes/motion-and-loading-feedback/design.md`, Unit 2 topology, API shape, timing, and
-  navigation choreography
-
-## Remaining Units and Dependencies
-
-### Unit 4: Mode-aware modal presence
-
-Unit 4 has not started. It consumes the Unit 3 foundation already present in ancestor commit
-`8a62d05`. The approved widening is binding: keep `ModalPresence` mounted above each conditional
-entity-modal and delete-modal subtree in all six shipped/demo routes. Entrance-only behavior was
-explicitly rejected because a presence boundary inside an unmounted conditional cannot run exit.
-
-Exact route paths:
-
-- `apps/web/app/[locale]/campaigns/[id]/npcs/page.tsx`
-- `apps/web/app/[locale]/campaigns/[id]/factions/page.tsx`
-- `apps/web/app/[locale]/campaigns/[id]/arcs/page.tsx`
-- `apps/web/app/[locale]/demo/npcs/page.tsx`
-- `apps/web/app/[locale]/demo/factions/page.tsx`
-- `apps/web/app/[locale]/demo/arcs/page.tsx`
-
-The shared implementation path is `apps/web/components/ui/modal.tsx`; preserve its portal, focus
-trap, Escape handling, backdrop close, scroll lock, focus restoration, props, CRUD callbacks, and
-copy. The widening is recorded in the design/spec/tasks and Engram decision `#951`.
-
-### Unit 5: Suggestion-card choreography
-
-Unit 5 has not started. Primary paths are:
-
-- `apps/web/components/sessions/memory-review-parts.tsx`
-- `apps/web/app/[locale]/campaigns/[id]/memory/review/page.tsx`
-- `apps/web/lib/motion/timings.ts`
-- `apps/web/components/sessions/__tests__/memory-review-parts.test.tsx`
-
-The design is fixed: accept uses a 260ms stamp pop, 800ms readable hold, and 220ms file-away;
-dismiss fits strike plus slide inside 220ms. Timer-driven state removal remains authoritative in
-every mode. Motion is visual-only and must never extend DOM lifetime or replace teardown timers.
-Preserve per-card busy isolation, `InlineScribeBusy`, `OriginBadge`, and existing copy.
-
 ## Constraints and Gotchas
 
 - Strict TDD remains active: RED before production changes, then GREEN and refactor evidence.
@@ -315,25 +183,18 @@ not silently alter the committed target during Unit 2.
 
 ## Known Artifact Contradictions
 
-- `apply-handoff.md` still says to create a fresh branch from `origin/main`. That instruction is
-  stale and is superseded here: remain on `feat/session-save-pending-guard`.
-- `apply-progress.md` still says no commit was created. That sentence is stale: Units 3 and 1 are
-  committed locally as `8a62d05` and `82f5fef`, respectively, with nothing pushed.
-- Some planning text says Units 4 and 5 require Unit 3 to be "merged." Unit 3 is not merged or
-  pushed upstream, but its reviewed commit `8a62d05` is an ancestor of the required continuation
-  branch. Do not solve this by branch switching or by silently rewriting planning artifacts.
-- The motion-system spec's DOM-reading wording differs from the provider-injection implementation;
-  this is the accepted informational follow-up described above.
+- `apply-handoff.md` is marked historical at the top. Its entry-point instructions — including the
+  fresh-branch bootstrap — no longer apply; it is kept for the `impeccable animate` setup and the
+  per-unit background it records.
+- `specs/motion-system/spec.md` requires the dismiss strike to "draw" under full motion. The
+  implementation keeps a static `text-decoration`, because a single scaled element cannot strike a
+  blockquote that wraps. The scenario has been amended to match; the reasoning is in
+  `apply-progress.md` under Deviations.
+- The motion-system spec's DOM-reading wording for `useMotionMode()` differs from the
+  provider-injection implementation. The bounded review classified this as informational and it is
+  still open — correct it only in a separate reviewed documentation scope.
 
-## Resume Checklist
+## Evidence
 
-- [ ] Confirm `HEAD` is `82f5fef` on clean `feat/session-save-pending-guard`.
-- [ ] Confirm local and `origin/feat/session-save-pending-guard` still resolve to `82f5fef`, and no
-      further push, PR, branch switch, or server/process action is authorized.
-- [ ] Read `tasks.md`, `design.md`, both specs, and cumulative `apply-progress.md`.
-- [ ] Start Unit 2 with a failing real-`<Link>` topology test, not an isolated hook test.
-- [ ] Keep the 150ms, non-Motion, fixed-footprint affordance perceivable in every mode.
-- [ ] Migrate internal links mechanically, then run focused and full quality gates.
-- [ ] Use only a representative read-only browser sample when the user confirms a server is running.
-- [ ] Merge Unit 2 evidence into OpenSpec and Engram without losing Unit 1/3 history.
-- [ ] Stop for the interactive checkpoint before Unit 4 or Unit 5.
+Units 3 and 1 are summarised below. Units 2, 4 and 5, the animation-critique fixes and the browser
+acceptance matrix are recorded per task in `apply-progress.md`, which is the cumulative source.

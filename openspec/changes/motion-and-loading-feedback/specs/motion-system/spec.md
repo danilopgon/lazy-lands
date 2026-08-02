@@ -208,7 +208,12 @@ depends on `animationend`" requirement, which this unit must jointly satisfy.
 
 - GIVEN `data-motion="full"`
 - WHEN a suggestion is dismissed
-- THEN the strike-through draws and the card slides out via `AnimatePresence`/`layout`
+- THEN the strike-through is applied and the card then slides out via Motion, with the strike
+  readable before the card starts leaving
+
+The strike is a static `text-decoration`, not an animated draw: the quote wraps to several lines
+and a single scaled element cannot strike wrapped text. The sequencing the draw existed to provide
+is preserved by delaying the card's exit instead.
 
 #### Scenario: Suggestion card renders a static dismiss sequence under subtle and off motion
 

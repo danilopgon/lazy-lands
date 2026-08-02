@@ -1,10 +1,16 @@
 # Apply Handoff — `motion-and-loading-feedback`
 
-You are picking up an SDD change whose **planning phases are complete and approved**. Your job is
-the `sdd-apply` phase. This document is your entry point; read it fully before touching anything.
+> **HISTORICAL — do not follow the entry-point instructions below.** This was the kickoff document
+> for the apply phase, kept for the `impeccable animate` setup and the per-unit background it
+> records. Every unit is now implemented on `feat/session-save-pending-guard`. The authoritative
+> state, including the branch to work on, is `continuation-handoff.md`; per-task evidence is in
+> `apply-progress.md`.
 
-Repo root: `C:\Users\Usuario\Dev\lazy-lands`. Branch: start from a fresh branch off `origin/main`
-(fetch first — local `main` has been stale before in this project).
+You are picking up an SDD change whose **planning phases are complete and approved**. Your job is
+the `sdd-apply` phase.
+
+Repo root: `C:\Users\Usuario\Dev\lazy-lands`. Branch: at the time this was written, a fresh branch
+off `origin/main`. That no longer applies — stay on `feat/session-save-pending-guard`.
 
 ---
 

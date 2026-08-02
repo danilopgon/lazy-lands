@@ -20,11 +20,11 @@
 
 | Unit | Goal | Likely PR | Focused test command | Dependencies |
 |---|---|---|---|---|
-| 1 | `useMutation` + pending UI + double-submit guard for generated-session saves | Single PR | `pnpm --filter web test -- components/sessions/__tests__/generated-session-view.test.tsx` | None. Highest priority in the whole change |
-| 2 | `useLinkStatus` pending affordance on every in-app `<Link>` | Single PR (`size:exception`, pre-approved) | `pnpm --filter web test -- components/navigation/__tests__/nav-link.test.tsx` + Playwright pattern-level sample | Independent of Units 1, 3 |
+| 1 | `useMutation` + pending UI + double-submit guard for generated-session saves | Single PR | `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx` | None. Highest priority in the whole change |
+| 2 | `useLinkStatus` pending affordance on every in-app `<Link>` | Single PR (`size:exception`, pre-approved) | `pnpm --filter web test -- tests/navigation/nav-link.test.tsx` + Playwright pattern-level sample | Independent of Units 1, 3 |
 | 3 | `useMotionMode()` + token module + thin `components/motion/` primitives, zero call-site migrations | Single PR | `pnpm --filter web test -- lib/motion/__tests__/use-motion-mode.test.tsx` | None |
-| 4 | `Modal` → `AnimatePresence`, route-level exit boundaries, close the `subtle`-mode gap | Single PR | `pnpm --filter web test -- components/ui/__tests__/modal.test.tsx` | **Depends on Unit 3 (merged)** |
-| 5 | `SuggestionCard` `fx` state machine → `AnimatePresence`/`layout` | Single PR | `pnpm --filter web test -- components/sessions/__tests__/memory-review-parts.test.tsx` | **Depends on Unit 3 (merged)** |
+| 4 | `Modal` → `AnimatePresence`, route-level exit boundaries, close the `subtle`-mode gap | Single PR | `pnpm --filter web test -- tests/ui/modal.test.tsx` | **Depends on Unit 3 (merged)** |
+| 5 | `SuggestionCard` `fx` state machine → `AnimatePresence`/`layout` | Single PR | `pnpm --filter web test -- tests/sessions/memory-review-choreography.test.tsx` | **Depends on Unit 3 (merged)** |
 
 ---
 
@@ -32,7 +32,7 @@
 
 ### Phase 1.1: Frontend RED tests
 
-- [x] 1.1.1 In `apps/web/components/sessions/__tests__/generated-session-view.test.tsx`, add a deferred-promise helper and failing tests asserting: while `saveSection`'s `useMutation` is pending, the "Save section changes" button is `disabled` and its label switches to the in-flight copy; on resolve it re-enables, reverts its label, closes the editor, and the existing "section saved" toast still renders; on reject it re-enables, reverts its label, and the existing localized section-save error `Notice` renders without discarding the draft text.
+- [x] 1.1.1 In `apps/web/tests/sessions/generated-session-view.test.tsx`, add a deferred-promise helper and failing tests asserting: while `saveSection`'s `useMutation` is pending, the "Save section changes" button is `disabled` and its label switches to the in-flight copy; on resolve it re-enables, reverts its label, closes the editor, and the existing "section saved" toast still renders; on reject it re-enables, reverts its label, and the existing localized section-save error `Notice` renders without discarding the draft text.
 - [x] 1.1.2 Add the same failing coverage for `saveAll` / "Save changes" (pending disable+relabel, success re-enable + existing "all saved" toast, error re-enable + existing save-all error `Notice`).
 - [x] 1.1.3 Add failing tests for the double-submit guard clause: invoking `saveSection('synopsis')` a second time while the first call for that same section is still pending issues no second PATCH; invoking `saveAll()` a second time while pending issues no second PATCH; once a prior mutation has settled (success or error), a new call is not blocked and issues a new PATCH.
 
@@ -45,7 +45,7 @@
 
 ### Phase 1.3: Quality gates
 
-- [x] 1.3.1 Run `pnpm --filter web test -- components/sessions/__tests__/generated-session-view.test.tsx`, `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
+- [x] 1.3.1 Run `pnpm --filter web test -- tests/sessions/generated-session-view.test.tsx`, `pnpm lint`, `pnpm typecheck`, and targeted `prettier --check` over the files this unit changed; all green.
 
 ### Phase 1.4: Manual verification (JSDOM cannot measure this)
 
@@ -59,7 +59,7 @@
 
 ### Phase 2.1: Frontend RED tests
 
-- [x] 2.1.1 In `apps/web/components/navigation/__tests__/nav-link.test.tsx`, add failing tests for a new `NavLink` component: it renders `<Link>{children}</Link>` with a Client Component `LinkPending` reader inside `<Link>`'s children (per Next 16.2.9's `useLinkStatus` topology — reading it anywhere else silently returns `{pending:false}`); it shows a `role="status"` pending affordance only after `NAV_PENDING_DELAY_MS` has elapsed while `pending: true` (grace delay against flicker); the affordance clears once `pending` flips back to `false`; the affordance's footprint is reserved in both pending and non-pending states (no CLS).
+- [x] 2.1.1 In `apps/web/tests/navigation/nav-link.test.tsx`, add failing tests for a new `NavLink` component: it renders `<Link>{children}</Link>` with a Client Component `LinkPending` reader inside `<Link>`'s children (per Next 16.2.9's `useLinkStatus` topology — reading it anywhere else silently returns `{pending:false}`); it shows a `role="status"` pending affordance only after `NAV_PENDING_DELAY_MS` has elapsed while `pending: true` (grace delay against flicker); the affordance clears once `pending` flips back to `false`; the affordance's footprint is reserved in both pending and non-pending states (no CLS).
 - [x] 2.1.2 Add failing tests asserting `NavLink` renders a bare anchor with no status node for hash (`#anchor`) and external (`https://...`) `href` values — a quiet no-op, never a runtime error.
 - [x] 2.1.3 Add a failing test asserting the pending affordance renders identically in every `data-motion` mode (it involves no Motion animation, so this is a straightforward DOM/text assertion, not a `transition()`/duration assertion).
 
@@ -71,7 +71,7 @@
 
 ### Phase 2.3: Quality gates
 
-- [x] 2.3.1 Run `pnpm --filter web test -- components/navigation/__tests__/nav-link.test.tsx`, the full `pnpm --filter web test` suite (regression check on all migrated call sites), `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
+- [x] 2.3.1 Run `pnpm --filter web test -- tests/navigation/nav-link.test.tsx`, the full `pnpm --filter web test` suite (regression check on all migrated call sites), `pnpm lint`, `pnpm typecheck`, and targeted `prettier --check` over the files this unit changed; all green.
 
 ### Phase 2.4: E2E and manual verification (pattern-level, not exhaustive per-`Link`)
 
@@ -97,7 +97,7 @@
 
 ### Phase 3.3: Quality gates
 
-- [x] 3.3.1 Run `pnpm --filter web test -- lib/motion/__tests__/use-motion-mode.test.tsx`, the full `pnpm --filter web test` suite (regression check — no existing rendered output changes), `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
+- [x] 3.3.1 Run `pnpm --filter web test -- lib/motion/__tests__/use-motion-mode.test.tsx`, the full `pnpm --filter web test` suite (regression check — no existing rendered output changes), `pnpm lint`, `pnpm typecheck`, and targeted `prettier --check` over the files this unit changed; all green.
 
 ### Phase 3.4: Manual verification (JSDOM cannot measure this)
 
@@ -111,7 +111,7 @@
 
 ### Phase 4.1: Frontend RED tests
 
-- [x] 4.1.1 In `apps/web/components/ui/__tests__/modal.test.tsx`, add a failing test asserting the backdrop/panel transition resolves at `duration: 0` under `data-motion="subtle"` (the pre-existing gap this unit closes) and under `"off"`.
+- [x] 4.1.1 In `apps/web/tests/ui/modal.test.tsx`, add a failing test asserting the backdrop/panel transition resolves at `duration: 0` under `data-motion="subtle"` (the pre-existing gap this unit closes) and under `"off"`.
 - [x] 4.1.2 Confirm the existing modal a11y test suite (portal target, `role="dialog"`, `aria-modal`, `aria-labelledby`, focus trap Tab/Shift+Tab cycling, Escape close, backdrop-click close, `body.style.overflow` scroll lock, focus restoration to `previousFocusRef`) is captured as an explicit regression guard that MUST stay green, unmodified, through this migration.
 - [x] 4.1.3 Add a failing integration test with `ModalPresence` mounted above a real conditional `<Modal>` subtree: closing removes the condition, the dialog remains only through the configured full-motion exit, and then unmounts; under `subtle`/`off` it resolves at zero duration. A test that renders `ModalPresence` only inside the conditional is invalid.
 
@@ -122,7 +122,7 @@
 
 ### Phase 4.3: Quality gates
 
-- [x] 4.3.1 Run `pnpm --filter web test -- components/ui/__tests__/modal.test.tsx`, `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green, including the untouched a11y suite.
+- [x] 4.3.1 Run `pnpm --filter web test -- tests/ui/modal.test.tsx`, `pnpm lint`, `pnpm typecheck`, and targeted `prettier --check` over the files this unit changed; all green, including the untouched a11y suite.
 
 ### Phase 4.4: Manual verification (JSDOM cannot measure this)
 
@@ -136,7 +136,7 @@
 
 ### Phase 5.1: Frontend RED tests
 
-- [x] 5.1.1 In `apps/web/components/sessions/__tests__/memory-review-parts.test.tsx`, using fake timers, add failing tests asserting a suggestion card is removed from the DOM after `STAMP_LIFETIME_MS + CARD_EXIT_MS` for accept, and after the existing dismiss exit window, in **all three** `data-motion` modes (`full`, `subtle`, `off`) — never gated on a CSS `animationend` listener, since `.ll-stamp`/`.ll-strike`/`.ll-discarding`/`.ll-accepting` are static under `subtle`/`off` and never fire that event.
+- [x] 5.1.1 In `apps/web/tests/sessions/memory-review-choreography.test.tsx`, using fake timers, add failing tests asserting a suggestion card is removed from the DOM after `STAMP_LIFETIME_MS + CARD_EXIT_MS` for accept, and after the existing dismiss exit window, in **all three** `data-motion` modes (`full`, `subtle`, `off`) — never gated on a CSS `animationend` listener, since `.ll-stamp`/`.ll-strike`/`.ll-discarding`/`.ll-accepting` are static under `subtle`/`off` and never fire that event.
 - [x] 5.1.2 Add a failing test asserting per-card `isSubmitting` busy isolation is preserved: accepting one card leaves a sibling card's Accept/Edit/Dismiss controls enabled and unaffected.
 - [x] 5.1.3 Add a failing test asserting `InlineScribeBusy` and `OriginBadge` rendering inside `SuggestionCard` are unaffected by the `fx`-machine migration.
 - [x] 5.1.4 Non-blocking spike task: confirm under Vitest/JSDOM whether Motion's `onAnimationComplete` fires during the fake-timer-driven test run (it is rAF-scheduled per the design's verified `motion-dom@12.42.0` source evidence). Record the finding; it decides only whether tests may additionally assert on the Motion callback, not whether the architecture changes — the timer path stays authoritative either way.
@@ -149,7 +149,7 @@
 
 ### Phase 5.3: Quality gates
 
-- [x] 5.3.1 Run `pnpm --filter web test -- components/sessions/__tests__/memory-review-parts.test.tsx`, `pnpm lint`, `pnpm typecheck`, and `pnpm format:check`; all green.
+- [x] 5.3.1 Run `pnpm --filter web test -- tests/sessions/memory-review-choreography.test.tsx`, `pnpm lint`, `pnpm typecheck`, and targeted `prettier --check` over the files this unit changed; all green.
 
 ### Phase 5.4: Manual verification (JSDOM cannot measure this)
 
