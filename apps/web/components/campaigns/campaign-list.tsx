@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { NavLink } from '@/components/navigation/nav-link'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
@@ -34,7 +34,12 @@ export function CampaignList({ campaigns }: CampaignListProps) {
         description={t('emptyDescription')}
         action={
           <Button asChild variant="accent">
-            <NavLink href="/campaigns/new">{t('emptyAction')}</NavLink>
+            <NavLink
+              pendingSlotClassName={PENDING_SLOT_OVERLAY}
+              href="/campaigns/new"
+            >
+              {t('emptyAction')}
+            </NavLink>
           </Button>
         }
       />

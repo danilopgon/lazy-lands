@@ -12,6 +12,13 @@ import type { LinkPendingProps, LocaleLinkProps, NavLinkProps } from './types'
 const SLOT_CLASS_NAME = 'ml-1 inline-block w-[1em] text-center align-baseline'
 
 /**
+ * Placement for button-shaped links. Their `justify-center` row would otherwise
+ * centre label-plus-slot, widening the button and pushing the label off-centre.
+ */
+export const PENDING_SLOT_OVERLAY =
+  'absolute right-2 top-1/2 -translate-y-1/2 leading-none'
+
+/**
  * Decide whether a destination is handled by the client router.
  *
  * @param {LocaleLinkProps['href']} href - The link destination.

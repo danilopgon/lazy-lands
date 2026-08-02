@@ -84,6 +84,31 @@ test('links announce nothing while idle', async ({ page }) => {
   await expect(page.locator(`a ${PENDING_SHOWN}`)).toHaveCount(0)
 })
 
+test('a button-styled link keeps its label centred', async ({ page }) => {
+  await page.goto('/')
+  const cta = page
+    .getByRole('link', { name: /Comenzar crónica|Start your chronicle/i })
+    .first()
+
+  const box = await cta.boundingBox()
+  const label = await cta.evaluate((el) => {
+    // Text nodes only: the pending slot is a child too, and including it would
+    // measure the very overlay this asserts is out of flow.
+    const range = document.createRange()
+    const text = [...el.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE)
+    range.setStartBefore(text[0])
+    range.setEndAfter(text[text.length - 1])
+    const { left, right } = range.getBoundingClientRect()
+    return { left, right }
+  })
+
+  // The slot must overlay rather than take a column: as a flex item it widens
+  // the button and `justify-center` then centres label-plus-slot, not the label.
+  const buttonCentre = box!.x + box!.width / 2
+  const labelCentre = (label.left + label.right) / 2
+  expect(Math.abs(buttonCentre - labelCentre)).toBeLessThan(3)
+})
+
 // Measured on a breadcrumb, which keeps the inline slot. A card link places its
 // slot absolutely, so it is out of flow and could not shift the box either way.
 test('the pending affordance reserves its footprint', async ({ page }) => {

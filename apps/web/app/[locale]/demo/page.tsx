@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 
-import { NavLink } from '@/components/navigation/nav-link'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 import { WorldStateEditor } from '@/components/campaigns/world-state-editor'
 import { DemoTour, type DemoTourStep } from '@/components/demo/demo-tour'
 import { useAppLocale } from '@/i18n/use-app-locale'
@@ -120,14 +120,16 @@ export default function DemoCampaignPage() {
         >
           <NavLink
             href={demoHrefs.logSession}
-            className="inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-transparent px-5 py-2 font-sans text-sm font-semibold text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:bg-[var(--paper-2)] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+            pendingSlotClassName={PENDING_SLOT_OVERLAY}
+            className="relative inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-transparent px-5 py-2 font-sans text-sm font-semibold text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:bg-[var(--paper-2)] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
           >
             {t('detail.logSessionHeader')}
           </NavLink>
           <NavLink
             href={demoHrefs.prepare}
             data-tour="prepare"
-            className="inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-[var(--accent)] px-5 py-2 font-sans text-sm font-semibold text-[var(--bg-contrast)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+            pendingSlotClassName={PENDING_SLOT_OVERLAY}
+            className="relative inline-flex h-11 items-center justify-center border-2 border-[var(--border)] bg-[var(--accent)] px-5 py-2 font-sans text-sm font-semibold text-[var(--bg-contrast)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow,background] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
           >
             {t('detail.prepareNextHeader')}
           </NavLink>

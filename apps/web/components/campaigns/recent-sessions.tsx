@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 
-import { NavLink } from '@/components/navigation/nav-link'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 
@@ -92,7 +92,10 @@ export function RecentSessions({
         description={t('history.emptyDescription')}
         action={
           <Button variant="ink" asChild>
-            <NavLink href={`/campaigns/${campaignId}/sessions/new`}>
+            <NavLink
+              pendingSlotClassName={PENDING_SLOT_OVERLAY}
+              href={`/campaigns/${campaignId}/sessions/new`}
+            >
               {t('history.logSession')}
             </NavLink>
           </Button>

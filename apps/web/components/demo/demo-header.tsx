@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 
-import { NavLink } from '@/components/navigation/nav-link'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 import { demoHrefs } from '@/lib/demo/hrefs'
 
@@ -36,7 +36,8 @@ export function DemoHeader() {
         <LanguageSwitcher compact />
         <NavLink
           href={demoHrefs.home}
-          className="inline-flex h-9 items-center whitespace-nowrap border-2 border-[var(--border)] bg-[var(--paper)] px-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
+          pendingSlotClassName={PENDING_SLOT_OVERLAY}
+          className="relative inline-flex h-9 items-center whitespace-nowrap border-2 border-[var(--border)] bg-[var(--paper)] px-3 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink)] shadow-[3px_3px_0_var(--shadow)] transition-[transform,box-shadow] duration-100 ease-out hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0_var(--shadow)]"
         >
           {t('exit')}
         </NavLink>

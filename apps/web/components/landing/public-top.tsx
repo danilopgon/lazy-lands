@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
 import { usePathname } from '@/i18n/navigation'
-import { NavLink } from '@/components/navigation/nav-link'
+import { NavLink, PENDING_SLOT_OVERLAY } from '@/components/navigation/nav-link'
 
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
@@ -137,16 +137,31 @@ export function PublicTop() {
           <div className="hidden items-center gap-2 llg:flex">
             <LanguageSwitcher compact />
             <Button asChild variant="ghost" size="sm">
-              <NavLink href="/login">{t('signIn')}</NavLink>
+              <NavLink
+                pendingSlotClassName={PENDING_SLOT_OVERLAY}
+                href="/login"
+              >
+                {t('signIn')}
+              </NavLink>
             </Button>
             <Button asChild variant="accent" size="sm">
-              <NavLink href="/register">{registerCta}</NavLink>
+              <NavLink
+                pendingSlotClassName={PENDING_SLOT_OVERLAY}
+                href="/register"
+              >
+                {registerCta}
+              </NavLink>
             </Button>
           </div>
 
           {/* Mobile: CTA + hamburger */}
           <Button asChild variant="accent" size="sm" className="llg:hidden">
-            <NavLink href="/register">{registerCta}</NavLink>
+            <NavLink
+              pendingSlotClassName={PENDING_SLOT_OVERLAY}
+              href="/register"
+            >
+              {registerCta}
+            </NavLink>
           </Button>
 
           <button
@@ -212,10 +227,20 @@ export function PublicTop() {
             <div className="mt-8 flex flex-col gap-3">
               <LanguageSwitcher inline />
               <Button asChild variant="ghost">
-                <NavLink href="/login">{t('signIn')}</NavLink>
+                <NavLink
+                  pendingSlotClassName={PENDING_SLOT_OVERLAY}
+                  href="/login"
+                >
+                  {t('signIn')}
+                </NavLink>
               </Button>
               <Button asChild variant="accent">
-                <NavLink href="/register">{t('register')} →</NavLink>
+                <NavLink
+                  pendingSlotClassName={PENDING_SLOT_OVERLAY}
+                  href="/register"
+                >
+                  {t('register')} →
+                </NavLink>
               </Button>
             </div>
           </div>
