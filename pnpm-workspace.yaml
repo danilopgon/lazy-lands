@@ -14,19 +14,19 @@ overrides:
   # is how a first attempt at this silently put js-yaml 5 under an ESLint that
   # wants 4. Drop an entry once every dependent ships the fix itself.
   #
-  # `minimatch` is here for `brace-expansion`, not for itself. The advisory
-  # covering brace-expansion (GHSA-mh99-v99m-4gvg) declares every version up to
-  # 5.0.7 vulnerable and publishes the fix only in 5.0.8, so the 1.x line ESLint
-  # pulls through `minimatch@3` has no patched release at all. `minimatch@3`
-  # cannot take 5.0.8 either — it calls brace-expansion as a bare function, which
+  # `minimatch` is here for `brace-expansion`, not for itself. The advisories
+  # GHSA-mh99-v99m-4gvg and GHSA-rgw5-rvv9-x895 leave the 1.x line ESLint pulls
+  # through `minimatch@3` without a patched release. `minimatch@3` cannot take
+  # brace-expansion 5.x either — it calls brace-expansion as a bare function, which
   # only the 1.x line exports, and blows up with "expand is not a function".
   # ESLint 9.39.5 and `@eslint/eslintrc` still depend on `minimatch@^3.1.5`
   # upstream, so the only way out of that corner is to lift minimatch itself to
   # the line that consumes a patched brace-expansion. ESLint destructures
   # `{ Minimatch }`, which both majors export, so this holds.
   minimatch: '>=10.2.4 <11'
-  brace-expansion: '>=5.0.8 <6'
-  js-yaml: '>=4.3.0 <5'
+  brace-expansion: '>=5.0.9 <6'
+  js-yaml: '>=4.3.1 <5'
+  nanoid: '>=3.3.17 <4'
   postcss: '>=8.5.18 <9'
   sharp: '>=0.35.0 <0.36'
 # pnpm 11 fails installs on dependencies with un-decided build scripts. These
