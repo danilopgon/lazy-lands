@@ -29,6 +29,10 @@ overrides:
   nanoid: '>=3.3.17 <4'
   postcss: '>=8.5.18 <9'
   sharp: '>=0.35.5 <0.36'
+  # Targeted high-severity fixes: GHSA-c83g-rgw3-j3cx,
+  # GHSA-73wf-gq98-2v4g, and GHSA-587h-7wmj-h5pm.
+  browserslist: '4.28.7'
+  vite: '8.1.6'
 # pnpm 11 fails installs on dependencies with un-decided build scripts. These
 # native optional deps already ran un-built under pnpm 10 (CI was green without
 # them), so keep them un-built and record the decision explicitly to satisfy the
