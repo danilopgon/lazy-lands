@@ -11,7 +11,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@hookform/resolvers": "latest",
+    "@hookform/resolvers": "5.7.1",
     "@radix-ui/react-slot": "^1.3.0",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
@@ -47,6 +47,6 @@
     "jsdom": "latest",
     "tailwindcss": "latest",
     "typescript": "latest",
-    "vitest": "latest"
+    "vitest": "4.1.12"
   }
 }

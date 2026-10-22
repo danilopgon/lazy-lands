@@ -32,6 +32,27 @@ The project should pass:
 - Manual or automated RLS checks.
 - Smoke test for the demo path.
 
+## Dependency security automation
+
+Use the `packageManager` version from `package.json` and install with
+`pnpm install --frozen-lockfile`. CI runs quality checks before the blocking full
+dependency audit. The weekly/manual `dependency-audit.yml` workflow checks both
+production and the complete dependency tree; either audit can fail the job.
+
+Dependabot updates GitHub Actions. As of 2026-10-22, GitHub's
+[supported ecosystems](https://docs.github.com/en/code-security/reference/supply-chain-security/supported-ecosystems-and-repositories)
+list pnpm through version 10, so automated package-update PRs are not configured
+for this pnpm 11 workspace. Review package advisories from the scheduled audit and
+update the lockfile manually until compatible automation is verified.
+
+`braces@3.0.3` remains affected by
+[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), with no
+patched release published as of 2026-10-22. It is used by development tooling via
+`lint-staged` and `eslint-config-next`, not by a demonstrated application request
+path. Keep this alert visible and the full audit blocking: a passing production
+audit does not mean the complete dependency tree is clean. When a compatible fix
+is published, update the lockfile and rerun both audits, quality checks and build.
+
 ## Frontend testing
 
 Recommended tools:
