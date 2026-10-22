@@ -28,7 +28,7 @@ overrides:
   js-yaml: '>=4.3.1 <5'
   nanoid: '>=3.3.17 <4'
   postcss: '>=8.5.18 <9'
-  sharp: '>=0.35.0 <0.36'
+  sharp: '>=0.35.5 <0.36'
 # pnpm 11 fails installs on dependencies with un-decided build scripts. These
 # native optional deps already ran un-built under pnpm 10 (CI was green without
 # them), so keep them un-built and record the decision explicitly to satisfy the
