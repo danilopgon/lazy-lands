@@ -25,8 +25,6 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Dependency audit
-        run: pnpm audit --audit-level=high
       - name: Lint
         run: pnpm lint
       - name: Typecheck
@@ -35,6 +33,10 @@ jobs:
         run: pnpm test
       - name: Build
         run: pnpm build
+      # Keep security auditing blocking, but let quality checks report their
+      # results first so new advisories do not hide lint/test/build regressions.
+      - name: Dependency audit
+        run: pnpm audit --audit-level=high
       - name: Playwright smoke
         continue-on-error: true
         run: pnpm --filter web test:e2e

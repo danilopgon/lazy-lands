@@ -1,0 +1,10 @@
+# pnpm 11 is not yet listed as supported by Dependabot's npm updater.
+# Package advisories remain blocking in CI and the weekly dependency audit.
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
